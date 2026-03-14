@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { statLabels } from '@/utils/formulas'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase } from '@/utils/format'
+import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
   expedition: Expedition
@@ -97,6 +98,7 @@ const selectedCreatureImage = computed(() => {
           :key="i"
           class="reward-tag"
         >
+          <img v-if="getItemImage({ id: reward.itemId })" :src="getItemImage({ id: reward.itemId })" :alt="toTitleCase(reward.itemId)" class="size-4 object-contain" />
           {{ reward.amount }}x {{ toTitleCase(reward.itemId) }}
         </span>
         <span v-if="expedition.rewards.length === 0" class="no-rewards">None</span>
@@ -303,6 +305,9 @@ const selectedCreatureImage = computed(() => {
 }
 
 .reward-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);

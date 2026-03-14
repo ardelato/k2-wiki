@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { statLabels, jobLabels } from '@/utils/formulas'
 import { toTitleCase } from '@/utils/format'
 import { getCreatureImage } from '@/utils/creatureImages'
+import { getItemImage } from '@/utils/itemImages'
 import StatRadarChart from './StatRadarChart.vue'
 import ProficiencyRing from './ProficiencyRing.vue'
 
@@ -118,7 +119,8 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
     <div class="section">
       <h3 class="section-title">Summoning Cost</h3>
       <div class="cost-list">
-        <div v-for="(cost, i) in creature.summoningCost" :key="i" class="cost-item font-mono">
+        <div v-for="(cost, i) in creature.summoningCost" :key="i" class="cost-item font-mono" style="display: flex; align-items: center; gap: 6px;">
+          <img v-if="getItemImage({ id: cost.id })" :src="getItemImage({ id: cost.id })" :alt="toTitleCase(cost.id)" style="width: 20px; height: 20px; object-fit: contain;" />
           {{ cost.amount }}x {{ toTitleCase(cost.id) }}
         </div>
       </div>

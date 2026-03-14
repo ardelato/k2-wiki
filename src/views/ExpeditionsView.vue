@@ -8,6 +8,7 @@ import { useExpeditions } from '@/composables/useExpeditions'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { statAbbreviations, statLabels, calculateXpPerSecond, tierModifiers } from '@/utils/formulas'
 import { formatDuration, toTitleCase } from '@/utils/format'
+import { getItemImage } from '@/utils/itemImages'
 import type { Creature, ElementType, ExpeditionStatWeights } from '@/types'
 
 const route = useRoute()
@@ -450,8 +451,9 @@ function toggleCreatureTier(tier: number) {
               <span
                 v-for="reward in selectedExpedition.rewards"
                 :key="reward.itemId"
-                class="rounded-full border border-border bg-muted/45 px-3 py-1 text-xs font-mono"
+                class="inline-flex items-center gap-1 rounded-full border border-border bg-muted/45 px-3 py-1 text-xs font-mono"
               >
+                <img v-if="getItemImage({ id: reward.itemId })" :src="getItemImage({ id: reward.itemId })" :alt="toTitleCase(reward.itemId)" class="size-4 object-contain" />
                 {{ reward.amount * tierModifiers.loot[selectedTier - 1] }}x {{ toTitleCase(reward.itemId) }}
               </span>
             </div>
