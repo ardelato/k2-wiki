@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Item } from '@/types'
 import { itemTypeColor } from '@/utils/format'
+import { getItemImage } from '@/utils/itemImages'
 
 defineProps<{
   item: Item
@@ -21,14 +22,21 @@ defineEmits<{
     @click="$emit('select', item)"
     @keydown.enter="$emit('select', item)"
   >
-    <!-- Placeholder area -->
+    <!-- Image / Placeholder area -->
     <div
       class="flex aspect-[4/3] items-center justify-center rounded-t-[inherit]"
       :style="{
         background: `linear-gradient(180deg, color-mix(in oklch, ${itemTypeColor(item.type)} 15%, transparent) 0%, color-mix(in oklch, ${itemTypeColor(item.type)} 8%, transparent) 100%)`
       }"
     >
+      <img
+        v-if="getItemImage(item)"
+        :src="getItemImage(item)"
+        :alt="item.name"
+        class="size-16 object-contain drop-shadow-md"
+      />
       <span
+        v-else
         class="text-3xl font-bold"
         :style="{ color: `color-mix(in oklch, ${itemTypeColor(item.type)} 50%, transparent)` }"
       >

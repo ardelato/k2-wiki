@@ -4,6 +4,7 @@ import { useMediaQuery } from '@vueuse/core'
 import { useItems } from '@/composables/useItems'
 import type { Item } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
+import { getItemImage } from '@/utils/itemImages'
 import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import ItemCard from '@/components/items/ItemCard.vue'
 import ItemDetail from '@/components/items/ItemDetail.vue'
@@ -257,7 +258,13 @@ const hasActiveFilters = computed(() =>
                         class="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border text-xs font-bold"
                         :style="{ color: itemTypeColor(item.type), backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 10%, transparent)` }"
                       >
-                        {{ item.name.charAt(0) }}
+                        <img
+                          v-if="getItemImage(item)"
+                          :src="getItemImage(item)"
+                          :alt="item.name"
+                          class="size-8 object-contain"
+                        />
+                        <template v-else>{{ item.name.charAt(0) }}</template>
                       </div>
                       <span class="text-sm font-semibold text-foreground">{{ item.name }}</span>
                     </div>

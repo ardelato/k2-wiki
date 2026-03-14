@@ -4,6 +4,7 @@ import { X, ChevronRight, ChevronDown } from 'lucide-vue-next'
 import type { Item } from '@/types'
 import { itemTypeColor, toTitleCase, formatDuration } from '@/utils/format'
 import { getCreatureImage } from '@/utils/creatureImages'
+import { getItemImage } from '@/utils/itemImages'
 import { useItems } from '@/composables/useItems'
 import expeditionsData from '@/data/expeditions.json'
 
@@ -190,7 +191,14 @@ const jobColorMap: Record<string, string> = {
       </button>
 
       <div class="flex aspect-[3/2] w-full items-center justify-center">
+        <img
+          v-if="getItemImage(item)"
+          :src="getItemImage(item)"
+          :alt="item.name"
+          class="size-24 object-contain drop-shadow-lg"
+        />
         <span
+          v-else
           class="text-4xl font-bold"
           :style="{ color: `color-mix(in oklch, ${itemTypeColor(item.type)} 50%, transparent)` }"
         >
@@ -299,7 +307,8 @@ const jobColorMap: Record<string, string> = {
             class="flex items-center gap-3 rounded-lg px-3 py-1.5 -mx-1 cursor-pointer hover:bg-muted/20 transition"
             @click="emit('select-item', cs.containerId)"
           >
-            <span class="size-1.5 shrink-0 rounded-full" style="background-color: var(--color-item-container)" />
+            <img v-if="getItemImage({ id: cs.containerId })" :src="getItemImage({ id: cs.containerId })" :alt="cs.containerName" class="size-5 shrink-0 object-contain" />
+            <span v-else class="size-1.5 shrink-0 rounded-full" style="background-color: var(--color-item-container)" />
             <span class="flex-1 text-sm font-semibold text-foreground">{{ cs.containerName }}</span>
             <span class="font-mono text-sm" style="color: var(--color-yellow)">x{{ cs.amount }}</span>
             <span class="font-mono text-sm" style="color: var(--color-green)">{{ formatChance(cs.chance) }}</span>
@@ -357,7 +366,8 @@ const jobColorMap: Record<string, string> = {
                 class="flex items-center gap-2 cursor-pointer rounded px-1 py-0.5 hover:bg-muted/50 transition"
                 @click="emit('select-item', ingredient.id)"
               >
-                <span class="size-1.5 shrink-0 rounded-full bg-accent/60" />
+                <img v-if="getItemImage({ id: ingredient.id })" :src="getItemImage({ id: ingredient.id })" :alt="getItemById(ingredient.id)?.name" class="size-5 shrink-0 object-contain" />
+                <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
                 <span class="flex-1 text-sm text-foreground hover:text-primary transition">{{ getItemById(ingredient.id)?.name ?? toTitleCase(ingredient.id) }}</span>
                 <span class="font-mono text-sm font-semibold" style="color: var(--color-yellow)">x{{ ingredient.amount }}</span>
               </div>
@@ -384,7 +394,8 @@ const jobColorMap: Record<string, string> = {
                     class="flex items-center gap-2 cursor-pointer rounded px-1 py-0.5 hover:bg-muted/50 transition"
                     @click="emit('select-item', variant)"
                   >
-                    <span class="size-1.5 shrink-0 rounded-full bg-accent/40" />
+                    <img v-if="getItemImage({ id: variant })" :src="getItemImage({ id: variant })" :alt="getItemById(variant)?.name" class="size-5 shrink-0 object-contain" />
+                    <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/40" />
                     <span class="flex-1 text-sm text-foreground hover:text-primary transition">
                       {{ getItemById(variant)?.name ?? toTitleCase(variant) }}
                     </span>
@@ -406,7 +417,8 @@ const jobColorMap: Record<string, string> = {
             class="flex items-center gap-3 rounded-lg px-3 py-1.5 -mx-1 cursor-pointer hover:bg-muted/20 transition"
             @click="emit('select-item', usage.outputItemId)"
           >
-            <span class="size-1.5 shrink-0 rounded-full bg-accent/60" />
+            <img v-if="getItemImage({ id: usage.outputItemId })" :src="getItemImage({ id: usage.outputItemId })" :alt="usage.outputItemName" class="size-5 shrink-0 object-contain" />
+            <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
             <div class="min-w-0 flex-1">
               <span class="text-sm font-semibold text-foreground hover:text-primary transition">{{ usage.outputItemName }}</span>
               <span class="text-sm text-muted-foreground"> &middot; {{ usage.workstation }}</span>
@@ -426,7 +438,8 @@ const jobColorMap: Record<string, string> = {
             class="flex items-center gap-3 rounded-lg px-3 py-1.5 -mx-1 cursor-pointer hover:bg-muted/20 transition"
             @click="emit('select-item', entry.id)"
           >
-            <span class="size-1.5 shrink-0 rounded-full bg-accent/60" />
+            <img v-if="getItemImage({ id: entry.id })" :src="getItemImage({ id: entry.id })" :alt="getItemById(entry.id)?.name" class="size-5 shrink-0 object-contain" />
+            <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
             <span class="flex-1 text-sm font-semibold text-foreground hover:text-primary transition">{{ getItemById(entry.id)?.name ?? toTitleCase(entry.id) }}</span>
             <span class="font-mono text-sm" style="color: var(--color-yellow)">x{{ entry.amount }}</span>
             <span class="font-mono text-sm" style="color: var(--color-green)">{{ formatChance(entry.chance) }}</span>
