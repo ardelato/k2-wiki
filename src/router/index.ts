@@ -9,6 +9,19 @@ export const router = createRouter({
       component: () => import('../views/BeastiaryView.vue'),
     },
     {
+      path: '/planner/:id?',
+      name: 'planner',
+      component: () => import('../views/ItemPlannerView.vue'),
+    },
+    {
+      path: '/items/:id/planner',
+      redirect: to => ({
+        name: 'planner',
+        params: { id: typeof to.params.id === 'string' ? to.params.id : undefined },
+        query: to.query,
+      }),
+    },
+    {
       path: '/items',
       name: 'items',
       component: () => import('../views/ItemsView.vue'),
