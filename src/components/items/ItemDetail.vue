@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { X, ChevronRight, ChevronDown } from 'lucide-vue-next'
+import { X, ChevronRight, ChevronDown, GitBranch } from 'lucide-vue-next'
 import type { Item } from '@/types'
 import { itemTypeColor, toTitleCase, formatDuration } from '@/utils/format'
 import { getCreatureImage } from '@/utils/creatureImages'
@@ -10,9 +10,12 @@ import expeditionsData from '@/data/expeditions.json'
 
 const expeditionById = new Map(expeditionsData.map(e => [e.id, e]))
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   item: Item
-}>()
+  showCloseButton?: boolean
+}>(), {
+  showCloseButton: true,
+})
 
 const emit = defineEmits<{
   close: []
@@ -183,6 +186,7 @@ const jobColorMap: Record<string, string> = {
       }"
     >
       <button
+        v-if="showCloseButton"
         aria-label="Close item details"
         class="focus-ring absolute right-3 top-3 rounded-lg border border-border/60 bg-card/80 p-2 text-muted-foreground backdrop-blur hover:text-foreground active:bg-muted/60"
         @click="emit('close')"
@@ -216,6 +220,13 @@ const jobColorMap: Record<string, string> = {
         >
           {{ item.type }}
         </span>
+        <RouterLink
+          :to="{ name: 'planner', params: { id: item.id } }"
+          class="focus-ring inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition hover:bg-primary/15"
+        >
+          <GitBranch class="size-3.5" />
+          Open Planner
+        </RouterLink>
       </div>
     </div>
 
