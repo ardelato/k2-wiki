@@ -20,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Lefthook local overrides
+lefthook-local.yml

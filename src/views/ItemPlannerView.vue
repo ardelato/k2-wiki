@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
-import { ChevronsDownUp, ChevronsUpDown, Clock3, Coins, GanttChart, GitBranch, Hammer, Network, Search } from 'lucide-vue-next'
+import { ChevronsDownUp, ChevronsUpDown, Clock3, Coins, GanttChart, GitBranch, Network, Search } from 'lucide-vue-next'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import PlannerGantt from '@/components/planner/PlannerGantt.vue'
 import PlannerInspector from '@/components/planner/PlannerInspector.vue'
@@ -12,8 +12,7 @@ import PlannerShoppingList from '@/components/planner/PlannerShoppingList.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
 import { useCraftPlanner } from '@/composables/useCraftPlanner'
 import { useItems } from '@/composables/useItems'
-import { getItemImage } from '@/utils/itemImages'
-import { formatDuration, itemTypeColor, sourceLabel } from '@/utils/format'
+import { formatDuration, sourceLabel } from '@/utils/format'
 
 function normalizeQuantity(value: unknown): number {
   const parsed = Number(value)

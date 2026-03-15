@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { ArrowRight, CheckCircle2, ChevronDown, ChevronRight, GitBranch, Info, PackageSearch, Pin } from 'lucide-vue-next'
 import type { PlannerMethod, PlannerNode, PlannerSchedule } from '@/types'
 import { getItemImage } from '@/utils/itemImages'
-import { formatDuration, itemTypeColor, methodKindClasses, methodKindColor, methodKindLabel } from '@/utils/format'
+import { formatDuration, itemTypeColor, methodKindColor, methodKindLabel } from '@/utils/format'
 
 const props = defineProps<{
   focusNode: PlannerNode | null
