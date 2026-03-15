@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { BookOpen, Compass, GitBranch, Package } from 'lucide-vue-next'
+import { BookOpen, Compass, GitBranch, Github, Package } from 'lucide-vue-next'
+import SteamIcon from '@/components/icons/SteamIcon.vue'
+import AppFooter from '@/components/layout/AppFooter.vue'
 import { cn } from '@/lib/utils'
 
 const route = useRoute()
@@ -42,12 +44,35 @@ function isActive(path: string) {
             <span>{{ item.label }}</span>
           </RouterLink>
         </nav>
+
+        <div class="flex items-center gap-1">
+          <a
+            href="https://github.com/ardelato/k2-wiki"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub repository"
+            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+          >
+            <Github class="size-5" />
+          </a>
+          <a
+            href="https://store.steampowered.com/app/2834700/Koltera_2/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Koltera 2 on Steam"
+            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+          >
+            <SteamIcon class="size-5" />
+          </a>
+        </div>
       </div>
     </header>
 
     <main class="mx-auto w-full max-w-app px-4 py-6 sm:px-6 lg:py-8">
       <RouterView />
     </main>
+
+    <AppFooter />
 
     <nav
       class="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/94 px-3 pb-[calc(env(safe-area-inset-bottom)+0.55rem)] pt-2 backdrop-blur-xl md:hidden">
