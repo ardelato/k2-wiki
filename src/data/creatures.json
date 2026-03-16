@@ -10,20 +10,20 @@
       "Wind"
     ],
     "stats": {
-      "power": 1,
+      "power": 10,
       "grit": 11,
       "agility": 15,
       "smarts": 20,
-      "looting": 14,
+      "looting": 5,
       "luck": 12
     },
     "jobs": {
-      "chopping": 1,
-      "mining": 1,
-      "digging": 1,
-      "exploring": 1,
-      "fishing": 1,
-      "farming": 1
+      "chopping": 2,
+      "mining": 2,
+      "digging": 2,
+      "exploring": 2,
+      "fishing": 2,
+      "farming": 2
     },
     "summoningCost": [
       {
