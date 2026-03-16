@@ -4412,7 +4412,7 @@
                 "ingredients": [
                     {
                         "id": "water-vial",
-                        "amount": 2
+                        "amount": 1
                     },
                     {
                         "id": "bucket",
@@ -4440,7 +4440,7 @@
                 "ingredients": [
                     {
                         "id": "hide",
-                        "amount": 4
+                        "amount": 2
                     }
                 ],
                 "outputAmount": 1,
@@ -5796,6 +5796,15 @@
         "recipes": []
     },
     {
+        "id": "awaken-tree-reset-potion",
+        "name": "Awaken Tree Potion",
+        "type": "Consumable",
+        "buyValue": 250000,
+        "weeklyLimit": 1,
+        "description": "A potion that resets the Awaken Tree, refunding all spent Awaken Points. Can be bought at the Merchant.",
+        "recipes": []
+    },
+    {
         "id": "knowledge-orb",
         "name": "Knowledge Orb",
         "type": "Gathered",
@@ -6738,7 +6747,7 @@
         "recipes": [
             {
                 "workstation": "Workbench",
-                "levelRequirement": 60,
+                "levelRequirement": 40,
                 "ingredients": [
                     {
                         "id": "dungeon-dust",

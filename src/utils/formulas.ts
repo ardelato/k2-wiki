@@ -39,7 +39,7 @@ export const jobColors: Record<keyof Creature['jobs'], string> = {
 
 export const tierModifiers = {
   difficulty: [1, 1.5, 2, 2.5, 3],
-  duration: [1, 1.5, 2, 2.5, 3],
+  duration: [1, 1, 1, 1, 1],
   xp: [1.0, 1.2, 1.4, 1.6, 1.8],
   loot: [1, 2, 3, 4, 5],
 }
@@ -101,16 +101,17 @@ export function calculateDuration(
   expedition: Expedition,
   tier: number
 ): number {
-  const baseDuration = expedition.baseDuration * tierModifiers.duration[tier - 1]
+  const minSeconds = 300
+  const maxSeconds = 7200
   const difficultyRating = calculateDifficultyRating(expedition, tier)
 
-  if (partyScore <= 0) return Math.floor(baseDuration)
+  if (partyScore <= 0) return maxSeconds
 
-  const scoreRatio = difficultyRating / partyScore
-  const rawDuration = baseDuration * scoreRatio
-  const minDuration = baseDuration * 0.8
+  // Linear interpolation: 100% score = min duration (5 min), 0% score = max duration (2 hr)
+  const ratio = difficultyRating > 0 ? Math.min(partyScore / difficultyRating, 1) : 0
+  const duration = maxSeconds - ratio * (maxSeconds - minSeconds)
 
-  return Math.floor(Math.max(rawDuration, minDuration))
+  return Math.floor(Math.max(minSeconds, Math.min(duration, maxSeconds)))
 }
 
 export function estimateCompletionTime(
@@ -122,19 +123,42 @@ export function estimateCompletionTime(
   return Math.round(durationSeconds / 60)
 }
 
-export function calculateXpPerSecond(
+export function calculateExpeditionXp(
   expedition: Expedition,
-  tier: number = 1
+  tier: number = 1,
+  loopCount: number = 0,
+  partySize: number = 1
 ): number {
-  return expedition.baseXP * tierModifiers.xp[tier - 1]
+  const baseXP = expedition.baseXP
+  const xpMod = tierModifiers.xp[tier - 1]
+  const loopBonus = 1 + getLoopXpBonus(loopCount)
+  return Math.floor((baseXP * xpMod * loopBonus) / Math.max(1, partySize))
+}
+
+export function getLoopXpBonus(loopCount: number): number {
+  const rate = 0.01
+  const loopsPerBonus = 10
+  const maxBonus = 0.20
+  return Math.min(Math.floor(loopCount / loopsPerBonus) * rate, maxBonus)
+}
+
+export function getLootAmount(baseAmount: number, tier: number): number {
+  return baseAmount * tierModifiers.loot[tier - 1]
 }
 
 export function xpForLevel(level: number): number {
-  return 50 * (level - 1) * (level - 1)
+  if (level <= 1) return 0
+  return 50 * level * level
 }
 
 export function levelFromXp(xp: number): number {
-  return Math.floor(Math.sqrt(xp / 50)) + 1
+  if (xp <= 0) return 1
+  const level = Math.floor(Math.sqrt(xp / 50))
+  // Verify the level is correct
+  while (level > 1 && xp < xpForLevel(level)) {
+    return level - 1
+  }
+  return Math.max(1, level)
 }
 
 export function getRecommendedCreatures(

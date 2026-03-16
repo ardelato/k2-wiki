@@ -7,11 +7,13 @@ import {
   calculateDifficultyRating,
   calculatePartyScore,
   calculateDuration,
-  calculateXpPerSecond,
+  calculateExpeditionXp,
   estimateCompletionTime,
   xpForLevel,
   levelFromXp,
   getRecommendedCreatures,
+  getLoopXpBonus,
+  biomeMultiplier,
 } from '@/utils/formulas'
 
 const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
@@ -68,12 +70,31 @@ export function useExpeditions(creatures: Creature[]) {
 
   const recommendedCreatures = computed(() => {
     if (!selectedExpedition.value) return []
-    return getRecommendedCreatures(
+    const expedition = selectedExpedition.value
+    const biome = currentBiome.value
+    const remainingScore = difficultyRating.value - partyScore.value
+    const base = getRecommendedCreatures(
       creatures.filter(c => !partyCreatureIds.value.has(c.id)),
-      selectedExpedition.value,
+      expedition,
       creatureLevels.value,
-      currentBiome.value
+      biome
     )
+    return base.map(entry => {
+      let weightedStatSum = 0
+      for (const [stat, weight] of Object.entries(expedition.statWeights) as [keyof typeof entry.creature.stats, number][]) {
+        if (weight > 0) {
+          weightedStatSum += entry.creature.stats[stat] * weight
+        }
+      }
+      let suggestedLevel: number | null = null
+      if (weightedStatSum > 0) {
+        const biomeMult = biome ? biomeMultiplier(entry.creature, biome) : 1.0
+        const traitBonus = entry.creature.trait === expedition.trait ? 1.5 : 1.0
+        const ratingPerLevel = weightedStatSum * biomeMult * traitBonus
+        suggestedLevel = Math.max(1, Math.min(120, Math.ceil(remainingScore / ratingPerLevel)))
+      }
+      return { ...entry, suggestedLevel }
+    })
   })
 
   const difficultyRating = computed(() => {
@@ -106,16 +127,27 @@ export function useExpeditions(creatures: Creature[]) {
     return partyScore.value / difficultyRating.value
   })
 
-  const xpPerSecond = computed(() => {
-    if (!selectedExpedition.value) return 0
-    return calculateXpPerSecond(selectedExpedition.value, selectedTier.value)
+  const loopCount = ref(0)
+
+  const loopBonusPercent = computed(() => {
+    return Math.round(getLoopXpBonus(loopCount.value) * 100)
   })
 
   const totalXp = computed(() => {
-    if (!estimatedDuration.value || xpPerSecond.value <= 0) return null
-    const rawXp = Math.floor(xpPerSecond.value * estimatedDuration.value)
-    const maxXp = xpForLevel(120) - xpForLevel(1)
-    return Math.min(rawXp, maxXp)
+    if (!selectedExpedition.value) return null
+    const activeCreatures = partySlots.value.filter(Boolean).length
+    if (activeCreatures <= 0) return null
+    return calculateExpeditionXp(
+      selectedExpedition.value,
+      selectedTier.value,
+      loopCount.value,
+      activeCreatures
+    )
+  })
+
+  const xpPerMinute = computed(() => {
+    if (!totalXp.value || !estimatedDuration.value || estimatedDuration.value <= 0) return null
+    return Math.round(totalXp.value / (estimatedDuration.value / 60))
   })
 
   const levelsGained = computed(() => {
@@ -209,8 +241,10 @@ export function useExpeditions(creatures: Creature[]) {
     estimatedDuration,
     estimatedDurationMinutes,
     scoreRatio,
-    xpPerSecond,
+    loopCount,
+    loopBonusPercent,
     totalXp,
+    xpPerMinute,
     levelsGained,
     partyXpProgress,
     currentBiome,

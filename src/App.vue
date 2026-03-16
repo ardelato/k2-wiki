@@ -31,7 +31,7 @@ function isActive(path: string) {
           <span class="leading-tight">
             <span class="flex items-center gap-1.5 text-sm font-semibold tracking-wide text-muted-foreground">
               Koltera 2
-              <span class="rounded-full bg-primary px-1.5 py-0.5 text-[0.625rem] font-semibold leading-none text-primary-foreground" title="Content is based on this game version">v1.7</span>
+              <span class="rounded-full bg-primary px-1.5 py-0.5 text-[0.625rem] font-semibold leading-none text-primary-foreground" title="Content is based on this game version">v2.0</span>
             </span>
             <span class="block text-lg font-extrabold text-foreground">Wiki</span>
           </span>

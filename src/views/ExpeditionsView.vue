@@ -6,7 +6,7 @@ import { Compass, Minus, Plus, Target, X } from 'lucide-vue-next'
 import { useCreatures } from '@/composables/useCreatures'
 import { useExpeditions } from '@/composables/useExpeditions'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { statAbbreviations, statLabels, calculateXpPerSecond, tierModifiers } from '@/utils/formulas'
+import { statAbbreviations, statLabels, tierModifiers } from '@/utils/formulas'
 import { formatDuration, toTitleCase } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
 import type { Creature, ElementType, ExpeditionStatWeights } from '@/types'
@@ -27,8 +27,10 @@ const {
   partyScore,
   estimatedDuration,
   scoreRatio,
+  loopCount,
+  loopBonusPercent,
   totalXp,
-  levelsGained,
+  xpPerMinute,
   partyXpProgress,
   assignCreatureToSlot,
   removeCreatureFromSlot,
@@ -163,6 +165,25 @@ function stepCreatureLevel(creatureId: string, currentLevel: number, delta: numb
   updateCreatureLevel(creatureId, clampLevel(currentLevel + delta))
 }
 
+function clampLoopCount(value: number): number {
+  if (Number.isNaN(value)) return 0
+  return Math.max(0, Math.min(200, Math.round(value)))
+}
+
+function stepLoopCount(delta: number) {
+  loopCount.value = clampLoopCount(loopCount.value + delta)
+}
+
+function normalizeLoopCountOnBlur(event: FocusEvent) {
+  const target = event.target as HTMLInputElement
+  if (!target.value.trim()) {
+    loopCount.value = 0
+    return
+  }
+  const parsed = Number(target.value)
+  loopCount.value = clampLoopCount(parsed)
+}
+
 function selectAllCreatureTypes() {
   selectedCreatureTypes.value = [...creatureTypes]
 }
@@ -203,44 +224,37 @@ function toggleCreatureTier(tier: number) {
   <section class="space-y-5 lg:space-y-6">
     <div class="surface-card p-2 lg:hidden">
       <div class="grid grid-cols-3 gap-2">
-        <button
-          class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
+        <button class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
           :class="mobileSection === 'list' ? 'bg-primary text-primary-foreground shadow-glow' : 'bg-muted/45 text-muted-foreground'"
-          @click="mobileSection = 'list'"
-        >
+          @click="mobileSection = 'list'">
           List
         </button>
-        <button
-          class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
+        <button class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
           :class="mobileSection === 'details' ? 'bg-primary text-primary-foreground shadow-glow' : 'bg-muted/45 text-muted-foreground'"
-          @click="mobileSection = 'details'"
-        >
+          @click="mobileSection = 'details'">
           Details
         </button>
-        <button
-          class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
+        <button class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
           :class="mobileSection === 'creature' ? 'bg-primary text-primary-foreground shadow-glow' : 'bg-muted/45 text-muted-foreground'"
-          @click="mobileSection = 'creature'"
-        >
+          @click="mobileSection = 'creature'">
           Creature
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 lg:h-[calc(100vh-12rem)] lg:grid-cols-[minmax(260px,0.9fr)_minmax(320px,1fr)_minmax(320px,1fr)] lg:grid-rows-[minmax(0,1fr)]">
-      <section class="surface-card flex flex-col overflow-hidden" :class="!isDesktop && mobileSection !== 'list' ? 'hidden' : ''">
+    <div
+      class="grid grid-cols-1 gap-4 lg:h-[calc(100vh-12rem)] lg:grid-cols-[minmax(260px,0.9fr)_minmax(320px,1fr)_minmax(320px,1fr)] lg:grid-rows-[minmax(0,1fr)]">
+      <section class="surface-card flex flex-col overflow-hidden"
+        :class="!isDesktop && mobileSection !== 'list' ? 'hidden' : ''">
         <div class="flex items-center justify-between border-b border-border/70 px-4 py-3">
           <h2 class="text-base font-bold">Expeditions</h2>
         </div>
 
         <div class="max-h-[62vh] overflow-y-auto lg:min-h-0 lg:max-h-none lg:flex-1">
-          <button
-            v-for="expedition in filteredExpeditions"
-            :key="expedition.id"
+          <button v-for="expedition in filteredExpeditions" :key="expedition.id"
             class="focus-ring block w-full border-b border-border/55 px-4 py-3 text-left transition hover:bg-muted/35"
             :class="rowSelected(expedition.id) ? 'bg-primary/20 border-l-2 border-l-primary' : ''"
-            @click="chooseExpedition(expedition)"
-          >
+            @click="chooseExpedition(expedition)">
             <div class="flex items-start justify-between gap-2">
               <p class="line-clamp-1 font-semibold text-foreground">{{ expedition.name }}</p>
               <span class="font-mono text-sm text-primary">{{ expedition.baseRating }}</span>
@@ -256,39 +270,63 @@ function toggleCreatureTier(tier: number) {
             </div>
           </button>
 
-          <div
-            v-if="filteredExpeditions.length === 0"
-            class="px-4 py-8 text-center text-sm text-muted-foreground"
-          >
+          <div v-if="filteredExpeditions.length === 0" class="px-4 py-8 text-center text-sm text-muted-foreground">
             No expeditions match your filters.
           </div>
         </div>
       </section>
 
-      <section class="surface-card flex flex-col overflow-hidden" :class="!isDesktop && mobileSection !== 'details' ? 'hidden' : ''">
+      <section class="surface-card flex flex-col overflow-hidden"
+        :class="!isDesktop && mobileSection !== 'details' ? 'hidden' : ''">
         <div class="border-b border-border/70 px-4 py-3">
           <h2 class="text-base font-bold">Expedition Details</h2>
         </div>
 
-        <div v-if="selectedExpedition" class="max-h-[62vh] space-y-4 overflow-y-auto p-4 animate-fade-in lg:min-h-0 lg:max-h-none lg:flex-1">
+        <div v-if="selectedExpedition"
+          class="max-h-[62vh] space-y-4 overflow-y-auto p-4 animate-fade-in lg:min-h-0 lg:max-h-none lg:flex-1">
           <div>
             <h3 class="text-2xl font-black leading-tight">{{ selectedExpedition.name }}</h3>
             <p class="mt-1 text-sm text-muted-foreground">{{ selectedExpedition.description }}</p>
           </div>
 
-          <!-- Tier Selector -->
-          <div class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Tier</h4>
-            <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
-              <button
-                v-for="t in 5"
-                :key="t"
-                class="focus-ring rounded-md px-3 py-1.5 text-xs font-semibold transition"
-                :class="selectedTier === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
-                @click="selectedTier = t"
-              >
-                T{{ t }}
-              </button>
+          <!-- Tier & Loop Count -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Tier</h4>
+              <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
+                <button v-for="t in 5" :key="t"
+                  class="focus-ring rounded-md px-3 py-1.5 text-xs font-semibold transition"
+                  :class="selectedTier === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'"
+                  @click="selectedTier = t">
+                  T{{ t }}
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Loop Count</h4>
+              <div class="flex items-center gap-2">
+                <div class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85">
+                  <button
+                    class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="loopCount <= 0" aria-label="Decrease loop count by 10" @click="stepLoopCount(-10)">
+                    <Minus class="size-3" />
+                  </button>
+                  <input type="text" inputmode="numeric" pattern="[0-9]*"
+                    class="focus-ring h-8 w-14 border-x border-input bg-transparent text-center text-sm font-mono"
+                    :value="loopCount" aria-label="Loop count" @blur="normalizeLoopCountOnBlur($event)" />
+                  <button
+                    class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="loopCount >= 200" aria-label="Increase loop count by 10" @click="stepLoopCount(10)">
+                    <Plus class="size-3" />
+                  </button>
+                </div>
+                <span v-if="loopBonusPercent > 0"
+                  class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-400">
+                  +{{ loopBonusPercent }}%
+                </span>
+              </div>
+              <p class="text-[11px] text-muted-foreground">+1% XP per 10 loops, max +20%</p>
             </div>
           </div>
 
@@ -303,18 +341,19 @@ function toggleCreatureTier(tier: number) {
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
               <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Trait</p>
-              <p class="font-semibold text-amber-300">{{ selectedExpedition.trait ? toTitleCase(selectedExpedition.trait) : 'None' }}</p>
+              <p class="font-semibold text-amber-300">{{ selectedExpedition.trait ?
+                toTitleCase(selectedExpedition.trait) : 'None' }}</p>
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Base Duration</p>
-              <p class="font-semibold">{{ formatDuration(selectedExpedition.baseDuration) }}</p>
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Base XP (Pool)</p>
+              <p class="font-semibold">{{ selectedExpedition.baseXP }}</p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">XP/sec</p>
-              <p class="font-semibold">{{ calculateXpPerSecond(selectedExpedition, selectedTier).toFixed(2) }}</p>
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">XP / Creature</p>
+              <p class="font-semibold">{{ totalXp ? totalXp.toLocaleString() : '—' }}</p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
               <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Max Party</p>
@@ -328,11 +367,8 @@ function toggleCreatureTier(tier: number) {
 
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Stat Weights</h4>
-            <div
-              v-for="[key, weight] in weightedStats"
-              :key="key"
-              class="grid grid-cols-[80px_minmax(0,1fr)_44px] items-center gap-2"
-            >
+            <div v-for="[key, weight] in weightedStats" :key="key"
+              class="grid grid-cols-[80px_minmax(0,1fr)_44px] items-center gap-2">
               <span class="text-xs text-muted-foreground">{{ statLabels[key] }}</span>
               <div class="h-2 rounded-full bg-muted">
                 <div class="h-full rounded-full bg-primary" :style="{ width: `${weight * 100}%` }" />
@@ -345,33 +381,24 @@ function toggleCreatureTier(tier: number) {
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Party</h4>
             <div class="flex flex-wrap gap-2">
-              <div
-                v-for="(slot, index) in partySlots"
-                :key="index"
-                class="relative size-20 overflow-hidden rounded-lg border transition"
-                :class="[
+              <div v-for="(slot, index) in partySlots" :key="index"
+                class="relative size-20 overflow-hidden rounded-lg border transition" :class="[
                   slot
                     ? 'border-border bg-card/50'
                     : activeSlotIndex === index
                       ? 'border-primary bg-primary/10 border-dashed'
                       : 'border-border/50 border-dashed bg-muted/20 hover:border-accent/45 cursor-pointer',
-                ]"
-                @click="!slot ? setActiveSlot(index) : undefined"
-              >
+                ]" @click="!slot ? setActiveSlot(index) : undefined">
                 <template v-if="slot">
-                  <img
-                    :src="getCreatureImage(slot)"
-                    :alt="`${slot.name} artwork`"
-                    class="size-full object-cover"
-                  />
+                  <img :src="getCreatureImage(slot)" :alt="`${slot.name} artwork`" class="size-full object-cover" />
                   <div class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/75 px-1.5 py-1">
                     <p class="min-w-0 truncate text-[10px] font-semibold text-white">{{ slot.name }}</p>
-                    <span class="shrink-0 font-mono text-[10px] font-semibold text-primary">{{ getCreatureSlotRating(slot) }}</span>
+                    <span class="shrink-0 font-mono text-[10px] font-semibold text-primary">{{
+                      getCreatureSlotRating(slot) }}</span>
                   </div>
                   <button
                     class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
-                    @click.stop="removeCreatureFromSlot(index)"
-                  >
+                    @click.stop="removeCreatureFromSlot(index)">
                     <X class="size-3" />
                   </button>
                 </template>
@@ -398,34 +425,44 @@ function toggleCreatureTier(tier: number) {
                 <p class="font-mono text-sm font-semibold">{{ difficultyRating }}</p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Duration</p>
-                <p class="font-mono text-sm font-semibold">{{ estimatedDuration ? formatDuration(estimatedDuration) : '—' }}</p>
-              </div>
-              <div class="rounded-md bg-card px-2 py-2">
                 <p class="text-muted-foreground">Score Ratio</p>
-                <p
-                  class="font-mono text-sm font-semibold"
-                  :class="scoreRatio && scoreRatio >= 1 ? 'text-emerald-400' : 'text-amber-400'"
-                >
+                <p class="font-mono text-sm font-semibold"
+                  :class="scoreRatio && scoreRatio >= 1 ? 'text-emerald-400' : 'text-amber-400'">
                   {{ scoreRatio ? scoreRatio.toFixed(2) : '—' }}
                 </p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Total XP</p>
-                <p class="font-mono text-sm font-semibold">{{ totalXp ? totalXp.toLocaleString() : '—' }}</p>
+                <p class="text-muted-foreground">Duration / Run</p>
+                <p class="font-mono text-sm font-semibold">{{ estimatedDuration ? formatDuration(estimatedDuration) :
+                  '—' }}</p>
+                <p v-if="loopCount > 0 && estimatedDuration" class="mt-0.5 text-[10px] text-muted-foreground">
+                  {{ formatDuration(estimatedDuration * loopCount) }}
+                </p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Levels</p>
-                <p class="font-mono text-sm font-semibold">{{ levelsGained ?? '—' }}</p>
+                <p class="text-muted-foreground">XP / Creature</p>
+                <p class="font-mono text-sm font-semibold">
+                  {{ totalXp ? totalXp.toLocaleString() : '—' }}
+                  <span v-if="loopBonusPercent > 0 && totalXp"
+                    class="ml-0.5 inline-block rounded bg-emerald-500/15 px-1 py-px text-[10px] font-semibold text-emerald-400">
+                    +{{ loopBonusPercent }}%
+                  </span>
+                </p>
+              </div>
+              <div class="rounded-md bg-card px-2 py-2">
+                <p class="text-muted-foreground">XP Rate</p>
+                <div class="flex items-center justify-center gap-2">
+                  <p class="font-mono text-sm font-semibold">{{ xpPerMinute ? xpPerMinute.toLocaleString() : '—' }}<span
+                      class="text-[10px] text-muted-foreground">/m</span></p>
+                  <div class="h-4 border-l border-border/50" />
+                  <p class="font-mono text-sm font-semibold">{{ xpPerMinute ? (xpPerMinute / 60).toFixed(2) : '—'
+                  }}<span class="text-[10px] text-muted-foreground">/s</span></p>
+                </div>
               </div>
             </div>
 
             <div v-if="partyXpProgress.length" class="space-y-1.5">
-              <div
-                v-for="entry in partyXpProgress"
-                :key="entry.creature.id"
-                class="flex items-center gap-2"
-              >
+              <div v-for="entry in partyXpProgress" :key="entry.creature.id" class="flex items-center gap-2">
                 <span class="w-16 shrink-0 truncate font-mono text-[10px] font-semibold text-muted-foreground">
                   {{ entry.creature.name }}
                 </span>
@@ -433,10 +470,8 @@ function toggleCreatureTier(tier: number) {
                   {{ entry.currentLevel }}
                 </span>
                 <div class="relative h-1.5 flex-1 overflow-hidden rounded-full bg-muted/60">
-                  <div
-                    class="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-500"
-                    :style="{ width: `${entry.progress * 100}%` }"
-                  />
+                  <div class="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-500"
+                    :style="{ width: `${entry.progress * 100}%` }" />
                 </div>
                 <span class="w-7 shrink-0 font-mono text-[10px] font-semibold text-foreground">
                   {{ entry.targetLevel }}
@@ -448,71 +483,51 @@ function toggleCreatureTier(tier: number) {
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Rewards</h4>
             <div class="flex flex-wrap gap-2">
-              <span
-                v-for="reward in selectedExpedition.rewards"
-                :key="reward.itemId"
-                class="inline-flex items-center gap-1 rounded-full border border-border bg-muted/45 px-3 py-1 text-xs font-mono"
-              >
-                <img v-if="getItemImage({ id: reward.itemId })" :src="getItemImage({ id: reward.itemId })" :alt="toTitleCase(reward.itemId)" class="size-4 object-contain" />
+              <span v-for="reward in selectedExpedition.rewards" :key="reward.itemId"
+                class="inline-flex items-center gap-1 rounded-full border border-border bg-muted/45 px-3 py-1 text-xs font-mono">
+                <img v-if="getItemImage({ id: reward.itemId })" :src="getItemImage({ id: reward.itemId })"
+                  :alt="toTitleCase(reward.itemId)" class="size-4 object-contain" />
                 {{ reward.amount * tierModifiers.loot[selectedTier - 1] }}x {{ toTitleCase(reward.itemId) }}
               </span>
             </div>
           </div>
         </div>
 
-        <div v-else class="flex min-h-[220px] flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
+        <div v-else
+          class="flex min-h-[220px] flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground">
           <Compass class="size-8 text-accent/65" />
           <p class="text-sm">Select an expedition from the list.</p>
         </div>
       </section>
 
-      <section class="surface-card flex flex-col overflow-hidden" :class="!isDesktop && mobileSection !== 'creature' ? 'hidden' : ''">
+      <section class="surface-card flex flex-col overflow-hidden"
+        :class="!isDesktop && mobileSection !== 'creature' ? 'hidden' : ''">
         <div class="border-b border-border/70 px-4 py-3">
           <h2 class="text-base font-bold">Select Creature</h2>
         </div>
 
         <div class="space-y-3 border-b border-border/70 px-4 py-3">
-          <input
-            v-model="creatureSearch"
-            type="text"
-            placeholder="Search creature"
-            class="focus-ring w-full rounded-lg border border-input bg-background/70 px-3 py-2 text-sm"
-          />
+          <input v-model="creatureSearch" type="text" placeholder="Search creature"
+            class="focus-ring w-full rounded-lg border border-input bg-background/70 px-3 py-2 text-sm" />
 
           <div class="flex flex-wrap gap-2">
-            <button
-              class="pill focus-ring"
-              :class="allCreatureTypesSelected ? 'pill-active' : ''"
-              @click="selectAllCreatureTypes"
-            >
+            <button class="pill focus-ring" :class="allCreatureTypesSelected ? 'pill-active' : ''"
+              @click="selectAllCreatureTypes">
               All
             </button>
-            <button
-              v-for="type in creatureTypes"
-              :key="type"
-              class="pill focus-ring"
-              :class="selectedCreatureTypes.includes(type) ? 'pill-active' : ''"
-              @click="toggleCreatureType(type)"
-            >
+            <button v-for="type in creatureTypes" :key="type" class="pill focus-ring"
+              :class="selectedCreatureTypes.includes(type) ? 'pill-active' : ''" @click="toggleCreatureType(type)">
               {{ type }}
             </button>
           </div>
 
           <div class="flex flex-wrap gap-2">
-            <button
-              class="pill focus-ring font-mono"
-              :class="allCreatureTiersSelected ? 'pill-active' : ''"
-              @click="selectAllCreatureTiers"
-            >
+            <button class="pill focus-ring font-mono" :class="allCreatureTiersSelected ? 'pill-active' : ''"
+              @click="selectAllCreatureTiers">
               All Tiers
             </button>
-            <button
-              v-for="tier in creatureTierOptions"
-              :key="tier"
-              class="pill focus-ring font-mono"
-              :class="selectedCreatureTiers.includes(tier) ? 'pill-active' : ''"
-              @click="toggleCreatureTier(tier)"
-            >
+            <button v-for="tier in creatureTierOptions" :key="tier" class="pill focus-ring font-mono"
+              :class="selectedCreatureTiers.includes(tier) ? 'pill-active' : ''" @click="toggleCreatureTier(tier)">
               T{{ tier + 1 }}
             </button>
           </div>
@@ -520,42 +535,27 @@ function toggleCreatureTier(tier: number) {
           <div v-if="weightedStats.length" class="flex items-center gap-1.5">
             <Target class="size-4 text-accent" />
             <span class="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Focus</span>
-            <span
-              v-for="[key] in weightedStats"
-              :key="key"
-              class="rounded-md border border-accent/35 bg-accent/12 px-2 py-0.5 text-xs font-semibold text-accent"
-            >
+            <span v-for="[key] in weightedStats" :key="key"
+              class="rounded-md border border-accent/35 bg-accent/12 px-2 py-0.5 text-xs font-semibold text-accent">
               {{ statAbbreviations[key] }}
             </span>
           </div>
         </div>
 
         <div class="max-h-[58vh] space-y-2 overflow-y-auto p-3 lg:min-h-0 lg:max-h-none lg:flex-1">
-          <button
-            v-for="{ creature, rating, level } in filteredRecommended"
-            :key="creature.id"
-            class="focus-ring block w-full rounded-xl border px-3 py-3 text-left transition"
-            :class="hasEmptySlot
+          <button v-for="{ creature, rating, level, suggestedLevel } in filteredRecommended" :key="creature.id"
+            class="focus-ring block w-full rounded-xl border px-3 py-3 text-left transition" :class="hasEmptySlot
               ? 'border-border bg-card/50 hover:border-accent/45 hover:bg-muted/25'
-              : 'border-border/50 bg-card/30 opacity-60 cursor-not-allowed'"
-            @click="chooseCreature(creature)"
-          >
+              : 'border-border/50 bg-card/30 opacity-60 cursor-not-allowed'" @click="chooseCreature(creature)">
             <div class="flex items-start gap-3">
-              <img
-                :src="getCreatureImage(creature)"
-                :alt="`${creature.name} artwork`"
-                class="size-10 rounded-md border border-border object-cover"
-              />
+              <img :src="getCreatureImage(creature)" :alt="`${creature.name} artwork`"
+                class="size-10 rounded-md border border-border object-cover" />
 
               <div class="min-w-0 flex-1">
                 <p class="truncate font-semibold text-foreground">{{ creature.name }}</p>
                 <div class="mt-1 flex flex-wrap gap-1 text-xs">
-                  <span
-                    v-for="type in creature.types"
-                    :key="type"
-                    class="rounded-full bg-muted px-2 py-0.5 font-semibold"
-                    :style="{ color: typeColor(type) }"
-                  >
+                  <span v-for="type in creature.types" :key="type"
+                    class="rounded-full bg-muted px-2 py-0.5 font-semibold" :style="{ color: typeColor(type) }">
                     {{ type }}
                   </span>
                   <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
@@ -563,31 +563,28 @@ function toggleCreatureTier(tier: number) {
               </div>
 
               <div class="text-right" @click.stop>
-                <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Lvl</p>
+                <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Lvl
+                  <span v-if="suggestedLevel != null" class="ml-1 normal-case tracking-normal"
+                    :class="level >= suggestedLevel ? 'text-emerald-400' : 'text-amber-400'">
+                    (Suggested: {{ suggestedLevel }})
+                  </span>
+                </p>
                 <div class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85">
                   <button
                     class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="level <= 1"
-                    aria-label="Decrease creature level"
-                    @click.stop="stepCreatureLevel(creature.id, level, -1)"
-                  >
+                    :disabled="level <= 1" aria-label="Decrease creature level"
+                    @click.stop="stepCreatureLevel(creature.id, level, -1)">
                     <Minus class="size-3" />
                   </button>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
+                  <input type="text" inputmode="numeric" pattern="[0-9]*"
                     class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center text-xs font-mono"
-                    :value="level"
-                    aria-label="Creature level"
-                    @blur="normalizeLevelOnBlur(creature.id, level, $event)"
-                  />
+                    :value="level" aria-label="Creature level"
+                    @blur="normalizeLevelOnBlur(creature.id, level, $event)" />
                   <button
                     class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="level >= 120"
-                    aria-label="Increase creature level"
-                    @click.stop="stepCreatureLevel(creature.id, level, 1)"
-                  >
+                    :disabled="level >= 120" aria-label="Increase creature level"
+                    @click.stop="stepCreatureLevel(creature.id, level, 1)">
                     <Plus class="size-3" />
                   </button>
                 </div>
@@ -596,23 +593,21 @@ function toggleCreatureTier(tier: number) {
             </div>
 
             <div v-if="weightedStats.length" class="mt-3 space-y-1.5">
-              <div
-                v-for="[key, weight] in weightedStats"
-                :key="key"
-                class="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2"
-              >
-                <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{{ statAbbreviations[key] }}</span>
+              <div v-for="[key, weight] in weightedStats" :key="key"
+                class="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{{
+                  statAbbreviations[key]
+                }}</span>
                 <div class="h-1.5 rounded-full bg-muted">
-                  <div
-                    class="h-full rounded-full bg-primary"
-                    :style="{ width: `${statBar(creature, key)}%`, opacity: 0.45 + weight * 0.55 }"
-                  />
+                  <div class="h-full rounded-full bg-primary"
+                    :style="{ width: `${statBar(creature, key)}%`, opacity: 0.45 + weight * 0.55 }" />
                 </div>
               </div>
             </div>
           </button>
 
-          <div v-if="filteredRecommended.length === 0" class="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-7 text-center text-sm text-muted-foreground">
+          <div v-if="filteredRecommended.length === 0"
+            class="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-7 text-center text-sm text-muted-foreground">
             {{ selectedExpedition ? 'No creatures match your creature filters.' : 'Select an expedition first.' }}
           </div>
         </div>
