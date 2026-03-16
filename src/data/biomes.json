@@ -4,11 +4,10 @@
     "name": "Forest",
     "description": "A dense forest with tall trees and undergrowth.",
     "advantage": [
-      "Wind",
-      "Earth"
+      "Wind"
     ],
     "disadvantage": [
-      "Fire"
+      "Earth"
     ]
   },
   {
@@ -43,7 +42,7 @@
       "Fire"
     ],
     "disadvantage": [
-      "Earth"
+      "Wind"
     ]
   },
   {
@@ -77,7 +76,8 @@
       "Water"
     ],
     "disadvantage": [
-      "Fire"
+      "Fire",
+      "Earth"
     ]
   }
 ]
