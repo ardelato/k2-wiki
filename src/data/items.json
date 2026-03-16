@@ -5796,6 +5796,15 @@
         "recipes": []
     },
     {
+        "id": "awaken-tree-reset-potion",
+        "name": "Awaken Tree Potion",
+        "type": "Consumable",
+        "buyValue": 250000,
+        "weeklyLimit": 1,
+        "description": "A potion that resets the Awaken Tree, refunding all spent Awaken Points. Can be bought at the Merchant.",
+        "recipes": []
+    },
+    {
         "id": "knowledge-orb",
         "name": "Knowledge Orb",
         "type": "Gathered",
