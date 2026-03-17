@@ -115,6 +115,21 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
   return 'text-foreground border-border bg-muted/35'
 }
 
+const selectedCreatureStats = computed<CreatureStats | undefined>(() => {
+  if (!selectedCreature.value) return undefined
+  const level = getLevel(selectedCreature.value.id)
+  if (level <= 1) return undefined
+  const base = selectedCreature.value.stats
+  return {
+    power: base.power * level,
+    grit: base.grit * level,
+    agility: base.agility * level,
+    smarts: base.smarts * level,
+    looting: base.looting * level,
+    luck: base.luck * level,
+  }
+})
+
 const maxJobLevel = 10
 </script>
 
@@ -466,9 +481,14 @@ const maxJobLevel = 10
 
             <!-- Stats with Radar Chart -->
             <section class="border-t border-border/60 pt-4">
-              <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Stats</h3>
+              <div class="mb-3 flex items-baseline justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Stats</h3>
+                <span v-if="selectedCreatureStats" class="font-mono text-[10px] text-muted-foreground">
+                  LVL {{ getLevel(selectedCreature.id) }}
+                </span>
+              </div>
               <div class="flex justify-center">
-                <StatRadarChart :creature="selectedCreature" :size="180" />
+                <StatRadarChart :creature="selectedCreature" :stats-override="selectedCreatureStats" :size="180" />
               </div>
               <div class="mt-3 grid grid-cols-3 gap-2">
                 <div
@@ -477,7 +497,8 @@ const maxJobLevel = 10
                   class="rounded-lg border px-2 py-2 text-center transition-colors"
                   :class="statHighlight(selectedCreature, statKey)"
                 >
-                  <p class="font-mono text-xs">{{ selectedCreature.stats[statKey] }}</p>
+                  <p class="font-mono text-xs">{{ (selectedCreatureStats ?? selectedCreature.stats)[statKey] }}</p>
+                  <p v-if="selectedCreatureStats" class="font-mono text-[10px] text-muted-foreground/60">(BASE {{ selectedCreature.stats[statKey] }})</p>
                   <p class="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{{ statLabel }}</p>
                 </div>
               </div>
@@ -628,9 +649,14 @@ const maxJobLevel = 10
 
             <!-- Stats with Radar Chart -->
             <section class="border-t border-border/60 pt-4">
-              <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Stats</h3>
+              <div class="mb-3 flex items-baseline justify-between">
+                <h3 class="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Stats</h3>
+                <span v-if="selectedCreatureStats" class="font-mono text-[10px] text-muted-foreground">
+                  LVL {{ getLevel(selectedCreature.id) }}
+                </span>
+              </div>
               <div class="flex justify-center">
-                <StatRadarChart :creature="selectedCreature" :size="160" />
+                <StatRadarChart :creature="selectedCreature" :stats-override="selectedCreatureStats" :size="160" />
               </div>
               <div class="mt-3 grid grid-cols-3 gap-2">
                 <div
@@ -639,7 +665,8 @@ const maxJobLevel = 10
                   class="rounded-lg border px-2 py-2 text-center transition-colors"
                   :class="statHighlight(selectedCreature, statKey)"
                 >
-                  <p class="font-mono text-xs">{{ selectedCreature.stats[statKey] }}</p>
+                  <p class="font-mono text-xs">{{ (selectedCreatureStats ?? selectedCreature.stats)[statKey] }}</p>
+                  <p v-if="selectedCreatureStats" class="font-mono text-[10px] text-muted-foreground/60">(BASE {{ selectedCreature.stats[statKey] }})</p>
                   <p class="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{{ statLabel }}</p>
                 </div>
               </div>

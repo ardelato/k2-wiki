@@ -6,10 +6,15 @@ import { statAbbreviations } from '@/utils/formulas'
 const props = withDefaults(defineProps<{
   creature: Creature
   size?: number
+  statsOverride?: CreatureStats
 }>(), { size: 120 })
 
-const maxStat = 40
-const stats = computed(() => Object.entries(props.creature.stats) as [keyof CreatureStats, number][])
+const stats = computed(() => Object.entries(props.statsOverride ?? props.creature.stats) as [keyof CreatureStats, number][])
+const maxStat = computed(() => {
+  const values = stats.value.map(([, v]) => v)
+  const peak = Math.max(...values)
+  return peak > 0 ? peak : 40
+})
 const centerX = computed(() => props.size / 2)
 const centerY = computed(() => props.size / 2)
 const radius = computed(() => (props.size / 2) - 20)
@@ -18,7 +23,7 @@ const startAngle = -Math.PI / 2
 
 function getPoint(index: number, value: number) {
   const angle = startAngle + index * angleStep.value
-  const r = (Math.min(value, maxStat) / maxStat) * radius.value
+  const r = (Math.min(value, maxStat.value) / maxStat.value) * radius.value
   return { x: centerX.value + r * Math.cos(angle), y: centerY.value + r * Math.sin(angle) }
 }
 
