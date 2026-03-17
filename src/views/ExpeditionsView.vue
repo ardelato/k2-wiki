@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
-import { Compass, Minus, Plus, Target, X } from 'lucide-vue-next'
+import { Check, Compass, Info, Minus, Plus, Target, X } from 'lucide-vue-next'
 import { useCreatures } from '@/composables/useCreatures'
 import { useExpeditions } from '@/composables/useExpeditions'
+import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { statAbbreviations, statLabels, tierModifiers } from '@/utils/formulas'
 import { formatDuration, toTitleCase } from '@/utils/format'
@@ -39,10 +40,13 @@ const {
   updateCreatureLevel,
 } = useExpeditions(creatures.value)
 
+const { collectionLevels, isOwned } = useCreatureCollection()
+
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
 const creatureSearch = ref('')
 const selectedCreatureTypes = ref<ElementType[]>([...creatureTypes])
 const selectedCreatureTiers = ref<number[]>([])
+const ownedOnly = ref(false)
 
 type MobileSection = 'list' | 'details' | 'creature'
 
@@ -102,6 +106,22 @@ const filteredRecommended = computed(() => {
     const matchesTier = selectedCreatureTiers.value.length === 0 || selectedCreatureTiers.value.includes(creature.tier)
     return matchesSearch && matchesType && matchesTier
   })
+})
+
+// Auto-fill creature levels from collection for entries still at default (1)
+watchEffect(() => {
+  const levels = collectionLevels.value
+  for (const [id, level] of Object.entries(levels)) {
+    const rec = recommendedCreatures.value.find(r => r.creature.id === id)
+    if (rec && rec.level === 1) {
+      updateCreatureLevel(id, level)
+    }
+  }
+})
+
+const displayRecommended = computed(() => {
+  if (!ownedOnly.value) return filteredRecommended.value
+  return filteredRecommended.value.filter(({ creature }) => isOwned(creature.id))
 })
 
 const hasEmptySlot = computed(() => partySlots.value.some(s => s === null))
@@ -532,6 +552,13 @@ function toggleCreatureTier(tier: number) {
             </button>
           </div>
 
+          <div class="flex flex-wrap gap-2">
+            <button class="pill focus-ring" :class="ownedOnly ? 'pill-active' : ''"
+              @click="ownedOnly = !ownedOnly">
+              Summoned Only
+            </button>
+          </div>
+
           <div v-if="weightedStats.length" class="flex items-center gap-1.5">
             <Target class="size-4 text-accent" />
             <span class="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Focus</span>
@@ -540,16 +567,31 @@ function toggleCreatureTier(tier: number) {
               {{ statAbbreviations[key] }}
             </span>
           </div>
+
+          <div class="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2">
+            <Info class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+            <p class="text-[11px] text-muted-foreground">
+              Level changes here are per-expedition only and do not update your collection.
+            </p>
+          </div>
         </div>
 
         <div class="max-h-[58vh] space-y-2 overflow-y-auto p-3 lg:min-h-0 lg:max-h-none lg:flex-1">
-          <button v-for="{ creature, rating, level, suggestedLevel } in filteredRecommended" :key="creature.id"
+          <button v-for="{ creature, rating, level, suggestedLevel } in displayRecommended" :key="creature.id"
             class="focus-ring block w-full rounded-xl border px-3 py-3 text-left transition" :class="hasEmptySlot
               ? 'border-border bg-card/50 hover:border-accent/45 hover:bg-muted/25'
               : 'border-border/50 bg-card/30 opacity-60 cursor-not-allowed'" @click="chooseCreature(creature)">
             <div class="flex items-start gap-3">
-              <img :src="getCreatureImage(creature)" :alt="`${creature.name} artwork`"
-                class="size-10 rounded-md border border-border object-cover" />
+              <div class="relative shrink-0">
+                <img :src="getCreatureImage(creature)" :alt="`${creature.name} artwork`"
+                  class="size-10 rounded-md border border-border object-cover" />
+                <span
+                  v-if="isOwned(creature.id)"
+                  class="absolute -left-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md"
+                >
+                  <Check class="size-2.5" />
+                </span>
+              </div>
 
               <div class="min-w-0 flex-1">
                 <p class="truncate font-semibold text-foreground">{{ creature.name }}</p>
@@ -606,7 +648,7 @@ function toggleCreatureTier(tier: number) {
             </div>
           </button>
 
-          <div v-if="filteredRecommended.length === 0"
+          <div v-if="displayRecommended.length === 0"
             class="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-7 text-center text-sm text-muted-foreground">
             {{ selectedExpedition ? 'No creatures match your creature filters.' : 'Select an expedition first.' }}
           </div>
