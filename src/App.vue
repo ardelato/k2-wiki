@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { BookOpen, Compass, FolderHeart, GitBranch, Github, Package } from 'lucide-vue-next'
+import { BookOpen, Compass, GitBranch, Github, Package } from 'lucide-vue-next'
 import SteamIcon from '@/components/icons/SteamIcon.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,6 @@ const route = useRoute()
 
 const navItems = [
   { label: 'Beastiary', to: '/', icon: BookOpen },
-  { label: 'Collection', to: '/collection', icon: FolderHeart },
   { label: 'Items', to: '/items', icon: Package },
   { label: 'Planner', to: '/planner', icon: GitBranch },
   { label: 'Expeditions', to: '/expeditions', icon: Compass },
@@ -80,7 +79,7 @@ function isActive(path: string) {
 
     <nav
       class="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/94 px-3 pb-[calc(env(safe-area-inset-bottom)+0.55rem)] pt-2 backdrop-blur-xl md:hidden">
-      <div class="mx-auto grid max-w-lg grid-cols-5 gap-1.5">
+      <div class="mx-auto grid max-w-lg grid-cols-4 gap-1.5">
         <RouterLink v-for="item in navItems" :key="item.to" :to="item.to" :class="cn(
           'focus-ring inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-semibold transition',
           isActive(item.to)
