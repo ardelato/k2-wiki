@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, onMounted } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import { useRoute } from 'vue-router'
 import { useItems } from '@/composables/useItems'
 import type { Item } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
@@ -130,6 +131,15 @@ function clearFilters() {
 const hasActiveFilters = computed(() =>
   typeFilter.value !== 'all' || sourceFilter.value !== 'all' || searchQuery.value !== '' || sourceSubFilter.value.size > 0
 )
+
+const route = useRoute()
+
+onMounted(() => {
+  const itemId = route.query.item
+  if (typeof itemId === 'string') {
+    selectItemById(itemId)
+  }
+})
 </script>
 
 <template>

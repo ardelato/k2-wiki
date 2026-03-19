@@ -122,10 +122,10 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
     <div class="section">
       <h3 class="section-title">Summoning Cost</h3>
       <div class="cost-list">
-        <div v-for="(cost, i) in creature.summoningCost" :key="i" class="cost-item font-mono" style="display: flex; align-items: center; gap: 6px;">
+        <router-link v-for="(cost, i) in creature.summoningCost" :key="i" :to="{ path: '/items', query: { item: cost.id } }" class="cost-item font-mono" style="display: flex; align-items: center; gap: 6px;">
           <img v-if="getItemImage({ id: cost.id })" :src="getItemImage({ id: cost.id })" :alt="getItemById(cost.id)?.name ?? toTitleCase(cost.id)" style="width: 20px; height: 20px; object-fit: contain;" />
           {{ cost.amount }}x {{ getItemById(cost.id)?.name ?? toTitleCase(cost.id) }}
-        </div>
+        </router-link>
       </div>
     </div>
   </div>
@@ -158,5 +158,6 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
 .prof-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
 @media (min-width: 640px) { .prof-grid { gap: 16px; } }
 .cost-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.cost-item { padding: 4px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 13px; color: var(--color-text); }
+.cost-item { padding: 4px 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 13px; color: var(--color-text); text-decoration: none; transition: background 0.15s, border-color 0.15s; }
+.cost-item:hover { background: oklch(0.22 0.03 285 / 0.5); border-color: var(--color-primary); }
 </style>
