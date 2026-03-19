@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
-import { ChevronsDownUp, ChevronsUpDown, Clock3, Coins, GanttChart, GitBranch, Network, Search } from 'lucide-vue-next'
+import { ChevronsDownUp, ChevronsUpDown, Clock3, Coins, GanttChart, GitBranch, Hammer, Network, Search, TrendingUp } from 'lucide-vue-next'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import PlannerBadge from '@/components/planner/PlannerBadge.vue'
+import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
+import PlannerToolbar from '@/components/planner/PlannerToolbar.vue'
 import PlannerGantt from '@/components/planner/PlannerGantt.vue'
 import PlannerInspector from '@/components/planner/PlannerInspector.vue'
 import PlannerItemPicker from '@/components/planner/PlannerItemPicker.vue'
@@ -10,6 +13,7 @@ import PlannerSettings from '@/components/planner/PlannerSettings.vue'
 import PlannerActiveMods from '@/components/planner/PlannerActiveMods.vue'
 import PlannerShoppingList from '@/components/planner/PlannerShoppingList.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
+import LevelPlannerView from '@/views/LevelPlannerView.vue'
 import { useCraftPlanner } from '@/composables/useCraftPlanner'
 import { useItems } from '@/composables/useItems'
 import { formatDuration, sourceLabel } from '@/utils/format'
@@ -216,10 +220,46 @@ function expandAll() {
 }
 
 const collapsedCount = computed(() => collapsedNodeIds.value.size)
+
+const activeTab = computed(() =>
+  route.query.tab === 'levelup' ? 'levelup' : 'craft',
+)
+
+function switchTab(tab: 'craft' | 'levelup') {
+  if (tab === 'craft') {
+    router.push({ name: 'planner', params: route.params, query: {} })
+  } else {
+    router.push({ path: '/planner', query: { tab: 'levelup' } })
+  }
+}
 </script>
 
 <template>
   <section class="space-y-6">
+    <div class="flex justify-center">
+      <div class="inline-flex rounded-xl border border-border/60 bg-card/60 p-1">
+        <button
+          class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
+          :class="activeTab === 'craft' ? 'bg-primary/15 text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'"
+          @click="switchTab('craft')"
+        >
+          <Hammer class="size-4" />
+          Craft
+        </button>
+        <button
+          class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
+          :class="activeTab === 'levelup' ? 'bg-primary/15 text-primary shadow-sm' : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'"
+          @click="switchTab('levelup')"
+        >
+          <TrendingUp class="size-4" />
+          Level Up
+        </button>
+      </div>
+    </div>
+
+    <LevelPlannerView v-if="activeTab === 'levelup'" />
+
+    <template v-else>
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="space-y-2">
         <div>
@@ -234,29 +274,17 @@ const collapsedCount = computed(() => collapsedNodeIds.value.size)
       </div>
     </div>
 
-    <section class="surface-card relative z-20">
-      <div v-if="rootNode" class="group flex flex-wrap items-center gap-4 border-b border-border/40 px-4 py-3">
-        <div class="min-w-0 flex-1">
-          <PlannerItemPicker
-            :model-value="selectedPlannerItemId"
-            :options="plannerItemOptions"
-            placeholder="Choose an item"
-            subtle
-            @update:model-value="handlePlannerTargetChange"
-          />
-        </div>
-      </div>
+    <PlannerToolbar picker-label="Item">
+      <template #picker>
+        <PlannerItemPicker
+          :model-value="selectedPlannerItemId"
+          :options="plannerItemOptions"
+          placeholder="Choose an item"
+          @update:model-value="handlePlannerTargetChange"
+        />
+      </template>
 
-      <div class="flex flex-wrap items-center gap-4 px-4 py-3">
-        <div v-if="!rootNode" class="flex min-w-0 items-center gap-3">
-          <PlannerItemPicker
-            :model-value="selectedPlannerItemId"
-            :options="plannerItemOptions"
-            placeholder="Choose an item"
-            @update:model-value="handlePlannerTargetChange"
-          />
-        </div>
-
+      <template #controls>
         <div class="flex min-w-0 items-center gap-3">
           <div class="inline-flex items-center overflow-hidden rounded-xl border border-border/70 bg-background/70">
             <button
@@ -295,30 +323,30 @@ const collapsedCount = computed(() => collapsedNodeIds.value.size)
             </button>
           </div>
         </div>
+      </template>
 
-        <div v-if="rootNode && summary" class="ml-auto flex items-center gap-3">
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-xs font-semibold" style="color: var(--color-green)" title="Total time assumes independent steps run in parallel and dependent steps run in series">
-            <Clock3 class="size-3.5" />
-            {{ summary.totalTimeSeconds != null ? formatDuration(summary.totalTimeSeconds) : '?' }}
-          </span>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-xs font-semibold" style="color: var(--color-yellow)">
-            <Coins class="size-3.5" />
-            {{ Math.round(summary.totalCost).toLocaleString() }}
-          </span>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-background/50 px-2.5 py-1 text-xs font-semibold" style="color: var(--color-primary)">
-            <GitBranch class="size-3.5" />
-            {{ summary.branchPointCount }}
-          </span>
-        </div>
-      </div>
-    </section>
+      <template v-if="rootNode && summary" #summary>
+        <PlannerBadge color="var(--color-green)" title="Total time assumes independent steps run in parallel and dependent steps run in series">
+          <Clock3 class="size-3.5" />
+          {{ summary.totalTimeSeconds != null ? formatDuration(summary.totalTimeSeconds) : '?' }}
+        </PlannerBadge>
+        <PlannerBadge color="var(--color-yellow)">
+          <Coins class="size-3.5" />
+          {{ Math.round(summary.totalCost).toLocaleString() }}
+        </PlannerBadge>
+        <PlannerBadge color="var(--color-primary)">
+          <GitBranch class="size-3.5" />
+          {{ summary.branchPointCount }}
+        </PlannerBadge>
+      </template>
+    </PlannerToolbar>
 
-    <div v-if="!rootNode" class="surface-card px-6 py-12 text-center">
-      <p class="text-lg font-bold text-foreground">Choose an item to begin planning.</p>
-      <p class="mt-2 text-sm text-muted-foreground">
-        Select a target item above or jump here directly from any item card’s planner link.
-      </p>
-      <div class="mt-5 flex justify-center">
+    <PlannerEmptyState
+      v-if="!rootNode"
+      title="Choose an item to begin planning."
+      subtitle="Select a target item above or jump here directly from any item card’s planner link."
+    >
+      <template #action>
         <RouterLink
           to="/items"
           class="focus-ring inline-flex items-center gap-2 rounded-full border border-primary/35 bg-primary/12 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/18"
@@ -326,15 +354,14 @@ const collapsedCount = computed(() => collapsedNodeIds.value.size)
           <Search class="size-4" />
           Browse Items
         </RouterLink>
-      </div>
-    </div>
+      </template>
+    </PlannerEmptyState>
 
-    <div v-else-if="!isDesktop" class="surface-card px-6 py-8 text-center">
-      <p class="text-lg font-bold text-foreground">Planner is desktop-first for now.</p>
-      <p class="mt-2 text-sm text-muted-foreground">
-        Open this page on a wider screen to browse the full dependency tree and inspector.
-      </p>
-    </div>
+    <PlannerEmptyState
+      v-else-if="!isDesktop"
+      title="Planner is desktop-first for now."
+      subtitle="Open this page on a wider screen to browse the full dependency tree and inspector."
+    />
 
     <div v-else-if="rootNode" class="space-y-6">
       <PlannerSettings
@@ -497,5 +524,6 @@ const collapsedCount = computed(() => collapsedNodeIds.value.size)
       />
       </div>
     </div>
+    </template>
   </section>
 </template>
