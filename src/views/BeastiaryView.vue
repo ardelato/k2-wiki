@@ -434,28 +434,47 @@ const maxJobLevel = 10
                 </p>
               </div>
 
-              <!-- Level stepper (edit mode + owned) -->
-              <div v-if="isOwned(creature.id) && editing" class="space-y-1" @click.stop>
-                <p class="text-center text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">LVL</p>
-                <div
-                  class="inline-flex w-full items-center overflow-hidden rounded-md border border-input bg-background/85">
+              <!-- Level hybrid slider-stepper (edit mode + owned) -->
+              <div v-if="isOwned(creature.id) && editing" class="space-y-1.5" @click.stop>
+                <!-- Stepper: [−] input [+] -->
+                <div class="flex w-full items-center justify-center gap-1">
                   <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="getLevel(creature.id) <= 1" aria-label="Decrease level"
-                    @click="stepCollectionLevel(creature.id, -1)">
-                    <Minus class="size-3" />
+                    class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="getLevel(creature.id) <= 1"
+                    aria-label="Decrease level"
+                    @click="stepCollectionLevel(creature.id, -1)"
+                  >
+                    <Minus class="size-3.5" />
                   </button>
-                  <input type="text" inputmode="numeric" pattern="[0-9]*"
-                    class="focus-ring h-7 min-w-0 flex-1 border-x border-input bg-transparent text-center text-xs font-mono"
-                    :value="getLevel(creature.id)" aria-label="Creature level"
-                    @blur="normalizeCollectionLevelOnBlur(creature.id, $event)" />
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    class="focus-ring h-7 w-12 rounded-md border border-input bg-background/85 text-center text-xs font-mono font-semibold"
+                    :value="getLevel(creature.id)"
+                    aria-label="Creature level"
+                    @blur="normalizeCollectionLevelOnBlur(creature.id, $event)"
+                    @keydown.enter="($event.target as HTMLInputElement).blur()"
+                  />
                   <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="getLevel(creature.id) >= 120" aria-label="Increase level"
-                    @click="stepCollectionLevel(creature.id, 1)">
-                    <Plus class="size-3" />
+                    class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="getLevel(creature.id) >= 120"
+                    aria-label="Increase level"
+                    @click="stepCollectionLevel(creature.id, 1)"
+                  >
+                    <Plus class="size-3.5" />
                   </button>
                 </div>
+                <!-- Range slider -->
+                <input
+                  type="range"
+                  min="1"
+                  max="120"
+                  :value="getLevel(creature.id)"
+                  class="level-slider h-1.5 w-full cursor-pointer"
+                  aria-label="Level slider"
+                  @input="setLevel(creature.id, +($event.target as HTMLInputElement).value)"
+                />
               </div>
             </div>
           </div>
