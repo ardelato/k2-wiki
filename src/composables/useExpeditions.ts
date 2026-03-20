@@ -83,18 +83,6 @@ export function useExpeditions(creatures: Creature[]) {
     return getBiome(selectedExpedition.value.biome);
   });
 
-  const assignedCreatureIds = computed(() => {
-    const ids = new Set<string>();
-
-    for (const party of Object.values(expeditionParties.value)) {
-      for (const creature of party) {
-        if (creature) ids.add(creature.id);
-      }
-    }
-
-    return ids;
-  });
-
   const recommendedCreatures = computed(() => {
     if (!selectedExpedition.value) return [];
     const expedition = selectedExpedition.value;
