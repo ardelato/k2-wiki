@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Check, Minus, Pencil, Plus, TrendingUp, X } from 'lucide-vue-next'
+import summonedIcon from '@/assets/icons/summoned.png'
+import notSummonedIcon from '@/assets/icons/not_summoned.png'
 import { useCreatures } from '@/composables/useCreatures'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { Creature, CreatureStats, Jobs } from '@/types'
@@ -26,7 +28,7 @@ const {
   allJobs,
 } = useCreatures()
 
-const { collection, isOwned, getLevel, toggleOwned, setLevel, ownedCreatureIds } = useCreatureCollection()
+const { collection, isOwned, setOwned, getLevel, toggleOwned, setLevel, ownedCreatureIds } = useCreatureCollection()
 
 const ownedFilter = ref<'all' | 'owned' | 'unowned'>('all')
 const editing = ref(false)
@@ -53,6 +55,13 @@ function deselectAllVisible() {
   const next = new Set(selectedIds.value)
   for (const c of displayCreatures.value) next.delete(c.id)
   selectedIds.value = next
+}
+
+// Bulk actions (apply to selected creatures)
+function bulkSetSummoned(owned: boolean) {
+  for (const id of selectedIds.value) {
+    setOwned(id, owned)
+  }
 }
 
 // Snapshot collection on edit enter, restore on cancel
@@ -243,6 +252,27 @@ const maxJobLevel = 10
           Clear
         </button>
 
+        <!-- Divider -->
+        <div class="h-8 w-0.5 rounded-full bg-muted-foreground/30" />
+
+        <!-- Summoning actions -->
+        <button
+          class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          :disabled="!selectedIds.size"
+          @click="bulkSetSummoned(true)"
+        >
+          <img :src="summonedIcon" alt="" class="size-4" />
+          Summoned
+        </button>
+        <button
+          class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          :disabled="!selectedIds.size"
+          @click="bulkSetSummoned(false)"
+        >
+          <img :src="notSummonedIcon" alt="" class="size-4" />
+          Not Summoned
+        </button>
+
         <!-- Done/Cancel (right side) -->
         <div class="ml-auto flex items-center gap-2">
           <button
@@ -303,11 +333,12 @@ const maxJobLevel = 10
               <Plus v-else class="size-3.5" />
             </div>
 
-            <!-- Owned check overlay -->
-            <div v-if="!editing && isOwned(creature.id)"
-              class="absolute left-2 top-3 z-10 flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md">
-              <Check class="size-3.5" />
-            </div>
+            <!-- Summoned status icon -->
+            <img
+              :src="isOwned(creature.id) ? summonedIcon : notSummonedIcon"
+              :alt="isOwned(creature.id) ? 'Summoned' : 'Not summoned'"
+              class="absolute left-2.5 top-3.5 z-10 size-5 drop-shadow-md"
+            />
 
             <!-- Tier badge -->
             <span
