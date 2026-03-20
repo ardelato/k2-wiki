@@ -42,6 +42,7 @@ const {
   importSetup,
   exportSetup,
   totalXpPerSecond,
+  autoAssignBestXp,
 } = useExpeditions(creatures.value);
 
 const { collectionLevels, isOwned } = useCreatureCollection();
@@ -320,8 +321,8 @@ function handleImport() {
 }
 
 function openSetupModal() {
-  importText.value = exportSetup() 
-  showSetupModal.value = true
+  importText.value = exportSetup();
+  showSetupModal.value = true;
 }
 </script>
 
@@ -335,35 +336,35 @@ function openSetupModal() {
       class="w-full max-w-lg rounded-xl border bg-card p-4 shadow-xl"
       @click.stop
     >
-        <!-- Header -->
-        <div class="mb-3 flex items-center justify-between">
-          <h2 class="text-sm font-semibold">Setup Import / Export</h2>
-          <button
-            class="text-muted-foreground hover:text-foreground"
-            @click="showSetupModal = false"
-          >
-            ✕
+      <!-- Header -->
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-sm font-semibold">Setup Import / Export</h2>
+        <button
+          class="text-muted-foreground hover:text-foreground"
+          @click="showSetupModal = false"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="space-y-2">
+        <textarea
+          v-model="importText"
+          placeholder="Paste setup JSON here..."
+          class="w-full h-32 rounded-md border p-2 text-xs font-mono text-black"
+        />
+
+        <div class="flex gap-2 justify-between">
+          <button class="pill focus-ring" @click="handleExport">
+            Copy setup
+          </button>
+
+          <button class="pill focus-ring" @click="handleImport">
+            Import setup
           </button>
         </div>
-
-        <!-- Content -->
-        <div class="space-y-2">
-          <textarea
-            v-model="importText"
-            placeholder="Paste setup JSON here..."
-            class="w-full h-32 rounded-md border p-2 text-xs font-mono text-black"
-          />
-
-          <div class="flex gap-2 justify-between">
-            <button class="pill focus-ring" @click="handleExport">
-              Copy setup
-            </button>
-
-            <button class="pill focus-ring" @click="handleImport">
-              Import setup
-            </button>
-          </div>
-        </div>
+      </div>
     </div>
   </div>
   <section class="space-y-5 lg:space-y-6">
@@ -947,6 +948,12 @@ function openSetupModal() {
               @click="resetAllExpeditions"
             >
               Reset all expeditions
+            </button>
+            <button
+              class="pill focus-ring border-green-500/40 bg-green-500/10 text-green-500 hover:bg-green-500/20"
+              @click="autoAssignBestXp"
+            >
+              Automatic setup
             </button>
           </div>
 

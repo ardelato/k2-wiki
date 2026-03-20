@@ -1,4 +1,30 @@
-[
+[ {
+    "id": "sanctuary-0",
+    "name": "Sanctuary creatures",
+    "description": "Insert your helper creatures here",
+    "baseRating": 1,
+    "baseDuration": 999,
+    "baseXP": 0,
+    "maxPartySize": 8,
+    "trait": "learner",
+    "biome": "plains",
+    "requiredExpeditionCompletions": 0,
+    "statWeights": {},
+    "rewards": []
+  },{
+    "id": "helpers-0",
+    "name": "Helper creatures",
+    "description": "Insert your helper creatures here",
+    "baseRating": 1,
+    "baseDuration": 999,
+    "baseXP": 0,
+    "maxPartySize": 6,
+    "trait": "learner",
+    "biome": "plains",
+    "requiredExpeditionCompletions": 0,
+    "statWeights": {},
+    "rewards": []
+  },
   {
     "id": "expedition-type-1",
     "name": "Expedition Training",
