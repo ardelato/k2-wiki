@@ -303,7 +303,7 @@ function evaluateExpedition(exp: Expedition) {
 
   if (!xp || !duration || duration <= 0) return null
 
-  const xpPerSecond = xp / duration
+  const xpPerSecond = xp / duration * activeCreatures
 
   return {
     expeditionId: exp.id,
