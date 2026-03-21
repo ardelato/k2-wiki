@@ -301,6 +301,7 @@ export function useExpeditions(creatures: Creature[]) {
     return JSON.stringify({
       parties: expeditionParties.value,
       levels: creatureLevels.value,
+      tiers: expeditionTiers.value,
     })
   }
 
@@ -313,8 +314,12 @@ export function useExpeditions(creatures: Creature[]) {
       if (data.levels && typeof data.levels === 'object') {
         creatureLevels.value = data.levels
       }
+      if (data.tiers && typeof data.tiers === 'object') {
+        expeditionTiers.value = data.tiers
+      }
       // Refresh current view
       if (selectedExpedition.value) {
+        selectedTier.value = expeditionTiers.value[selectedExpedition.value.id] || 1
         const ids = expeditionParties.value[selectedExpedition.value.id] || []
         partySlots.value = Array(selectedExpedition.value.maxPartySize).fill(null).map((_, i) => {
           const id = ids[i]
