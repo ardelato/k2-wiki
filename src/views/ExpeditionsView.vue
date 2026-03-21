@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMediaQuery } from '@vueuse/core'
-import { Check, Compass, FileDown, FileUp, Info, Minus, Plus, RotateCcw, Target, X } from 'lucide-vue-next'
+import { Check, ClipboardPaste, Compass, Copy, Download, FileDown, FileUp, FolderOpen, Info, Minus, Plus, RotateCcw, Target, X } from 'lucide-vue-next'
 import { useCreatures } from '@/composables/useCreatures'
 import { useExpeditions } from '@/composables/useExpeditions'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
@@ -53,6 +53,108 @@ const creatureSearch = ref('')
 const selectedCreatureTypes = ref<ElementType[]>([...creatureTypes])
 const selectedCreatureTiers = ref<number[]>([])
 const ownedOnly = ref(false)
+const modalMode = ref<'import' | 'export' | null>(null)
+const modalText = ref('')
+const importError = ref('')
+const copied = ref(false)
+const importTextarea = ref<HTMLTextAreaElement | null>(null)
+const exportTextarea = ref<HTMLTextAreaElement | null>(null)
+
+function autoResizeTextarea(el: HTMLTextAreaElement | null) {
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = `${el.scrollHeight}px`
+}
+
+watch(modalText, () => {
+  nextTick(() => {
+    if (modalMode.value === 'import') autoResizeTextarea(importTextarea.value)
+    if (modalMode.value === 'export') autoResizeTextarea(exportTextarea.value)
+  })
+})
+
+watch(modalMode, () => {
+  nextTick(() => {
+    autoResizeTextarea(importTextarea.value)
+    autoResizeTextarea(exportTextarea.value)
+  })
+})
+
+function openExportModal() {
+  const raw = exportSetup()
+  try {
+    modalText.value = JSON.stringify(JSON.parse(raw), null, 2)
+  } catch {
+    modalText.value = raw
+  }
+  importError.value = ''
+  copied.value = false
+  modalMode.value = 'export'
+}
+
+function openImportModal() {
+  modalText.value = ''
+  importError.value = ''
+  modalMode.value = 'import'
+}
+
+function handleImport() {
+  const success = importSetup(modalText.value)
+  if (success) {
+    modalMode.value = null
+  } else {
+    importError.value = 'Invalid JSON format'
+  }
+}
+
+function copyExport() {
+  navigator.clipboard.writeText(modalText.value)
+  copied.value = true
+  setTimeout(() => { copied.value = false }, 2000)
+}
+
+function downloadExport() {
+  const blob = new Blob([modalText.value], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `expedition-setup-${timestamp}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText()
+    try {
+      modalText.value = JSON.stringify(JSON.parse(text), null, 2)
+    } catch {
+      modalText.value = text
+    }
+    importError.value = ''
+  } catch {
+    importError.value = 'Unable to read clipboard'
+  }
+}
+
+function handleFileUpload(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = () => {
+    const text = reader.result as string
+    try {
+      modalText.value = JSON.stringify(JSON.parse(text), null, 2)
+    } catch {
+      modalText.value = text
+    }
+    importError.value = ''
+  }
+  reader.readAsText(file)
+  input.value = ''
+}
 
 function handleReset() {
   if (window.confirm('Reset all expedition parties and creature levels?')) {
@@ -580,6 +682,7 @@ function toggleCreatureTier(tier: number) {
               </span>
             </div>
           </div>
+
         </div>
 
         <div v-else
@@ -724,5 +827,71 @@ function toggleCreatureTier(tier: number) {
         </div>
       </section>
     </div>
+
+    <Teleport to="body">
+      <Transition name="fade">
+        <div v-if="modalMode" class="fixed inset-0 z-50 flex items-center justify-center bg-background/60 backdrop-blur-sm"
+          @click.self="modalMode = null">
+          <div class="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-2xl">
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="text-lg font-bold">{{ modalMode === 'export' ? 'Export Setup' : 'Import Setup' }}</h3>
+              <button class="focus-ring rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
+                @click="modalMode = null">
+                <X class="size-4" />
+              </button>
+            </div>
+
+            <!-- Export modal -->
+            <template v-if="modalMode === 'export'">
+              <textarea :value="modalText" readonly ref="exportTextarea"
+                class="focus-ring min-h-[20rem] max-h-[70vh] w-full resize-none overflow-y-auto rounded-lg border border-input bg-background/70 p-3 font-mono text-xs" />
+              <div class="mt-3 flex justify-end gap-2">
+                <button
+                  class="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/35 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
+                  @click="copyExport">
+                  <Check v-if="copied" class="size-3 text-emerald-400" />
+                  <Copy v-else class="size-3" />
+                  {{ copied ? 'Copied' : 'Copy' }}
+                </button>
+                <button
+                  class="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  @click="downloadExport">
+                  <Download class="size-3" />
+                  Download
+                </button>
+              </div>
+            </template>
+
+            <!-- Import modal -->
+            <template v-else>
+              <textarea v-model="modalText" ref="importTextarea"
+                class="focus-ring min-h-[20rem] max-h-[70vh] w-full resize-none overflow-y-auto rounded-lg border border-input bg-background/70 p-3 font-mono text-xs"
+                placeholder="Paste exported JSON here..." />
+              <p v-if="importError" class="mt-1 text-xs text-destructive">{{ importError }}</p>
+              <div class="mt-3 flex justify-end gap-2">
+                <button
+                  class="focus-ring inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/35 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
+                  @click="pasteFromClipboard">
+                  <ClipboardPaste class="size-4" />
+                  Paste
+                </button>
+                <label
+                  class="focus-ring inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-muted/35 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground">
+                  <FolderOpen class="size-4" />
+                  Open File
+                  <input type="file" accept=".json,application/json" class="hidden" @change="handleFileUpload" />
+                </label>
+                <button
+                  class="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                  @click="handleImport">
+                  <Check class="size-4" />
+                  Import
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </section>
 </template>
