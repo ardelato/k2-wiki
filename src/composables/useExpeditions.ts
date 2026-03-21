@@ -1,4 +1,5 @@
 import { ref, computed, watch } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import type { Creature, Expedition, Biome } from '@/types'
 import expeditionsData from '@/data/expeditions.json'
 import biomesData from '@/data/biomes.json'
@@ -23,10 +24,12 @@ export function useExpeditions(creatures: Creature[]) {
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
   const selectedExpedition = ref<Expedition | null>(null)
+  const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
   const selectedTier = ref(1)
   const partySlots = ref<(Creature | null)[]>([])
   const activeSlotIndex = ref<number | null>(null)
-  const creatureLevels = ref<Record<string, number>>({})
+  const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
+  const creatureLevels = useLocalStorage<Record<string, number>>('expedition-creature-levels', {})
 
   const filteredExpeditions = computed(() => {
     return expeditions.value
@@ -45,15 +48,48 @@ export function useExpeditions(creatures: Creature[]) {
       })
   })
 
-  // Reset party slots when expedition changes
+  const allAssignedCreatureIds = computed(() => {
+    const ids = new Set<string>()
+    for (const partyIds of Object.values(expeditionParties.value)) {
+      for (const id of partyIds) {
+        ids.add(id)
+      }
+    }
+    return ids
+  })
+
+  // Restore party slots and tier when expedition changes
   watch(selectedExpedition, (exp) => {
     if (exp) {
-      partySlots.value = Array(exp.maxPartySize).fill(null)
+      selectedTier.value = expeditionTiers.value[exp.id] || 1
+      const ids = expeditionParties.value[exp.id] || []
+      partySlots.value = Array(exp.maxPartySize).fill(null).map((_, i) => {
+        const id = ids[i]
+        return id ? creatures.find(c => c.id === id) ?? null : null
+      })
     } else {
       partySlots.value = []
     }
     activeSlotIndex.value = null
   })
+
+  // Persist tier changes
+  watch(selectedTier, (tier) => {
+    if (!selectedExpedition.value) return
+    expeditionTiers.value = {
+      ...expeditionTiers.value,
+      [selectedExpedition.value.id]: tier,
+    }
+  })
+
+  // Persist party changes
+  watch(partySlots, (slots) => {
+    if (!selectedExpedition.value) return
+    expeditionParties.value = {
+      ...expeditionParties.value,
+      [selectedExpedition.value.id]: slots.map(s => s?.id ?? '').filter(id => id !== ''),
+    }
+  }, { deep: true })
 
   const getBiome = (id: string): Biome | undefined => {
     return biomes.value.find(b => b.id === id)
@@ -74,7 +110,7 @@ export function useExpeditions(creatures: Creature[]) {
     const biome = currentBiome.value
     const remainingScore = difficultyRating.value - partyScore.value
     const base = getRecommendedCreatures(
-      creatures.filter(c => !partyCreatureIds.value.has(c.id)),
+      creatures.filter(c => !partyCreatureIds.value.has(c.id) && !allAssignedCreatureIds.value.has(c.id)),
       expedition,
       creatureLevels.value,
       biome
@@ -255,5 +291,8 @@ export function useExpeditions(creatures: Creature[]) {
     getCreatureSlotRating,
     updateCreatureLevel,
     uniqueBiomes,
+    allAssignedCreatureIds,
+    expeditionTiers,
+    expeditionParties,
   }
 }
