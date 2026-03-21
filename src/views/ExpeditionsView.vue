@@ -159,6 +159,10 @@ function handleFileUpload(event: Event) {
 function handleReset() {
   if (window.confirm('Reset all expedition parties and creature levels?')) {
     resetAllExpeditions()
+    autoFilledCreatures.clear()
+    for (const [id, level] of Object.entries(collectionLevels.value)) {
+      updateCreatureLevel(id, level)
+    }
   }
 }
 
