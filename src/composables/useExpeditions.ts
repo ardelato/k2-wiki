@@ -122,10 +122,14 @@ export function useExpeditions(creatures: Creature[]) {
   // Persist party changes
   watch(partySlots, (slots) => {
     if (!selectedExpedition.value) return
-    expeditionParties.value = {
-      ...expeditionParties.value,
-      [selectedExpedition.value.id]: slots.map(s => s?.id ?? '').filter(id => id !== ''),
+    const ids = slots.map(s => s?.id ?? '').filter(id => id !== '')
+    const updated = { ...expeditionParties.value }
+    if (ids.length > 0) {
+      updated[selectedExpedition.value.id] = ids
+    } else {
+      delete updated[selectedExpedition.value.id]
     }
+    expeditionParties.value = updated
   }, { deep: true })
 
   const getBiome = (id: string): Biome | undefined => {
@@ -298,9 +302,16 @@ export function useExpeditions(creatures: Creature[]) {
   })
 
   function exportSetup(): string {
+    const assignedIds = new Set(Object.values(expeditionParties.value).flat())
+    const assignedLevels: Record<string, number> = {}
+    for (const id of assignedIds) {
+      if (creatureLevels.value[id]) {
+        assignedLevels[id] = creatureLevels.value[id]
+      }
+    }
     return JSON.stringify({
       parties: expeditionParties.value,
-      levels: creatureLevels.value,
+      levels: assignedLevels,
       tiers: expeditionTiers.value,
     })
   }
