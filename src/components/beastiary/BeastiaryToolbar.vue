@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
+import summonedIcon from '@/assets/icons/summoned.png'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
+import notSummonedIcon from '@/assets/icons/not_summoned.png'
 import type { ElementType } from '@/types'
 import { toTitleCase } from '@/utils/format'
 
@@ -12,6 +15,7 @@ const props = defineProps<{
   jobFilter: string | 'all'
   viewMode: 'grid' | 'table'
   ownedFilter: 'all' | 'owned' | 'unowned'
+  awakenedFilter: 'all' | 'awakened' | 'unawakened'
   ownedCount: number
   resultCount: number
   traitOptions: string[]
@@ -26,6 +30,7 @@ const emit = defineEmits<{
   'update:jobFilter': [value: string | 'all']
   'update:viewMode': [value: 'grid' | 'table']
   'update:ownedFilter': [value: 'all' | 'owned' | 'unowned']
+  'update:awakenedFilter': [value: 'all' | 'awakened' | 'unawakened']
 }>()
 
 const typeOptions: Array<ElementType | 'all'> = ['all', 'Fire', 'Water', 'Wind', 'Earth']
@@ -193,11 +198,30 @@ const typeDotColor: Record<ElementType, string> = {
           :key="option"
           role="radio"
           :aria-checked="props.ownedFilter === option"
-          class="pill focus-ring"
+          class="pill focus-ring gap-1.5"
           :class="props.ownedFilter === option ? 'pill-active' : ''"
           @click="emit('update:ownedFilter', option)"
         >
+          <img v-if="option === 'owned'" :src="summonedIcon" alt="" class="size-4" />
+          <img v-if="option === 'unowned'" :src="notSummonedIcon" alt="" class="size-4" />
           {{ option === 'all' ? 'All' : option === 'owned' ? 'Summoned' : 'Not Summoned' }}
+        </button>
+      </div>
+
+      <!-- Awakened filter -->
+      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by awakened">
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Awakened</span>
+        <button
+          v-for="option in (['all', 'awakened', 'unawakened'] as const)"
+          :key="option"
+          role="radio"
+          :aria-checked="props.awakenedFilter === option"
+          class="pill focus-ring gap-1.5"
+          :class="props.awakenedFilter === option ? 'pill-active' : ''"
+          @click="emit('update:awakenedFilter', option)"
+        >
+          <img v-if="option === 'awakened'" :src="awakenedSummonedIcon" alt="" class="size-4" />
+          {{ option === 'all' ? 'All' : option === 'awakened' ? 'Awakened' : 'Not Awakened' }}
         </button>
 
         <div class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground" aria-live="polite">
