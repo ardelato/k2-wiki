@@ -1,10 +1,12 @@
-import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, type Ref } from 'vue'
 
+import { useGameConfig } from '@/composables/useGameConfig'
 import expeditionsData from '@/data/expeditions.json'
 import itemsData from '@/data/items.json'
 import jobsData from '@/data/jobs.json'
 import type {
+  AwakenGatherUpgrade,
+  GardenFlowerEntry,
   Item,
   ItemType,
   PlannerMethod,
@@ -19,15 +21,7 @@ import type {
 } from '@/types'
 import { formatDuration, methodKindLabel, toTitleCase } from '@/utils/format'
 
-export interface GardenFlowerEntry {
-  count: number
-  level: number
-}
-
-export interface AwakenGatherUpgrade {
-  yieldBonus: number // 0, 1, or 2 (Yield I = +1, Yield II = +1 more)
-  durationTier: number // 0–4, each tier = -5% activity duration
-}
+export type { GardenFlowerEntry, AwakenGatherUpgrade }
 
 export interface PlannerModifiers {
   gardenFlowers: Record<string, GardenFlowerEntry[]>
@@ -278,7 +272,7 @@ function buildPlannerGraph(
         }
       })
 
-      const speedReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.05
+      const speedReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.1
       const effectiveCraftTime = Math.max(
         recipe.craftTime * 0.01,
         recipe.craftTime * (1 - speedReduction),
@@ -316,7 +310,7 @@ function buildPlannerGraph(
             ? [
                 {
                   label: 'Speed Tier',
-                  value: `-${modifiers.awakenSpeedTiers[recipe.workstation] * 5}%`,
+                  value: `+${modifiers.awakenSpeedTiers[recipe.workstation] * 10}%`,
                 },
               ]
             : []),
@@ -336,16 +330,22 @@ function buildPlannerGraph(
     })
 
     ;(gatherSourcesByItem.get(itemId) ?? []).forEach((source, sourceIndex) => {
+      // Cumulative duration reduction percentage per tier (0-5)
+      const JOB_TIER_DURATION_REDUCTION = [0, 0, 0.1, 0.1, 0.2, 0.2]
+      // Cumulative yield bonus per tier (0-5)
+      const JOB_TIER_YIELD_BONUS = [0, 0, 0, 0, 0, 1]
+
       const awakenGather = modifiers.awakenGatherUpgrades[source.jobId]
       const yieldBonus = awakenGather?.yieldBonus ?? 0
+      const jobTier = modifiers.jobTiers[source.jobId] ?? 0
+      const jobYieldBonus = JOB_TIER_YIELD_BONUS[jobTier] ?? 0
       const baseYield = source.chance * expectedAmount(source.min, source.max)
-      const expectedYield = baseYield + yieldBonus
+      const expectedYield = baseYield + yieldBonus + jobYieldBonus
       if (expectedYield <= 0) return
 
       const actionsNeeded = requiredAmount / expectedYield
       const awakenReduction = (awakenGather?.durationTier ?? 0) * 0.05
-      const jobMilestones = modifiers.jobTiers[source.jobId] ?? 0
-      const jobReduction = jobMilestones * 0.1
+      const jobReduction = JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0
       const effectiveDuration = Math.max(
         Math.max(source.duration * 0.01, 1),
         source.duration * (1 - awakenReduction) * (1 - jobReduction),
@@ -373,7 +373,14 @@ function buildPlannerGraph(
           ...((awakenGather?.durationTier ?? 0) > 0
             ? [{ label: 'Awaken Duration', value: `-${(awakenGather?.durationTier ?? 0) * 5}%` }]
             : []),
-          ...(jobMilestones > 0 ? [{ label: 'Job Tier', value: `-${jobMilestones * 10}%` }] : []),
+          ...(jobTier > 0
+            ? [
+                {
+                  label: 'Job Tier',
+                  value: `-${(JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) * 100}%`,
+                },
+              ]
+            : []),
           { label: 'Actions', value: formatAmount(actionsNeeded), estimated: isEstimated },
           { label: 'Step time', value: formatDuration(localTimeSeconds), estimated: isEstimated },
         ],
@@ -721,44 +728,26 @@ export function useCraftPlanner(
 ) {
   const pinnedMethodIds = ref<Record<string, string>>({})
 
-  const inventoryAmounts = useLocalStorage<Record<string, number>>('planner-inventory', {})
+  const {
+    inventoryAmounts: baseInventory,
+    gardenFlowers: baseGarden,
+    awakenGatherUpgrades: baseAwakenGather,
+    awakenSpeedTiers: baseAwakenSpeed,
+    jobTiers: baseJobTiers,
+  } = useGameConfig()
 
-  const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
-    'planner-garden-flowers',
-    {
-      'fire-flower': [],
-      'wind-flower': [],
-      'earth-flower': [],
-      'water-flower': [],
-    },
-  )
+  // Temporary overrides — null means "use config value", non-null means "planner simulation"
+  const inventoryOverrides = ref<Record<string, number> | null>(null)
+  const gardenOverrides = ref<Record<string, GardenFlowerEntry[]> | null>(null)
+  const awakenGatherOverrides = ref<Record<string, AwakenGatherUpgrade> | null>(null)
+  const awakenSpeedOverrides = ref<Record<string, number> | null>(null)
+  const jobTierOverrides = ref<Record<string, number> | null>(null)
 
-  const awakenGatherUpgrades = useLocalStorage<Record<string, AwakenGatherUpgrade>>(
-    'planner-awaken-gather',
-    {
-      Chopping: { yieldBonus: 0, durationTier: 0 },
-      Mining: { yieldBonus: 0, durationTier: 0 },
-      Digging: { yieldBonus: 0, durationTier: 0 },
-      Exploring: { yieldBonus: 0, durationTier: 0 },
-      Fishing: { yieldBonus: 0, durationTier: 0 },
-      Farming: { yieldBonus: 0, durationTier: 0 },
-    },
-  )
-
-  const awakenSpeedTiers = useLocalStorage<Record<string, number>>('planner-awaken-speed', {
-    Furnace: 0,
-    Stove: 0,
-    Workbench: 0,
-  })
-
-  const jobTiers = useLocalStorage<Record<string, number>>('planner-job-tiers', {
-    Chopping: 0,
-    Mining: 0,
-    Digging: 0,
-    Exploring: 0,
-    Fishing: 0,
-    Farming: 0,
-  })
+  const inventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
+  const gardenFlowers = computed(() => gardenOverrides.value ?? baseGarden.value)
+  const awakenGatherUpgrades = computed(() => awakenGatherOverrides.value ?? baseAwakenGather.value)
+  const awakenSpeedTiers = computed(() => awakenSpeedOverrides.value ?? baseAwakenSpeed.value)
+  const jobTiers = computed(() => jobTierOverrides.value ?? baseJobTiers.value)
 
   const modifiers = computed<PlannerModifiers>(() => ({
     gardenFlowers: gardenFlowers.value,
@@ -944,92 +933,77 @@ export function useCraftPlanner(
   }
 
   function setInventory(itemId: string, amount: number) {
+    const base = inventoryOverrides.value ?? { ...baseInventory.value }
     if (amount <= 0) {
-      const { [itemId]: _, ...rest } = inventoryAmounts.value
-      inventoryAmounts.value = rest
+      const { [itemId]: _, ...rest } = base
+      inventoryOverrides.value = rest
     } else {
-      inventoryAmounts.value = { ...inventoryAmounts.value, [itemId]: amount }
+      inventoryOverrides.value = { ...base, [itemId]: amount }
     }
   }
 
   function resetInventory() {
-    inventoryAmounts.value = {}
+    inventoryOverrides.value = null
   }
 
   function setGardenFlowerEntries(flowerId: string, entries: GardenFlowerEntry[]) {
-    gardenFlowers.value = {
-      ...gardenFlowers.value,
+    const base = gardenOverrides.value ?? { ...baseGarden.value }
+    gardenOverrides.value = {
+      ...base,
       [flowerId]: entries.filter((e) => e.count > 0),
     }
   }
 
   function resetGarden() {
-    gardenFlowers.value = {
-      'fire-flower': [],
-      'wind-flower': [],
-      'earth-flower': [],
-      'water-flower': [],
-    }
+    gardenOverrides.value = null
   }
 
   function setAwakenGatherYieldBonus(jobId: string, yieldBonus: number) {
-    const current = awakenGatherUpgrades.value[jobId] ?? { yieldBonus: 0, durationTier: 0 }
-    awakenGatherUpgrades.value = {
-      ...awakenGatherUpgrades.value,
+    const base = awakenGatherOverrides.value ?? { ...baseAwakenGather.value }
+    const current = base[jobId] ?? { yieldBonus: 0, durationTier: 0 }
+    awakenGatherOverrides.value = {
+      ...base,
       [jobId]: { ...current, yieldBonus: Math.max(0, Math.min(2, yieldBonus)) },
     }
   }
 
   function setAwakenGatherDurationTier(jobId: string, tier: number) {
-    const current = awakenGatherUpgrades.value[jobId] ?? { yieldBonus: 0, durationTier: 0 }
-    awakenGatherUpgrades.value = {
-      ...awakenGatherUpgrades.value,
+    const base = awakenGatherOverrides.value ?? { ...baseAwakenGather.value }
+    const current = base[jobId] ?? { yieldBonus: 0, durationTier: 0 }
+    awakenGatherOverrides.value = {
+      ...base,
       [jobId]: { ...current, durationTier: Math.max(0, Math.min(4, tier)) },
     }
   }
 
   function setAwakenSpeedTier(workstation: string, tier: number) {
-    awakenSpeedTiers.value = {
-      ...awakenSpeedTiers.value,
+    const base = awakenSpeedOverrides.value ?? { ...baseAwakenSpeed.value }
+    awakenSpeedOverrides.value = {
+      ...base,
       [workstation]: Math.max(0, Math.min(4, tier)),
     }
   }
 
   function resetAwaken() {
-    awakenGatherUpgrades.value = {
-      Chopping: { yieldBonus: 0, durationTier: 0 },
-      Mining: { yieldBonus: 0, durationTier: 0 },
-      Digging: { yieldBonus: 0, durationTier: 0 },
-      Exploring: { yieldBonus: 0, durationTier: 0 },
-      Fishing: { yieldBonus: 0, durationTier: 0 },
-      Farming: { yieldBonus: 0, durationTier: 0 },
-    }
-    awakenSpeedTiers.value = { Furnace: 0, Stove: 0, Workbench: 0 }
+    awakenGatherOverrides.value = null
+    awakenSpeedOverrides.value = null
   }
 
   function setJobTier(jobId: string, tier: number) {
-    jobTiers.value = {
-      ...jobTiers.value,
-      [jobId]: Math.max(0, Math.min(2, tier)),
-    }
+    const base = jobTierOverrides.value ?? { ...baseJobTiers.value }
+    jobTierOverrides.value = { ...base, [jobId]: Math.max(0, Math.min(5, tier)) }
   }
 
   function resetJobTiers() {
-    jobTiers.value = {
-      Chopping: 0,
-      Mining: 0,
-      Digging: 0,
-      Exploring: 0,
-      Fishing: 0,
-      Farming: 0,
-    }
+    jobTierOverrides.value = null
   }
 
   function resetAllSettings() {
-    resetInventory()
-    resetGarden()
-    resetAwaken()
-    resetJobTiers()
+    inventoryOverrides.value = null
+    gardenOverrides.value = null
+    awakenGatherOverrides.value = null
+    awakenSpeedOverrides.value = null
+    jobTierOverrides.value = null
     resetPins()
   }
 
@@ -1089,7 +1063,6 @@ export function useCraftPlanner(
     gardenFlowers,
     awakenGatherUpgrades,
     awakenSpeedTiers,
-    jobTiers,
     getActiveMethod,
     setPinnedMethod,
     resetPins,
@@ -1102,6 +1075,7 @@ export function useCraftPlanner(
     setAwakenGatherDurationTier,
     setAwakenSpeedTier,
     resetAwaken,
+    jobTiers,
     setJobTier,
     resetJobTiers,
     resetAllSettings,
