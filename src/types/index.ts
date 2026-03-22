@@ -231,6 +231,16 @@ export interface CreatureCollectionEntry {
   awakened: boolean
 }
 
+export interface GardenFlowerEntry {
+  count: number
+  level: number
+}
+
+export interface AwakenGatherUpgrade {
+  yieldBonus: number // 0, 1, or 2 (Yield I = +1, Yield II = +1 more)
+  durationTier: number // 0–4, each tier = -5% activity duration
+}
+
 export type CreatureStatKey = keyof CreatureStats
 export type ExpeditionStatKey = keyof ExpeditionStatWeights
 export type JobKey = keyof Jobs
