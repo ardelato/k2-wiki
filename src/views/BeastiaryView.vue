@@ -18,6 +18,7 @@ import {
   getBestExpeditionsForCreature,
   maxLevelForState,
 } from '@/utils/formulas'
+import { jobIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const { getItemById } = useItems()
@@ -746,7 +747,9 @@ const maxJobLevel = 10
                     class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                     @click="sortBy(jobKey)"
                   >
+                    <img v-if="jobIcons[jobKey]" :src="jobIcons[jobKey]" alt="" class="size-3.5" />
                     <span
+                      v-else
                       class="inline-block size-1.5 rounded-full"
                       :style="{ backgroundColor: jobColors[jobKey] }"
                     ></span>
@@ -1096,15 +1099,20 @@ const maxJobLevel = 10
                 Job Levels
               </h3>
               <div class="flex flex-wrap justify-center gap-3">
-                <ProficiencyRing
+                <div
                   v-for="[jobKey, jobName] in jobEntries"
                   :key="jobKey"
-                  :label="jobName.slice(0, 3)"
-                  :value="selectedCreature.jobs[jobKey]"
-                  :max-value="maxJobLevel"
-                  :color="jobColors[jobKey]"
-                  size="sm"
-                />
+                  class="flex flex-col items-center gap-1"
+                >
+                  <img v-if="jobIcons[jobKey]" :src="jobIcons[jobKey]" alt="" class="size-4" />
+                  <ProficiencyRing
+                    :label="jobName.slice(0, 3)"
+                    :value="selectedCreature.jobs[jobKey]"
+                    :max-value="maxJobLevel"
+                    :color="jobColors[jobKey]"
+                    size="sm"
+                  />
+                </div>
               </div>
             </section>
 

@@ -7,6 +7,7 @@ import notSummonedIcon from '@/assets/icons/not_summoned.png'
 import summonedIcon from '@/assets/icons/summoned.png'
 import type { ElementType } from '@/types'
 import { toTitleCase } from '@/utils/format'
+import { jobIcons } from '@/utils/icons'
 
 const props = defineProps<{
   searchQuery: string
@@ -182,10 +183,16 @@ const typeDotColor: Record<ElementType, string> = {
           :key="job"
           role="radio"
           :aria-checked="props.jobFilter === job"
-          class="pill focus-ring"
+          class="pill focus-ring gap-1.5"
           :class="props.jobFilter === job ? 'pill-active' : ''"
           @click="emit('update:jobFilter', job)"
         >
+          <img
+            v-if="jobIcons[job.toLowerCase()]"
+            :src="jobIcons[job.toLowerCase()]"
+            alt=""
+            class="size-4"
+          />
           {{ toTitleCase(job) }}
         </button>
       </div>

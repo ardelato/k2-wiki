@@ -5,6 +5,7 @@ import type { Creature, JobKey } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase } from '@/utils/format'
 import { jobLabels, jobColors } from '@/utils/formulas'
+import { jobIcons } from '@/utils/icons'
 
 const props = defineProps<{
   creature: Creature
@@ -80,7 +81,8 @@ const jobEntries = computed(() =>
     <!-- Job stats grid -->
     <div class="job-grid">
       <div v-for="job in jobEntries" :key="job.key" class="job-cell">
-        <span class="job-dot" :style="{ backgroundColor: job.color }" />
+        <img v-if="jobIcons[job.key]" :src="jobIcons[job.key]" alt="" class="job-icon" />
+        <span v-else class="job-dot" :style="{ backgroundColor: job.color }" />
         <span class="job-abbr">{{ job.abbr }}</span>
         <span class="job-level">{{ job.level }}</span>
       </div>
@@ -212,6 +214,13 @@ const jobEntries = computed(() =>
   gap: 4px;
   font-size: 11px;
   min-width: 0;
+}
+
+.job-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .job-dot {

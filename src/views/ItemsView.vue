@@ -9,6 +9,7 @@ import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import { useItems } from '@/composables/useItems'
 import type { Item } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
+import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const {
@@ -411,8 +412,14 @@ onMounted(() => {
                       <span
                         v-for="label in uniqueSourceLabels(item.sources).slice(0, 2)"
                         :key="label"
-                        class="rounded-md border border-border/60 bg-muted/30 px-1.5 py-0.5 text-xs font-medium text-muted-foreground"
+                        class="inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/30 px-1.5 py-0.5 text-xs font-medium text-muted-foreground"
                       >
+                        <img
+                          v-if="sourceIcons[label]"
+                          :src="sourceIcons[label]"
+                          alt=""
+                          class="size-3"
+                        />
                         {{ label }}
                       </span>
                       <span

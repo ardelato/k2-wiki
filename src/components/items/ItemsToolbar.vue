@@ -5,6 +5,7 @@ import { ref, computed } from 'vue'
 import type { SourceCategory } from '@/composables/useItems'
 import type { ItemType } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
+import { sourceIcons } from '@/utils/icons'
 
 const props = defineProps<{
   searchQuery: string
@@ -216,10 +217,11 @@ const showFilters = ref(false)
         <button
           v-for="sub in props.availableSubFilters"
           :key="sub"
-          class="pill focus-ring active:scale-[0.96]"
+          class="pill focus-ring gap-1.5 active:scale-[0.96]"
           :class="props.sourceSubFilter.has(sub) ? 'pill-active' : ''"
           @click="emit('toggle-sub-filter', sub)"
         >
+          <img v-if="sourceIcons[sub]" :src="sourceIcons[sub]" alt="" class="size-4" />
           {{ sourceLabel(sub) }}
         </button>
         <button

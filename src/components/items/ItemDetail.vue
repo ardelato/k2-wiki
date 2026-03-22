@@ -7,6 +7,7 @@ import expeditionsData from '@/data/expeditions.json'
 import type { Item } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { itemTypeColor, toTitleCase, formatDuration } from '@/utils/format'
+import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const expeditionById = new Map(expeditionsData.map((e) => [e.id, e]))
@@ -294,7 +295,14 @@ const jobColorMap: Record<string, string> = {
               v-if="group.count === 1"
               class="-mx-1 flex items-center gap-3 rounded-lg px-3 py-1.5 transition hover:bg-muted/20"
             >
+              <img
+                v-if="sourceIcons[group.jobId]"
+                :src="sourceIcons[group.jobId]"
+                alt=""
+                class="size-4 shrink-0"
+              />
               <span
+                v-else
                 class="size-1.5 shrink-0 rounded-full"
                 :style="{ backgroundColor: jobColorMap[group.jobId] ?? 'var(--color-text-muted)' }"
               />
@@ -326,7 +334,14 @@ const jobColorMap: Record<string, string> = {
                 class="-mx-1 flex cursor-pointer select-none items-center gap-3 rounded-lg px-3 py-1.5 transition hover:bg-muted/20"
                 @click="toggleJobGroup(group.jobId)"
               >
+                <img
+                  v-if="sourceIcons[group.jobId]"
+                  :src="sourceIcons[group.jobId]"
+                  alt=""
+                  class="size-4 shrink-0"
+                />
                 <span
+                  v-else
                   class="size-1.5 shrink-0 rounded-full"
                   :style="{
                     backgroundColor: jobColorMap[group.jobId] ?? 'var(--color-text-muted)',
@@ -442,7 +457,15 @@ const jobColorMap: Record<string, string> = {
         <div class="space-y-3">
           <div v-for="(recipe, idx) in mergedRecipes" :key="idx" class="rounded-xl bg-muted/20 p-3">
             <!-- Header -->
-            <p class="mb-2 text-sm font-semibold text-foreground">{{ recipe.workstation }}</p>
+            <p class="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <img
+                v-if="sourceIcons[recipe.workstation]"
+                :src="sourceIcons[recipe.workstation]"
+                alt=""
+                class="size-4"
+              />
+              {{ recipe.workstation }}
+            </p>
 
             <!-- Stats bar -->
             <div class="mb-3 flex flex-wrap gap-3 text-sm">
