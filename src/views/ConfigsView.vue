@@ -1018,9 +1018,7 @@ function jobTierLabel(tier: number): string {
         </button>
         <div class="flex items-center gap-2">
           <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-            {{
-              sanctuaryCreatureIds.length + helperCreatureIds.length + machineCreatureIds.length
-            }}
+            {{ sanctuaryCreatureIds.length + helperCreatureIds.length + machineCreatureIds.length }}
             excluded
           </span>
           <button
