@@ -187,7 +187,12 @@ const typeDotColor: Record<ElementType, string> = {
           :class="props.jobFilter === job ? 'pill-active' : ''"
           @click="emit('update:jobFilter', job)"
         >
-          <img v-if="jobIcons[job.toLowerCase()]" :src="jobIcons[job.toLowerCase()]" alt="" class="size-4" />
+          <img
+            v-if="jobIcons[job.toLowerCase()]"
+            :src="jobIcons[job.toLowerCase()]"
+            alt=""
+            class="size-4"
+          />
           {{ toTitleCase(job) }}
         </button>
       </div>

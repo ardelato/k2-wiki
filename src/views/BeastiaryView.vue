@@ -747,12 +747,7 @@ const maxJobLevel = 10
                     class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                     @click="sortBy(jobKey)"
                   >
-                    <img
-                      v-if="jobIcons[jobKey]"
-                      :src="jobIcons[jobKey]"
-                      alt=""
-                      class="size-3.5"
-                    />
+                    <img v-if="jobIcons[jobKey]" :src="jobIcons[jobKey]" alt="" class="size-3.5" />
                     <span
                       v-else
                       class="inline-block size-1.5 rounded-full"
@@ -1109,12 +1104,7 @@ const maxJobLevel = 10
                   :key="jobKey"
                   class="flex flex-col items-center gap-1"
                 >
-                  <img
-                    v-if="jobIcons[jobKey]"
-                    :src="jobIcons[jobKey]"
-                    alt=""
-                    class="size-4"
-                  />
+                  <img v-if="jobIcons[jobKey]" :src="jobIcons[jobKey]" alt="" class="size-4" />
                   <ProficiencyRing
                     :label="jobName.slice(0, 3)"
                     :value="selectedCreature.jobs[jobKey]"

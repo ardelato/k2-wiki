@@ -401,7 +401,12 @@ const hasAnyChanges = computed(
               class="rounded-xl border border-border/40 bg-background/30 px-3 py-2.5"
             >
               <div class="flex items-center gap-3">
-                <img v-if="sourceIcons[job]" :src="sourceIcons[job]" alt="" class="size-4 shrink-0" />
+                <img
+                  v-if="sourceIcons[job]"
+                  :src="sourceIcons[job]"
+                  alt=""
+                  class="size-4 shrink-0"
+                />
                 <span class="min-w-0 flex-1 text-xs font-semibold text-foreground">{{ job }}</span>
 
                 <div class="flex items-center gap-2">

@@ -175,7 +175,12 @@ function forwardPinMethod(nodeId: string, methodId: string) {
           >
             {{ methodKindLabel(activeMethod.kind) }}
           </span>
-          <img v-if="sourceIcons[activeMethod.title]" :src="sourceIcons[activeMethod.title]" alt="" class="size-3.5 shrink-0" />
+          <img
+            v-if="sourceIcons[activeMethod.title]"
+            :src="sourceIcons[activeMethod.title]"
+            alt=""
+            class="size-3.5 shrink-0"
+          />
           <span class="min-w-0 truncate text-xs text-muted-foreground">{{
             activeMethod.title
           }}</span>
