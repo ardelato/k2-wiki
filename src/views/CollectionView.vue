@@ -6,9 +6,10 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { Creature, ElementType } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { typeColor, typeColorVar } from '@/utils/format'
+import { maxLevelForState } from '@/utils/formulas'
 
 const { creatures } = useCreatures()
-const { isOwned, getLevel, toggleOwned, setLevel, ownedCreatureIds } = useCreatureCollection()
+const { isOwned, getLevel, toggleOwned, setLevel, ownedCreatureIds, isAwakened, setAwakened } = useCreatureCollection()
 
 const editing = ref(false)
 const searchQuery = ref('')
@@ -216,7 +217,9 @@ function applyBulkLevel() {
         <div v-for="creature in group.creatures" :key="creature.id"
           class="group relative rounded-xl border transition"
           :class="[isOwned(creature.id)
-            ? 'border-primary/40 ring-1 ring-primary/20'
+            ? isAwakened(creature.id)
+              ? 'border-pink-500/40 ring-1 ring-pink-500/20'
+              : 'border-primary/40 ring-1 ring-primary/20'
             : 'border-border/60 opacity-55',
             editing ? 'cursor-pointer' : '']"
           @click="editing ? toggleOwned(creature.id) : undefined">
@@ -264,12 +267,12 @@ function applyBulkLevel() {
           <div class="space-y-2 rounded-b-xl bg-card/80 px-3 pb-3 pt-2.5">
             <!-- Name + level -->
             <div class="text-center">
-              <p class="truncate text-lg font-extrabold text-foreground">{{ creature.name }}</p>
+              <p class="truncate text-lg font-extrabold" :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-foreground'">{{ creature.name }}</p>
               <p
                 v-if="!editing && isOwned(creature.id)"
                 class="font-mono text-[10px] text-muted-foreground"
               >
-                LVL {{ getLevel(creature.id) }}
+                LVL {{ getLevel(creature.id) }}<span v-if="isAwakened(creature.id)" class="ml-1 text-pink-400">★</span>
               </p>
             </div>
 
@@ -290,11 +293,22 @@ function applyBulkLevel() {
                   @blur="normalizeLevelOnBlur(creature.id, $event)" />
                 <button
                   class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                  :disabled="getLevel(creature.id) >= 120" aria-label="Increase level"
+                  :disabled="getLevel(creature.id) >= maxLevelForState(isAwakened(creature.id))" aria-label="Increase level"
                   @click="stepLevel(creature.id, 1)">
                   <Plus class="size-3" />
                 </button>
               </div>
+              <!-- Awakened toggle -->
+              <button
+                class="flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-semibold transition"
+                :class="isAwakened(creature.id)
+                  ? 'border-pink-500/40 bg-pink-500/10 text-pink-400'
+                  : 'border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground'"
+                @click="setAwakened(creature.id, !isAwakened(creature.id))"
+              >
+                <span>&#9733;</span>
+                {{ isAwakened(creature.id) ? 'Awakened' : 'Awaken' }}
+              </button>
             </div>
           </div>
         </div>
