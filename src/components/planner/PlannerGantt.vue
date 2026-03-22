@@ -4,6 +4,7 @@ import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 
 import type { PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
 import { formatDuration, methodKindClasses } from '@/utils/format'
+import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
@@ -186,7 +187,8 @@ const timeMarkers = computed(() => {
         class="flex items-center border-b border-border/40"
       >
         <!-- Resource label -->
-        <div class="w-28 shrink-0 truncate px-3 py-3 text-xs font-bold text-foreground/80">
+        <div class="flex w-28 shrink-0 items-center gap-1.5 truncate px-3 py-3 text-xs font-bold text-foreground/80">
+          <img v-if="sourceIcons[resource]" :src="sourceIcons[resource]" alt="" class="size-3.5 shrink-0" />
           {{ resource }}
         </div>
         <!-- Lane with task bars -->

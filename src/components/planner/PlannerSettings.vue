@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, RotateCcw } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/composables/useCraftPlanner'
+import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
@@ -400,6 +401,7 @@ const hasAnyChanges = computed(
               class="rounded-xl border border-border/40 bg-background/30 px-3 py-2.5"
             >
               <div class="flex items-center gap-3">
+                <img v-if="sourceIcons[job]" :src="sourceIcons[job]" alt="" class="size-4 shrink-0" />
                 <span class="min-w-0 flex-1 text-xs font-semibold text-foreground">{{ job }}</span>
 
                 <div class="flex items-center gap-2">
@@ -465,6 +467,7 @@ const hasAnyChanges = computed(
               class="rounded-xl border border-border/40 bg-background/30 px-3 py-2.5"
             >
               <div class="flex items-center gap-3">
+                <img v-if="sourceIcons[ws]" :src="sourceIcons[ws]" alt="" class="size-4 shrink-0" />
                 <span class="min-w-0 flex-1 text-xs font-semibold text-foreground">{{ ws }}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-[10px] font-semibold text-muted-foreground">Duration</span>
@@ -531,6 +534,7 @@ const hasAnyChanges = computed(
             :key="job"
             class="flex items-center gap-3 rounded-xl border border-border/40 bg-background/30 px-3 py-2.5"
           >
+            <img v-if="sourceIcons[job]" :src="sourceIcons[job]" alt="" class="size-4 shrink-0" />
             <span class="min-w-0 flex-1 text-sm font-semibold text-foreground">{{ job }}</span>
             <div class="flex items-center gap-1.5">
               <button

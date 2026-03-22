@@ -13,6 +13,7 @@ import { computed } from 'vue'
 
 import type { PlannerMethod, PlannerNode, PlannerSchedule } from '@/types'
 import { formatDuration, itemTypeColor, methodKindColor, methodKindLabel } from '@/utils/format'
+import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
@@ -336,6 +337,7 @@ function openDisplayNodePlanner() {
                 v-if="activeMethod?.id === method.id"
                 class="size-4 shrink-0 text-primary"
               />
+              <img v-if="sourceIcons[method.title]" :src="sourceIcons[method.title]" alt="" class="size-4 shrink-0" />
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-semibold text-foreground">{{ method.title }}</p>
                 <p
