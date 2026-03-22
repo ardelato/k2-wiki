@@ -4,9 +4,13 @@ import exploringIcon from '@/assets/icons/explorering.png'
 import farmingIcon from '@/assets/icons/farming.png'
 import fishingIcon from '@/assets/icons/fishing.png'
 import furnaceIcon from '@/assets/icons/furnace.png'
+import helpersIcon from '@/assets/icons/helpers.png'
 import miningIcon from '@/assets/icons/mining.png'
+import sanctuaryIcon from '@/assets/icons/sanctuary.png'
 import stoveIcon from '@/assets/icons/stove.png'
 import workbenchIcon from '@/assets/icons/workbench.png'
+
+export { helpersIcon, sanctuaryIcon }
 
 export const jobIcons: Record<string, string> = {
   chopping: choppingIcon,
