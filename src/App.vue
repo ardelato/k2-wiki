@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { BookOpen, Compass, GitBranch, Github, Package } from 'lucide-vue-next'
+import { BookOpen, Compass, FileCog, GitBranch, Github, Package } from 'lucide-vue-next'
 import SteamIcon from '@/components/icons/SteamIcon.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import SaveImportModal from '@/components/SaveImportModal.vue'
 import { cn } from '@/lib/utils'
 
 const route = useRoute()
+const showImportModal = ref(false)
 
 const navItems = [
   { label: 'Beastiary', to: '/', icon: BookOpen },
@@ -49,6 +51,14 @@ function isActive(path: string) {
         </nav>
 
         <div class="flex items-center gap-1">
+          <button
+            aria-label="Import save file"
+            title="Import save file"
+            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+            @click="showImportModal = true"
+          >
+            <FileCog class="size-5" />
+          </button>
           <a
             href="https://github.com/ardelato/k2-wiki"
             target="_blank"
@@ -76,6 +86,8 @@ function isActive(path: string) {
     </main>
 
     <AppFooter />
+
+    <SaveImportModal v-if="showImportModal" @close="showImportModal = false" />
 
     <nav
       class="fixed inset-x-0 bottom-0 z-50 border-t border-border/70 bg-background/94 px-3 pb-[calc(env(safe-area-inset-bottom)+0.55rem)] pt-2 backdrop-blur-xl md:hidden">
