@@ -5,6 +5,7 @@ import {
   calculateExpeditionXp,
   biomeMultiplier,
   xpForLevel,
+  PRE_AWAKEN_MAX,
 } from '@/utils/formulas'
 import expeditionsData from '@/data/expeditions.json'
 import biomesData from '@/data/biomes.json'
@@ -13,6 +14,7 @@ export interface LevelPlannerInput {
   creature: Creature
   startLevel: number
   targetLevel: number
+  isAwakened: boolean
 }
 
 export interface PlanStep {
@@ -31,6 +33,7 @@ export interface PlanStep {
   traitMatch: boolean
   biomeStatus: 'advantage' | 'disadvantage' | 'neutral'
   partyTip?: string
+  isAwakeningStep?: boolean
 }
 
 export interface LevelingPlan {
@@ -39,8 +42,6 @@ export interface LevelingPlan {
   totalRuns: number
   xpPerMinute: number
 }
-
-const MAX_LEVEL = 120
 
 /** Minimum improvement required to justify switching expedition+tier (accounts for loop bonus loss) */
 const SWITCH_THRESHOLD = 0.15
@@ -113,7 +114,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const biomes = biomesData as Biome[]
   const biomeMap = new Map(biomes.map(b => [b.id, b]))
 
-  const { creature, startLevel, targetLevel } = settings
+  const { creature, startLevel, targetLevel, isAwakened } = settings
 
   const candidates: ExpeditionWithBiome[] = expeditions.map(exp => ({
     expedition: exp,
@@ -123,8 +124,10 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const rawSteps: PlanStep[] = []
   let currentCombo: ComboKey | null = null
   let loopCount = 0
+  // Effective cap: unawakened creatures must awaken at 70 before continuing
+  const effectiveTarget = !isAwakened ? Math.min(targetLevel, PRE_AWAKEN_MAX) : targetLevel
 
-  for (let level = startLevel; level < targetLevel; level++) {
+  for (let level = startLevel; level < effectiveTarget; level++) {
     // Evaluate current combo with accumulated loop bonus
     let currentResult: EvalResult | null = null
     if (currentCombo) {
@@ -206,6 +209,102 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     loopCount += chosen.runsForLevel
   }
 
+  // Insert awakening step and plan remaining levels if needed
+  if (!isAwakened && targetLevel > PRE_AWAKEN_MAX && startLevel <= PRE_AWAKEN_MAX) {
+    rawSteps.push({
+      expedition: {} as Expedition,
+      tier: 0,
+      fromLevel: PRE_AWAKEN_MAX,
+      toLevel: 1,
+      runs: 0,
+      timeSeconds: 0,
+      xpPerRun: 0,
+      durationPerRun: 0,
+      xpPerMinute: 0,
+      startXpPerMinute: 0,
+      endXpPerMinute: 0,
+      biomeName: '',
+      traitMatch: false,
+      biomeStatus: 'neutral',
+      isAwakeningStep: true,
+    })
+
+    // Plan from 1 → target after awakening (level resets to 1 on awaken)
+    currentCombo = null
+    loopCount = 0
+    for (let level = 1; level < targetLevel; level++) {
+      let currentResult: EvalResult | null = null
+      if (currentCombo) {
+        const cand = candidates.find(c => c.expedition.id === currentCombo!.expeditionId)
+        if (cand) {
+          currentResult = evaluateCombo(creature, cand.expedition, cand.biome, currentCombo.tier, level, loopCount)
+        }
+      }
+
+      let bestFresh: EvalResult | null = null
+      for (const { expedition, biome } of candidates) {
+        for (let tier = 1; tier <= 5; tier++) {
+          const result = evaluateCombo(creature, expedition, biome, tier, level, 0)
+          if (result && (!bestFresh ||
+              result.timeForLevel < bestFresh.timeForLevel ||
+              (result.timeForLevel === bestFresh.timeForLevel && result.xpPerMinute > bestFresh.xpPerMinute))) {
+            bestFresh = result
+          }
+        }
+      }
+
+      if (bestFresh && currentCombo &&
+          bestFresh.expedition.id === currentCombo.expeditionId &&
+          bestFresh.tier === currentCombo.tier) {
+        bestFresh = currentResult
+      }
+
+      let chosen: EvalResult | null
+      if (!currentResult) {
+        chosen = bestFresh
+      } else if (!bestFresh) {
+        chosen = currentResult
+      } else if (bestFresh.expedition.id === currentResult.expedition.id &&
+                 bestFresh.tier === currentResult.tier) {
+        chosen = currentResult
+      } else {
+        const improvement = 1 - bestFresh.timeForLevel / currentResult.timeForLevel
+        const xpImprovement = bestFresh.xpPerMinute / currentResult.xpPerMinute - 1
+        chosen = (improvement > SWITCH_THRESHOLD || (improvement >= 0 && xpImprovement > SWITCH_THRESHOLD))
+          ? bestFresh : currentResult
+      }
+
+      if (!chosen) break
+
+      const chosenCombo: ComboKey = { expeditionId: chosen.expedition.id, tier: chosen.tier }
+      if (!currentCombo || comboId(chosenCombo) !== comboId(currentCombo)) {
+        currentCombo = chosenCombo
+        loopCount = 0
+      }
+
+      const biomeStatus = chosen.biome ? getBiomeStatus(creature, chosen.biome) : 'neutral' as const
+
+      rawSteps.push({
+        expedition: chosen.expedition,
+        tier: chosen.tier,
+        fromLevel: level,
+        toLevel: level + 1,
+        runs: chosen.runsForLevel,
+        timeSeconds: chosen.timeForLevel,
+        xpPerRun: chosen.xpPerRun,
+        durationPerRun: chosen.duration,
+        xpPerMinute: chosen.xpPerMinute,
+        startXpPerMinute: chosen.xpPerMinute,
+        endXpPerMinute: chosen.xpPerMinute,
+        biomeName: chosen.biome?.name ?? chosen.expedition.biome,
+        traitMatch: creature.trait === chosen.expedition.trait,
+        biomeStatus,
+      })
+
+      loopCount += chosen.runsForLevel
+    }
+  }
+
   // Merge consecutive steps using the same expedition+tier
   const steps = mergeSteps(rawSteps)
 
@@ -249,7 +348,12 @@ function mergeSteps(steps: PlanStep[]): PlanStep[] {
 
   for (let i = 1; i < steps.length; i++) {
     const step = steps[i]
-    if (step.expedition.id === current.expedition.id && step.tier === current.tier) {
+    // Never merge awakening steps with adjacent steps
+    if (step.isAwakeningStep || current.isAwakeningStep) {
+      merged.push(current)
+      current = { ...step }
+      currentXpEarned = current.runs * current.xpPerRun
+    } else if (step.expedition.id === current.expedition.id && step.tier === current.tier) {
       current.toLevel = step.toLevel
       current.runs += step.runs
       current.timeSeconds += step.timeSeconds
@@ -266,4 +370,3 @@ function mergeSteps(steps: PlanStep[]): PlanStep[] {
   return merged
 }
 
-export { MAX_LEVEL }
