@@ -8,6 +8,7 @@ defineProps<{
   selected: boolean
 }>()
 
+
 defineEmits<{
   select: [item: Item]
 }>()
@@ -18,7 +19,7 @@ defineEmits<{
     tabindex="0"
     role="button"
     class="surface-card group relative cursor-pointer overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:border-accent/45 hover:shadow-glow active:translate-y-0 active:shadow-none"
-    :class="selected ? 'ring-2 ring-primary/60 border-primary/40' : ''"
+    :class="selected ? 'border-primary/40 ring-2 ring-primary/60' : ''"
     @click="$emit('select', item)"
     @keydown.enter="$emit('select', item)"
   >
@@ -26,7 +27,7 @@ defineEmits<{
     <div
       class="flex aspect-[4/3] items-center justify-center rounded-t-[inherit]"
       :style="{
-        background: `linear-gradient(180deg, color-mix(in oklch, ${itemTypeColor(item.type)} 15%, transparent) 0%, color-mix(in oklch, ${itemTypeColor(item.type)} 8%, transparent) 100%)`
+        background: `linear-gradient(180deg, color-mix(in oklch, ${itemTypeColor(item.type)} 15%, transparent) 0%, color-mix(in oklch, ${itemTypeColor(item.type)} 8%, transparent) 100%)`,
       }"
     >
       <img
@@ -53,7 +54,7 @@ defineEmits<{
         class="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold"
         :style="{
           color: itemTypeColor(item.type),
-          backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 12%, transparent)`
+          backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 12%, transparent)`,
         }"
       >
         {{ item.type }}

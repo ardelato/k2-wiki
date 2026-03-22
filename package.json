@@ -1,12 +1,16 @@
 {
   "name": "k2-wiki",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
+    "lint": "oxlint -c oxlintrc.json --vue-plugin",
+    "lint:fix": "oxlint -c oxlintrc.json --vue-plugin --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "prepare": "lefthook install"
   },
   "dependencies": {
@@ -23,6 +27,8 @@
     "@vitejs/plugin-vue": "^5.2.3",
     "autoprefixer": "^10.4.27",
     "lefthook": "^2.1.4",
+    "oxfmt": "^0.41.0",
+    "oxlint": "^1.56.0",
     "postcss": "^8.5.8",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",

@@ -6,9 +6,7 @@
     "description": "A leaf-like creature that can glide through the wind effortlessly with its leaf-like features. A jack of all trades, who enjoys learning everything it can around it.",
     "tier": 0,
     "trait": "learner",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 10,
       "grit": 11,
@@ -43,9 +41,7 @@
     "description": "A ball-like creature who's just happy to roll around and chase after their friends, quite often running into walls. Has quite the hard shell, making for good bonks!",
     "tier": 0,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 8,
       "grit": 20,
@@ -80,9 +76,7 @@
     "description": "A hedgehog-bear-like creature who is very slick and greedy. Will stop at nothing to earn a little gold to add to its collection. They are also one lucky duck.",
     "tier": 0,
     "trait": "lucky",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 4,
       "grit": 7,
@@ -117,9 +111,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "camouflage",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 3,
       "grit": 4,
@@ -154,9 +146,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "heat-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 20,
       "grit": 4,
@@ -191,9 +181,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 4,
       "grit": 7,
@@ -228,9 +216,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "tracking",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 20,
       "grit": 4,
@@ -265,9 +251,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "gatherer",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 3,
       "grit": 5,
@@ -302,9 +286,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "lucky",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 3,
       "grit": 5,
@@ -339,9 +321,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "regeneration",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 3,
       "grit": 5,
@@ -376,9 +356,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "camouflage",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 3,
       "grit": 6,
@@ -413,9 +391,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "poison-resistance",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 18,
       "grit": 8,
@@ -450,9 +426,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "heat-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 5,
       "grit": 4,
@@ -487,9 +461,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "hard-shell",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 7,
       "grit": 17,
@@ -524,9 +496,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 2,
       "grit": 3,
@@ -561,9 +531,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "cold-resistance",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 2,
       "grit": 4,
@@ -598,9 +566,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "lucky",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 2,
       "grit": 3,
@@ -635,9 +601,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "learner",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 4,
       "grit": 4,
@@ -672,9 +636,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "scouting",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 3,
       "grit": 3,
@@ -709,9 +671,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 0,
     "trait": "tracking",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 3,
       "grit": 4,
@@ -746,9 +706,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "night-vision",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 26,
       "grit": 14,
@@ -791,9 +749,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "night-vision",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 5,
       "grit": 5,
@@ -836,9 +792,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "cold-resistance",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 26,
       "grit": 14,
@@ -881,9 +835,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "heat-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 4,
       "grit": 14,
@@ -926,9 +878,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "scouting",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 4,
       "grit": 6,
@@ -971,9 +921,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "regeneration",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 4,
       "grit": 7,
@@ -1016,9 +964,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "poison-resistance",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 28,
       "grit": 10,
@@ -1061,9 +1007,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 14,
       "grit": 28,
@@ -1106,9 +1050,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "camouflage",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 10,
       "grit": 5,
@@ -1151,9 +1093,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "tracking",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 4,
       "grit": 5,
@@ -1196,9 +1136,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "learner",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 4,
       "grit": 4,
@@ -1241,9 +1179,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "tracking",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 4,
       "grit": 5,
@@ -1286,9 +1222,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "night-vision",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 5,
       "grit": 4,
@@ -1331,9 +1265,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "learner",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 14,
       "grit": 5,
@@ -1376,9 +1308,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 26,
       "grit": 10,
@@ -1421,9 +1351,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "poison-resistance",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 28,
       "grit": 6,
@@ -1466,9 +1394,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 3,
       "grit": 5,
@@ -1511,9 +1437,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 5,
       "grit": 26,
@@ -1556,9 +1480,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 4,
       "grit": 5,
@@ -1601,9 +1523,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 1,
     "trait": "regeneration",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 26,
       "grit": 12,
@@ -1646,9 +1566,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "heat-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 34,
       "grit": 8,
@@ -1695,9 +1613,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 10,
       "grit": 38,
@@ -1744,9 +1660,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 38,
       "grit": 34,
@@ -1793,9 +1707,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "tracking",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 34,
       "grit": 6,
@@ -1842,9 +1754,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "lucky",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 38,
       "grit": 34,
@@ -1891,9 +1801,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "cold-resistance",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 38,
       "grit": 6,
@@ -1940,9 +1848,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "poison-resistance",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 5,
       "grit": 10,
@@ -1989,9 +1895,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "camouflage",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 6,
       "grit": 34,
@@ -2038,9 +1942,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 5,
       "grit": 10,
@@ -2087,9 +1989,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "heat-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 12,
       "grit": 8,
@@ -2136,9 +2036,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "camouflage",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 38,
       "grit": 34,
@@ -2185,9 +2083,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "regeneration",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 6,
       "grit": 12,
@@ -2234,9 +2130,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 34,
       "grit": 12,
@@ -2283,9 +2177,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 4,
       "grit": 5,
@@ -2332,9 +2224,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "cold-resistance",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 4,
       "grit": 36,
@@ -2381,9 +2271,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "water-breathing",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 4,
       "grit": 5,
@@ -2430,9 +2318,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "tracking",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 4,
       "grit": 6,
@@ -2479,9 +2365,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "cold-resistance",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 4,
       "grit": 5,
@@ -2528,9 +2412,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "learner",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 5,
       "grit": 6,
@@ -2577,9 +2459,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 2,
     "trait": "scouting",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 5,
       "grit": 6,
@@ -2626,9 +2506,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "hard-shell",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 56,
       "grit": 52,
@@ -2679,9 +2557,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 56,
       "grit": 54,
@@ -2732,9 +2608,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 52,
       "grit": 56,
@@ -2785,9 +2659,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "learner",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 56,
       "grit": 20,
@@ -2838,9 +2710,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "poison-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 54,
       "grit": 52,
@@ -2891,9 +2761,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "lucky",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 52,
       "grit": 18,
@@ -2944,9 +2812,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "regeneration",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 12,
       "grit": 24,
@@ -2997,9 +2863,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "gatherer",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 12,
       "grit": 52,
@@ -3050,9 +2914,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "camouflage",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 26,
       "grit": 54,
@@ -3103,9 +2965,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "scouting",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 56,
       "grit": 54,
@@ -3156,9 +3016,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 52,
       "grit": 54,
@@ -3209,9 +3067,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "tracking",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 52,
       "grit": 26,
@@ -3262,9 +3118,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "hard-shell",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 54,
       "grit": 52,
@@ -3315,9 +3169,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "gatherer",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 8,
       "grit": 12,
@@ -3368,9 +3220,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "cold-resistance",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 8,
       "grit": 24,
@@ -3421,9 +3271,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "water-breathing",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 8,
       "grit": 12,
@@ -3474,9 +3322,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 8,
       "grit": 12,
@@ -3527,9 +3373,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "learner",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 12,
       "grit": 8,
@@ -3580,9 +3424,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "night-vision",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 8,
       "grit": 12,
@@ -3633,9 +3475,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 3,
     "trait": "night-vision",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 8,
       "grit": 12,
@@ -3686,9 +3526,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "regeneration",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 78,
       "grit": 74,
@@ -3739,9 +3577,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "hard-shell",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 78,
       "grit": 74,
@@ -3792,9 +3628,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "night-vision",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 36,
       "grit": 22,
@@ -3845,9 +3679,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "hard-shell",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 74,
       "grit": 78,
@@ -3898,9 +3730,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "camouflage",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 72,
       "grit": 36,
@@ -3951,9 +3781,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "camouflage",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 78,
       "grit": 36,
@@ -4004,9 +3832,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "tracking",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 78,
       "grit": 72,
@@ -4057,9 +3883,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "learner",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 20,
       "grit": 65,
@@ -4110,9 +3934,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "hard-shell",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 20,
       "grit": 65,
@@ -4163,9 +3985,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "cold-resistance",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 20,
       "grit": 74,
@@ -4216,9 +4036,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "heat-resistance",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 20,
       "grit": 66,
@@ -4269,9 +4087,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "camouflage",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 72,
       "grit": 36,
@@ -4322,9 +4138,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "scouting",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 78,
       "grit": 74,
@@ -4375,9 +4189,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "tracking",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 76,
       "grit": 74,
@@ -4428,9 +4240,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "scouting",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 14,
       "grit": 78,
@@ -4481,9 +4291,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "learner",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 14,
       "grit": 36,
@@ -4534,9 +4342,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 14,
       "grit": 72,
@@ -4587,9 +4393,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "night-vision",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 14,
       "grit": 22,
@@ -4640,9 +4444,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "poison-resistance",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 14,
       "grit": 20,
@@ -4693,9 +4495,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 4,
     "trait": "cold-resistance",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 14,
       "grit": 20,
@@ -4746,9 +4546,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 96,
       "grit": 94,
@@ -4799,9 +4597,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 94,
       "grit": 98,
@@ -4852,9 +4648,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 92,
       "grit": 98,
@@ -4905,9 +4699,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "poison-resistance",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 98,
       "grit": 88,
@@ -4958,9 +4750,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "regeneration",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 96,
       "grit": 94,
@@ -5011,9 +4801,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "cold-resistance",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 98,
       "grit": 86,
@@ -5064,9 +4852,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "tracking",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 98,
       "grit": 94,
@@ -5117,9 +4903,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "heat-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 34,
       "grit": 86,
@@ -5170,9 +4954,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "lucky",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 34,
       "grit": 52,
@@ -5223,9 +5005,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "gatherer",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 22,
       "grit": 88,
@@ -5276,9 +5056,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "scouting",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 98,
       "grit": 94,
@@ -5329,9 +5107,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "poison-resistance",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 96,
       "grit": 36,
@@ -5382,9 +5158,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "hard-shell",
-    "types": [
-      "Earth"
-    ],
+    "types": ["Earth"],
     "stats": {
       "power": 98,
       "grit": 86,
@@ -5435,9 +5209,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 86,
       "grit": 22,
@@ -5488,9 +5260,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "water-breathing",
-    "types": [
-      "Water"
-    ],
+    "types": ["Water"],
     "stats": {
       "power": 34,
       "grit": 22,
@@ -5541,9 +5311,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "cold-resistance",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 22,
       "grit": 90,
@@ -5594,9 +5362,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "tracking",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 24,
       "grit": 36,
@@ -5647,9 +5413,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "gatherer",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 24,
       "grit": 36,
@@ -5700,9 +5464,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "learner",
-    "types": [
-      "Fire"
-    ],
+    "types": ["Fire"],
     "stats": {
       "power": 34,
       "grit": 22,
@@ -5753,9 +5515,7 @@
     "description": "Placeholder flavor text, to be written in the future.",
     "tier": 5,
     "trait": "scouting",
-    "types": [
-      "Wind"
-    ],
+    "types": ["Wind"],
     "stats": {
       "power": 34,
       "grit": 22,

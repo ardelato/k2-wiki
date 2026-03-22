@@ -1,8 +1,9 @@
-import { ref, computed, watch } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
-import type { Creature, Expedition, Biome } from '@/types'
-import expeditionsData from '@/data/expeditions.json'
+import { ref, computed, watch } from 'vue'
+
 import biomesData from '@/data/biomes.json'
+import expeditionsData from '@/data/expeditions.json'
+import type { Creature, Expedition, Biome } from '@/types'
 import {
   calculateCreatureRating,
   calculateDifficultyRating,
@@ -37,11 +38,10 @@ export function useExpeditions(creatures: Creature[]) {
         const matchesSearch =
           exp.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
           exp.biome.toLowerCase().includes(searchQuery.value.toLowerCase())
-        const matchesBiome =
-          biomeFilter.value === 'all' || exp.biome === biomeFilter.value
+        const matchesBiome = biomeFilter.value === 'all' || exp.biome === biomeFilter.value
         return matchesSearch && matchesBiome
       })
-      .sort((a, b) => {
+      .toSorted((a, b) => {
         const aNum = parseInt(a.id.replace(/\D/g, ''), 10) || 0
         const bNum = parseInt(b.id.replace(/\D/g, ''), 10) || 0
         return aNum - bNum
@@ -59,7 +59,10 @@ export function useExpeditions(creatures: Creature[]) {
   })
 
   const expeditionEvaluations = computed(() => {
-    const result: Record<string, { xpPerCreature: number, xpPerSecond: number, duration: number, scoreRatio: number } | null> = {}
+    const result: Record<
+      string,
+      { xpPerCreature: number; xpPerSecond: number; duration: number; scoreRatio: number } | null
+    > = {}
     for (const exp of expeditions.value) {
       result[exp.id] = evaluateExpedition(exp)
     }
@@ -77,10 +80,14 @@ export function useExpeditions(creatures: Creature[]) {
     return sum
   })
 
-  function evaluateExpedition(exp: Expedition): { xpPerCreature: number, xpPerSecond: number, duration: number, scoreRatio: number } | null {
+  function evaluateExpedition(
+    exp: Expedition,
+  ): { xpPerCreature: number; xpPerSecond: number; duration: number; scoreRatio: number } | null {
     const partyIds = expeditionParties.value[exp.id]
     if (!partyIds || partyIds.length === 0) return null
-    const partyCreatures = partyIds.map(id => creatures.find(c => c.id === id)).filter((c): c is Creature => c !== null)
+    const partyCreatures = partyIds
+      .map((id) => creatures.find((c) => c.id === id))
+      .filter((c): c is Creature => c !== null)
     if (partyCreatures.length === 0) return null
 
     const biome = getBiome(exp.biome)
@@ -100,10 +107,12 @@ export function useExpeditions(creatures: Creature[]) {
     if (exp) {
       selectedTier.value = expeditionTiers.value[exp.id] || 1
       const ids = expeditionParties.value[exp.id] || []
-      partySlots.value = Array(exp.maxPartySize).fill(null).map((_, i) => {
-        const id = ids[i]
-        return id ? creatures.find(c => c.id === id) ?? null : null
-      })
+      partySlots.value = Array(exp.maxPartySize)
+        .fill(null)
+        .map((_, i) => {
+          const id = ids[i]
+          return id ? (creatures.find((c) => c.id === id) ?? null) : null
+        })
     } else {
       partySlots.value = []
     }
@@ -120,20 +129,24 @@ export function useExpeditions(creatures: Creature[]) {
   })
 
   // Persist party changes
-  watch(partySlots, (slots) => {
-    if (!selectedExpedition.value) return
-    const ids = slots.map(s => s?.id ?? '').filter(id => id !== '')
-    const updated = { ...expeditionParties.value }
-    if (ids.length > 0) {
-      updated[selectedExpedition.value.id] = ids
-    } else {
-      delete updated[selectedExpedition.value.id]
-    }
-    expeditionParties.value = updated
-  }, { deep: true })
+  watch(
+    partySlots,
+    (slots) => {
+      if (!selectedExpedition.value) return
+      const ids = slots.map((s) => s?.id ?? '').filter((id) => id !== '')
+      const updated = { ...expeditionParties.value }
+      if (ids.length > 0) {
+        updated[selectedExpedition.value.id] = ids
+      } else {
+        delete updated[selectedExpedition.value.id]
+      }
+      expeditionParties.value = updated
+    },
+    { deep: true },
+  )
 
   const getBiome = (id: string): Biome | undefined => {
-    return biomes.value.find(b => b.id === id)
+    return biomes.value.find((b) => b.id === id)
   }
 
   const currentBiome = computed(() => {
@@ -142,7 +155,7 @@ export function useExpeditions(creatures: Creature[]) {
   })
 
   const partyCreatureIds = computed(() => {
-    return new Set(partySlots.value.filter(Boolean).map(c => c!.id))
+    return new Set(partySlots.value.filter(Boolean).map((c) => c!.id))
   })
 
   const recommendedCreatures = computed(() => {
@@ -151,14 +164,19 @@ export function useExpeditions(creatures: Creature[]) {
     const biome = currentBiome.value
     const remainingScore = difficultyRating.value - partyScore.value
     const base = getRecommendedCreatures(
-      creatures.filter(c => !partyCreatureIds.value.has(c.id) && !allAssignedCreatureIds.value.has(c.id)),
+      creatures.filter(
+        (c) => !partyCreatureIds.value.has(c.id) && !allAssignedCreatureIds.value.has(c.id),
+      ),
       expedition,
       creatureLevels.value,
-      biome
+      biome,
     )
-    return base.map(entry => {
+    return base.map((entry) => {
       let weightedStatSum = 0
-      for (const [stat, weight] of Object.entries(expedition.statWeights) as [keyof typeof entry.creature.stats, number][]) {
+      for (const [stat, weight] of Object.entries(expedition.statWeights) as [
+        keyof typeof entry.creature.stats,
+        number,
+      ][]) {
         if (weight > 0) {
           weightedStatSum += entry.creature.stats[stat] * weight
         }
@@ -185,7 +203,7 @@ export function useExpeditions(creatures: Creature[]) {
       partySlots.value,
       selectedExpedition.value,
       creatureLevels.value,
-      currentBiome.value
+      currentBiome.value,
     )
   })
 
@@ -218,7 +236,7 @@ export function useExpeditions(creatures: Creature[]) {
       selectedExpedition.value,
       selectedTier.value,
       loopCount.value,
-      activeCreatures
+      activeCreatures,
     )
   })
 
@@ -238,7 +256,7 @@ export function useExpeditions(creatures: Creature[]) {
     if (!totalXp.value) return []
     return partySlots.value
       .filter((c): c is Creature => c !== null)
-      .map(creature => {
+      .map((creature) => {
         const currentLevel = creatureLevels.value[creature.id] || 1
         const startXp = xpForLevel(currentLevel)
         const endXp = startXp + totalXp.value!
@@ -259,13 +277,17 @@ export function useExpeditions(creatures: Creature[]) {
   const assignCreatureToSlot = (creature: Creature) => {
     const slots = partySlots.value
     // If there's an active slot, fill it
-    if (activeSlotIndex.value !== null && activeSlotIndex.value < slots.length && !slots[activeSlotIndex.value]) {
+    if (
+      activeSlotIndex.value !== null &&
+      activeSlotIndex.value < slots.length &&
+      !slots[activeSlotIndex.value]
+    ) {
       slots[activeSlotIndex.value] = creature
       activeSlotIndex.value = null
       return
     }
     // Otherwise fill first empty slot
-    const emptyIndex = slots.findIndex(s => s === null)
+    const emptyIndex = slots.findIndex((s) => s === null)
     if (emptyIndex !== -1) {
       slots[emptyIndex] = creature
       activeSlotIndex.value = null
@@ -297,8 +319,8 @@ export function useExpeditions(creatures: Creature[]) {
   }
 
   const uniqueBiomes = computed(() => {
-    const ids = new Set(expeditions.value.map(e => e.biome))
-    return Array.from(ids).sort()
+    const ids = new Set(expeditions.value.map((e) => e.biome))
+    return Array.from(ids).toSorted()
   })
 
   function exportSetup(): string {
@@ -332,10 +354,12 @@ export function useExpeditions(creatures: Creature[]) {
       if (selectedExpedition.value) {
         selectedTier.value = expeditionTiers.value[selectedExpedition.value.id] || 1
         const ids = expeditionParties.value[selectedExpedition.value.id] || []
-        partySlots.value = Array(selectedExpedition.value.maxPartySize).fill(null).map((_, i) => {
-          const id = ids[i]
-          return id ? creatures.find(c => c.id === id) ?? null : null
-        })
+        partySlots.value = Array(selectedExpedition.value.maxPartySize)
+          .fill(null)
+          .map((_, i) => {
+            const id = ids[i]
+            return id ? (creatures.find((c) => c.id === id) ?? null) : null
+          })
       }
       return true
     } catch {

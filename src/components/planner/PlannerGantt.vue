@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Minus, Plus, RotateCcw } from 'lucide-vue-next'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+
 import type { PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
 import { formatDuration, methodKindClasses } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
@@ -11,9 +12,11 @@ const props = defineProps<{
   selectedNodeId: string | null
 }>()
 
+
 const emit = defineEmits<{
   'select-node': [nodeId: string]
 }>()
+
 
 const tasksByResource = computed(() => {
   const map: Record<string, ScheduledTask[]> = {}
@@ -26,15 +29,19 @@ const tasksByResource = computed(() => {
   return map
 })
 
+
 function niceTimeStep(total: number): number {
   if (total <= 0) return 1
   const rough = total / 6
-  const candidates = [1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400]
+  const candidates = [
+    1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400,
+  ]
   for (const c of candidates) {
     if (c >= rough) return c
   }
   return candidates[candidates.length - 1]
 }
+
 
 const ZOOM_LEVELS = [1, 1.5, 2, 3, 5, 8, 12, 16, 20, 25, 30]
 const DEFAULT_ZOOM_INDEX = 2 // 2x
@@ -43,6 +50,7 @@ const zoom = computed(() => ZOOM_LEVELS[zoomIndex.value])
 const canZoomIn = computed(() => zoomIndex.value < ZOOM_LEVELS.length - 1)
 const canZoomOut = computed(() => zoomIndex.value > 0)
 const isDefaultZoom = computed(() => zoomIndex.value === DEFAULT_ZOOM_INDEX)
+
 
 function zoomIn() {
   if (canZoomIn.value) zoomIndex.value++
@@ -54,26 +62,32 @@ function resetZoom() {
   zoomIndex.value = DEFAULT_ZOOM_INDEX
 }
 
+
 const laneMinWidth = computed(() => `${Math.round(400 * zoom.value)}px`)
+
 
 const ganttRef = ref<HTMLElement | null>(null)
 const zoomModifierHeld = ref(false)
 const shiftHeld = ref(false)
+
 
 function onKeyDown(e: KeyboardEvent) {
   if (e.ctrlKey || e.metaKey) zoomModifierHeld.value = true
   if (e.shiftKey) shiftHeld.value = true
 }
 
+
 function onKeyUp(e: KeyboardEvent) {
   if (!e.ctrlKey && !e.metaKey) zoomModifierHeld.value = false
   if (!e.shiftKey) shiftHeld.value = false
 }
 
+
 function onBlur() {
   zoomModifierHeld.value = false
   shiftHeld.value = false
 }
+
 
 function onWheel(e: WheelEvent) {
   if (!e.ctrlKey && !e.metaKey) return
@@ -82,6 +96,7 @@ function onWheel(e: WheelEvent) {
   else if (e.deltaY > 0) zoomOut()
 }
 
+
 onMounted(() => {
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
@@ -89,12 +104,14 @@ onMounted(() => {
   ganttRef.value?.addEventListener('wheel', onWheel, { passive: false })
 })
 
+
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeyDown)
   window.removeEventListener('keyup', onKeyUp)
   window.removeEventListener('blur', onBlur)
   ganttRef.value?.removeEventListener('wheel', onWheel)
 })
+
 
 const timeMarkers = computed(() => {
   const total = props.schedule.totalTime
@@ -109,7 +126,11 @@ const timeMarkers = computed(() => {
 </script>
 
 <template>
-  <div ref="ganttRef" class="surface-card overflow-hidden" :class="zoomModifierHeld ? 'cursor-zoom-in' : shiftHeld ? 'cursor-ew-resize' : ''">
+  <div
+    ref="ganttRef"
+    class="surface-card overflow-hidden"
+    :class="zoomModifierHeld ? 'cursor-zoom-in' : shiftHeld ? 'cursor-ew-resize' : ''"
+  >
     <!-- Zoom controls -->
     <div class="flex items-center justify-end gap-2 border-b border-border/40 px-4 py-2">
       <span class="text-[11px] font-semibold text-muted-foreground">{{ zoom }}x</span>
@@ -145,7 +166,7 @@ const timeMarkers = computed(() => {
     <!-- Scrollable timeline area -->
     <div class="flex flex-col gap-0 overflow-x-auto">
       <!-- Time axis header -->
-      <div class="flex items-end border-b border-border/60 px-3 pb-2 pt-3 pl-28">
+      <div class="flex items-end border-b border-border/60 px-3 pb-2 pl-28 pt-3">
         <div class="relative h-5 flex-1" :style="{ minWidth: laneMinWidth }">
           <span
             v-for="marker in timeMarkers"
@@ -173,11 +194,15 @@ const timeMarkers = computed(() => {
           <button
             v-for="task in tasksByResource[resource]"
             :key="task.nodeId"
-            class="absolute top-2 bottom-2 flex items-center gap-1.5 truncate rounded border px-2 text-[11px] font-bold transition-colors"
+            class="absolute bottom-2 top-2 flex items-center gap-1.5 truncate rounded border px-2 text-[11px] font-bold transition-colors"
             :class="[
               task.nodeId === selectedNodeId ? 'ring-2 ring-primary' : '',
               methodKindClasses(task.kind),
-              zoomModifierHeld ? 'cursor-zoom-in' : shiftHeld ? 'cursor-ew-resize' : 'cursor-pointer',
+              zoomModifierHeld
+                ? 'cursor-zoom-in'
+                : shiftHeld
+                  ? 'cursor-ew-resize'
+                  : 'cursor-pointer',
             ]"
             :style="{
               left: `${(task.startTime / schedule.totalTime) * 100}%`,
@@ -193,8 +218,12 @@ const timeMarkers = computed(() => {
               class="size-4 shrink-0 object-contain"
             />
             <span class="truncate">{{ task.itemName }}</span>
-            <span v-if="nodesById[task.nodeId]" class="shrink-0 text-[10px] opacity-70">x{{ Math.round(nodesById[task.nodeId].requiredAmount) }}</span>
-            <span class="ml-auto shrink-0 pl-1 font-mono text-[10px] opacity-70">{{ formatDuration(task.localTime) }}</span>
+            <span v-if="nodesById[task.nodeId]" class="shrink-0 text-[10px] opacity-70"
+              >x{{ Math.round(nodesById[task.nodeId].requiredAmount) }}</span
+            >
+            <span class="ml-auto shrink-0 pl-1 font-mono text-[10px] opacity-70">{{
+              formatDuration(task.localTime)
+            }}</span>
           </button>
         </div>
       </div>
@@ -206,9 +235,15 @@ const timeMarkers = computed(() => {
     </div>
 
     <!-- Total time footer (outside scroll area, stays pinned) -->
-    <div v-if="schedule.tasks.length > 0" class="flex items-center justify-end border-t border-border/40 px-4 pt-3 pb-3">
+    <div
+      v-if="schedule.tasks.length > 0"
+      class="flex items-center justify-end border-t border-border/40 px-4 pb-3 pt-3"
+    >
       <span class="text-xs font-bold text-foreground/80">
-        Total: <span class="font-mono" style="color: var(--color-green)">{{ formatDuration(schedule.totalTime) }}</span>
+        Total:
+        <span class="font-mono" style="color: var(--color-green)">{{
+          formatDuration(schedule.totalTime)
+        }}</span>
       </span>
     </div>
   </div>

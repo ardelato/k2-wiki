@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
 import { Check, Search } from 'lucide-vue-next'
+import { computed, nextTick, ref, watch } from 'vue'
+
 import type { ItemType } from '@/types'
 import { itemTypeColor } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
@@ -12,17 +13,23 @@ type PlannerItemOption = {
   source: string
 }
 
-const props = withDefaults(defineProps<{
-  modelValue: string
-  options: PlannerItemOption[]
-  placeholder?: string
-}>(), {
-  placeholder: 'Choose an item',
-})
+
+const props = withDefaults(
+  defineProps<{
+    modelValue: string
+    options: PlannerItemOption[]
+    placeholder?: string
+  }>(),
+  {
+    placeholder: 'Choose an item',
+  },
+)
+
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
 
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const searchInputRef = ref<HTMLInputElement | null>(null)
@@ -30,9 +37,11 @@ const isOpen = ref(false)
 const searchQuery = ref('')
 const dropdownStyle = ref<Record<string, string>>({})
 
-const selectedOption = computed(() =>
-  props.options.find(option => option.id === props.modelValue) ?? null
+
+const selectedOption = computed(
+  () => props.options.find((option) => option.id === props.modelValue) ?? null,
 )
+
 
 const filteredOptions = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
@@ -44,6 +53,7 @@ const filteredOptions = computed(() => {
     return haystack.includes(query)
   })
 })
+
 
 watch(isOpen, async (open) => {
   if (!open) {
@@ -65,13 +75,16 @@ watch(isOpen, async (open) => {
   searchInputRef.value?.select()
 })
 
+
 function togglePicker() {
   isOpen.value = !isOpen.value
 }
 
+
 function closePicker() {
   isOpen.value = false
 }
+
 
 function selectOption(itemId: string) {
   emit('update:modelValue', itemId)
@@ -95,12 +108,17 @@ function selectOption(itemId: string) {
           :src="getItemImage({ id: selectedOption.id })"
           :alt="selectedOption.name"
           class="size-10 rounded-xl border border-border object-contain"
-          :style="{ backgroundColor: `color-mix(in oklch, ${itemTypeColor(selectedOption.type)} 10%, transparent)` }"
+          :style="{
+            backgroundColor: `color-mix(in oklch, ${itemTypeColor(selectedOption.type)} 10%, transparent)`,
+          }"
         />
         <span
           v-else
           class="flex size-10 items-center justify-center rounded-xl border border-border text-sm font-black"
-          :style="{ color: itemTypeColor(selectedOption.type), backgroundColor: `color-mix(in oklch, ${itemTypeColor(selectedOption.type)} 10%, transparent)` }"
+          :style="{
+            color: itemTypeColor(selectedOption.type),
+            backgroundColor: `color-mix(in oklch, ${itemTypeColor(selectedOption.type)} 10%, transparent)`,
+          }"
         >
           {{ selectedOption.name.charAt(0) }}
         </span>
@@ -120,12 +138,20 @@ function selectOption(itemId: string) {
         </span>
       </template>
       <template v-else>
-        <span class="flex size-10 items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/30 text-sm font-black text-muted-foreground">
+        <span
+          class="flex size-10 items-center justify-center rounded-xl border border-dashed border-border/60 bg-muted/30 text-sm font-black text-muted-foreground"
+        >
           ?
         </span>
         <span class="text-sm text-muted-foreground">{{ placeholder }}</span>
       </template>
-      <svg class="ml-auto size-4 shrink-0 text-muted-foreground" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+      <svg
+        class="ml-auto size-4 shrink-0 text-muted-foreground"
+        viewBox="0 0 16 16"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
         <path d="M4 6l4 4 4-4" />
       </svg>
     </button>
@@ -140,7 +166,9 @@ function selectOption(itemId: string) {
       >
         <div class="border-b border-border/60 p-3">
           <label class="relative block">
-            <Search class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              class="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               ref="searchInputRef"
               v-model="searchQuery"
@@ -158,7 +186,11 @@ function selectOption(itemId: string) {
             :key="option.id"
             type="button"
             class="focus-ring flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition"
-            :class="option.id === modelValue ? 'border-primary/45 bg-primary/10' : 'border-transparent hover:border-border/50 hover:bg-background/55'"
+            :class="
+              option.id === modelValue
+                ? 'border-primary/45 bg-primary/10'
+                : 'border-transparent hover:border-border/50 hover:bg-background/55'
+            "
             @click.stop="selectOption(option.id)"
           >
             <span
@@ -177,14 +209,15 @@ function selectOption(itemId: string) {
             </span>
 
             <span class="min-w-0 flex-1">
-              <span class="block truncate text-[15px] font-semibold text-foreground">{{ option.name }}</span>
-              <span class="block truncate text-xs text-muted-foreground">{{ option.type }} · {{ option.source }}</span>
+              <span class="block truncate text-[15px] font-semibold text-foreground">{{
+                option.name
+              }}</span>
+              <span class="block truncate text-xs text-muted-foreground"
+                >{{ option.type }} · {{ option.source }}</span
+              >
             </span>
 
-            <Check
-              v-if="option.id === modelValue"
-              class="size-4 shrink-0 text-primary"
-            />
+            <Check v-if="option.id === modelValue" class="size-4 shrink-0 text-primary" />
           </button>
 
           <div

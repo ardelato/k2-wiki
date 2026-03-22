@@ -1,3 +1,14 @@
+pre-commit:
+  commands:
+    format:
+      glob: '*.{ts,tsx,vue,css,json}'
+      run: npx oxfmt {staged_files}
+      stage_fixed: true
+    lint:
+      glob: '*.{ts,tsx,vue}'
+      run: npx oxlint -c oxlintrc.json --vue-plugin --fix {staged_files}
+      stage_fixed: true
+
 pre-push:
   commands:
     typecheck:

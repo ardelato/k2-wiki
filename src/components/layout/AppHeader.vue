@@ -10,19 +10,47 @@ import { RouterLink } from 'vue-router'
       </RouterLink>
       <nav class="nav">
         <RouterLink to="/" v-slot="{ isActive }" custom>
-          <a href="/" :class="['nav-link', { 'nav-link--active': isActive }]" @click.prevent="$router.push('/')">
-            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          <a
+            href="/"
+            :class="['nav-link', { 'nav-link--active': isActive }]"
+            @click.prevent="$router.push('/')"
+          >
+            <svg
+              class="nav-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
             </svg>
             Beastiary
           </a>
         </RouterLink>
         <RouterLink to="/expeditions" v-slot="{ isActive }" custom>
-          <a href="/expeditions" :class="['nav-link', { 'nav-link--active': isActive }]" @click.prevent="$router.push('/expeditions')">
-            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+          <a
+            href="/expeditions"
+            :class="['nav-link', { 'nav-link--active': isActive }]"
+            @click.prevent="$router.push('/expeditions')"
+          >
+            <svg
+              class="nav-icon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
             </svg>
             Expeditions
           </a>
@@ -86,7 +114,9 @@ import { RouterLink } from 'vue-router'
   font-weight: 500;
   color: var(--color-text-muted);
   text-decoration: none;
-  transition: color 0.15s, background-color 0.15s;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
 }
 
 .nav-link:hover {

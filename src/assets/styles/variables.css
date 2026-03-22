@@ -3,46 +3,46 @@
   --color-bg: oklch(0.12 0.02 285);
   --color-bg-card: oklch(0.16 0.025 285);
   --color-bg-hover: oklch(0.22 0.03 285);
-  --color-bg-input: oklch(0.20 0.03 285);
+  --color-bg-input: oklch(0.2 0.03 285);
   --color-border: oklch(0.28 0.04 285);
   --color-text: oklch(0.92 0.01 285);
-  --color-text-muted: oklch(0.60 0.04 285);
+  --color-text-muted: oklch(0.6 0.04 285);
   --color-primary: oklch(0.65 0.18 285);
   --color-primary-fg: oklch(0.98 0 0);
-  --color-primary-hover: oklch(0.70 0.18 285);
+  --color-primary-hover: oklch(0.7 0.18 285);
   --color-destructive: oklch(0.55 0.22 25);
-  --color-green: oklch(0.65 0.20 145);
+  --color-green: oklch(0.65 0.2 145);
   --color-yellow: oklch(0.75 0.15 85);
-  --color-red: oklch(0.60 0.22 25);
+  --color-red: oklch(0.6 0.22 25);
 
   /* Element type colors */
-  --color-fire: oklch(0.60 0.22 25);
-  --color-water: oklch(0.60 0.18 220);
+  --color-fire: oklch(0.6 0.22 25);
+  --color-water: oklch(0.6 0.18 220);
   --color-wind: oklch(0.65 0.18 145);
   --color-earth: oklch(0.65 0.15 70);
 
   /* Job ring colors */
   --color-job-chopping: oklch(0.65 0.22 25);
-  --color-job-mining: oklch(0.60 0.15 55);
+  --color-job-mining: oklch(0.6 0.15 55);
   --color-job-digging: oklch(0.55 0.12 45);
-  --color-job-exploring: oklch(0.65 0.20 285);
+  --color-job-exploring: oklch(0.65 0.2 285);
   --color-job-fishing: oklch(0.65 0.18 220);
-  --color-job-farming: oklch(0.70 0.18 95);
+  --color-job-farming: oklch(0.7 0.18 95);
 
   /* Item type colors */
   --color-item-currency: oklch(0.75 0.15 85);
   --color-item-container: oklch(0.62 0.12 55);
-  --color-item-gathered: oklch(0.65 0.20 145);
+  --color-item-gathered: oklch(0.65 0.2 145);
   --color-item-refined: oklch(0.62 0.18 270);
   --color-item-sellable: oklch(0.65 0.18 330);
-  --color-item-consumable: oklch(0.60 0.22 25);
+  --color-item-consumable: oklch(0.6 0.22 25);
 
   /* Tier colors (display T1-T6, data 0-5) */
   --color-tier-1: oklch(0.55 0.03 285);
-  --color-tier-2: oklch(0.65 0.20 145);
-  --color-tier-3: oklch(0.60 0.18 250);
+  --color-tier-2: oklch(0.65 0.2 145);
+  --color-tier-3: oklch(0.6 0.18 250);
   --color-tier-4: oklch(0.55 0.18 285);
-  --color-tier-5: oklch(0.70 0.15 85);
+  --color-tier-5: oklch(0.7 0.15 85);
   --color-tier-6: oklch(0.65 0.22 25);
 
   /* Layout */

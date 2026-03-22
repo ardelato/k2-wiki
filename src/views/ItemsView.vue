@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, nextTick, onMounted } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
+import { computed, ref, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+
+import ItemCard from '@/components/items/ItemCard.vue'
+import ItemDetail from '@/components/items/ItemDetail.vue'
+import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import { useItems } from '@/composables/useItems'
 import type { Item } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
-import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
-import ItemCard from '@/components/items/ItemCard.vue'
-import ItemDetail from '@/components/items/ItemDetail.vue'
 
 const {
   filteredItems,
@@ -21,12 +22,15 @@ const {
   getRecipeUsages,
 } = useItems()
 
+
 const viewMode = ref<'grid' | 'table'>('grid')
 const selectedItem = ref<Item | null>(null)
 const detailPanelRef = ref<HTMLElement | null>(null)
 const lastTriggerEl = ref<HTMLElement | null>(null)
 
+
 type SortKey = 'name' | 'type' | 'buyValue' | 'sellValue' | 'recipeCount' | 'usedInCount'
+
 
 function getDeduplicatedRecipeCount(itemId: string): number {
   const usages = getRecipeUsages(itemId)
@@ -35,7 +39,9 @@ function getDeduplicatedRecipeCount(itemId: string): number {
   return seen.size
 }
 
-const anySummons = computed(() => filteredItems.value.some(i => (i.summoning?.length ?? 0) > 0))
+
+const anySummons = computed(() => filteredItems.value.some((i) => (i.summoning?.length ?? 0) > 0))
+
 
 function uniqueSourceLabels(sources: string[] | undefined): string[] {
   const seen = new Set<string>()
@@ -52,7 +58,9 @@ function uniqueSourceLabels(sources: string[] | undefined): string[] {
 const tableSortKey = ref<SortKey>('name')
 const tableSortDirection = ref<'asc' | 'desc'>('asc')
 
+
 const isMobile = useMediaQuery('(max-width: 1279px)')
+
 
 const sortedItems = computed(() => {
   const list = [...filteredItems.value]
@@ -63,12 +71,15 @@ const sortedItems = computed(() => {
     else if (key === 'type') result = a.type.localeCompare(b.type)
     else if (key === 'buyValue') result = (a.buyValue ?? 0) - (b.buyValue ?? 0)
     else if (key === 'sellValue') result = (a.sellValue ?? 0) - (b.sellValue ?? 0)
-    else if (key === 'recipeCount') result = getDeduplicatedRecipeCount(a.id) - getDeduplicatedRecipeCount(b.id)
-    else if (key === 'usedInCount') result = getRecipeUsages(a.id).length - getRecipeUsages(b.id).length
+    else if (key === 'recipeCount')
+      result = getDeduplicatedRecipeCount(a.id) - getDeduplicatedRecipeCount(b.id)
+    else if (key === 'usedInCount')
+      result = getRecipeUsages(a.id).length - getRecipeUsages(b.id).length
     return tableSortDirection.value === 'asc' ? result : -result
   })
   return list
 })
+
 
 function sortBy(key: SortKey) {
   if (tableSortKey.value === key) {
@@ -79,6 +90,7 @@ function sortBy(key: SortKey) {
   tableSortDirection.value = 'asc'
 }
 
+
 function selectItem(item: Item) {
   selectedItem.value = item
   nextTick(() => {
@@ -86,16 +98,18 @@ function selectItem(item: Item) {
   })
 }
 
+
 function selectItemFromEvent(item: Item, event: Event) {
   lastTriggerEl.value = (event.currentTarget as HTMLElement) ?? null
   selectItem(item)
 }
 
+
 function selectItemById(id: string) {
   const item = getItemById(id)
   if (!item) return
   // Clear filters if item is currently filtered out
-  if (!filteredItems.value.find(i => i.id === id)) {
+  if (!filteredItems.value.find((i) => i.id === id)) {
     searchQuery.value = ''
     typeFilter.value = 'all'
     sourceFilter.value = 'all'
@@ -103,6 +117,7 @@ function selectItemById(id: string) {
   }
   selectedItem.value = item
 }
+
 
 function closeDetail() {
   selectedItem.value = null
@@ -112,14 +127,17 @@ function closeDetail() {
   })
 }
 
+
 function toggleSubFilter(v: string) {
   if (sourceSubFilter.value.has(v)) sourceSubFilter.value.delete(v)
   else sourceSubFilter.value.add(v)
 }
 
+
 function clearSubFilters() {
   sourceSubFilter.value.clear()
 }
+
 
 function clearFilters() {
   searchQuery.value = ''
@@ -128,11 +146,18 @@ function clearFilters() {
   sourceSubFilter.value.clear()
 }
 
-const hasActiveFilters = computed(() =>
-  typeFilter.value !== 'all' || sourceFilter.value !== 'all' || searchQuery.value !== '' || sourceSubFilter.value.size > 0
+
+const hasActiveFilters = computed(
+  () =>
+    typeFilter.value !== 'all' ||
+    sourceFilter.value !== 'all' ||
+    searchQuery.value !== '' ||
+    sourceSubFilter.value.size > 0,
 )
 
+
 const route = useRoute()
+
 
 onMounted(() => {
   const itemId = route.query.item
@@ -159,9 +184,14 @@ onMounted(() => {
     <div class="flex gap-5">
       <div class="min-w-0 flex-1">
         <!-- Empty state -->
-        <div v-if="filteredItems.length === 0" class="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/50 px-6 py-16 text-center">
+        <div
+          v-if="filteredItems.length === 0"
+          class="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/50 px-6 py-16 text-center"
+        >
           <p class="text-lg font-semibold text-foreground">No items match your filters</p>
-          <p class="mt-1 text-sm text-muted-foreground">Try adjusting your search or filter criteria.</p>
+          <p class="mt-1 text-sm text-muted-foreground">
+            Try adjusting your search or filter criteria.
+          </p>
           <button
             v-if="hasActiveFilters"
             class="focus-ring mt-4 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
@@ -172,7 +202,10 @@ onMounted(() => {
         </div>
 
         <!-- Grid view -->
-        <div v-else-if="viewMode === 'grid'" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div
+          v-else-if="viewMode === 'grid'"
+          class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+        >
           <ItemCard
             v-for="item in filteredItems"
             :key="item.id"
@@ -190,57 +223,134 @@ onMounted(() => {
                 <tr>
                   <th
                     class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="tableSortKey === 'name' ? (tableSortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    :aria-sort="
+                      tableSortKey === 'name'
+                        ? tableSortDirection === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    "
                   >
-                    <button class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground" @click="sortBy('name')">
+                    <button
+                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                      @click="sortBy('name')"
+                    >
                       Name
-                      <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-30'">{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                      <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-30'">{{
+                        tableSortDirection === 'asc' ? '▲' : '▼'
+                      }}</span>
                     </button>
                   </th>
                   <th
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="tableSortKey === 'type' ? (tableSortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    :aria-sort="
+                      tableSortKey === 'type'
+                        ? tableSortDirection === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    "
                   >
-                    <button class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground" @click="sortBy('type')">
+                    <button
+                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                      @click="sortBy('type')"
+                    >
                       Type
-                      <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-30'">{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                      <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-30'">{{
+                        tableSortDirection === 'asc' ? '▲' : '▼'
+                      }}</span>
                     </button>
                   </th>
-                  <th class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                  <th
+                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  >
                     Sources
                   </th>
-                  <th class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                  <th
+                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  >
                     <span class="inline-flex items-center gap-1">
-                      <button class="focus-ring inline-flex items-center gap-0.5 transition hover:text-foreground" @click="sortBy('buyValue')">
+                      <button
+                        class="focus-ring inline-flex items-center gap-0.5 transition hover:text-foreground"
+                        @click="sortBy('buyValue')"
+                      >
                         Buy
-                        <span :class="tableSortKey === 'buyValue' ? 'text-primary' : 'opacity-30'">{{ tableSortKey === 'buyValue' ? (tableSortDirection === 'asc' ? '▲' : '▼') : '▲' }}</span>
+                        <span
+                          :class="tableSortKey === 'buyValue' ? 'text-primary' : 'opacity-30'"
+                          >{{
+                            tableSortKey === 'buyValue'
+                              ? tableSortDirection === 'asc'
+                                ? '▲'
+                                : '▼'
+                              : '▲'
+                          }}</span
+                        >
                       </button>
                       <span class="text-muted-foreground/50">/</span>
-                      <button class="focus-ring inline-flex items-center gap-0.5 transition hover:text-foreground" @click="sortBy('sellValue')">
+                      <button
+                        class="focus-ring inline-flex items-center gap-0.5 transition hover:text-foreground"
+                        @click="sortBy('sellValue')"
+                      >
                         Sell
-                        <span :class="tableSortKey === 'sellValue' ? 'text-primary' : 'opacity-30'">{{ tableSortKey === 'sellValue' ? (tableSortDirection === 'asc' ? '▲' : '▼') : '▲' }}</span>
+                        <span
+                          :class="tableSortKey === 'sellValue' ? 'text-primary' : 'opacity-30'"
+                          >{{
+                            tableSortKey === 'sellValue'
+                              ? tableSortDirection === 'asc'
+                                ? '▲'
+                                : '▼'
+                              : '▲'
+                          }}</span
+                        >
                       </button>
                     </span>
                   </th>
                   <th
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="tableSortKey === 'recipeCount' ? (tableSortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    :aria-sort="
+                      tableSortKey === 'recipeCount'
+                        ? tableSortDirection === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    "
                   >
-                    <button class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground" @click="sortBy('recipeCount')">
+                    <button
+                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                      @click="sortBy('recipeCount')"
+                    >
                       Recipes
-                      <span :class="tableSortKey === 'recipeCount' ? 'text-primary' : 'opacity-30'">{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                      <span
+                        :class="tableSortKey === 'recipeCount' ? 'text-primary' : 'opacity-30'"
+                        >{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span
+                      >
                     </button>
                   </th>
                   <th
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="tableSortKey === 'usedInCount' ? (tableSortDirection === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    :aria-sort="
+                      tableSortKey === 'usedInCount'
+                        ? tableSortDirection === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    "
                   >
-                    <button class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground" @click="sortBy('usedInCount')">
+                    <button
+                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                      @click="sortBy('usedInCount')"
+                    >
                       Used In
-                      <span :class="tableSortKey === 'usedInCount' ? 'text-primary' : 'opacity-30'">{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span>
+                      <span
+                        :class="tableSortKey === 'usedInCount' ? 'text-primary' : 'opacity-30'"
+                        >{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span
+                      >
                     </button>
                   </th>
-                  <th v-if="anySummons" class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                  <th
+                    v-if="anySummons"
+                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  >
                     Summons
                   </th>
                 </tr>
@@ -254,19 +364,25 @@ onMounted(() => {
                   class="cursor-pointer transition-colors duration-150"
                   :class="[
                     selectedItem?.id === item.id ? 'bg-muted/40' : 'bg-card/50 hover:bg-muted/30',
-                    'even:bg-muted/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60'
+                    'even:bg-muted/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60',
                   ]"
                   @click="selectItemFromEvent(item, $event)"
                   @keydown.enter="selectItemFromEvent(item, $event)"
                 >
                   <td
                     class="border-l-2 px-2 py-2.5 transition-[border-color] duration-150"
-                    :style="{ borderColor: selectedItem?.id === item.id ? itemTypeColor(item.type) : 'transparent' }"
+                    :style="{
+                      borderColor:
+                        selectedItem?.id === item.id ? itemTypeColor(item.type) : 'transparent',
+                    }"
                   >
                     <div class="flex items-center gap-3">
                       <div
                         class="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border text-xs font-bold"
-                        :style="{ color: itemTypeColor(item.type), backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 10%, transparent)` }"
+                        :style="{
+                          color: itemTypeColor(item.type),
+                          backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 10%, transparent)`,
+                        }"
                       >
                         <img
                           v-if="getItemImage(item)"
@@ -282,7 +398,10 @@ onMounted(() => {
                   <td class="px-2 py-2.5">
                     <span
                       class="rounded-full px-2 py-0.5 text-xs font-semibold"
-                      :style="{ color: itemTypeColor(item.type), backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 12%, transparent)` }"
+                      :style="{
+                        color: itemTypeColor(item.type),
+                        backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 12%, transparent)`,
+                      }"
                     >
                       {{ item.type }}
                     </span>
@@ -296,7 +415,11 @@ onMounted(() => {
                       >
                         {{ label }}
                       </span>
-                      <span v-if="uniqueSourceLabels(item.sources).length > 2" class="text-xs text-muted-foreground">+{{ uniqueSourceLabels(item.sources).length - 2 }}</span>
+                      <span
+                        v-if="uniqueSourceLabels(item.sources).length > 2"
+                        class="text-xs text-muted-foreground"
+                        >+{{ uniqueSourceLabels(item.sources).length - 2 }}</span
+                      >
                     </div>
                   </td>
                   <td class="whitespace-nowrap px-2 py-2.5 font-mono text-sm text-yellow-400">
@@ -362,7 +485,9 @@ onMounted(() => {
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 translate-y-4"
           >
-            <div class="mx-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-card shadow-card">
+            <div
+              class="mx-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-card shadow-card"
+            >
               <ItemDetail :item="selectedItem" @close="closeDetail" @select-item="selectItemById" />
             </div>
           </Transition>

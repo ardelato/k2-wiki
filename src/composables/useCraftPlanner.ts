@@ -1,5 +1,9 @@
-import { computed, ref, type Ref } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
+import { computed, ref, type Ref } from 'vue'
+
+import expeditionsData from '@/data/expeditions.json'
+import itemsData from '@/data/items.json'
+import jobsData from '@/data/jobs.json'
 import type {
   Item,
   ItemType,
@@ -13,9 +17,6 @@ import type {
   PlannerTimeBreakdown,
   ScheduledTask,
 } from '@/types'
-import itemsData from '@/data/items.json'
-import jobsData from '@/data/jobs.json'
-import expeditionsData from '@/data/expeditions.json'
 import { formatDuration, methodKindLabel, toTitleCase } from '@/utils/format'
 
 export interface GardenFlowerEntry {
@@ -24,14 +25,14 @@ export interface GardenFlowerEntry {
 }
 
 export interface AwakenGatherUpgrade {
-  yieldBonus: number   // 0, 1, or 2 (Yield I = +1, Yield II = +1 more)
+  yieldBonus: number // 0, 1, or 2 (Yield I = +1, Yield II = +1 more)
   durationTier: number // 0–4, each tier = -5% activity duration
 }
 
 export interface PlannerModifiers {
   gardenFlowers: Record<string, GardenFlowerEntry[]>
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
-  awakenSpeedTiers: Record<string, number>  // per workstation, 0–4
+  awakenSpeedTiers: Record<string, number> // per workstation, 0–4
   jobTiers: Record<string, number>
 }
 
@@ -73,7 +74,7 @@ interface PlannerGraph {
 }
 
 const items = itemsData as Item[]
-const itemById = new Map(items.map(item => [item.id, item]))
+const itemById = new Map(items.map((item) => [item.id, item]))
 
 const gatherSourcesByItem = new Map<string, GatherSource[]>()
 for (const job of jobsData) {
@@ -159,7 +160,12 @@ function formatTimeOrUnknown(value: number | null): string {
   return value == null ? 'Unknown' : formatDuration(value)
 }
 
-function buildPlannerGraph(targetItemId: string, targetQuantity: number, inventory: Record<string, number>, modifiers: PlannerModifiers): PlannerGraph {
+function buildPlannerGraph(
+  targetItemId: string,
+  targetQuantity: number,
+  inventory: Record<string, number>,
+  modifiers: PlannerModifiers,
+): PlannerGraph {
   const nodesById = new Map<string, PlannerNode>()
   const methodsById = new Map<string, PlannerMethod>()
   const remainingStock = new Map<string, number>(Object.entries(inventory).filter(([, v]) => v > 0))
@@ -273,9 +279,12 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
       })
 
       const speedReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.05
-      const effectiveCraftTime = Math.max(recipe.craftTime * 0.01, recipe.craftTime * (1 - speedReduction))
+      const effectiveCraftTime = Math.max(
+        recipe.craftTime * 0.01,
+        recipe.craftTime * (1 - speedReduction),
+      )
       const localTimeSeconds = craftsNeeded * effectiveCraftTime
-      const childTimes = children.map(child => {
+      const childTimes = children.map((child) => {
         const childNode = nodesById.get(child.nodeId)
         if (!childNode) return null
         if (childNode.fulfilled) return 0
@@ -286,9 +295,8 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
       })
       const knownChildTimes = childTimes.filter((time): time is number => time != null)
       const maxChildTime = knownChildTimes.length > 0 ? Math.max(...knownChildTimes) : 0
-      const totalTimeSeconds = knownChildTimes.length !== childTimes.length
-        ? null
-        : localTimeSeconds + maxChildTime
+      const totalTimeSeconds =
+        knownChildTimes.length !== childTimes.length ? null : localTimeSeconds + maxChildTime
 
       const method: PlannerMethod = {
         id: `${nodeId}#recipe-${recipeIndex}`,
@@ -305,7 +313,12 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
           { label: 'Crafts', value: formatAmount(craftsNeeded) },
           { label: 'Level', value: `Lv${recipe.levelRequirement}` },
           ...((modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) > 0
-            ? [{ label: 'Speed Tier', value: `-${(modifiers.awakenSpeedTiers[recipe.workstation]) * 5}%` }]
+            ? [
+                {
+                  label: 'Speed Tier',
+                  value: `-${modifiers.awakenSpeedTiers[recipe.workstation] * 5}%`,
+                },
+              ]
             : []),
           { label: 'Step time', value: formatDuration(localTimeSeconds) },
           { label: 'Total time', value: formatTimeOrUnknown(totalTimeSeconds) },
@@ -332,7 +345,7 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
       const actionsNeeded = requiredAmount / expectedYield
       const awakenReduction = (awakenGather?.durationTier ?? 0) * 0.05
       const jobMilestones = modifiers.jobTiers[source.jobId] ?? 0
-      const jobReduction = jobMilestones * 0.10
+      const jobReduction = jobMilestones * 0.1
       const effectiveDuration = Math.max(
         Math.max(source.duration * 0.01, 1),
         source.duration * (1 - awakenReduction) * (1 - jobReduction),
@@ -352,9 +365,14 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
         detailRows: [
           { label: 'Activity', value: source.activityName },
           { label: 'Level', value: `Lv${source.levelRequirement}` },
-          { label: 'Yield / action', value: `${(source.chance * 100).toFixed(source.chance < 0.01 ? 2 : 1)}% × ${formatAmount(expectedAmount(source.min, source.max))}` },
+          {
+            label: 'Yield / action',
+            value: `${(source.chance * 100).toFixed(source.chance < 0.01 ? 2 : 1)}% × ${formatAmount(expectedAmount(source.min, source.max))}`,
+          },
           ...(yieldBonus > 0 ? [{ label: 'Yield Bonus', value: `+${yieldBonus}` }] : []),
-          ...((awakenGather?.durationTier ?? 0) > 0 ? [{ label: 'Awaken Duration', value: `-${(awakenGather?.durationTier ?? 0) * 5}%` }] : []),
+          ...((awakenGather?.durationTier ?? 0) > 0
+            ? [{ label: 'Awaken Duration', value: `-${(awakenGather?.durationTier ?? 0) * 5}%` }]
+            : []),
           ...(jobMilestones > 0 ? [{ label: 'Job Tier', value: `-${jobMilestones * 10}%` }] : []),
           { label: 'Actions', value: formatAmount(actionsNeeded), estimated: isEstimated },
           { label: 'Step time', value: formatDuration(localTimeSeconds), estimated: isEstimated },
@@ -377,7 +395,9 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
       if (yieldPerCycle > 0) {
         const cyclesNeeded = requiredAmount / yieldPerCycle
         const localTimeSeconds = cyclesNeeded * gardenSource.cycleSeconds
-        const breakdownParts = entries.filter(e => e.count > 0).map(e => `${e.count}×Lv${e.level}`)
+        const breakdownParts = entries
+          .filter((e) => e.count > 0)
+          .map((e) => `${e.count}×Lv${e.level}`)
         const method: PlannerMethod = {
           id: `${nodeId}#garden`,
           nodeId,
@@ -397,9 +417,7 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
             { label: 'Step time', value: formatDuration(localTimeSeconds) },
           ],
           formula: `${formatAmount(requiredAmount)} ÷ ${formatAmount(yieldPerCycle)} per cycle × ${formatDuration(gardenSource.cycleSeconds)}`,
-          notes: [
-            `Garden yield: ${breakdownParts.join(' + ')} = ${yieldPerCycle}/min.`,
-          ],
+          notes: [`Garden yield: ${breakdownParts.join(' + ')} = ${yieldPerCycle}/min.`],
           children: [],
         }
 
@@ -445,7 +463,9 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
       )
 
       const childMethodId = containerNode.defaultMethodId
-      const childTime = childMethodId ? methodsById.get(childMethodId)?.totalTimeSeconds ?? null : null
+      const childTime = childMethodId
+        ? (methodsById.get(childMethodId)?.totalTimeSeconds ?? null)
+        : null
       const totalTimeSeconds = childTime
       const isContainerEstimated = source.chance < 1
       const method: PlannerMethod = {
@@ -459,12 +479,25 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
         totalTimeSeconds,
         cost: null,
         detailRows: [
-          { label: 'Yield / open', value: `${(source.chance * 100).toFixed(source.chance < 0.01 ? 2 : 1)}% × ${source.amount}` },
-          { label: 'Containers needed', value: formatAmount(openingsNeeded), estimated: isContainerEstimated },
-          { label: 'Total time', value: formatTimeOrUnknown(totalTimeSeconds), estimated: isContainerEstimated },
+          {
+            label: 'Yield / open',
+            value: `${(source.chance * 100).toFixed(source.chance < 0.01 ? 2 : 1)}% × ${source.amount}`,
+          },
+          {
+            label: 'Containers needed',
+            value: formatAmount(openingsNeeded),
+            estimated: isContainerEstimated,
+          },
+          {
+            label: 'Total time',
+            value: formatTimeOrUnknown(totalTimeSeconds),
+            estimated: isContainerEstimated,
+          },
         ],
         formula: `${formatAmount(requiredAmount)} ÷ (${(source.chance * 100).toFixed(source.chance < 0.01 ? 2 : 1)}% × ${source.amount}) per ${source.containerName.toLowerCase()} opening`,
-        notes: ['Opening time is treated as negligible; only obtaining the container contributes time.'],
+        notes: [
+          'Opening time is treated as negligible; only obtaining the container contributes time.',
+        ],
         children: [
           {
             itemId: source.containerId,
@@ -532,16 +565,31 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
     }
 
     methods.sort((a, b) => {
-      const kindOrder = ['craft', 'gather', 'garden', 'container', 'expedition', 'buy', 'unknown', 'cycle']
+      const kindOrder = [
+        'craft',
+        'gather',
+        'garden',
+        'container',
+        'expedition',
+        'buy',
+        'unknown',
+        'cycle',
+      ]
       return kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind)
     })
 
-    const nonBuyMethods = methods.filter(method => method.kind !== 'buy')
-    const knownTimeMethods = (nonBuyMethods.length > 0 ? nonBuyMethods : methods)
-      .filter(method => method.totalTimeSeconds != null)
-    const defaultMethodId = knownTimeMethods.length > 0
-      ? knownTimeMethods.sort((a, b) => (a.totalTimeSeconds ?? Number.POSITIVE_INFINITY) - (b.totalTimeSeconds ?? Number.POSITIVE_INFINITY))[0].id
-      : (nonBuyMethods[0] ?? methods[0])?.id ?? null
+    const nonBuyMethods = methods.filter((method) => method.kind !== 'buy')
+    const knownTimeMethods = (nonBuyMethods.length > 0 ? nonBuyMethods : methods).filter(
+      (method) => method.totalTimeSeconds != null,
+    )
+    const defaultMethodId =
+      knownTimeMethods.length > 0
+        ? knownTimeMethods.toSorted(
+            (a, b) =>
+              (a.totalTimeSeconds ?? Number.POSITIVE_INFINITY) -
+              (b.totalTimeSeconds ?? Number.POSITIVE_INFINITY),
+          )[0].id
+        : ((nonBuyMethods[0] ?? methods[0])?.id ?? null)
 
     const node: PlannerNode = {
       id: nodeId,
@@ -578,6 +626,9 @@ function buildPlannerGraph(targetItemId: string, targetQuantity: number, invento
   }
 }
 
+const resourceSortPriority = (r: string) =>
+  r.startsWith('Garden:') ? 2 : r.startsWith('Expedition:') ? 3 : 1
+
 function computeSchedule(
   root: PlannerNode,
   nodesById: Record<string, PlannerNode>,
@@ -590,7 +641,10 @@ function computeSchedule(
 
   function schedule(node: PlannerNode): number {
     if (completionTime.has(node.id)) return completionTime.get(node.id)!
-    if (node.fulfilled) { completionTime.set(node.id, 0); return 0 }
+    if (node.fulfilled) {
+      completionTime.set(node.id, 0)
+      return 0
+    }
 
     const methodId = activeMethodIdByNode[node.id]
     const method = methodId ? methodsById[methodId] : null
@@ -649,34 +703,47 @@ function computeSchedule(
 
   const totalTime = schedule(root)
 
-  const resourceOrder = [...new Set(tasks.map(t => t.resource))].sort((a, b) => {
-    const priority = (r: string) => r.startsWith('Garden:') ? 2 : r.startsWith('Expedition:') ? 3 : 1
-    return priority(a) - priority(b) || a.localeCompare(b)
+  const resourceOrder = [...new Set(tasks.map((t) => t.resource))].toSorted((a, b) => {
+    return resourceSortPriority(a) - resourceSortPriority(b) || a.localeCompare(b)
   })
 
-  return { tasks, resourceOrder, totalTime, completionTimeByNode: Object.fromEntries(completionTime) }
+  return {
+    tasks,
+    resourceOrder,
+    totalTime,
+    completionTimeByNode: Object.fromEntries(completionTime),
+  }
 }
 
-export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuantity: Readonly<Ref<number>>) {
+export function useCraftPlanner(
+  targetItemId: Readonly<Ref<string>>,
+  targetQuantity: Readonly<Ref<number>>,
+) {
   const pinnedMethodIds = ref<Record<string, string>>({})
 
   const inventoryAmounts = useLocalStorage<Record<string, number>>('planner-inventory', {})
 
-  const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>('planner-garden-flowers', {
-    'fire-flower': [],
-    'wind-flower': [],
-    'earth-flower': [],
-    'water-flower': [],
-  })
+  const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
+    'planner-garden-flowers',
+    {
+      'fire-flower': [],
+      'wind-flower': [],
+      'earth-flower': [],
+      'water-flower': [],
+    },
+  )
 
-  const awakenGatherUpgrades = useLocalStorage<Record<string, AwakenGatherUpgrade>>('planner-awaken-gather', {
-    Chopping: { yieldBonus: 0, durationTier: 0 },
-    Mining: { yieldBonus: 0, durationTier: 0 },
-    Digging: { yieldBonus: 0, durationTier: 0 },
-    Exploring: { yieldBonus: 0, durationTier: 0 },
-    Fishing: { yieldBonus: 0, durationTier: 0 },
-    Farming: { yieldBonus: 0, durationTier: 0 },
-  })
+  const awakenGatherUpgrades = useLocalStorage<Record<string, AwakenGatherUpgrade>>(
+    'planner-awaken-gather',
+    {
+      Chopping: { yieldBonus: 0, durationTier: 0 },
+      Mining: { yieldBonus: 0, durationTier: 0 },
+      Digging: { yieldBonus: 0, durationTier: 0 },
+      Exploring: { yieldBonus: 0, durationTier: 0 },
+      Fishing: { yieldBonus: 0, durationTier: 0 },
+      Farming: { yieldBonus: 0, durationTier: 0 },
+    },
+  )
 
   const awakenSpeedTiers = useLocalStorage<Record<string, number>>('planner-awaken-speed', {
     Furnace: 0,
@@ -700,7 +767,14 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
     jobTiers: jobTiers.value,
   }))
 
-  const graph = computed(() => buildPlannerGraph(targetItemId.value, targetQuantity.value, inventoryAmounts.value, modifiers.value))
+  const graph = computed(() =>
+    buildPlannerGraph(
+      targetItemId.value,
+      targetQuantity.value,
+      inventoryAmounts.value,
+      modifiers.value,
+    ),
+  )
 
   function getActiveMethodId(node: PlannerNode): string | null {
     return pinnedMethodIds.value[node.id] ?? node.defaultMethodId
@@ -710,13 +784,16 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
     const node = graph.value.nodesById[nodeId]
     if (!node) return null
     const methodId = getActiveMethodId(node)
-    return methodId ? graph.value.methodsById[methodId] ?? null : null
+    return methodId ? (graph.value.methodsById[methodId] ?? null) : null
   }
 
   const summary = computed<PlannerSummary | null>(() => {
     if (!graph.value.root) return null
 
-    const leafAmounts = new Map<string, { itemName: string; amount: number; acquisitionKind: PlannerMethodKind }>()
+    const leafAmounts = new Map<
+      string,
+      { itemName: string; amount: number; acquisitionKind: PlannerMethodKind }
+    >()
     let totalCost = 0
     let craftStepCount = 0
     let branchPointCount = 0
@@ -757,10 +834,12 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
       } else {
         switch (activeMethod.kind) {
           case 'craft':
-            craftTimeByWorkstation[activeMethod.title] = (craftTimeByWorkstation[activeMethod.title] ?? 0) + activeMethod.localTimeSeconds
+            craftTimeByWorkstation[activeMethod.title] =
+              (craftTimeByWorkstation[activeMethod.title] ?? 0) + activeMethod.localTimeSeconds
             break
           case 'gather':
-            gatherTimeByJob[activeMethod.title] = (gatherTimeByJob[activeMethod.title] ?? 0) + activeMethod.localTimeSeconds
+            gatherTimeByJob[activeMethod.title] =
+              (gatherTimeByJob[activeMethod.title] ?? 0) + activeMethod.localTimeSeconds
             break
           case 'garden':
             gardenTimeSeconds = Math.max(gardenTimeSeconds, activeMethod.localTimeSeconds)
@@ -794,16 +873,22 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
     const passiveTimeSeconds = Math.max(gardenTimeSeconds, expeditionTimeSeconds)
     // Prefer schedule-based total (accounts for dependency ordering + resource contention)
     const scheduledTotal = schedule.value?.totalTime ?? null
-    const totalTimeSeconds = missingTimeNodeCount > 0 ? null : (scheduledTotal ?? Math.max(activeTimeSeconds, passiveTimeSeconds))
+    const totalTimeSeconds =
+      missingTimeNodeCount > 0
+        ? null
+        : (scheduledTotal ?? Math.max(activeTimeSeconds, passiveTimeSeconds))
 
-    const timeBreakdown: PlannerTimeBreakdown | null = missingTimeNodeCount > 0 ? null : {
-      gatherTimeByJob,
-      craftTimeByWorkstation,
-      gardenTimeSeconds,
-      expeditionTimeSeconds,
-      activeTimeSeconds,
-      passiveTimeSeconds,
-    }
+    const timeBreakdown: PlannerTimeBreakdown | null =
+      missingTimeNodeCount > 0
+        ? null
+        : {
+            gatherTimeByJob,
+            craftTimeByWorkstation,
+            gardenTimeSeconds,
+            expeditionTimeSeconds,
+            activeTimeSeconds,
+            passiveTimeSeconds,
+          }
 
     return {
       totalTimeSeconds,
@@ -813,21 +898,23 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
       branchPointCount,
       missingTimeNodeCount,
       leafItems: [...leafAmounts.entries()]
-        .map(([itemId, value]): PlannerSummaryLeaf => ({
-          itemId,
-          itemName: value.itemName,
-          amount: value.amount,
-          stillNeeded: value.amount,
-          acquisitionKind: value.acquisitionKind,
-          inventoryAmount: inventoryAmounts.value[itemId] ?? 0,
-        }))
-        .sort((a, b) => b.amount - a.amount),
+        .map(
+          ([itemId, value]): PlannerSummaryLeaf => ({
+            itemId,
+            itemName: value.itemName,
+            amount: value.amount,
+            stillNeeded: value.amount,
+            acquisitionKind: value.acquisitionKind,
+            inventoryAmount: inventoryAmounts.value[itemId] ?? 0,
+          }),
+        )
+        .toSorted((a, b) => b.amount - a.amount),
     }
   })
 
   const shoppingListText = computed(() => {
     if (!summary.value) return ''
-    const needed = summary.value.leafItems.filter(l => l.stillNeeded > 0)
+    const needed = summary.value.leafItems.filter((l) => l.stillNeeded > 0)
     const grouped = new Map<PlannerMethodKind, PlannerSummaryLeaf[]>()
     for (const leaf of needed) {
       const group = grouped.get(leaf.acquisitionKind) ?? []
@@ -872,7 +959,7 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
   function setGardenFlowerEntries(flowerId: string, entries: GardenFlowerEntry[]) {
     gardenFlowers.value = {
       ...gardenFlowers.value,
-      [flowerId]: entries.filter(e => e.count > 0),
+      [flowerId]: entries.filter((e) => e.count > 0),
     }
   }
 
@@ -929,8 +1016,12 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
 
   function resetJobTiers() {
     jobTiers.value = {
-      Chopping: 0, Mining: 0, Digging: 0,
-      Exploring: 0, Fishing: 0, Farming: 0,
+      Chopping: 0,
+      Mining: 0,
+      Digging: 0,
+      Exploring: 0,
+      Fishing: 0,
+      Farming: 0,
     }
   }
 
@@ -944,25 +1035,34 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
 
   const activeMethodIdByNode = computed<Record<string, string | null>>(() => {
     return Object.fromEntries(
-      Object.values(graph.value.nodesById).map(node => [node.id, getActiveMethodId(node)])
+      Object.values(graph.value.nodesById).map((node) => [node.id, getActiveMethodId(node)]),
     )
   })
 
   const schedule = computed<PlannerSchedule | null>(() => {
     const root = graph.value.root
     if (!root) return null
-    return computeSchedule(root, graph.value.nodesById, activeMethodIdByNode.value, graph.value.methodsById)
+    return computeSchedule(
+      root,
+      graph.value.nodesById,
+      activeMethodIdByNode.value,
+      graph.value.methodsById,
+    )
   })
 
   const allTreeItems = computed(() => {
     const root = graph.value.root
     if (!root) return []
 
-    const items = new Map<string, { itemId: string; itemName: string; itemType: ItemType }>()
+    const treeItems = new Map<string, { itemId: string; itemName: string; itemType: ItemType }>()
 
     function walk(node: PlannerNode) {
-      if (!items.has(node.itemId)) {
-        items.set(node.itemId, { itemId: node.itemId, itemName: node.itemName, itemType: node.itemType })
+      if (!treeItems.has(node.itemId)) {
+        treeItems.set(node.itemId, {
+          itemId: node.itemId,
+          itemName: node.itemName,
+          itemType: node.itemType,
+        })
       }
       const method = getActiveMethod(node.id)
       if (!method) return
@@ -973,7 +1073,7 @@ export function useCraftPlanner(targetItemId: Readonly<Ref<string>>, targetQuant
     }
 
     walk(root)
-    return [...items.values()].sort((a, b) => a.itemName.localeCompare(b.itemName))
+    return [...treeItems.values()].toSorted((a, b) => a.itemName.localeCompare(b.itemName))
   })
 
   return {

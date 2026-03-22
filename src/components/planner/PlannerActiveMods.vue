@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { ChevronDown, ChevronRight, SlidersHorizontal } from 'lucide-vue-next'
-import { getItemImage } from '@/utils/itemImages'
+import { computed, ref } from 'vue'
+
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/composables/useCraftPlanner'
+import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
   inventoryAmounts: Record<string, number>
@@ -13,16 +14,18 @@ const props = defineProps<{
   treeItems: { itemId: string; itemName: string; itemType: string }[]
 }>()
 
+
 const stockedItems = computed(() =>
   Object.entries(props.inventoryAmounts)
     .filter(([, amount]) => amount > 0)
     .map(([itemId, amount]) => ({
       itemId,
-      itemName: props.treeItems.find(i => i.itemId === itemId)?.itemName ?? itemId,
+      itemName: props.treeItems.find((i) => i.itemId === itemId)?.itemName ?? itemId,
       amount,
     }))
     .sort((a, b) => a.itemName.localeCompare(b.itemName)),
 )
+
 
 const flowerTypes: Record<string, string> = {
   'fire-flower': 'Fire Flower',
@@ -31,11 +34,12 @@ const flowerTypes: Record<string, string> = {
   'water-flower': 'Water Flower',
 }
 
+
 const activeFlowers = computed(() =>
   Object.entries(props.gardenFlowers)
-    .filter(([, entries]) => entries.some(e => e.count > 0))
+    .filter(([, entries]) => entries.some((e) => e.count > 0))
     .map(([flowerId, entries]) => {
-      const activeEntries = entries.filter(e => e.count > 0).sort((a, b) => a.level - b.level)
+      const activeEntries = entries.filter((e) => e.count > 0).toSorted((a, b) => a.level - b.level)
       const totalCount = activeEntries.reduce((s, e) => s + e.count, 0)
       const yieldPerMin = activeEntries.reduce((s, e) => s + e.count * e.level, 0)
       return {
@@ -48,6 +52,7 @@ const activeFlowers = computed(() =>
     }),
 )
 
+
 const activeGatherUpgrades = computed(() =>
   Object.entries(props.awakenGatherUpgrades)
     .filter(([, u]) => u.yieldBonus > 0 || u.durationTier > 0)
@@ -58,6 +63,7 @@ const activeGatherUpgrades = computed(() =>
     })),
 )
 
+
 const activeSpeedTiers = computed(() =>
   Object.entries(props.awakenSpeedTiers)
     .filter(([, tier]) => tier > 0)
@@ -66,6 +72,7 @@ const activeSpeedTiers = computed(() =>
       pct: tier * 5,
     })),
 )
+
 
 const activeJobTiers = computed(() =>
   Object.entries(props.jobTiers)
@@ -76,15 +83,19 @@ const activeJobTiers = computed(() =>
     })),
 )
 
+
 const isOpen = ref(true)
 
-const activeCount = computed(() =>
-  stockedItems.value.length
-  + activeFlowers.value.length
-  + activeGatherUpgrades.value.length
-  + activeSpeedTiers.value.length
-  + activeJobTiers.value.length,
+
+const activeCount = computed(
+  () =>
+    stockedItems.value.length +
+    activeFlowers.value.length +
+    activeGatherUpgrades.value.length +
+    activeSpeedTiers.value.length +
+    activeJobTiers.value.length,
 )
+
 
 const hasAnything = computed(() => activeCount.value > 0)
 </script>
@@ -93,13 +104,15 @@ const hasAnything = computed(() => activeCount.value > 0)
   <div v-if="hasAnything" class="surface-card overflow-hidden">
     <div class="flex items-center gap-2 px-4 py-3">
       <button
-        class="focus-ring flex flex-1 items-center gap-2 text-left transition hover:bg-muted/15 rounded-lg -mx-1 px-1"
+        class="focus-ring -mx-1 flex flex-1 items-center gap-2 rounded-lg px-1 text-left transition hover:bg-muted/15"
         @click="isOpen = !isOpen"
       >
         <component :is="isOpen ? ChevronDown : ChevronRight" class="size-4 text-muted-foreground" />
         <SlidersHorizontal class="size-4 text-primary" />
         <span class="text-sm font-bold text-foreground">Active Modifiers</span>
-        <span class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+        <span
+          class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
+        >
           {{ activeCount }}
         </span>
       </button>
@@ -108,7 +121,10 @@ const hasAnything = computed(() => activeCount.value > 0)
     <div v-if="isOpen" class="space-y-3 px-4 pb-4">
       <!-- In Stock -->
       <div v-if="stockedItems.length" class="space-y-1">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em]" style="color: rgb(52, 211, 153)">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: rgb(52, 211, 153)"
+        >
           In Stock
         </p>
         <div class="space-y-1">
@@ -124,7 +140,10 @@ const hasAnything = computed(() => activeCount.value > 0)
               class="size-5 object-contain"
             />
             <span class="min-w-0 truncate text-sm text-foreground">{{ item.itemName }}</span>
-            <span class="ml-auto shrink-0 font-mono text-sm font-semibold" style="color: rgb(52, 211, 153)">
+            <span
+              class="ml-auto shrink-0 font-mono text-sm font-semibold"
+              style="color: rgb(52, 211, 153)"
+            >
               x{{ item.amount.toLocaleString() }}
             </span>
           </div>
@@ -133,7 +152,10 @@ const hasAnything = computed(() => activeCount.value > 0)
 
       <!-- Garden -->
       <div v-if="activeFlowers.length" class="space-y-1">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em]" style="color: rgb(163, 230, 53)">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: rgb(163, 230, 53)"
+        >
           Garden
         </p>
         <div class="space-y-2">
@@ -149,9 +171,16 @@ const hasAnything = computed(() => activeCount.value > 0)
                 :alt="flower.flowerName"
                 class="size-5 object-contain"
               />
-              <span class="min-w-0 text-sm font-semibold text-foreground">{{ flower.flowerName }}</span>
-              <span class="ml-auto shrink-0 text-[11px] text-muted-foreground">{{ flower.totalCount }} flower{{ flower.totalCount === 1 ? '' : 's' }}</span>
-              <span class="shrink-0 font-mono text-sm font-semibold" style="color: rgb(163, 230, 53)">
+              <span class="min-w-0 text-sm font-semibold text-foreground">{{
+                flower.flowerName
+              }}</span>
+              <span class="ml-auto shrink-0 text-[11px] text-muted-foreground"
+                >{{ flower.totalCount }} flower{{ flower.totalCount === 1 ? '' : 's' }}</span
+              >
+              <span
+                class="shrink-0 font-mono text-sm font-semibold"
+                style="color: rgb(163, 230, 53)"
+              >
                 {{ flower.yieldPerMin }}/min
               </span>
             </div>
@@ -160,11 +189,13 @@ const hasAnything = computed(() => activeCount.value > 0)
                 v-for="entry in flower.entries"
                 :key="entry.level"
                 class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold"
-                :class="entry.level >= 4
-                  ? 'border-lime-400/40 bg-lime-400/10 text-lime-300'
-                  : entry.level >= 2
-                    ? 'border-lime-400/25 bg-lime-400/5 text-lime-300/80'
-                    : 'border-border/50 bg-background/50 text-muted-foreground'"
+                :class="
+                  entry.level >= 4
+                    ? 'border-lime-400/40 bg-lime-400/10 text-lime-300'
+                    : entry.level >= 2
+                      ? 'border-lime-400/25 bg-lime-400/5 text-lime-300/80'
+                      : 'border-border/50 bg-background/50 text-muted-foreground'
+                "
               >
                 <span class="font-bold">{{ entry.count }}×</span>
                 <span>Lv{{ entry.level }}</span>
@@ -176,7 +207,10 @@ const hasAnything = computed(() => activeCount.value > 0)
 
       <!-- Awaken Gather -->
       <div v-if="activeGatherUpgrades.length" class="space-y-1">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em]" style="color: rgb(52, 211, 153)">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: rgb(52, 211, 153)"
+        >
           Awaken Gather
         </p>
         <div class="space-y-1">
@@ -187,10 +221,18 @@ const hasAnything = computed(() => activeCount.value > 0)
           >
             <span class="min-w-0 text-sm text-foreground">{{ upgrade.jobId }}</span>
             <div class="ml-auto flex items-center gap-3">
-              <span v-if="upgrade.yieldBonus > 0" class="text-xs font-semibold" style="color: rgb(52, 211, 153)">
+              <span
+                v-if="upgrade.yieldBonus > 0"
+                class="text-xs font-semibold"
+                style="color: rgb(52, 211, 153)"
+              >
                 Yield +{{ upgrade.yieldBonus }}
               </span>
-              <span v-if="upgrade.durationPct > 0" class="text-xs font-semibold" style="color: rgb(52, 211, 153)">
+              <span
+                v-if="upgrade.durationPct > 0"
+                class="text-xs font-semibold"
+                style="color: rgb(52, 211, 153)"
+              >
                 Duration -{{ upgrade.durationPct }}%
               </span>
             </div>
@@ -200,7 +242,10 @@ const hasAnything = computed(() => activeCount.value > 0)
 
       <!-- Awaken Speed -->
       <div v-if="activeSpeedTiers.length" class="space-y-1">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em]" style="color: hsl(var(--primary))">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: hsl(var(--primary))"
+        >
           Awaken Speed
         </p>
         <div class="space-y-1">
@@ -219,7 +264,10 @@ const hasAnything = computed(() => activeCount.value > 0)
 
       <!-- Job Tiers -->
       <div v-if="activeJobTiers.length" class="space-y-1">
-        <p class="text-[11px] font-bold uppercase tracking-[0.16em]" style="color: rgb(52, 211, 153)">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: rgb(52, 211, 153)"
+        >
           Job Tiers
         </p>
         <div class="space-y-1">

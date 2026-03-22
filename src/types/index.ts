@@ -188,12 +188,12 @@ export interface PlannerSummaryLeaf {
 }
 
 export interface PlannerTimeBreakdown {
-  gatherTimeByJob: Record<string, number>   // serial within job, parallel across jobs
-  craftTimeByWorkstation: Record<string, number>  // serial within station, parallel across stations
-  gardenTimeSeconds: number   // passive
-  expeditionTimeSeconds: number  // passive
-  activeTimeSeconds: number   // max(max(per-job), max(per-workstation))
-  passiveTimeSeconds: number  // max(garden, expedition)
+  gatherTimeByJob: Record<string, number> // serial within job, parallel across jobs
+  craftTimeByWorkstation: Record<string, number> // serial within station, parallel across stations
+  gardenTimeSeconds: number // passive
+  expeditionTimeSeconds: number // passive
+  activeTimeSeconds: number // max(max(per-job), max(per-workstation))
+  passiveTimeSeconds: number // max(garden, expedition)
 }
 
 export interface PlannerSummary {

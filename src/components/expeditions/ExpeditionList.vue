@@ -9,6 +9,7 @@ defineProps<{
   sortDirection: string
 }>()
 
+
 const emit = defineEmits<{
   select: [expedition: Expedition]
   sort: [field: string]
@@ -26,7 +27,13 @@ const emit = defineEmits<{
           @click="emit('sort', 'rating')"
         >
           Rating
-          <svg v-if="sortField === 'rating'" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+          <svg
+            v-if="sortField === 'rating'"
+            viewBox="0 0 16 16"
+            width="12"
+            height="12"
+            fill="currentColor"
+          >
             <path v-if="sortDirection === 'asc'" d="M8 4l4 6H4l4-6z" />
             <path v-else d="M8 12l-4-6h8l-4 6z" />
           </svg>
@@ -37,7 +44,13 @@ const emit = defineEmits<{
           @click="emit('sort', 'time')"
         >
           Time
-          <svg v-if="sortField === 'time'" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+          <svg
+            v-if="sortField === 'time'"
+            viewBox="0 0 16 16"
+            width="12"
+            height="12"
+            fill="currentColor"
+          >
             <path v-if="sortDirection === 'asc'" d="M8 4l4 6H4l4-6z" />
             <path v-else d="M8 12l-4-6h8l-4 6z" />
           </svg>
@@ -63,9 +76,7 @@ const emit = defineEmits<{
         </div>
       </div>
 
-      <div v-if="expeditions.length === 0" class="empty">
-        No expeditions found.
-      </div>
+      <div v-if="expeditions.length === 0" class="empty">No expeditions found.</div>
     </div>
   </div>
 </template>
@@ -111,7 +122,9 @@ const emit = defineEmits<{
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .sort-btn:hover {

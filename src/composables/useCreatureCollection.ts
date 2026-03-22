@@ -1,9 +1,13 @@
-import { computed } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
+import { computed } from 'vue'
+
 import type { CreatureCollectionEntry } from '@/types'
 import { PRE_AWAKEN_MAX, maxLevelForState } from '@/utils/formulas'
 
-const collection = useLocalStorage<Record<string, CreatureCollectionEntry>>('creature-collection', {})
+const collection = useLocalStorage<Record<string, CreatureCollectionEntry>>(
+  'creature-collection',
+  {},
+)
 
 // Migration: add awakened field to existing entries
 for (const [id, entry] of Object.entries(collection.value)) {
@@ -66,7 +70,11 @@ export function useCreatureCollection() {
     const current = collection.value[id]
     collection.value = {
       ...collection.value,
-      [id]: { owned: !current?.owned, level: current?.level ?? 1, awakened: current?.awakened ?? false },
+      [id]: {
+        owned: !current?.owned,
+        level: current?.level ?? 1,
+        awakened: current?.awakened ?? false,
+      },
     }
   }
 

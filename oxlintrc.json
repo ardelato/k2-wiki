@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "no-unused-vars": "off"
+  },
+  "env": {
+    "browser": true
+  },
+  "ignorePatterns": ["dist/**", "src/data/**", "vite.config.ts"]
+}

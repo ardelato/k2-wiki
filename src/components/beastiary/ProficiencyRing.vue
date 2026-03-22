@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(defineProps<{
-  label: string
-  value: number
-  maxValue?: number
-  color: string
-  size?: 'sm' | 'md'
-}>(), { maxValue: 10, size: 'md' })
+const props = withDefaults(
+  defineProps<{
+    label: string
+    value: number
+    maxValue?: number
+    color: string
+    size?: 'sm' | 'md'
+  }>(),
+  { maxValue: 10, size: 'md' },
+)
 
-const radius = computed(() => props.size === 'sm' ? 20 : 28)
-const strokeWidth = computed(() => props.size === 'sm' ? 3 : 4)
+
+const radius = computed(() => (props.size === 'sm' ? 20 : 28))
+const strokeWidth = computed(() => (props.size === 'sm' ? 3 : 4))
 const circumference = computed(() => 2 * Math.PI * radius.value)
 const progress = computed(() => Math.min(props.value / props.maxValue, 1))
 const dashOffset = computed(() => circumference.value * (1 - progress.value))
@@ -47,7 +51,13 @@ const svgSize = computed(() => (radius.value + strokeWidth.value) * 2)
         />
       </svg>
       <div class="ring-value">
-        <span :class="['value-text', size === 'sm' ? 'value-sm' : 'value-md', value === 0 ? 'value-zero' : '']">
+        <span
+          :class="[
+            'value-text',
+            size === 'sm' ? 'value-sm' : 'value-md',
+            value === 0 ? 'value-zero' : '',
+          ]"
+        >
           {{ value }}
         </span>
       </div>
@@ -66,8 +76,12 @@ const svgSize = computed(() => (radius.value + strokeWidth.value) * 2)
   color: var(--color-text-muted);
   font-weight: 500;
 }
-.label-sm { font-size: 10px; }
-.label-md { font-size: 12px; }
+.label-sm {
+  font-size: 10px;
+}
+.label-md {
+  font-size: 12px;
+}
 .ring-container {
   position: relative;
 }
@@ -89,7 +103,14 @@ const svgSize = computed(() => (radius.value + strokeWidth.value) * 2)
   font-weight: 700;
   color: var(--color-text);
 }
-.value-sm { font-size: 14px; }
-.value-md { font-size: 18px; }
-.value-zero { color: var(--color-text-muted); opacity: 0.5; }
+.value-sm {
+  font-size: 14px;
+}
+.value-md {
+  font-size: 18px;
+}
+.value-zero {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+}
 </style>

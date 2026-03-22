@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import type { Creature, Expedition, ExpeditionStatWeights } from '@/types'
-import { statLabels, statAbbreviations } from '@/utils/formulas'
-import { toTitleCase } from '@/utils/format'
 import { getCreatureImage } from '@/utils/creatureImages'
+import { toTitleCase } from '@/utils/format'
+import { statLabels, statAbbreviations } from '@/utils/formulas'
 
 type ExpeditionStatKey = keyof ExpeditionStatWeights
+
 
 const props = defineProps<{
   creatures: { creature: Creature; rating: number; level: number }[]
   expedition: Expedition | null
   selectedCreatureId: string | null
 }>()
+
 
 const emit = defineEmits<{
   selectCreature: [creature: Creature]
@@ -19,6 +21,7 @@ const emit = defineEmits<{
   updateTypeFilter: [type: string]
 }>()
 
+
 const typeColorMap: Record<string, string> = {
   Fire: 'var(--color-fire)',
   Water: 'var(--color-water)',
@@ -26,12 +29,17 @@ const typeColorMap: Record<string, string> = {
   Earth: 'var(--color-earth)',
 }
 
+
 const elementTypes = ['All', 'Fire', 'Water', 'Wind', 'Earth'] as const
+
 
 function weightedStats(): [ExpeditionStatKey, number][] {
   if (!props.expedition) return []
-  return (Object.entries(props.expedition.statWeights) as [ExpeditionStatKey, number][]).filter(([, w]) => w > 0)
+  return (Object.entries(props.expedition.statWeights) as [ExpeditionStatKey, number][]).filter(
+    ([, w]) => w > 0,
+  )
 }
+
 
 function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
   return Math.min(100, creature.stats[statKey])
@@ -44,7 +52,15 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
     <div class="selector-header">
       <span class="selector-title">Select Creature</span>
       <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14">
+        <svg
+          class="search-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          width="14"
+          height="14"
+        >
           <circle cx="8.5" cy="8.5" r="5.5" />
           <line x1="13" y1="13" x2="17" y2="17" />
         </svg>
@@ -74,12 +90,7 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
     <!-- Stat sort pills (when expedition selected) -->
     <div v-if="expedition && weightedStats().length" class="stat-pills">
       <span class="stat-pills-label">Focus:</span>
-      <span
-        v-for="[key] in weightedStats()"
-        :key="key"
-        class="stat-pill"
-        :title="statLabels[key]"
-      >
+      <span v-for="[key] in weightedStats()" :key="key" class="stat-pill" :title="statLabels[key]">
         {{ statAbbreviations[key] }}
       </span>
     </div>
@@ -87,7 +98,7 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
     <!-- Creature list -->
     <div class="creature-scroll">
       <div
-        v-for="({ creature, rating, level }) in creatures"
+        v-for="{ creature, rating, level } in creatures"
         :key="creature.id"
         class="creature-row"
         :class="{ selected: creature.id === selectedCreatureId }"
@@ -125,7 +136,9 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
                 height="13"
                 fill="var(--color-yellow)"
               >
-                <path d="M8 1l1.854 4.146L14 5.882l-3.146 2.868.854 4.25L8 10.854l-3.708 2.146.854-4.25L2 5.882l4.146-.736L8 1z" />
+                <path
+                  d="M8 1l1.854 4.146L14 5.882l-3.146 2.868.854 4.25L8 10.854l-3.708 2.146.854-4.25L2 5.882l4.146-.736L8 1z"
+                />
               </svg>
             </div>
             <div class="c-meta">
@@ -134,7 +147,8 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
                 :key="t"
                 :style="{ color: typeColorMap[t] }"
                 class="c-type"
-              >{{ t }}</span>
+                >{{ t }}</span
+              >
               <span v-if="creature.trait" class="c-trait">{{ toTitleCase(creature.trait) }}</span>
             </div>
           </div>
@@ -148,7 +162,9 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
               min="1"
               max="100"
               title="Level"
-              @input="emit('updateLevel', creature.id, Number(($event.target as HTMLInputElement).value))"
+              @input="
+                emit('updateLevel', creature.id, Number(($event.target as HTMLInputElement).value))
+              "
             />
             <span class="c-rating">{{ rating }}</span>
           </div>
@@ -156,11 +172,7 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
 
         <!-- Stat bars for weighted stats -->
         <div v-if="expedition && weightedStats().length" class="stat-bars">
-          <div
-            v-for="[key, weight] in weightedStats()"
-            :key="key"
-            class="stat-bar-row"
-          >
+          <div v-for="[key, weight] in weightedStats()" :key="key" class="stat-bar-row">
             <span class="stat-bar-label">{{ statAbbreviations[key] }}</span>
             <div class="stat-bar-bg">
               <div
@@ -250,7 +262,10 @@ function getStatBar(creature: Creature, statKey: ExpeditionStatKey): number {
   background: transparent;
   color: var(--color-text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .type-pill:hover {

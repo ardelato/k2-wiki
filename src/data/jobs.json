@@ -1,2504 +1,2504 @@
 [
-    {
-        "id": "Chopping",
+  {
+    "id": "Chopping",
+    "description": "",
+    "maxLevel": 0,
+    "baseXpRate": 0,
+    "type": "skilling",
+    "activities": [
+      {
+        "id": "sapling",
+        "name": "Sapling",
         "description": "",
-        "maxLevel": 0,
-        "baseXpRate": 0,
-        "type": "skilling",
-        "activities": [
-            {
-                "id": "sapling",
-                "name": "Sapling",
-                "description": "",
-                "levelRequirement": 1,
-                "xpRate": 2,
-                "duration": 8,
-                "output": [
-                    {
-                        "id": "twig",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "pine-tree",
-                "name": "Pine Tree",
-                "description": "",
-                "levelRequirement": 5,
-                "xpRate": 3,
-                "duration": 9,
-                "output": [
-                    {
-                        "id": "pine-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "birch-tree",
-                "name": "Birch Tree",
-                "description": "",
-                "levelRequirement": 10,
-                "xpRate": 4,
-                "duration": 10,
-                "output": [
-                    {
-                        "id": "birch-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "oak-tree",
-                "name": "Oak Tree",
-                "description": "",
-                "levelRequirement": 15,
-                "xpRate": 6,
-                "duration": 11,
-                "output": [
-                    {
-                        "id": "oak-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "maple-tree",
-                "name": "Maple Tree",
-                "description": "",
-                "levelRequirement": 20,
-                "xpRate": 8,
-                "duration": 12,
-                "output": [
-                    {
-                        "id": "maple-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "cedar-tree",
-                "name": "Cedar Tree",
-                "description": "",
-                "levelRequirement": 30,
-                "xpRate": 10,
-                "duration": 13,
-                "output": [
-                    {
-                        "id": "cedar-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "ash-tree",
-                "name": "Ash Tree",
-                "description": "",
-                "levelRequirement": 40,
-                "xpRate": 14,
-                "duration": 14,
-                "output": [
-                    {
-                        "id": "ash-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "spruce-tree",
-                "name": "Spruce Tree",
-                "description": "",
-                "levelRequirement": 50,
-                "xpRate": 20,
-                "duration": 16,
-                "output": [
-                    {
-                        "id": "spruce-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "willow-tree",
-                "name": "Willow Tree",
-                "description": "",
-                "levelRequirement": 60,
-                "xpRate": 26,
-                "duration": 20,
-                "output": [
-                    {
-                        "id": "willow-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "runic-tree",
-                "name": "Runic Tree",
-                "description": "",
-                "levelRequirement": 70,
-                "xpRate": 36,
-                "duration": 25,
-                "output": [
-                    {
-                        "id": "runic-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "elder-tree",
-                "name": "Elder Tree",
-                "description": "",
-                "levelRequirement": 80,
-                "xpRate": 60,
-                "duration": 35,
-                "output": [
-                    {
-                        "id": "elder-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "arcanum-tree",
-                "name": "Arcanum Tree",
-                "description": "",
-                "levelRequirement": 90,
-                "xpRate": 120,
-                "duration": 45,
-                "output": [
-                    {
-                        "id": "arcanum-log",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "leaf",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "feather",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            }
+        "levelRequirement": 1,
+        "xpRate": 2,
+        "duration": 8,
+        "output": [
+          {
+            "id": "twig",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
         ]
-    },
-    {
-        "id": "Digging",
+      },
+      {
+        "id": "pine-tree",
+        "name": "Pine Tree",
         "description": "",
-        "maxLevel": 0,
-        "baseXpRate": 0,
-        "type": "skilling",
-        "activities": [
-            {
-                "id": "soft-soil",
-                "name": "Soft Soil",
-                "description": "",
-                "levelRequirement": 1,
-                "xpRate": 2,
-                "duration": 8,
-                "output": [
-                    {
-                        "id": "stone",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "clay-deposit",
-                "name": "Clay Deposit",
-                "description": "",
-                "levelRequirement": 5,
-                "xpRate": 3,
-                "duration": 9,
-                "output": [
-                    {
-                        "id": "clay",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "sand-deposit",
-                "name": "Sand Beach",
-                "description": "",
-                "levelRequirement": 10,
-                "xpRate": 4,
-                "duration": 10,
-                "output": [
-                    {
-                        "id": "sand",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "muddy-pit",
-                "name": "Muddy Pit",
-                "description": "",
-                "levelRequirement": 15,
-                "xpRate": 6,
-                "duration": 11,
-                "output": [
-                    {
-                        "id": "mud",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "snow-cover",
-                "name": "Snow Cover",
-                "description": "",
-                "levelRequirement": 20,
-                "xpRate": 8,
-                "duration": 12,
-                "output": [
-                    {
-                        "id": "ice",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "deep-soil",
-                "name": "Deep Soil",
-                "description": "",
-                "levelRequirement": 30,
-                "xpRate": 10,
-                "duration": 13,
-                "output": [
-                    {
-                        "id": "obsidian",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "gravel-deposit",
-                "name": "Gravel Deposit",
-                "description": "",
-                "levelRequirement": 40,
-                "xpRate": 14,
-                "duration": 14,
-                "output": [
-                    {
-                        "id": "gravel",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "fossil-bed",
-                "name": "Fossil Bed",
-                "description": "",
-                "levelRequirement": 50,
-                "xpRate": 20,
-                "duration": 16,
-                "output": [
-                    {
-                        "id": "fossil",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "old-foundations",
-                "name": "Old Foundations",
-                "description": "",
-                "levelRequirement": 60,
-                "xpRate": 26,
-                "duration": 20,
-                "output": [
-                    {
-                        "id": "dungeon-dust",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "runic-debris",
-                "name": "Runic Debris",
-                "description": "",
-                "levelRequirement": 70,
-                "xpRate": 36,
-                "duration": 25,
-                "output": [
-                    {
-                        "id": "runestone",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "ember-pits",
-                "name": "Ember Pits",
-                "description": "",
-                "levelRequirement": 80,
-                "xpRate": 60,
-                "duration": 35,
-                "output": [
-                    {
-                        "id": "volcanic-rock",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "vault-rubble",
-                "name": "Vault Rubble",
-                "description": "",
-                "levelRequirement": 90,
-                "xpRate": 120,
-                "duration": 45,
-                "output": [
-                    {
-                        "id": "key-fragment",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "bone",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "burried-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            }
+        "levelRequirement": 5,
+        "xpRate": 3,
+        "duration": 9,
+        "output": [
+          {
+            "id": "pine-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
         ]
-    },
-    {
-        "id": "Exploring",
-        "description": "Venture into various areas to discover herbs, flowers, foliage, and other natural resources.",
-        "maxLevel": 0,
-        "baseXpRate": 0,
-        "type": "skilling",
-        "activities": [
-            {
-                "id": "forest",
-                "name": "Forest",
-                "description": "",
-                "levelRequirement": 1,
-                "xpRate": 2,
-                "duration": 8,
-                "output": [
-                    {
-                        "id": "berry",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "meadow",
-                "name": "Meadow",
-                "description": "",
-                "levelRequirement": 5,
-                "xpRate": 3,
-                "duration": 9,
-                "output": [
-                    {
-                        "id": "butterfly",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "riverbank",
-                "name": "Riverbank",
-                "description": "",
-                "levelRequirement": 10,
-                "xpRate": 4,
-                "duration": 10,
-                "output": [
-                    {
-                        "id": "shell",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "hillside",
-                "name": "Hillside",
-                "description": "",
-                "levelRequirement": 15,
-                "xpRate": 6,
-                "duration": 11,
-                "output": [
-                    {
-                        "id": "horn",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "wetland",
-                "name": "Wetland",
-                "description": "",
-                "levelRequirement": 20,
-                "xpRate": 8,
-                "duration": 12,
-                "output": [
-                    {
-                        "id": "reed",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "mountain",
-                "name": "Mountain",
-                "description": "",
-                "levelRequirement": 30,
-                "xpRate": 10,
-                "duration": 13,
-                "output": [
-                    {
-                        "id": "lichen",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "deep-forest",
-                "name": "Deep Forest",
-                "description": "",
-                "levelRequirement": 40,
-                "xpRate": 14,
-                "duration": 14,
-                "output": [
-                    {
-                        "id": "mushroom",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "graveyard",
-                "name": "Graveyard",
-                "description": "",
-                "levelRequirement": 50,
-                "xpRate": 20,
-                "duration": 16,
-                "output": [
-                    {
-                        "id": "memory-orb",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "swamp",
-                "name": "Swamp",
-                "description": "",
-                "levelRequirement": 60,
-                "xpRate": 26,
-                "duration": 20,
-                "output": [
-                    {
-                        "id": "vine",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "caverns",
-                "name": "Caverns",
-                "description": "",
-                "levelRequirement": 70,
-                "xpRate": 36,
-                "duration": 25,
-                "output": [
-                    {
-                        "id": "geode",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "tundra",
-                "name": "Tundra",
-                "description": "",
-                "levelRequirement": 80,
-                "xpRate": 60,
-                "duration": 35,
-                "output": [
-                    {
-                        "id": "snow",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "ancient-site",
-                "name": "Ancient Site",
-                "description": "",
-                "levelRequirement": 90,
-                "xpRate": 120,
-                "duration": 45,
-                "output": [
-                    {
-                        "id": "legacy-fragment",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "meat",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "hide",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "backpack",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "Farming",
-        "description": "Plant and harvest crops to feed yourself and create valuable materials.",
-        "maxLevel": 0,
-        "baseXpRate": 0,
-        "type": "skilling",
-        "activities": [
-            {
-                "id": "grass-seeds",
-                "name": "Grass Seeds",
-                "description": "",
-                "levelRequirement": 1,
-                "xpRate": 2,
-                "duration": 8,
-                "output": [
-                    {
-                        "id": "grass",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "wheat-seeds",
-                "name": "Wheat Seeds",
-                "description": "",
-                "levelRequirement": 5,
-                "xpRate": 3,
-                "duration": 9,
-                "output": [
-                    {
-                        "id": "wheat",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "carrot-seeds",
-                "name": "Carrot Seeds",
-                "description": "",
-                "levelRequirement": 10,
-                "xpRate": 4,
-                "duration": 10,
-                "output": [
-                    {
-                        "id": "carrot",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "tomato-seeds",
-                "name": "Tomato Seeds",
-                "description": "",
-                "levelRequirement": 15,
-                "xpRate": 6,
-                "duration": 11,
-                "output": [
-                    {
-                        "id": "tomato",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "lettuce-seeds",
-                "name": "Lettuce Seeds",
-                "description": "",
-                "levelRequirement": 20,
-                "xpRate": 8,
-                "duration": 12,
-                "output": [
-                    {
-                        "id": "lettuce",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "potato-seeds",
-                "name": "Potato Seeds",
-                "description": "",
-                "levelRequirement": 30,
-                "xpRate": 10,
-                "duration": 13,
-                "output": [
-                    {
-                        "id": "potato",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "corn-seeds",
-                "name": "Corn Seeds",
-                "description": "",
-                "levelRequirement": 40,
-                "xpRate": 14,
-                "duration": 14,
-                "output": [
-                    {
-                        "id": "corn",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "eggplant-seeds",
-                "name": "Eggplant Seeds",
-                "description": "",
-                "levelRequirement": 50,
-                "xpRate": 20,
-                "duration": 16,
-                "output": [
-                    {
-                        "id": "eggplant",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "onion-seeds",
-                "name": "Onion Seeds",
-                "description": "",
-                "levelRequirement": 60,
-                "xpRate": 26,
-                "duration": 20,
-                "output": [
-                    {
-                        "id": "onion",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "pepper-seeds",
-                "name": "Pepper Seeds",
-                "description": "",
-                "levelRequirement": 70,
-                "xpRate": 36,
-                "duration": 25,
-                "output": [
-                    {
-                        "id": "pepper",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "pineapple-seeds",
-                "name": "Pineapple Seeds",
-                "description": "",
-                "levelRequirement": 80,
-                "xpRate": 60,
-                "duration": 35,
-                "output": [
-                    {
-                        "id": "pineapple",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "mango-seeds",
-                "name": "Mango Seeds",
-                "description": "",
-                "levelRequirement": 90,
-                "xpRate": 120,
-                "duration": 45,
-                "output": [
-                    {
-                        "id": "mango",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "weeds",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "caterpillar",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "herb-pouch",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "Fishing",
-        "description": "Cast your line and catch fish from various water bodies.",
-        "maxLevel": 0,
-        "baseXpRate": 0,
-        "type": "skilling",
-        "activities": [
-            {
-                "id": "shallow-pond",
-                "name": "Shallow Pond",
-                "description": "",
-                "levelRequirement": 1,
-                "xpRate": 2,
-                "duration": 8,
-                "output": [
-                    {
-                        "id": "minnow",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "quiet-stream",
-                "name": "Quiet Stream",
-                "description": "",
-                "levelRequirement": 5,
-                "xpRate": 3,
-                "duration": 9,
-                "output": [
-                    {
-                        "id": "trout",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "lakeside",
-                "name": "Lakeside",
-                "description": "",
-                "levelRequirement": 10,
-                "xpRate": 4,
-                "duration": 10,
-                "output": [
-                    {
-                        "id": "bass",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "forest-creek",
-                "name": "Forest Creek",
-                "description": "",
-                "levelRequirement": 15,
-                "xpRate": 6,
-                "duration": 11,
-                "output": [
-                    {
-                        "id": "walleye",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "wide-river",
-                "name": "Wide River",
-                "description": "",
-                "levelRequirement": 20,
-                "xpRate": 8,
-                "duration": 12,
-                "output": [
-                    {
-                        "id": "salmon",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "muddy-marsh",
-                "name": "Muddy Marsh",
-                "description": "",
-                "levelRequirement": 30,
-                "xpRate": 10,
-                "duration": 13,
-                "output": [
-                    {
-                        "id": "snail",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "hidden-lake",
-                "name": "Hidden Lake",
-                "description": "",
-                "levelRequirement": 40,
-                "xpRate": 14,
-                "duration": 14,
-                "output": [
-                    {
-                        "id": "carp",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "deep-lake",
-                "name": "Deep Lake",
-                "description": "",
-                "levelRequirement": 50,
-                "xpRate": 20,
-                "duration": 16,
-                "output": [
-                    {
-                        "id": "magical-carp",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "rock-coast",
-                "name": "Rock Coast",
-                "description": "",
-                "levelRequirement": 60,
-                "xpRate": 26,
-                "duration": 20,
-                "output": [
-                    {
-                        "id": "crab",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "coastal-waters",
-                "name": "Coastal Waters",
-                "description": "",
-                "levelRequirement": 70,
-                "xpRate": 36,
-                "duration": 25,
-                "output": [
-                    {
-                        "id": "redfish",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "deep-ocean",
-                "name": "Deep Ocean",
-                "description": "",
-                "levelRequirement": 80,
-                "xpRate": 60,
-                "duration": 35,
-                "output": [
-                    {
-                        "id": "rainbow-fish",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "molten-lake",
-                "name": "Molten Lake",
-                "description": "",
-                "levelRequirement": 90,
-                "xpRate": 120,
-                "duration": 45,
-                "output": [
-                    {
-                        "id": "emberfish",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "trash",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "seaweed",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "treasure-chest",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "Mining",
+      },
+      {
+        "id": "birch-tree",
+        "name": "Birch Tree",
         "description": "",
-        "maxLevel": 0,
-        "baseXpRate": 0,
-        "type": "skilling",
-        "activities": [
-            {
-                "id": "stone",
-                "name": "Stone",
-                "description": "",
-                "levelRequirement": 1,
-                "xpRate": 2,
-                "duration": 8,
-                "output": [
-                    {
-                        "id": "stone",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "copper-ore",
-                "name": "Copper Ore",
-                "description": "",
-                "levelRequirement": 5,
-                "xpRate": 3,
-                "duration": 9,
-                "output": [
-                    {
-                        "id": "copper-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "tin-ore",
-                "name": "Tin Ore",
-                "description": "",
-                "levelRequirement": 10,
-                "xpRate": 4,
-                "duration": 10,
-                "output": [
-                    {
-                        "id": "tin-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "coal",
-                "name": "Coal",
-                "description": "",
-                "levelRequirement": 15,
-                "xpRate": 6,
-                "duration": 11,
-                "output": [
-                    {
-                        "id": "coal",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "iron-ore",
-                "name": "Iron Ore",
-                "description": "",
-                "levelRequirement": 20,
-                "xpRate": 8,
-                "duration": 12,
-                "output": [
-                    {
-                        "id": "iron-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "silver-ore",
-                "name": "Silver Ore",
-                "description": "",
-                "levelRequirement": 30,
-                "xpRate": 10,
-                "duration": 13,
-                "output": [
-                    {
-                        "id": "silver-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "gold-ore",
-                "name": "Gold Ore",
-                "description": "",
-                "levelRequirement": 40,
-                "xpRate": 14,
-                "duration": 14,
-                "output": [
-                    {
-                        "id": "gold-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "platinum-ore",
-                "name": "Platinum Ore",
-                "description": "",
-                "levelRequirement": 50,
-                "xpRate": 20,
-                "duration": 16,
-                "output": [
-                    {
-                        "id": "platinum-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "adamantite-ore",
-                "name": "Adamantite Ore",
-                "description": "",
-                "levelRequirement": 60,
-                "xpRate": 26,
-                "duration": 20,
-                "output": [
-                    {
-                        "id": "adamantite-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "runic-ore",
-                "name": "Runic Ore",
-                "description": "",
-                "levelRequirement": 70,
-                "xpRate": 36,
-                "duration": 25,
-                "output": [
-                    {
-                        "id": "runic-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "solarite-ore",
-                "name": "Solarite Ore",
-                "description": "",
-                "levelRequirement": 80,
-                "xpRate": 60,
-                "duration": 35,
-                "output": [
-                    {
-                        "id": "solarite-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            },
-            {
-                "id": "arcanum-ore",
-                "name": "Arcanum Ore",
-                "description": "",
-                "levelRequirement": 90,
-                "xpRate": 120,
-                "duration": 45,
-                "output": [
-                    {
-                        "id": "arcanum-ore",
-                        "chance": 1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "dirt",
-                        "chance": 0.2,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "relic",
-                        "chance": 0.1,
-                        "min": 1,
-                        "max": 1
-                    },
-                    {
-                        "id": "crate",
-                        "chance": 0.01,
-                        "min": 1,
-                        "max": 1
-                    }
-                ]
-            }
+        "levelRequirement": 10,
+        "xpRate": 4,
+        "duration": 10,
+        "output": [
+          {
+            "id": "birch-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
         ]
-    }
+      },
+      {
+        "id": "oak-tree",
+        "name": "Oak Tree",
+        "description": "",
+        "levelRequirement": 15,
+        "xpRate": 6,
+        "duration": 11,
+        "output": [
+          {
+            "id": "oak-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "maple-tree",
+        "name": "Maple Tree",
+        "description": "",
+        "levelRequirement": 20,
+        "xpRate": 8,
+        "duration": 12,
+        "output": [
+          {
+            "id": "maple-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "cedar-tree",
+        "name": "Cedar Tree",
+        "description": "",
+        "levelRequirement": 30,
+        "xpRate": 10,
+        "duration": 13,
+        "output": [
+          {
+            "id": "cedar-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "ash-tree",
+        "name": "Ash Tree",
+        "description": "",
+        "levelRequirement": 40,
+        "xpRate": 14,
+        "duration": 14,
+        "output": [
+          {
+            "id": "ash-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "spruce-tree",
+        "name": "Spruce Tree",
+        "description": "",
+        "levelRequirement": 50,
+        "xpRate": 20,
+        "duration": 16,
+        "output": [
+          {
+            "id": "spruce-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "willow-tree",
+        "name": "Willow Tree",
+        "description": "",
+        "levelRequirement": 60,
+        "xpRate": 26,
+        "duration": 20,
+        "output": [
+          {
+            "id": "willow-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "runic-tree",
+        "name": "Runic Tree",
+        "description": "",
+        "levelRequirement": 70,
+        "xpRate": 36,
+        "duration": 25,
+        "output": [
+          {
+            "id": "runic-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "elder-tree",
+        "name": "Elder Tree",
+        "description": "",
+        "levelRequirement": 80,
+        "xpRate": 60,
+        "duration": 35,
+        "output": [
+          {
+            "id": "elder-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "arcanum-tree",
+        "name": "Arcanum Tree",
+        "description": "",
+        "levelRequirement": 90,
+        "xpRate": 120,
+        "duration": 45,
+        "output": [
+          {
+            "id": "arcanum-log",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "leaf",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "feather",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "Digging",
+    "description": "",
+    "maxLevel": 0,
+    "baseXpRate": 0,
+    "type": "skilling",
+    "activities": [
+      {
+        "id": "soft-soil",
+        "name": "Soft Soil",
+        "description": "",
+        "levelRequirement": 1,
+        "xpRate": 2,
+        "duration": 8,
+        "output": [
+          {
+            "id": "stone",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "clay-deposit",
+        "name": "Clay Deposit",
+        "description": "",
+        "levelRequirement": 5,
+        "xpRate": 3,
+        "duration": 9,
+        "output": [
+          {
+            "id": "clay",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "sand-deposit",
+        "name": "Sand Beach",
+        "description": "",
+        "levelRequirement": 10,
+        "xpRate": 4,
+        "duration": 10,
+        "output": [
+          {
+            "id": "sand",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "muddy-pit",
+        "name": "Muddy Pit",
+        "description": "",
+        "levelRequirement": 15,
+        "xpRate": 6,
+        "duration": 11,
+        "output": [
+          {
+            "id": "mud",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "snow-cover",
+        "name": "Snow Cover",
+        "description": "",
+        "levelRequirement": 20,
+        "xpRate": 8,
+        "duration": 12,
+        "output": [
+          {
+            "id": "ice",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "deep-soil",
+        "name": "Deep Soil",
+        "description": "",
+        "levelRequirement": 30,
+        "xpRate": 10,
+        "duration": 13,
+        "output": [
+          {
+            "id": "obsidian",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "gravel-deposit",
+        "name": "Gravel Deposit",
+        "description": "",
+        "levelRequirement": 40,
+        "xpRate": 14,
+        "duration": 14,
+        "output": [
+          {
+            "id": "gravel",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "fossil-bed",
+        "name": "Fossil Bed",
+        "description": "",
+        "levelRequirement": 50,
+        "xpRate": 20,
+        "duration": 16,
+        "output": [
+          {
+            "id": "fossil",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "old-foundations",
+        "name": "Old Foundations",
+        "description": "",
+        "levelRequirement": 60,
+        "xpRate": 26,
+        "duration": 20,
+        "output": [
+          {
+            "id": "dungeon-dust",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "runic-debris",
+        "name": "Runic Debris",
+        "description": "",
+        "levelRequirement": 70,
+        "xpRate": 36,
+        "duration": 25,
+        "output": [
+          {
+            "id": "runestone",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "ember-pits",
+        "name": "Ember Pits",
+        "description": "",
+        "levelRequirement": 80,
+        "xpRate": 60,
+        "duration": 35,
+        "output": [
+          {
+            "id": "volcanic-rock",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "vault-rubble",
+        "name": "Vault Rubble",
+        "description": "",
+        "levelRequirement": 90,
+        "xpRate": 120,
+        "duration": 45,
+        "output": [
+          {
+            "id": "key-fragment",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "bone",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "burried-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "Exploring",
+    "description": "Venture into various areas to discover herbs, flowers, foliage, and other natural resources.",
+    "maxLevel": 0,
+    "baseXpRate": 0,
+    "type": "skilling",
+    "activities": [
+      {
+        "id": "forest",
+        "name": "Forest",
+        "description": "",
+        "levelRequirement": 1,
+        "xpRate": 2,
+        "duration": 8,
+        "output": [
+          {
+            "id": "berry",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "meadow",
+        "name": "Meadow",
+        "description": "",
+        "levelRequirement": 5,
+        "xpRate": 3,
+        "duration": 9,
+        "output": [
+          {
+            "id": "butterfly",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "riverbank",
+        "name": "Riverbank",
+        "description": "",
+        "levelRequirement": 10,
+        "xpRate": 4,
+        "duration": 10,
+        "output": [
+          {
+            "id": "shell",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "hillside",
+        "name": "Hillside",
+        "description": "",
+        "levelRequirement": 15,
+        "xpRate": 6,
+        "duration": 11,
+        "output": [
+          {
+            "id": "horn",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "wetland",
+        "name": "Wetland",
+        "description": "",
+        "levelRequirement": 20,
+        "xpRate": 8,
+        "duration": 12,
+        "output": [
+          {
+            "id": "reed",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "mountain",
+        "name": "Mountain",
+        "description": "",
+        "levelRequirement": 30,
+        "xpRate": 10,
+        "duration": 13,
+        "output": [
+          {
+            "id": "lichen",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "deep-forest",
+        "name": "Deep Forest",
+        "description": "",
+        "levelRequirement": 40,
+        "xpRate": 14,
+        "duration": 14,
+        "output": [
+          {
+            "id": "mushroom",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "graveyard",
+        "name": "Graveyard",
+        "description": "",
+        "levelRequirement": 50,
+        "xpRate": 20,
+        "duration": 16,
+        "output": [
+          {
+            "id": "memory-orb",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "swamp",
+        "name": "Swamp",
+        "description": "",
+        "levelRequirement": 60,
+        "xpRate": 26,
+        "duration": 20,
+        "output": [
+          {
+            "id": "vine",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "caverns",
+        "name": "Caverns",
+        "description": "",
+        "levelRequirement": 70,
+        "xpRate": 36,
+        "duration": 25,
+        "output": [
+          {
+            "id": "geode",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "tundra",
+        "name": "Tundra",
+        "description": "",
+        "levelRequirement": 80,
+        "xpRate": 60,
+        "duration": 35,
+        "output": [
+          {
+            "id": "snow",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "ancient-site",
+        "name": "Ancient Site",
+        "description": "",
+        "levelRequirement": 90,
+        "xpRate": 120,
+        "duration": 45,
+        "output": [
+          {
+            "id": "legacy-fragment",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "meat",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "hide",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "backpack",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "Farming",
+    "description": "Plant and harvest crops to feed yourself and create valuable materials.",
+    "maxLevel": 0,
+    "baseXpRate": 0,
+    "type": "skilling",
+    "activities": [
+      {
+        "id": "grass-seeds",
+        "name": "Grass Seeds",
+        "description": "",
+        "levelRequirement": 1,
+        "xpRate": 2,
+        "duration": 8,
+        "output": [
+          {
+            "id": "grass",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "wheat-seeds",
+        "name": "Wheat Seeds",
+        "description": "",
+        "levelRequirement": 5,
+        "xpRate": 3,
+        "duration": 9,
+        "output": [
+          {
+            "id": "wheat",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "carrot-seeds",
+        "name": "Carrot Seeds",
+        "description": "",
+        "levelRequirement": 10,
+        "xpRate": 4,
+        "duration": 10,
+        "output": [
+          {
+            "id": "carrot",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "tomato-seeds",
+        "name": "Tomato Seeds",
+        "description": "",
+        "levelRequirement": 15,
+        "xpRate": 6,
+        "duration": 11,
+        "output": [
+          {
+            "id": "tomato",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "lettuce-seeds",
+        "name": "Lettuce Seeds",
+        "description": "",
+        "levelRequirement": 20,
+        "xpRate": 8,
+        "duration": 12,
+        "output": [
+          {
+            "id": "lettuce",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "potato-seeds",
+        "name": "Potato Seeds",
+        "description": "",
+        "levelRequirement": 30,
+        "xpRate": 10,
+        "duration": 13,
+        "output": [
+          {
+            "id": "potato",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "corn-seeds",
+        "name": "Corn Seeds",
+        "description": "",
+        "levelRequirement": 40,
+        "xpRate": 14,
+        "duration": 14,
+        "output": [
+          {
+            "id": "corn",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "eggplant-seeds",
+        "name": "Eggplant Seeds",
+        "description": "",
+        "levelRequirement": 50,
+        "xpRate": 20,
+        "duration": 16,
+        "output": [
+          {
+            "id": "eggplant",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "onion-seeds",
+        "name": "Onion Seeds",
+        "description": "",
+        "levelRequirement": 60,
+        "xpRate": 26,
+        "duration": 20,
+        "output": [
+          {
+            "id": "onion",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "pepper-seeds",
+        "name": "Pepper Seeds",
+        "description": "",
+        "levelRequirement": 70,
+        "xpRate": 36,
+        "duration": 25,
+        "output": [
+          {
+            "id": "pepper",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "pineapple-seeds",
+        "name": "Pineapple Seeds",
+        "description": "",
+        "levelRequirement": 80,
+        "xpRate": 60,
+        "duration": 35,
+        "output": [
+          {
+            "id": "pineapple",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "mango-seeds",
+        "name": "Mango Seeds",
+        "description": "",
+        "levelRequirement": 90,
+        "xpRate": 120,
+        "duration": 45,
+        "output": [
+          {
+            "id": "mango",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "weeds",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "caterpillar",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "herb-pouch",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "Fishing",
+    "description": "Cast your line and catch fish from various water bodies.",
+    "maxLevel": 0,
+    "baseXpRate": 0,
+    "type": "skilling",
+    "activities": [
+      {
+        "id": "shallow-pond",
+        "name": "Shallow Pond",
+        "description": "",
+        "levelRequirement": 1,
+        "xpRate": 2,
+        "duration": 8,
+        "output": [
+          {
+            "id": "minnow",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "quiet-stream",
+        "name": "Quiet Stream",
+        "description": "",
+        "levelRequirement": 5,
+        "xpRate": 3,
+        "duration": 9,
+        "output": [
+          {
+            "id": "trout",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "lakeside",
+        "name": "Lakeside",
+        "description": "",
+        "levelRequirement": 10,
+        "xpRate": 4,
+        "duration": 10,
+        "output": [
+          {
+            "id": "bass",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "forest-creek",
+        "name": "Forest Creek",
+        "description": "",
+        "levelRequirement": 15,
+        "xpRate": 6,
+        "duration": 11,
+        "output": [
+          {
+            "id": "walleye",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "wide-river",
+        "name": "Wide River",
+        "description": "",
+        "levelRequirement": 20,
+        "xpRate": 8,
+        "duration": 12,
+        "output": [
+          {
+            "id": "salmon",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "muddy-marsh",
+        "name": "Muddy Marsh",
+        "description": "",
+        "levelRequirement": 30,
+        "xpRate": 10,
+        "duration": 13,
+        "output": [
+          {
+            "id": "snail",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "hidden-lake",
+        "name": "Hidden Lake",
+        "description": "",
+        "levelRequirement": 40,
+        "xpRate": 14,
+        "duration": 14,
+        "output": [
+          {
+            "id": "carp",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "deep-lake",
+        "name": "Deep Lake",
+        "description": "",
+        "levelRequirement": 50,
+        "xpRate": 20,
+        "duration": 16,
+        "output": [
+          {
+            "id": "magical-carp",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "rock-coast",
+        "name": "Rock Coast",
+        "description": "",
+        "levelRequirement": 60,
+        "xpRate": 26,
+        "duration": 20,
+        "output": [
+          {
+            "id": "crab",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "coastal-waters",
+        "name": "Coastal Waters",
+        "description": "",
+        "levelRequirement": 70,
+        "xpRate": 36,
+        "duration": 25,
+        "output": [
+          {
+            "id": "redfish",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "deep-ocean",
+        "name": "Deep Ocean",
+        "description": "",
+        "levelRequirement": 80,
+        "xpRate": 60,
+        "duration": 35,
+        "output": [
+          {
+            "id": "rainbow-fish",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "molten-lake",
+        "name": "Molten Lake",
+        "description": "",
+        "levelRequirement": 90,
+        "xpRate": 120,
+        "duration": 45,
+        "output": [
+          {
+            "id": "emberfish",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "trash",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "seaweed",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "treasure-chest",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "Mining",
+    "description": "",
+    "maxLevel": 0,
+    "baseXpRate": 0,
+    "type": "skilling",
+    "activities": [
+      {
+        "id": "stone",
+        "name": "Stone",
+        "description": "",
+        "levelRequirement": 1,
+        "xpRate": 2,
+        "duration": 8,
+        "output": [
+          {
+            "id": "stone",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "copper-ore",
+        "name": "Copper Ore",
+        "description": "",
+        "levelRequirement": 5,
+        "xpRate": 3,
+        "duration": 9,
+        "output": [
+          {
+            "id": "copper-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "tin-ore",
+        "name": "Tin Ore",
+        "description": "",
+        "levelRequirement": 10,
+        "xpRate": 4,
+        "duration": 10,
+        "output": [
+          {
+            "id": "tin-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "coal",
+        "name": "Coal",
+        "description": "",
+        "levelRequirement": 15,
+        "xpRate": 6,
+        "duration": 11,
+        "output": [
+          {
+            "id": "coal",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "iron-ore",
+        "name": "Iron Ore",
+        "description": "",
+        "levelRequirement": 20,
+        "xpRate": 8,
+        "duration": 12,
+        "output": [
+          {
+            "id": "iron-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "silver-ore",
+        "name": "Silver Ore",
+        "description": "",
+        "levelRequirement": 30,
+        "xpRate": 10,
+        "duration": 13,
+        "output": [
+          {
+            "id": "silver-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "gold-ore",
+        "name": "Gold Ore",
+        "description": "",
+        "levelRequirement": 40,
+        "xpRate": 14,
+        "duration": 14,
+        "output": [
+          {
+            "id": "gold-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "platinum-ore",
+        "name": "Platinum Ore",
+        "description": "",
+        "levelRequirement": 50,
+        "xpRate": 20,
+        "duration": 16,
+        "output": [
+          {
+            "id": "platinum-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "adamantite-ore",
+        "name": "Adamantite Ore",
+        "description": "",
+        "levelRequirement": 60,
+        "xpRate": 26,
+        "duration": 20,
+        "output": [
+          {
+            "id": "adamantite-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "runic-ore",
+        "name": "Runic Ore",
+        "description": "",
+        "levelRequirement": 70,
+        "xpRate": 36,
+        "duration": 25,
+        "output": [
+          {
+            "id": "runic-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "solarite-ore",
+        "name": "Solarite Ore",
+        "description": "",
+        "levelRequirement": 80,
+        "xpRate": 60,
+        "duration": 35,
+        "output": [
+          {
+            "id": "solarite-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": "arcanum-ore",
+        "name": "Arcanum Ore",
+        "description": "",
+        "levelRequirement": 90,
+        "xpRate": 120,
+        "duration": 45,
+        "output": [
+          {
+            "id": "arcanum-ore",
+            "chance": 1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "dirt",
+            "chance": 0.2,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "relic",
+            "chance": 0.1,
+            "min": 1,
+            "max": 1
+          },
+          {
+            "id": "crate",
+            "chance": 0.01,
+            "min": 1,
+            "max": 1
+          }
+        ]
+      }
+    ]
+  }
 ]

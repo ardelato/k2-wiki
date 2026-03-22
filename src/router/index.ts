@@ -15,7 +15,7 @@ export const router = createRouter({
     },
     {
       path: '/items/:id/planner',
-      redirect: to => ({
+      redirect: (to) => ({
         name: 'planner',
         params: { id: typeof to.params.id === 'string' ? to.params.id : undefined },
         query: to.query,

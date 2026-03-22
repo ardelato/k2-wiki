@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { ChevronDown, ChevronRight, ClipboardCopy, ShoppingCart } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+
 import type { PlannerMethodKind, PlannerSummaryLeaf } from '@/types'
-import { getItemImage } from '@/utils/itemImages'
 import { methodKindColor, methodKindLabel } from '@/utils/format'
+import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
   leafItems: PlannerSummaryLeaf[]
@@ -11,8 +12,10 @@ const props = defineProps<{
   shoppingListText: string
 }>()
 
+
 const isOpen = ref(true)
 const copied = ref(false)
+
 
 const groupedItems = computed(() => {
   const groups = new Map<PlannerMethodKind, PlannerSummaryLeaf[]>()
@@ -24,11 +27,14 @@ const groupedItems = computed(() => {
   return [...groups.entries()]
 })
 
+
 async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(props.shoppingListText)
     copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
   } catch {
     // Clipboard API not available
   }
@@ -39,13 +45,15 @@ async function copyToClipboard() {
   <div class="surface-card overflow-hidden">
     <div class="flex items-center gap-2 px-4 py-3">
       <button
-        class="focus-ring flex flex-1 items-center gap-2 text-left transition hover:bg-muted/15 rounded-lg -mx-1 px-1"
+        class="focus-ring -mx-1 flex flex-1 items-center gap-2 rounded-lg px-1 text-left transition hover:bg-muted/15"
         @click="isOpen = !isOpen"
       >
         <component :is="isOpen ? ChevronDown : ChevronRight" class="size-4 text-muted-foreground" />
         <ShoppingCart class="size-4 text-primary" />
         <span class="text-sm font-bold text-foreground">Gathering List</span>
-        <span class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+        <span
+          class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
+        >
           {{ leafItems.length }}
         </span>
       </button>
@@ -81,15 +89,29 @@ async function copyToClipboard() {
             />
             <span
               class="min-w-0 truncate text-sm"
-              :class="leaf.stillNeeded === 0 ? 'text-muted-foreground line-through' : 'text-foreground'"
-            >{{ leaf.itemName }}
-              <span v-if="leaf.inventoryAmount > 0" class="text-[11px] text-muted-foreground font-normal">({{ leaf.inventoryAmount }} in stock)</span>
+              :class="
+                leaf.stillNeeded === 0 ? 'text-muted-foreground line-through' : 'text-foreground'
+              "
+              >{{ leaf.itemName }}
+              <span
+                v-if="leaf.inventoryAmount > 0"
+                class="text-[11px] font-normal text-muted-foreground"
+                >({{ leaf.inventoryAmount }} in stock)</span
+              >
             </span>
             <span
               class="ml-auto shrink-0 font-mono text-sm font-semibold"
-              :style="{ color: leaf.stillNeeded === 0 ? 'var(--color-green)' : 'var(--color-primary)' }"
+              :style="{
+                color: leaf.stillNeeded === 0 ? 'var(--color-green)' : 'var(--color-primary)',
+              }"
             >
-              {{ leaf.stillNeeded === 0 ? 'In Stock' : leaf.stillNeeded === leaf.amount ? `x${formatAmount(leaf.amount)}` : `x${formatAmount(leaf.stillNeeded)} / x${formatAmount(leaf.amount)}` }}
+              {{
+                leaf.stillNeeded === 0
+                  ? 'In Stock'
+                  : leaf.stillNeeded === leaf.amount
+                    ? `x${formatAmount(leaf.amount)}`
+                    : `x${formatAmount(leaf.stillNeeded)} / x${formatAmount(leaf.amount)}`
+              }}
             </span>
           </div>
         </div>

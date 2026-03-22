@@ -1,3 +1,5 @@
+import biomesData from '@/data/biomes.json'
+import expeditionsData from '@/data/expeditions.json'
 import type { Creature, Expedition, Biome } from '@/types'
 import {
   calculateCreatureRating,
@@ -7,8 +9,6 @@ import {
   xpForLevel,
   PRE_AWAKEN_MAX,
 } from '@/utils/formulas'
-import expeditionsData from '@/data/expeditions.json'
-import biomesData from '@/data/biomes.json'
 
 export interface LevelPlannerInput {
   creature: Creature
@@ -46,7 +46,10 @@ export interface LevelingPlan {
 /** Minimum improvement required to justify switching expedition+tier (accounts for loop bonus loss) */
 const SWITCH_THRESHOLD = 0.15
 
-function getBiomeStatus(creature: Creature, biome: Biome): 'advantage' | 'disadvantage' | 'neutral' {
+function getBiomeStatus(
+  creature: Creature,
+  biome: Biome,
+): 'advantage' | 'disadvantage' | 'neutral' {
   const mult = biomeMultiplier(creature, biome)
   if (mult > 1) return 'advantage'
   if (mult < 1) return 'disadvantage'
@@ -112,11 +115,11 @@ function evaluateCombo(
 export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const expeditions = expeditionsData as Expedition[]
   const biomes = biomesData as Biome[]
-  const biomeMap = new Map(biomes.map(b => [b.id, b]))
+  const biomeMap = new Map(biomes.map((b) => [b.id, b]))
 
   const { creature, startLevel, targetLevel, isAwakened } = settings
 
-  const candidates: ExpeditionWithBiome[] = expeditions.map(exp => ({
+  const candidates: ExpeditionWithBiome[] = expeditions.map((exp) => ({
     expedition: exp,
     biome: biomeMap.get(exp.biome),
   }))
@@ -131,9 +134,16 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     // Evaluate current combo with accumulated loop bonus
     let currentResult: EvalResult | null = null
     if (currentCombo) {
-      const cand = candidates.find(c => c.expedition.id === currentCombo!.expeditionId)
+      const cand = candidates.find((c) => c.expedition.id === currentCombo!.expeditionId)
       if (cand) {
-        currentResult = evaluateCombo(creature, cand.expedition, cand.biome, currentCombo.tier, level, loopCount)
+        currentResult = evaluateCombo(
+          creature,
+          cand.expedition,
+          cand.biome,
+          currentCombo.tier,
+          level,
+          loopCount,
+        )
       }
     }
 
@@ -142,18 +152,25 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     for (const { expedition, biome } of candidates) {
       for (let tier = 1; tier <= 5; tier++) {
         const result = evaluateCombo(creature, expedition, biome, tier, level, 0)
-        if (result && (!bestFresh ||
+        if (
+          result &&
+          (!bestFresh ||
             result.timeForLevel < bestFresh.timeForLevel ||
-            (result.timeForLevel === bestFresh.timeForLevel && result.xpPerMinute > bestFresh.xpPerMinute))) {
+            (result.timeForLevel === bestFresh.timeForLevel &&
+              result.xpPerMinute > bestFresh.xpPerMinute))
+        ) {
           bestFresh = result
         }
       }
     }
 
     // Also evaluate the best fresh option WITH loop bonus if it happens to be our current combo
-    if (bestFresh && currentCombo &&
-        bestFresh.expedition.id === currentCombo.expeditionId &&
-        bestFresh.tier === currentCombo.tier) {
+    if (
+      bestFresh &&
+      currentCombo &&
+      bestFresh.expedition.id === currentCombo.expeditionId &&
+      bestFresh.tier === currentCombo.tier
+    ) {
       // Best fresh is same as current — just use current (which has loop bonus)
       bestFresh = currentResult
     }
@@ -165,8 +182,10 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       chosen = bestFresh
     } else if (!bestFresh) {
       chosen = currentResult
-    } else if (bestFresh.expedition.id === currentResult.expedition.id &&
-               bestFresh.tier === currentResult.tier) {
+    } else if (
+      bestFresh.expedition.id === currentResult.expedition.id &&
+      bestFresh.tier === currentResult.tier
+    ) {
       // Best is same as current — keep going
       chosen = currentResult
     } else {
@@ -174,8 +193,10 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       // or same speed but meaningfully better XP/min
       const improvement = 1 - bestFresh.timeForLevel / currentResult.timeForLevel
       const xpImprovement = bestFresh.xpPerMinute / currentResult.xpPerMinute - 1
-      chosen = (improvement > SWITCH_THRESHOLD || (improvement >= 0 && xpImprovement > SWITCH_THRESHOLD))
-        ? bestFresh : currentResult
+      chosen =
+        improvement > SWITCH_THRESHOLD || (improvement >= 0 && xpImprovement > SWITCH_THRESHOLD)
+          ? bestFresh
+          : currentResult
     }
 
     if (!chosen) break
@@ -187,7 +208,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       loopCount = 0
     }
 
-    const biomeStatus = chosen.biome ? getBiomeStatus(creature, chosen.biome) : 'neutral' as const
+    const biomeStatus = chosen.biome ? getBiomeStatus(creature, chosen.biome) : ('neutral' as const)
 
     rawSteps.push({
       expedition: chosen.expedition,
@@ -235,9 +256,16 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     for (let level = 1; level < targetLevel; level++) {
       let currentResult: EvalResult | null = null
       if (currentCombo) {
-        const cand = candidates.find(c => c.expedition.id === currentCombo!.expeditionId)
+        const cand = candidates.find((c) => c.expedition.id === currentCombo!.expeditionId)
         if (cand) {
-          currentResult = evaluateCombo(creature, cand.expedition, cand.biome, currentCombo.tier, level, loopCount)
+          currentResult = evaluateCombo(
+            creature,
+            cand.expedition,
+            cand.biome,
+            currentCombo.tier,
+            level,
+            loopCount,
+          )
         }
       }
 
@@ -245,17 +273,24 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       for (const { expedition, biome } of candidates) {
         for (let tier = 1; tier <= 5; tier++) {
           const result = evaluateCombo(creature, expedition, biome, tier, level, 0)
-          if (result && (!bestFresh ||
+          if (
+            result &&
+            (!bestFresh ||
               result.timeForLevel < bestFresh.timeForLevel ||
-              (result.timeForLevel === bestFresh.timeForLevel && result.xpPerMinute > bestFresh.xpPerMinute))) {
+              (result.timeForLevel === bestFresh.timeForLevel &&
+                result.xpPerMinute > bestFresh.xpPerMinute))
+          ) {
             bestFresh = result
           }
         }
       }
 
-      if (bestFresh && currentCombo &&
-          bestFresh.expedition.id === currentCombo.expeditionId &&
-          bestFresh.tier === currentCombo.tier) {
+      if (
+        bestFresh &&
+        currentCombo &&
+        bestFresh.expedition.id === currentCombo.expeditionId &&
+        bestFresh.tier === currentCombo.tier
+      ) {
         bestFresh = currentResult
       }
 
@@ -264,14 +299,18 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
         chosen = bestFresh
       } else if (!bestFresh) {
         chosen = currentResult
-      } else if (bestFresh.expedition.id === currentResult.expedition.id &&
-                 bestFresh.tier === currentResult.tier) {
+      } else if (
+        bestFresh.expedition.id === currentResult.expedition.id &&
+        bestFresh.tier === currentResult.tier
+      ) {
         chosen = currentResult
       } else {
         const improvement = 1 - bestFresh.timeForLevel / currentResult.timeForLevel
         const xpImprovement = bestFresh.xpPerMinute / currentResult.xpPerMinute - 1
-        chosen = (improvement > SWITCH_THRESHOLD || (improvement >= 0 && xpImprovement > SWITCH_THRESHOLD))
-          ? bestFresh : currentResult
+        chosen =
+          improvement > SWITCH_THRESHOLD || (improvement >= 0 && xpImprovement > SWITCH_THRESHOLD)
+            ? bestFresh
+            : currentResult
       }
 
       if (!chosen) break
@@ -282,7 +321,9 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
         loopCount = 0
       }
 
-      const biomeStatus = chosen.biome ? getBiomeStatus(creature, chosen.biome) : 'neutral' as const
+      const biomeStatus = chosen.biome
+        ? getBiomeStatus(creature, chosen.biome)
+        : ('neutral' as const)
 
       rawSteps.push({
         expedition: chosen.expedition,
@@ -334,7 +375,8 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
 
   const totalTime = steps.reduce((sum, s) => sum + s.timeSeconds, 0)
   const totalRuns = steps.reduce((sum, s) => sum + s.runs, 0)
-  const xpPerMinute = totalTime > 0 ? (steps.reduce((sum, s) => sum + s.xpPerMinute * s.timeSeconds, 0) / totalTime) : 0
+  const xpPerMinute =
+    totalTime > 0 ? steps.reduce((sum, s) => sum + s.xpPerMinute * s.timeSeconds, 0) / totalTime : 0
 
   return { steps, totalTimeSeconds: totalTime, totalRuns, xpPerMinute }
 }
@@ -358,7 +400,8 @@ function mergeSteps(steps: PlanStep[]): PlanStep[] {
       current.runs += step.runs
       current.timeSeconds += step.timeSeconds
       currentXpEarned += step.runs * step.xpPerRun
-      current.xpPerMinute = current.timeSeconds > 0 ? (currentXpEarned / current.timeSeconds) * 60 : 0
+      current.xpPerMinute =
+        current.timeSeconds > 0 ? (currentXpEarned / current.timeSeconds) * 60 : 0
       current.endXpPerMinute = step.xpPerMinute
     } else {
       merged.push(current)
@@ -369,4 +412,3 @@ function mergeSteps(steps: PlanStep[]): PlanStep[] {
   merged.push(current)
   return merged
 }
-

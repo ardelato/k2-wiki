@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+
 import type { LevelingPlan } from '@/utils/levelPlanner'
+
 import LevelPlannerSummary from './LevelPlannerSummary.vue'
 import LevelPlannerTimelineStep from './LevelPlannerTimelineStep.vue'
 
@@ -9,14 +11,18 @@ const props = defineProps<{
   creatureName: string
 }>()
 
+
 const expandedIndex = ref<number | null>(null)
+
 
 function toggleExpand(index: number) {
   expandedIndex.value = expandedIndex.value === index ? null : index
 }
 
+
 const fromLevel = computed(() => props.plan.steps[0]?.fromLevel ?? 1)
 const toLevel = computed(() => props.plan.steps[props.plan.steps.length - 1]?.toLevel ?? 1)
+
 
 const timePercents = computed(() =>
   props.plan.steps.map((step) =>
@@ -29,11 +35,7 @@ const timePercents = computed(() =>
 
 <template>
   <div class="space-y-4">
-    <LevelPlannerSummary
-      :plan="plan"
-      :from-level="fromLevel"
-      :to-level="toLevel"
-    />
+    <LevelPlannerSummary :plan="plan" :from-level="fromLevel" :to-level="toLevel" />
 
     <div>
       <LevelPlannerTimelineStep

@@ -21,7 +21,10 @@ export function getCreatureImage(creature: Pick<Creature, 'id' | 'image'>): stri
   const byId = creatureImagesById[toId(creature.id)]
   if (byId) return byId
 
-  const filename = creature.image.split('/').pop()?.replace(/\.[^/.]+$/, '')
+  const filename = creature.image
+    .split('/')
+    .pop()
+    ?.replace(/\.[^/.]+$/, '')
   if (!filename) return undefined
   return creatureImagesById[toId(filename)]
 }

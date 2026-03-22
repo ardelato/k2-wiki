@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
-import summonedIcon from '@/assets/icons/summoned.png'
+import { ref } from 'vue'
+
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
 import notSummonedIcon from '@/assets/icons/not_summoned.png'
+import summonedIcon from '@/assets/icons/summoned.png'
 import type { ElementType } from '@/types'
 import { toTitleCase } from '@/utils/format'
 
@@ -22,6 +23,7 @@ const props = defineProps<{
   jobOptions: string[]
 }>()
 
+
 const emit = defineEmits<{
   'update:searchQuery': [value: string]
   'update:typeFilter': [value: ElementType | 'all']
@@ -33,10 +35,13 @@ const emit = defineEmits<{
   'update:awakenedFilter': [value: 'all' | 'awakened' | 'unawakened']
 }>()
 
+
 const typeOptions: Array<ElementType | 'all'> = ['all', 'Fire', 'Water', 'Wind', 'Earth']
 const tierOptions = ['all', 0, 1, 2, 3, 4, 5] as const
 
+
 const showFilters = ref(false)
+
 
 const typeDotColor: Record<ElementType, string> = {
   Fire: 'hsl(var(--type-fire))',
@@ -51,7 +56,9 @@ const typeDotColor: Record<ElementType, string> = {
     <div class="flex flex-wrap items-center gap-3">
       <!-- Search input with icon -->
       <label class="relative min-w-[220px] flex-1">
-        <Search class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search
+          class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        />
         <input
           :value="props.searchQuery"
           type="text"
@@ -62,12 +69,20 @@ const typeDotColor: Record<ElementType, string> = {
       </label>
 
       <!-- View mode toggle -->
-      <div class="inline-flex items-center rounded-xl border border-border bg-muted/50 p-1" role="radiogroup" aria-label="View mode">
+      <div
+        class="inline-flex items-center rounded-xl border border-border bg-muted/50 p-1"
+        role="radiogroup"
+        aria-label="View mode"
+      >
         <button
           role="radio"
           :aria-checked="props.viewMode === 'grid'"
           class="focus-ring inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition"
-          :class="props.viewMode === 'grid' ? 'bg-primary text-primary-foreground shadow-glow' : 'text-muted-foreground hover:text-foreground'"
+          :class="
+            props.viewMode === 'grid'
+              ? 'bg-primary text-primary-foreground shadow-glow'
+              : 'text-muted-foreground hover:text-foreground'
+          "
           @click="emit('update:viewMode', 'grid')"
         >
           <Grid2x2 class="size-3.5" />
@@ -77,7 +92,11 @@ const typeDotColor: Record<ElementType, string> = {
           role="radio"
           :aria-checked="props.viewMode === 'table'"
           class="focus-ring inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition"
-          :class="props.viewMode === 'table' ? 'bg-primary text-primary-foreground shadow-glow' : 'text-muted-foreground hover:text-foreground'"
+          :class="
+            props.viewMode === 'table'
+              ? 'bg-primary text-primary-foreground shadow-glow'
+              : 'text-muted-foreground hover:text-foreground'
+          "
           @click="emit('update:viewMode', 'table')"
         >
           <Columns3 class="size-3.5" />
@@ -105,7 +124,9 @@ const typeDotColor: Record<ElementType, string> = {
     >
       <!-- Type filter -->
       <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by type">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Type</span>
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+          >Type</span
+        >
         <button
           v-for="option in typeOptions"
           :key="option"
@@ -126,7 +147,9 @@ const typeDotColor: Record<ElementType, string> = {
 
       <!-- Tier filter -->
       <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by tier">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Tier</span>
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+          >Tier</span
+        >
         <button
           v-for="option in tierOptions"
           :key="option"
@@ -142,7 +165,9 @@ const typeDotColor: Record<ElementType, string> = {
 
       <!-- Job filter -->
       <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by job">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Job</span>
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+          >Job</span
+        >
         <button
           role="radio"
           :aria-checked="props.jobFilter === 'all'"
@@ -167,7 +192,9 @@ const typeDotColor: Record<ElementType, string> = {
 
       <!-- Trait filter -->
       <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by trait">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Trait</span>
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+          >Trait</span
+        >
         <button
           role="radio"
           :aria-checked="props.traitFilter === 'all'"
@@ -191,10 +218,16 @@ const typeDotColor: Record<ElementType, string> = {
       </div>
 
       <!-- Summoned filter -->
-      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by summoned">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Summoned</span>
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="radiogroup"
+        aria-label="Filter by summoned"
+      >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+          >Summoned</span
+        >
         <button
-          v-for="option in (['all', 'owned', 'unowned'] as const)"
+          v-for="option in ['all', 'owned', 'unowned'] as const"
           :key="option"
           role="radio"
           :aria-checked="props.ownedFilter === option"
@@ -209,10 +242,16 @@ const typeDotColor: Record<ElementType, string> = {
       </div>
 
       <!-- Awakened filter -->
-      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by awakened">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">Awakened</span>
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="radiogroup"
+        aria-label="Filter by awakened"
+      >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+          >Awakened</span
+        >
         <button
-          v-for="option in (['all', 'awakened', 'unawakened'] as const)"
+          v-for="option in ['all', 'awakened', 'unawakened'] as const"
           :key="option"
           role="radio"
           :aria-checked="props.awakenedFilter === option"
@@ -224,11 +263,13 @@ const typeDotColor: Record<ElementType, string> = {
           {{ option === 'all' ? 'All' : option === 'awakened' ? 'Awakened' : 'Not Awakened' }}
         </button>
 
-        <div class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground" aria-live="polite">
+        <div
+          class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
+          aria-live="polite"
+        >
           {{ props.ownedCount }} summoned · {{ props.resultCount }} results
         </div>
       </div>
-
     </div>
   </div>
 </template>

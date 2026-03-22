@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import type { Expedition, Creature, ExpeditionStatWeights } from '@/types'
 import { computed } from 'vue'
-import { statLabels } from '@/utils/formulas'
+
+import type { Expedition, Creature, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase } from '@/utils/format'
+import { statLabels } from '@/utils/formulas'
 import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
@@ -12,7 +13,9 @@ const props = defineProps<{
   selectedCreatureStats: { rating: number; time: number; xpPerSec: number; level: number } | null
 }>()
 
+
 type ExpeditionStatKey = keyof ExpeditionStatWeights
+
 
 const typeColorMap: Record<string, string> = {
   Fire: 'var(--color-fire)',
@@ -20,6 +23,7 @@ const typeColorMap: Record<string, string> = {
   Wind: 'var(--color-wind)',
   Earth: 'var(--color-earth)',
 }
+
 
 const selectedCreatureImage = computed(() => {
   if (!props.selectedCreature) return undefined
@@ -46,7 +50,9 @@ const selectedCreatureImage = computed(() => {
       </div>
       <div class="info-cell">
         <span class="info-label">Trait</span>
-        <span class="info-value trait-val">{{ expedition.trait ? toTitleCase(expedition.trait) : 'None' }}</span>
+        <span class="info-value trait-val">{{
+          expedition.trait ? toTitleCase(expedition.trait) : 'None'
+        }}</span>
       </div>
     </div>
 
@@ -77,11 +83,17 @@ const selectedCreatureImage = computed(() => {
     <div class="section">
       <h3 class="section-title">Stat Weights</h3>
       <div class="weights-list">
-        <template v-for="[key, weight] in (Object.entries(expedition.statWeights) as [ExpeditionStatKey, number][])" :key="key">
+        <template
+          v-for="[key, weight] in Object.entries(expedition.statWeights) as [
+            ExpeditionStatKey,
+            number,
+          ][]"
+          :key="key"
+        >
           <div v-if="weight > 0" class="weight-row">
             <span class="weight-label">{{ statLabels[key] }}</span>
             <div class="weight-bar-bg">
-              <div class="weight-bar-fill" :style="{ width: (weight * 100) + '%' }" />
+              <div class="weight-bar-fill" :style="{ width: weight * 100 + '%' }" />
             </div>
             <span class="weight-pct">{{ Math.round(weight * 100) }}%</span>
           </div>
@@ -93,12 +105,13 @@ const selectedCreatureImage = computed(() => {
     <div class="section">
       <h3 class="section-title">Rewards</h3>
       <div class="rewards-list">
-        <span
-          v-for="(reward, i) in expedition.rewards"
-          :key="i"
-          class="reward-tag"
-        >
-          <img v-if="getItemImage({ id: reward.itemId })" :src="getItemImage({ id: reward.itemId })" :alt="toTitleCase(reward.itemId)" class="size-4 object-contain" />
+        <span v-for="(reward, i) in expedition.rewards" :key="i" class="reward-tag">
+          <img
+            v-if="getItemImage({ id: reward.itemId })"
+            :src="getItemImage({ id: reward.itemId })"
+            :alt="toTitleCase(reward.itemId)"
+            class="size-4 object-contain"
+          />
           {{ reward.amount }}x {{ toTitleCase(reward.itemId) }}
         </span>
         <span v-if="expedition.rewards.length === 0" class="no-rewards">None</span>
@@ -109,7 +122,13 @@ const selectedCreatureImage = computed(() => {
     <div v-if="selectedCreature && selectedCreatureStats" class="section creature-stats-section">
       <h3 class="section-title">Creature Performance</h3>
       <div class="creature-card">
-        <div class="creature-avatar" :style="{ backgroundColor: typeColorMap[selectedCreature.types[0]] + '33', borderColor: typeColorMap[selectedCreature.types[0]] + '66' }">
+        <div
+          class="creature-avatar"
+          :style="{
+            backgroundColor: typeColorMap[selectedCreature.types[0]] + '33',
+            borderColor: typeColorMap[selectedCreature.types[0]] + '66',
+          }"
+        >
           <img
             v-if="selectedCreatureImage"
             :src="selectedCreatureImage"
@@ -121,7 +140,11 @@ const selectedCreatureImage = computed(() => {
         <div class="creature-info">
           <div class="creature-name-row">
             <span class="creature-name">{{ selectedCreature.name }}</span>
-            <span v-if="selectedCreature.types.length" class="creature-type" :style="{ color: typeColorMap[selectedCreature.types[0]] }">
+            <span
+              v-if="selectedCreature.types.length"
+              class="creature-type"
+              :style="{ color: typeColorMap[selectedCreature.types[0]] }"
+            >
               {{ selectedCreature.types.join(' / ') }}
             </span>
           </div>
@@ -381,7 +404,7 @@ const selectedCreatureImage = computed(() => {
   border-radius: 8px;
   font-size: 0.7rem;
   font-weight: 600;
-  background: oklch(0.65 0.20 145 / 0.2);
+  background: oklch(0.65 0.2 145 / 0.2);
   color: var(--color-green);
 }
 

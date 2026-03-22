@@ -1,13 +1,14 @@
 import { ref, computed } from 'vue'
-import type { Item, ItemType, JobActivitySource, RecipeUsage, ContainerSource } from '@/types'
+
 import itemsData from '@/data/items.json'
 import jobsData from '@/data/jobs.json'
+import type { Item, ItemType, JobActivitySource, RecipeUsage, ContainerSource } from '@/types'
 
 const items = itemsData as Item[]
 
 const JOB_NAMES = ['chopping', 'mining', 'digging', 'exploring', 'fishing', 'farming']
 const WORKSTATION_PREFIXES = ['crafting_furnace', 'crafting_stove', 'crafting_workbench']
-const CONTAINER_IDS = new Set(items.filter(i => i.type === 'Container').map(i => i.id))
+const CONTAINER_IDS = new Set(items.filter((i) => i.type === 'Container').map((i) => i.id))
 
 export type SourceCategory = 'all' | 'job' | 'workstation' | 'container' | 'expedition'
 
@@ -98,7 +99,7 @@ export function useItems() {
 
   const availableSubFilters = computed(() => {
     if (sourceFilter.value === 'all') return []
-    return [...(sourceSubOptions.get(sourceFilter.value) ?? [])].sort()
+    return [...(sourceSubOptions.get(sourceFilter.value) ?? [])].toSorted()
   })
 
   const filteredItems = computed(() => {
@@ -109,11 +110,10 @@ export function useItems() {
         item.name.toLowerCase().includes(q) ||
         item.type.toLowerCase().includes(q) ||
         item.description.toLowerCase().includes(q)
-      const matchesType =
-        typeFilter.value === 'all' || item.type === typeFilter.value
+      const matchesType = typeFilter.value === 'all' || item.type === typeFilter.value
       const matchesSource =
         sourceFilter.value === 'all' ||
-        (item.sources ?? []).some(s => {
+        (item.sources ?? []).some((s) => {
           if (!s || categorizeSource(s) !== sourceFilter.value) return false
           if (sourceSubFilter.value.size === 0) return true
           return sourceSubFilter.value.has(s)

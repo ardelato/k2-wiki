@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { Clock3, Zap, Repeat, Layers, Flag } from 'lucide-vue-next'
-import type { LevelingPlan } from '@/utils/levelPlanner'
+import { computed } from 'vue'
+
 import { formatDuration } from '@/utils/format'
+import type { LevelingPlan } from '@/utils/levelPlanner'
 
 const props = defineProps<{
   plan: LevelingPlan
@@ -10,15 +11,18 @@ const props = defineProps<{
   toLevel: number
 }>()
 
+
 const segments = computed(() =>
   props.plan.steps.map((step) => ({
-    percent: props.plan.totalTimeSeconds > 0
-      ? (step.timeSeconds / props.plan.totalTimeSeconds) * 100
-      : 100 / props.plan.steps.length,
+    percent:
+      props.plan.totalTimeSeconds > 0
+        ? (step.timeSeconds / props.plan.totalTimeSeconds) * 100
+        : 100 / props.plan.steps.length,
     biomeStatus: step.biomeStatus,
     toLevel: step.toLevel,
   })),
 )
+
 
 function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
   if (status === 'advantage') return 'var(--color-green)'
@@ -62,11 +66,17 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
       <div class="relative">
         <!-- Bar -->
         <div class="flex h-2.5 w-full overflow-hidden rounded-full bg-muted/30">
-          <div v-for="(seg, i) in segments" :key="i" class="h-full transition-all duration-300" :style="{
-            width: seg.percent + '%',
-            backgroundColor: segmentColor(seg.biomeStatus),
-            opacity: 0.8,
-          }" :class="i > 0 ? 'border-l border-background/50' : ''" />
+          <div
+            v-for="(seg, i) in segments"
+            :key="i"
+            class="h-full transition-all duration-300"
+            :style="{
+              width: seg.percent + '%',
+              backgroundColor: segmentColor(seg.biomeStatus),
+              opacity: 0.8,
+            }"
+            :class="i > 0 ? 'border-l border-background/50' : ''"
+          />
         </div>
 
         <!-- Level tick marks at segment boundaries -->

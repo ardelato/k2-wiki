@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Clock3, Zap, Users, ChevronRight, Repeat } from 'lucide-vue-next'
-import type { PlanStep } from '@/utils/levelPlanner'
-import { formatDuration } from '@/utils/format'
-import { getItemImage } from '@/utils/itemImages'
-import { getLoopXpBonus } from '@/utils/formulas'
+
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
+import { formatDuration } from '@/utils/format'
+import { getLoopXpBonus } from '@/utils/formulas'
+import { getItemImage } from '@/utils/itemImages'
+import type { PlanStep } from '@/utils/levelPlanner'
 
 defineProps<{
   step: PlanStep
@@ -16,15 +17,18 @@ defineProps<{
   timePercent: number
 }>()
 
+
 defineEmits<{
   toggle: []
 }>()
+
 
 function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
   if (status === 'advantage') return 'var(--color-green)'
   if (status === 'disadvantage') return 'var(--color-destructive)'
   return 'hsl(var(--primary))'
 }
+
 
 function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
   if (status === 'advantage') return 'var(--color-green)'
@@ -38,10 +42,7 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
     <!-- Timeline gutter -->
     <div class="relative flex w-8 shrink-0 flex-col items-center sm:w-10">
       <!-- Top connector line -->
-      <div
-        class="w-0.5 flex-1"
-        :class="isFirst ? 'bg-transparent' : 'bg-border/60'"
-      />
+      <div class="w-0.5 flex-1" :class="isFirst ? 'bg-transparent' : 'bg-border/60'" />
       <!-- Node circle -->
       <div
         v-if="step.isAwakeningStep"
@@ -62,15 +63,14 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
         {{ index + 1 }}
       </div>
       <!-- Bottom connector line -->
-      <div
-        class="w-0.5 flex-1"
-        :class="isLast ? 'bg-transparent' : 'bg-border/60'"
-      />
+      <div class="w-0.5 flex-1" :class="isLast ? 'bg-transparent' : 'bg-border/60'" />
     </div>
 
     <!-- Awakening step card -->
     <div v-if="step.isAwakeningStep" class="mb-2 min-w-0 flex-1 pb-1">
-      <div class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-amber-500/10">
+      <div
+        class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-amber-500/10"
+      >
         <div class="px-3 py-2.5 sm:px-4 sm:py-3">
           <div class="flex items-center gap-2">
             <div class="flex min-w-0 flex-1 items-center gap-2">
@@ -81,7 +81,9 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
               />
               <p class="text-sm font-semibold text-pink-400">Awaken Creature</p>
             </div>
-            <span class="shrink-0 rounded-full bg-pink-500/15 px-2 py-0.5 text-xs font-semibold text-pink-400">
+            <span
+              class="shrink-0 rounded-full bg-pink-500/15 px-2 py-0.5 text-xs font-semibold text-pink-400"
+            >
               LVL 70&rarr;1
             </span>
           </div>
@@ -105,13 +107,20 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
           <div class="flex items-center gap-2">
             <div class="flex min-w-0 flex-1 items-center gap-1.5">
               <img
-                v-if="step.expedition.rewards.length > 0 && getItemImage({ id: step.expedition.rewards[0].itemId })"
+                v-if="
+                  step.expedition.rewards.length > 0 &&
+                  getItemImage({ id: step.expedition.rewards[0].itemId })
+                "
                 :src="getItemImage({ id: step.expedition.rewards[0].itemId })"
                 :alt="step.expedition.rewards[0].itemId"
                 class="size-5 shrink-0 object-contain"
               />
-              <p class="truncate text-sm font-semibold text-foreground">{{ step.expedition.name }}</p>
-              <span class="shrink-0 rounded bg-muted/50 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+              <p class="truncate text-sm font-semibold text-foreground">
+                {{ step.expedition.name }}
+              </p>
+              <span
+                class="shrink-0 rounded bg-muted/50 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground"
+              >
                 T{{ step.tier }}
               </span>
               <span v-if="step.traitMatch" class="shrink-0 text-[10px] font-semibold text-primary">
@@ -119,7 +128,9 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
               </span>
             </div>
 
-            <span class="shrink-0 rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-foreground">
+            <span
+              class="shrink-0 rounded-full bg-muted/40 px-2 py-0.5 text-xs font-semibold text-foreground"
+            >
               LVL {{ step.fromLevel }}&rarr;{{ step.toLevel }}
             </span>
 
@@ -131,7 +142,9 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
 
           <!-- Row 2: Biome + stats on right -->
           <div class="mt-1.5 flex items-center gap-2">
-            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <div
+              class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 text-xs text-muted-foreground"
+            >
               <span>{{ step.biomeName }}</span>
               <span
                 v-if="step.biomeStatus === 'advantage'"
@@ -149,7 +162,10 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
             </div>
 
             <div class="ml-auto flex shrink-0 items-center gap-3">
-              <span class="inline-flex items-center gap-1 text-xs font-semibold" style="color: var(--color-green)">
+              <span
+                class="inline-flex items-center gap-1 text-xs font-semibold"
+                style="color: var(--color-green)"
+              >
                 <Clock3 class="size-3" />
                 {{ formatDuration(step.timeSeconds) }}
               </span>
@@ -159,7 +175,9 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
               </span>
               <span class="inline-flex items-center gap-1 text-xs font-semibold text-purple-400">
                 <Zap class="size-3" />
-                <template v-if="Math.round(step.startXpPerMinute) !== Math.round(step.endXpPerMinute)">
+                <template
+                  v-if="Math.round(step.startXpPerMinute) !== Math.round(step.endXpPerMinute)"
+                >
                   {{ Math.round(step.startXpPerMinute) }}&rarr;{{ Math.round(step.endXpPerMinute) }}
                 </template>
                 <template v-else>
@@ -204,7 +222,9 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
           </div>
           <div>
             <p class="font-semibold text-muted-foreground">Duration per run</p>
-            <p class="mt-0.5 font-mono text-foreground">{{ formatDuration(step.durationPerRun) }}</p>
+            <p class="mt-0.5 font-mono text-foreground">
+              {{ formatDuration(step.durationPerRun) }}
+            </p>
           </div>
           <div>
             <p class="font-semibold text-muted-foreground">Levels</p>
@@ -212,7 +232,9 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
           </div>
           <div>
             <p class="font-semibold text-muted-foreground">Loop bonus</p>
-            <p class="mt-0.5 font-mono text-foreground">+{{ Math.round(getLoopXpBonus(step.runs) * 100) }}%</p>
+            <p class="mt-0.5 font-mono text-foreground">
+              +{{ Math.round(getLoopXpBonus(step.runs) * 100) }}%
+            </p>
           </div>
         </div>
       </div>

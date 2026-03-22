@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import type { Creature, JobKey } from '@/types'
 import { computed } from 'vue'
-import { toTitleCase } from '@/utils/format'
+
+import type { Creature, JobKey } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
+import { toTitleCase } from '@/utils/format'
 import { jobLabels, jobColors } from '@/utils/formulas'
 
 const props = defineProps<{
@@ -11,14 +12,17 @@ const props = defineProps<{
   selectable?: boolean
 }>()
 
+
 const emit = defineEmits<{
   click: []
   select: []
 }>()
 
+
 const primaryType = computed(() => props.creature.types[0] || 'Earth')
 const typeColorVar = computed(() => `var(--color-${primaryType.value.toLowerCase()})`)
 const creatureImage = computed(() => getCreatureImage(props.creature))
+
 
 const jobEntries = computed(() =>
   (Object.keys(jobLabels) as JobKey[]).map((key) => ({
@@ -27,7 +31,7 @@ const jobEntries = computed(() =>
     abbr: jobLabels[key].slice(0, 3).toUpperCase(),
     level: props.creature.jobs[key],
     color: jobColors[key],
-  }))
+  })),
 )
 </script>
 
@@ -37,8 +41,20 @@ const jobEntries = computed(() =>
     <div class="accent-bar" :style="{ backgroundColor: typeColorVar }" />
 
     <!-- Checkbox -->
-    <button v-if="selectable" :class="['checkbox', selected && 'checked']" @click.stop="emit('select')">
-      <svg v-if="selected" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="12" height="12">
+    <button
+      v-if="selectable"
+      :class="['checkbox', selected && 'checked']"
+      @click.stop="emit('select')"
+    >
+      <svg
+        v-if="selected"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="3"
+        width="12"
+        height="12"
+      >
         <polyline points="20 6 9 17 4 12" />
       </svg>
     </button>
@@ -53,7 +69,9 @@ const jobEntries = computed(() =>
         class="hero-image"
         loading="lazy"
       />
-      <span v-else class="hero-fallback" :style="{ color: typeColorVar + '80' }">{{ creature.name.charAt(0) }}</span>
+      <span v-else class="hero-fallback" :style="{ color: typeColorVar + '80' }">{{
+        creature.name.charAt(0)
+      }}</span>
     </div>
 
     <!-- Name -->
@@ -71,7 +89,13 @@ const jobEntries = computed(() =>
     <!-- Tertiary info -->
     <div class="card-footer">
       <div class="type-tags">
-        <span v-for="t in creature.types" :key="t" class="type-tag" :style="{ color: `var(--color-${t.toLowerCase()})` }">{{ t }}</span>
+        <span
+          v-for="t in creature.types"
+          :key="t"
+          class="type-tag"
+          :style="{ color: `var(--color-${t.toLowerCase()})` }"
+          >{{ t }}</span
+        >
       </div>
       <span class="trait-value">{{ toTitleCase(creature.trait) }}</span>
     </div>
@@ -90,8 +114,13 @@ const jobEntries = computed(() =>
   display: flex;
   flex-direction: column;
 }
-.card:hover { border-color: oklch(0.65 0.18 285 / 0.5); }
-.card.selected { border-color: var(--color-primary); box-shadow: 0 0 0 2px oklch(0.65 0.18 285 / 0.25); }
+.card:hover {
+  border-color: oklch(0.65 0.18 285 / 0.5);
+}
+.card.selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px oklch(0.65 0.18 285 / 0.25);
+}
 
 .accent-bar {
   height: 3px;
@@ -107,7 +136,7 @@ const jobEntries = computed(() =>
   width: 20px;
   height: 20px;
   border-radius: var(--radius-sm);
-  border: 2px solid oklch(0.60 0.04 285 / 0.5);
+  border: 2px solid oklch(0.6 0.04 285 / 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,8 +145,14 @@ const jobEntries = computed(() =>
   background: oklch(0.12 0.02 285 / 0.6);
   backdrop-filter: blur(4px);
 }
-.checkbox:hover { border-color: var(--color-primary); }
-.checkbox.checked { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-primary-fg); }
+.checkbox:hover {
+  border-color: var(--color-primary);
+}
+.checkbox.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-fg);
+}
 
 .hero-area {
   position: relative;

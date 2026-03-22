@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Github } from 'lucide-vue-next'
+
 import SteamIcon from '@/components/icons/SteamIcon.vue'
 </script>
 
@@ -28,7 +29,8 @@ import SteamIcon from '@/components/icons/SteamIcon.vue'
           </a>
         </div>
         <p class="text-xs text-muted-foreground/70">
-          This is an unofficial fan project and is not affiliated with or endorsed by Braymen, the developer of Koltera 2.
+          This is an unofficial fan project and is not affiliated with or endorsed by Braymen, the
+          developer of Koltera 2.
         </p>
       </div>
     </div>

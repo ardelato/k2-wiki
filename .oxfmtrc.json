@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "printWidth": 100,
+  "sortImports": {},
+  "sortTailwindcss": {
+    "functions": ["cn", "cva", "clsx"]
+  },
+  "ignorePatterns": [
+    ".omc/**" // oh-my-claude state data
+  ]
+}
