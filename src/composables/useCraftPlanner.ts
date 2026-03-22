@@ -181,7 +181,9 @@ function buildPlannerGraph(
     const item = itemById.get(itemId)
     const nodeId = path
 
-    const effectiveAmount = claimStock(itemId, requiredAmount)
+    // Skip inventory deduction for the root target — we want to build
+    // *additional* items, not just ensure we own the requested quantity.
+    const effectiveAmount = depth === 0 ? requiredAmount : claimStock(itemId, requiredAmount)
 
     if (effectiveAmount <= 0) {
       const fulfilledNode: PlannerNode = {
