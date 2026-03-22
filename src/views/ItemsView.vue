@@ -7,6 +7,7 @@ import ItemCard from '@/components/items/ItemCard.vue'
 import ItemDetail from '@/components/items/ItemDetail.vue'
 import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import { useItems } from '@/composables/useItems'
+import { summoningIndex } from '@/data/indexes'
 import type { Item } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
@@ -41,7 +42,9 @@ function getDeduplicatedRecipeCount(itemId: string): number {
 }
 
 
-const anySummons = computed(() => filteredItems.value.some((i) => (i.summoning?.length ?? 0) > 0))
+const anySummons = computed(() =>
+  filteredItems.value.some((i) => (summoningIndex.get(i.id)?.length ?? 0) > 0),
+)
 
 
 function uniqueSourceLabels(sources: string[] | undefined): string[] {
@@ -439,7 +442,7 @@ onMounted(() => {
                     {{ getRecipeUsages(item.id).length || '—' }}
                   </td>
                   <td v-if="anySummons" class="px-2 py-2.5 text-sm text-foreground">
-                    {{ item.summoning?.length || '—' }}
+                    {{ summoningIndex.get(item.id)?.length || '—' }}
                   </td>
                 </tr>
               </tbody>

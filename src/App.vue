@@ -46,7 +46,7 @@ function isActive(path: string) {
               <span
                 class="rounded-full bg-primary px-1.5 py-0.5 text-[0.625rem] font-semibold leading-none text-primary-foreground"
                 title="Content is based on this game version"
-                >v2.0</span
+                >v3.0</span
               >
             </span>
             <span class="block text-lg font-extrabold text-foreground">Wiki</span>

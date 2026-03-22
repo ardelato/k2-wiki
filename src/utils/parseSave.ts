@@ -20,14 +20,22 @@ interface SaveHelper {
 }
 
 interface SaveCreature {
+  id: string
   species: string
   experience: number
   awakened?: boolean
 }
 
+interface SaveMachineInstance {
+  id: string
+  purchased: boolean
+  assignedCreatureId: string | null
+}
+
 export interface SaveConfig {
   sanctuary: string[]
   helpers: string[]
+  machines: string[]
   inventory: Record<string, number>
   gardenFlowers: Record<string, GardenFlowerEntry[]>
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
@@ -62,11 +70,14 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
 
   const creatures = Array.isArray(save.creatures) ? (save.creatures as SaveCreature[]) : []
 
+  const machines = parseMachineCreatures(save, creatures)
+
   const jobTiers = parseSanctuaryJobTiers(sanctuary)
 
   return {
     sanctuary,
     helpers,
+    machines,
     inventory,
     gardenFlowers,
     awakenGatherUpgrades,
@@ -199,6 +210,29 @@ export function calculateJobTiersFromSanctuary(sanctuaryIds: string[]): Record<s
     }
     result[job] = Math.min(tier, TIER_THRESHOLDS.length)
   }
+  return result
+}
+
+function parseMachineCreatures(save: Record<string, unknown>, creatures: SaveCreature[]): string[] {
+  const machinesState = save.machines as
+    | { machines?: Record<string, SaveMachineInstance> }
+    | undefined
+  if (!machinesState?.machines) return []
+
+  // Build instance ID → species lookup
+  const instanceToSpecies = new Map<string, string>()
+  for (const c of creatures) {
+    if (c.id) instanceToSpecies.set(c.id, c.species)
+  }
+
+  const result: string[] = []
+  for (const machine of Object.values(machinesState.machines)) {
+    if (machine.purchased && machine.assignedCreatureId) {
+      const species = instanceToSpecies.get(machine.assignedCreatureId)
+      if (species) result.push(species)
+    }
+  }
+
   return result
 }
 

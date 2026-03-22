@@ -22,7 +22,7 @@ import { getCreatureImage } from '@/utils/creatureImages'
 import { decryptSave } from '@/utils/decrypt'
 import { toTitleCase } from '@/utils/format'
 import { levelFromXp } from '@/utils/formulas'
-import { sourceIcons, sanctuaryIcon, helpersIcon } from '@/utils/icons'
+import { sourceIcons, sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractSaveConfig, type SaveConfig } from '@/utils/parseSave'
 
@@ -31,6 +31,7 @@ const { setOwned, setLevel, setAwakened, isOwned, getLevel, isAwakened } = useCr
 const {
   sanctuaryCreatureIds,
   helperCreatureIds,
+  machineCreatureIds,
   jobTiers,
   inventoryAmounts,
   gardenFlowers,
@@ -38,8 +39,12 @@ const {
   awakenSpeedTiers,
   setSanctuaryCreatures,
   setHelperCreatures,
+  setMachineCreatures,
   resetGameConfig,
 } = useGameConfig()
+
+
+const MACHINES_MAX = 9
 
 
 // State
@@ -66,6 +71,7 @@ function startEditing(section: EditableSection) {
       sectionSnapshot = {
         sanctuaryCreatureIds: JSON.parse(JSON.stringify(sanctuaryCreatureIds.value)),
         helperCreatureIds: JSON.parse(JSON.stringify(helperCreatureIds.value)),
+        machineCreatureIds: JSON.parse(JSON.stringify(machineCreatureIds.value)),
       }
       break
     case 'garden':
@@ -95,9 +101,11 @@ function cancelEditing() {
         const snap = sectionSnapshot as {
           sanctuaryCreatureIds: string[]
           helperCreatureIds: string[]
+          machineCreatureIds: string[]
         }
         setSanctuaryCreatures(snap.sanctuaryCreatureIds)
         setHelperCreatures(snap.helperCreatureIds)
+        setMachineCreatures(snap.machineCreatureIds)
         exclusionPickerValue.value = ''
         break
       }
@@ -266,7 +274,32 @@ const helperHasDiff = computed(() => {
 })
 
 
-const exclusionsHaveDiff = computed(() => sanctuaryHasDiff.value || helperHasDiff.value)
+const machinePreview = computed(() => {
+  if (!saveConfig.value) return []
+  const currentSet = new Set(machineCreatureIds.value)
+  return saveConfig.value.machines
+    .map((id) => {
+      const c = creatureMap.value.get(id)
+      return c ? { ...c, isNew: !currentSet.has(id) } : null
+    })
+    .filter(
+      (c): c is { id: string; name: string; image: string; tier: number; isNew: boolean } =>
+        c != null,
+    )
+})
+
+
+const machineHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  const current = [...machineCreatureIds.value].toSorted()
+  const save = [...saveConfig.value.machines].toSorted()
+  return JSON.stringify(current) !== JSON.stringify(save)
+})
+
+
+const exclusionsHaveDiff = computed(
+  () => sanctuaryHasDiff.value || helperHasDiff.value || machineHasDiff.value,
+)
 
 
 const inventoryHasDiff = computed(() => {
@@ -463,6 +496,7 @@ function applyExclusions() {
   if (!saveConfig.value) return
   setSanctuaryCreatures(saveConfig.value.sanctuary)
   setHelperCreatures(saveConfig.value.helpers)
+  setMachineCreatures(saveConfig.value.machines)
   appliedSections.value = { ...appliedSections.value, exclusions: true }
   sectionsCollapsed.value = { ...sectionsCollapsed.value, exclusions: true }
 }
@@ -556,7 +590,10 @@ function totalYieldPerCycle(entries: GardenFlowerEntry[]): number {
 
 // Exclusion editing
 const exclusionPickerValue = ref('')
-const activeExclusionSlot = ref<{ type: 'sanctuary' | 'helpers'; index: number } | null>(null)
+const activeExclusionSlot = ref<{
+  type: 'sanctuary' | 'helpers' | 'machines'
+  index: number
+} | null>(null)
 
 
 const SANCTUARY_MAX = 8
@@ -564,7 +601,12 @@ const HELPERS_MAX = 6
 
 
 const excludedCreatureIdSet = computed(
-  () => new Set([...sanctuaryCreatureIds.value, ...helperCreatureIds.value]),
+  () =>
+    new Set([
+      ...sanctuaryCreatureIds.value,
+      ...helperCreatureIds.value,
+      ...machineCreatureIds.value,
+    ]),
 )
 
 
@@ -588,7 +630,17 @@ const helperSlots = computed(() => {
 })
 
 
-function setActiveExclusionSlot(type: 'sanctuary' | 'helpers', index: number) {
+const machineSlots = computed(() => {
+  const slots: ({ id: string; name: string; image: string; tier: number } | null)[] = []
+  for (let i = 0; i < MACHINES_MAX; i++) {
+    const id = machineCreatureIds.value[i]
+    slots.push(id ? (creatureMap.value.get(id) ?? null) : null)
+  }
+  return slots
+})
+
+
+function setActiveExclusionSlot(type: 'sanctuary' | 'helpers' | 'machines', index: number) {
   if (activeExclusionSlot.value?.type === type && activeExclusionSlot.value?.index === index) {
     activeExclusionSlot.value = null
   } else {
@@ -611,6 +663,13 @@ function removeFromHelpers(index: number) {
 }
 
 
+function removeFromMachine(index: number) {
+  const ids = [...machineCreatureIds.value]
+  ids.splice(index, 1)
+  setMachineCreatures(ids)
+}
+
+
 function assignExclusionCreature(creatureId: string) {
   if (!activeExclusionSlot.value) return
   const { type, index } = activeExclusionSlot.value
@@ -624,7 +683,7 @@ function assignExclusionCreature(creatureId: string) {
       ids.push(creatureId)
     }
     setSanctuaryCreatures(ids.filter(Boolean))
-  } else {
+  } else if (type === 'helpers') {
     const ids = [...helperCreatureIds.value]
     while (ids.length < index) ids.push('')
     if (index < ids.length) {
@@ -633,6 +692,15 @@ function assignExclusionCreature(creatureId: string) {
       ids.push(creatureId)
     }
     setHelperCreatures(ids.filter(Boolean))
+  } else if (type === 'machines') {
+    const ids = [...machineCreatureIds.value]
+    while (ids.length < index) ids.push('')
+    if (index < ids.length) {
+      ids[index] = creatureId
+    } else {
+      ids.push(creatureId)
+    }
+    setMachineCreatures(ids.filter(Boolean))
   }
   activeExclusionSlot.value = null
   exclusionPickerValue.value = ''
@@ -950,7 +1018,8 @@ function jobTierLabel(tier: number): string {
         </button>
         <div class="flex items-center gap-2">
           <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-            {{ sanctuaryCreatureIds.length + helperCreatureIds.length }} excluded
+            {{ sanctuaryCreatureIds.length + helperCreatureIds.length + machineCreatureIds.length }}
+            excluded
           </span>
           <button
             v-if="saveConfig && !appliedSections.exclusions && exclusionsHaveDiff"
@@ -974,7 +1043,7 @@ function jobTierLabel(tier: number): string {
           <button
             v-if="
               editingSection === 'exclusions' &&
-              sanctuaryCreatureIds.length + helperCreatureIds.length > 0
+              sanctuaryCreatureIds.length + helperCreatureIds.length + machineCreatureIds.length > 0
             "
             class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
             @click="resetExclusions"
@@ -1241,6 +1310,129 @@ function jobTierLabel(tier: number): string {
                   >
                 </div>
                 <span v-if="helperPreview.length === 0" class="text-[10px] text-muted-foreground"
+                  >None</span
+                >
+              </div>
+            </template>
+            <span v-else class="text-[10px] text-emerald-400">No changes</span>
+          </div>
+        </div>
+
+        <!-- Machine Slots -->
+        <div class="space-y-2">
+          <h3
+            class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
+          >
+            <img :src="machinesIcon" alt="" class="size-4" />
+            <template v-if="saveConfig && !appliedSections.exclusions && machineHasDiff">
+              Machines ({{ machineCreatureIds.length }} &rarr; {{ saveConfig.machines.length }})
+            </template>
+            <template v-else>
+              Machines ({{ machineCreatureIds.length }}/{{ MACHINES_MAX }})
+            </template>
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            <div
+              v-for="(slot, index) in machineSlots"
+              :key="index"
+              class="relative size-16 overflow-hidden rounded-lg border transition"
+              :class="[
+                slot
+                  ? 'border-border bg-card/50'
+                  : editingSection === 'exclusions' &&
+                      activeExclusionSlot?.type === 'machines' &&
+                      activeExclusionSlot?.index === index
+                    ? 'border-dashed border-primary bg-primary/10'
+                    : editingSection === 'exclusions'
+                      ? 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45'
+                      : 'border-dashed border-border/50 bg-muted/20',
+              ]"
+              @click="
+                editingSection === 'exclusions' && !slot
+                  ? setActiveExclusionSlot('machines', index)
+                  : undefined
+              "
+            >
+              <template v-if="slot">
+                <img
+                  v-if="getCreatureImage(slot)"
+                  :src="getCreatureImage(slot)"
+                  :alt="slot.name"
+                  class="size-full object-cover"
+                />
+                <div
+                  v-else
+                  class="flex size-full items-center justify-center bg-muted text-xs font-bold"
+                >
+                  {{ slot.name.charAt(0) }}
+                </div>
+                <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                  <p class="truncate text-center text-[9px] font-semibold text-white">
+                    {{ slot.name }}
+                  </p>
+                </div>
+                <button
+                  v-if="editingSection === 'exclusions'"
+                  class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                  @click.stop="removeFromMachine(index)"
+                >
+                  <X class="size-3" />
+                </button>
+              </template>
+              <template v-else>
+                <div class="flex size-full flex-col items-center justify-center gap-1">
+                  <Plus
+                    v-if="editingSection === 'exclusions'"
+                    class="size-4 text-muted-foreground/50"
+                  />
+                  <span
+                    v-if="
+                      editingSection === 'exclusions' &&
+                      activeExclusionSlot?.type === 'machines' &&
+                      activeExclusionSlot?.index === index
+                    "
+                    class="text-[9px] text-primary"
+                    >Select</span
+                  >
+                </div>
+              </template>
+            </div>
+          </div>
+          <div
+            v-if="saveConfig && !appliedSections.exclusions"
+            class="mt-1.5 flex items-center gap-2"
+          >
+            <span class="text-[10px] font-semibold text-accent">&rarr;</span>
+            <template v-if="machineHasDiff">
+              <div class="flex flex-wrap gap-2">
+                <div
+                  v-for="c in machinePreview"
+                  :key="c.id"
+                  class="relative size-[60px] overflow-hidden rounded-lg border"
+                  :class="
+                    c.isNew
+                      ? 'border-emerald-400/50 ring-1 ring-emerald-400/20'
+                      : 'border-accent/30'
+                  "
+                >
+                  <img
+                    v-if="getCreatureImage(c)"
+                    :src="getCreatureImage(c)"
+                    :alt="c.name"
+                    class="size-full object-cover"
+                  />
+                  <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                    <p class="truncate text-center text-[8px] font-semibold text-white">
+                      {{ c.name }}
+                    </p>
+                  </div>
+                  <span
+                    v-if="c.isNew"
+                    class="absolute left-0.5 top-0.5 rounded bg-emerald-500/80 px-0.5 text-[7px] font-bold uppercase text-white"
+                    >new</span
+                  >
+                </div>
+                <span v-if="machinePreview.length === 0" class="text-[10px] text-muted-foreground"
                   >None</span
                 >
               </div>

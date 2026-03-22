@@ -1,10 +1,13 @@
 import { ref, computed } from 'vue'
 
-import itemsData from '@/data/items.json'
-import jobsData from '@/data/jobs.json'
+import {
+  items,
+  itemById,
+  jobActivityIndex,
+  recipeUsageIndex,
+  containerSourceIndex,
+} from '@/data/indexes'
 import type { Item, ItemType, JobActivitySource, RecipeUsage, ContainerSource } from '@/types'
-
-const items = itemsData as Item[]
 
 const JOB_NAMES = ['chopping', 'mining', 'digging', 'exploring', 'fishing', 'farming']
 const WORKSTATION_PREFIXES = ['crafting_furnace', 'crafting_stove', 'crafting_workbench']
@@ -19,64 +22,6 @@ function categorizeSource(source: string): SourceCategory {
   if (source.startsWith('expedition_') || source === 'completing expeditions') return 'expedition'
   if (CONTAINER_IDS.has(source)) return 'container'
   return 'all'
-}
-
-// Build cross-reference indexes once
-const itemById = new Map<string, Item>()
-for (const item of items) {
-  itemById.set(item.id, item)
-}
-
-const jobActivityIndex = new Map<string, JobActivitySource[]>()
-for (const job of jobsData) {
-  if (!job.activities) continue
-  for (const activity of job.activities) {
-    if (!activity.output) continue
-    for (const out of activity.output) {
-      const existing = jobActivityIndex.get(out.id) ?? []
-      existing.push({
-        jobId: job.id,
-        activityName: activity.name,
-        levelRequirement: activity.levelRequirement,
-        duration: activity.duration,
-        chance: out.chance,
-        min: out.min,
-        max: out.max,
-      })
-      jobActivityIndex.set(out.id, existing)
-    }
-  }
-}
-
-const recipeUsageIndex = new Map<string, RecipeUsage[]>()
-for (const item of items) {
-  for (const recipe of item.recipes) {
-    for (const ingredient of recipe.ingredients) {
-      const existing = recipeUsageIndex.get(ingredient.id) ?? []
-      existing.push({
-        outputItemId: item.id,
-        outputItemName: item.name,
-        workstation: recipe.workstation,
-        amountNeeded: ingredient.amount,
-      })
-      recipeUsageIndex.set(ingredient.id, existing)
-    }
-  }
-}
-
-const containerSourceIndex = new Map<string, ContainerSource[]>()
-for (const item of items) {
-  if (!item.lootTable) continue
-  for (const entry of item.lootTable) {
-    const existing = containerSourceIndex.get(entry.id) ?? []
-    existing.push({
-      containerId: item.id,
-      containerName: item.name,
-      amount: entry.amount,
-      chance: entry.chance,
-    })
-    containerSourceIndex.set(entry.id, existing)
-  }
 }
 
 // Build available sub-options per source category

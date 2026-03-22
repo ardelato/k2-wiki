@@ -6,6 +6,7 @@ import { calculateJobTiersFromSanctuary } from '@/utils/parseSave'
 
 const sanctuaryCreatureIds = useLocalStorage<string[]>('config-sanctuary-creatures', [])
 const helperCreatureIds = useLocalStorage<string[]>('config-helper-creatures', [])
+const machineCreatureIds = useLocalStorage<string[]>('config-machine-creature-ids', [])
 
 const inventoryAmounts = useLocalStorage<Record<string, number>>('config-inventory', {})
 const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
@@ -39,6 +40,7 @@ export function useGameConfig() {
     const set = new Set<string>()
     for (const id of sanctuaryCreatureIds.value) set.add(id)
     for (const id of helperCreatureIds.value) set.add(id)
+    for (const id of machineCreatureIds.value) set.add(id)
     return set
   })
 
@@ -50,6 +52,10 @@ export function useGameConfig() {
 
   function setHelperCreatures(ids: string[]) {
     helperCreatureIds.value = ids
+  }
+
+  function setMachineCreatures(ids: string[]) {
+    machineCreatureIds.value = ids
   }
 
   function setInventory(itemId: string, amount: number) {
@@ -119,6 +125,7 @@ export function useGameConfig() {
   function resetGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
+    machineCreatureIds.value = []
     resetInventory()
     resetGarden()
     resetAwaken()
@@ -127,6 +134,7 @@ export function useGameConfig() {
   return {
     sanctuaryCreatureIds,
     helperCreatureIds,
+    machineCreatureIds,
     excludedCreatureIds,
     jobTiers,
     inventoryAmounts,
@@ -135,6 +143,7 @@ export function useGameConfig() {
     awakenSpeedTiers,
     setSanctuaryCreatures,
     setHelperCreatures,
+    setMachineCreatures,
     setInventory,
     resetInventory,
     setGardenFlowerEntries,

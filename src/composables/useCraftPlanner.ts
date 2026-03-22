@@ -1,13 +1,15 @@
 import { computed, ref, type Ref } from 'vue'
 
 import { useGameConfig } from '@/composables/useGameConfig'
-import expeditionsData from '@/data/expeditions.json'
-import itemsData from '@/data/items.json'
-import jobsData from '@/data/jobs.json'
+import {
+  itemById,
+  jobActivityIndex,
+  containerSourceIndex,
+  expeditionSourceIndex,
+} from '@/data/indexes'
 import type {
   AwakenGatherUpgrade,
   GardenFlowerEntry,
-  Item,
   ItemType,
   PlannerMethod,
   PlannerMethodChild,
@@ -30,30 +32,6 @@ export interface PlannerModifiers {
   jobTiers: Record<string, number>
 }
 
-interface GatherSource {
-  jobId: string
-  activityName: string
-  levelRequirement: number
-  duration: number
-  chance: number
-  min: number
-  max: number
-}
-
-interface ContainerSource {
-  containerId: string
-  containerName: string
-  amount: number
-  chance: number
-}
-
-interface ExpeditionSource {
-  expeditionId: string
-  expeditionName: string
-  amount: number
-  baseDuration: number
-}
-
 interface GardenSource {
   flowerItemId: string
   flowerItemName: string
@@ -65,59 +43,6 @@ interface PlannerGraph {
   root: PlannerNode | null
   nodesById: Record<string, PlannerNode>
   methodsById: Record<string, PlannerMethod>
-}
-
-const items = itemsData as Item[]
-const itemById = new Map(items.map((item) => [item.id, item]))
-
-const gatherSourcesByItem = new Map<string, GatherSource[]>()
-for (const job of jobsData) {
-  if (!job.activities) continue
-  for (const activity of job.activities) {
-    if (!activity.output) continue
-    for (const output of activity.output) {
-      const existing = gatherSourcesByItem.get(output.id) ?? []
-      existing.push({
-        jobId: job.id,
-        activityName: activity.name,
-        levelRequirement: activity.levelRequirement,
-        duration: activity.duration,
-        chance: output.chance,
-        min: output.min,
-        max: output.max,
-      })
-      gatherSourcesByItem.set(output.id, existing)
-    }
-  }
-}
-
-const containerSourcesByItem = new Map<string, ContainerSource[]>()
-for (const item of items) {
-  if (!item.lootTable?.length) continue
-  for (const entry of item.lootTable) {
-    const existing = containerSourcesByItem.get(entry.id) ?? []
-    existing.push({
-      containerId: item.id,
-      containerName: item.name,
-      amount: entry.amount,
-      chance: entry.chance,
-    })
-    containerSourcesByItem.set(entry.id, existing)
-  }
-}
-
-const expeditionSourcesByItem = new Map<string, ExpeditionSource[]>()
-for (const expedition of expeditionsData) {
-  for (const reward of expedition.rewards) {
-    const existing = expeditionSourcesByItem.get(reward.itemId) ?? []
-    existing.push({
-      expeditionId: expedition.id,
-      expeditionName: expedition.name,
-      amount: reward.amount,
-      baseDuration: expedition.baseDuration,
-    })
-    expeditionSourcesByItem.set(reward.itemId, existing)
-  }
 }
 
 const gardenFlowerByItemId = new Map<string, string>([
@@ -331,7 +256,7 @@ function buildPlannerGraph(
       methodsById.set(method.id, method)
     })
 
-    ;(gatherSourcesByItem.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    ;(jobActivityIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
       // Cumulative duration reduction percentage per tier (0-5)
       const JOB_TIER_DURATION_REDUCTION = [0, 0, 0.1, 0.1, 0.2, 0.2]
       // Cumulative yield bonus per tier (0-5)
@@ -457,7 +382,7 @@ function buildPlannerGraph(
       }
     }
 
-    ;(containerSourcesByItem.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    ;(containerSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
       const expectedYield = source.amount * source.chance
       if (expectedYield <= 0) return
 
@@ -520,7 +445,7 @@ function buildPlannerGraph(
       methodsById.set(method.id, method)
     })
 
-    ;(expeditionSourcesByItem.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    ;(expeditionSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
       const runsNeeded = requiredAmount / source.amount
       const estimatedTime = runsNeeded * source.baseDuration
       const method: PlannerMethod = {
