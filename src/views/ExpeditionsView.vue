@@ -23,10 +23,12 @@ import summonedIcon from '@/assets/icons/summoned.png'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useExpeditions } from '@/composables/useExpeditions'
+import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, ElementType, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration, toTitleCase } from '@/utils/format'
 import { statAbbreviations, statLabels, tierModifiers } from '@/utils/formulas'
+import { sanctuaryIcon, helpersIcon } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const route = useRoute()
@@ -35,6 +37,7 @@ const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 
 const { creatures } = useCreatures()
+const { sanctuaryCreatureIds, helperCreatureIds } = useGameConfig()
 const {
   filteredExpeditions,
   selectedExpedition,
@@ -62,6 +65,7 @@ const {
   exportSetup,
   importSetup,
   expeditionTiers,
+  showExcludedCreatures,
 } = useExpeditions(creatures.value)
 
 
@@ -995,6 +999,13 @@ function toggleCreatureTier(tier: number) {
               <img :src="summonedIcon" alt="" class="size-4" />
               Summoned Only
             </button>
+            <button
+              class="pill focus-ring gap-1.5"
+              :class="showExcludedCreatures ? 'pill-active' : ''"
+              @click="showExcludedCreatures = !showExcludedCreatures"
+            >
+              Show Excluded
+            </button>
           </div>
 
           <div v-if="weightedStats.length" class="flex items-center gap-1.5">
@@ -1037,6 +1048,18 @@ function toggleCreatureTier(tier: number) {
                   :src="getCreatureImage(creature)"
                   :alt="`${creature.name} artwork`"
                   class="size-10 rounded-md border border-border object-cover"
+                />
+                <img
+                  v-if="sanctuaryCreatureIds.includes(creature.id)"
+                  :src="sanctuaryIcon"
+                  alt="Sanctuary"
+                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                />
+                <img
+                  v-else-if="helperCreatureIds.includes(creature.id)"
+                  :src="helpersIcon"
+                  alt="Helper"
+                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
                 />
               </div>
 

@@ -18,10 +18,14 @@ import {
   biomeMultiplier,
 } from '@/utils/formulas'
 
+import { useGameConfig } from './useGameConfig'
+
 const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
 const biomes = ref<Biome[]>(biomesData as Biome[])
 
 export function useExpeditions(creatures: Creature[]) {
+  const { excludedCreatureIds } = useGameConfig()
+  const showExcludedCreatures = ref(false)
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
   const selectedExpedition = ref<Expedition | null>(null)
@@ -165,7 +169,10 @@ export function useExpeditions(creatures: Creature[]) {
     const remainingScore = difficultyRating.value - partyScore.value
     const base = getRecommendedCreatures(
       creatures.filter(
-        (c) => !partyCreatureIds.value.has(c.id) && !allAssignedCreatureIds.value.has(c.id),
+        (c) =>
+          !partyCreatureIds.value.has(c.id) &&
+          !allAssignedCreatureIds.value.has(c.id) &&
+          (showExcludedCreatures.value || !excludedCreatureIds.value.has(c.id)),
       ),
       expedition,
       creatureLevels.value,
@@ -416,5 +423,6 @@ export function useExpeditions(creatures: Creature[]) {
     resetAllExpeditions,
     expeditionTiers,
     expeditionParties,
+    showExcludedCreatures,
   }
 }
