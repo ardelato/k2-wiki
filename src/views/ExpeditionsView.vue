@@ -28,7 +28,7 @@ import type { Creature, ElementType, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration, toTitleCase } from '@/utils/format'
 import { statAbbreviations, statLabels, tierModifiers } from '@/utils/formulas'
-import { sanctuaryIcon, helpersIcon } from '@/utils/icons'
+import { sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const route = useRoute()
@@ -37,7 +37,7 @@ const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 
 const { creatures } = useCreatures()
-const { sanctuaryCreatureIds, helperCreatureIds } = useGameConfig()
+const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds } = useGameConfig()
 const {
   filteredExpeditions,
   selectedExpedition,
@@ -1059,6 +1059,12 @@ function toggleCreatureTier(tier: number) {
                   v-else-if="helperCreatureIds.includes(creature.id)"
                   :src="helpersIcon"
                   alt="Helper"
+                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                />
+                <img
+                  v-else-if="machineCreatureIds.includes(creature.id)"
+                  :src="machinesIcon"
+                  alt="Machine"
                   class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
                 />
               </div>

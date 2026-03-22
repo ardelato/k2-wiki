@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 
 import { useItems } from '@/composables/useItems'
 import expeditionsData from '@/data/expeditions.json'
+import { summoningIndex } from '@/data/indexes'
 import type { Item } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { itemTypeColor, toTitleCase, formatDuration } from '@/utils/format'
@@ -31,6 +32,9 @@ const emit = defineEmits<{
 
 
 const { getJobSources, getRecipeUsages, getContainerSources, getItemById } = useItems()
+
+
+const summoningCreatures = computed(() => summoningIndex.get(props.item.id) ?? [])
 
 
 const jobSources = computed(() => {
@@ -617,13 +621,13 @@ const jobColorMap: Record<string, string> = {
       </section>
 
       <!-- Summoning -->
-      <section v-if="item.summoning?.length" class="border-t border-border/60 pt-4">
+      <section v-if="summoningCreatures.length" class="border-t border-border/60 pt-4">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
           Summoning
         </h3>
         <div class="grid grid-cols-4 gap-3">
           <div
-            v-for="creature in item.summoning"
+            v-for="creature in summoningCreatures"
             :key="creature.id"
             class="relative aspect-square overflow-hidden rounded-lg bg-muted/20"
           >
