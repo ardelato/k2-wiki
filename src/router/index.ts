@@ -32,6 +32,11 @@ export const router = createRouter({
       component: () => import('../views/ExpeditionsView.vue'),
     },
     {
+      path: '/configs',
+      name: 'configs',
+      component: () => import('../views/ConfigsView.vue'),
+    },
+    {
       path: '/collection',
       redirect: '/',
     },

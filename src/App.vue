@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { BookOpen, Compass, FileCog, GitBranch, Github, Package } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import SteamIcon from '@/components/icons/SteamIcon.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
-import SaveImportModal from '@/components/SaveImportModal.vue'
 import { cn } from '@/lib/utils'
 
 const route = useRoute()
-const showImportModal = ref(false)
 
 
 const navItems = [
@@ -17,6 +15,7 @@ const navItems = [
   { label: 'Items', to: '/items', icon: Package },
   { label: 'Planner', to: '/planner', icon: GitBranch },
   { label: 'Expeditions', to: '/expeditions', icon: Compass },
+  { label: 'Configs', to: '/configs', icon: FileCog },
 ]
 
 
@@ -74,14 +73,6 @@ function isActive(path: string) {
         </nav>
 
         <div class="flex items-center gap-1">
-          <button
-            aria-label="Import save file"
-            title="Import save file"
-            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
-            @click="showImportModal = true"
-          >
-            <FileCog class="size-5" />
-          </button>
           <a
             href="https://github.com/ardelato/k2-wiki"
             target="_blank"
@@ -110,12 +101,10 @@ function isActive(path: string) {
 
     <AppFooter />
 
-    <SaveImportModal v-if="showImportModal" @close="showImportModal = false" />
-
     <nav
       class="bg-background/94 fixed inset-x-0 bottom-0 z-50 border-t border-border/70 px-3 pb-[calc(env(safe-area-inset-bottom)+0.55rem)] pt-2 backdrop-blur-xl md:hidden"
     >
-      <div class="mx-auto grid max-w-lg grid-cols-4 gap-1.5">
+      <div class="mx-auto grid max-w-lg grid-cols-5 gap-1.5">
         <RouterLink
           v-for="item in navItems"
           :key="item.to"
