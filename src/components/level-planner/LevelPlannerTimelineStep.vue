@@ -4,10 +4,12 @@ import type { PlanStep } from '@/utils/levelPlanner'
 import { formatDuration } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
 import { getLoopXpBonus } from '@/utils/formulas'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
 
 defineProps<{
   step: PlanStep
   index: number
+  creatureName: string
   isFirst: boolean
   isLast: boolean
   expanded: boolean
@@ -42,6 +44,14 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
       />
       <!-- Node circle -->
       <div
+        v-if="step.isAwakeningStep"
+        class="relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
+        style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
+      >
+        <img :src="awakenedSummonedIcon" alt="" class="size-4" />
+      </div>
+      <div
+        v-else
         class="relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold sm:size-8"
         :style="{
           borderColor: nodeColor(step.biomeStatus),
@@ -58,8 +68,32 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
       />
     </div>
 
+    <!-- Awakening step card -->
+    <div v-if="step.isAwakeningStep" class="mb-2 min-w-0 flex-1 pb-1">
+      <div class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-amber-500/10">
+        <div class="px-3 py-2.5 sm:px-4 sm:py-3">
+          <div class="flex items-center gap-2">
+            <div class="flex min-w-0 flex-1 items-center gap-2">
+              <img
+                :src="awakenedSummonedIcon"
+                alt="Awaken"
+                class="size-5 shrink-0 object-contain"
+              />
+              <p class="text-sm font-semibold text-pink-400">Awaken Creature</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-pink-500/15 px-2 py-0.5 text-xs font-semibold text-pink-400">
+              LVL 70&rarr;1
+            </span>
+          </div>
+          <p class="mt-1.5 text-xs text-muted-foreground">
+            Awaken {{ creatureName }} to continue past level 70
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Step card -->
-    <div class="mb-2 min-w-0 flex-1 pb-1">
+    <div v-else class="mb-2 min-w-0 flex-1 pb-1">
       <button
         class="focus-ring surface-card w-full overflow-hidden text-left transition hover:bg-muted/20"
         :aria-expanded="expanded"

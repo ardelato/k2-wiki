@@ -17,7 +17,7 @@ const targetLevel = ref(
   Number(route.query.target) > 1 ? Math.min(120, Number(route.query.target)) : 120,
 )
 
-const { creature, startLevel, plan, totalXpNeeded, isMaxLevel } = useLevelPlanner(
+const { creature, startLevel, plan, totalXpNeeded, isMaxLevel, awakened } = useLevelPlanner(
   creatureId,
   targetLevel,
 )
@@ -111,10 +111,12 @@ function clampLevel(val: string): number {
     <PlannerEmptyState
       v-else-if="isMaxLevel"
       title="Already at max level!"
-      :subtitle="`${creature?.name} is already at level 120 — nothing left to grind.`"
+      :subtitle="!awakened && startLevel >= 70
+        ? `${creature?.name} is at level 70 — awaken to continue leveling to 120.`
+        : `${creature?.name} is already at level ${startLevel} — nothing left to grind.`"
     />
 
     <!-- Plan -->
-    <LevelPlannerResults v-else-if="plan && plan.steps.length > 0" :plan="plan" />
+    <LevelPlannerResults v-else-if="plan && plan.steps.length > 0" :plan="plan" :creature-name="creature?.name ?? ''" />
   </div>
 </template>
