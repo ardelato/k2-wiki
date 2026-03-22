@@ -6,6 +6,7 @@ import LevelPlannerTimelineStep from './LevelPlannerTimelineStep.vue'
 
 const props = defineProps<{
   plan: LevelingPlan
+  creatureName: string
 }>()
 
 const expandedIndex = ref<number | null>(null)
@@ -40,6 +41,7 @@ const timePercents = computed(() =>
         :key="index"
         :step="step"
         :index="index"
+        :creature-name="creatureName"
         :is-first="index === 0"
         :is-last="index === plan.steps.length - 1"
         :expanded="expandedIndex === index"
