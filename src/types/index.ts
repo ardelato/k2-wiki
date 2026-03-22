@@ -96,7 +96,6 @@ export interface Item {
   description: string
   image: string
   recipes: ItemRecipe[]
-  summoning?: SummoningReference[]
   lootTable?: LootTableEntry[]
   buyValue?: number
   sellValue?: number

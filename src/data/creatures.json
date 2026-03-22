@@ -738,7 +738,7 @@
       },
       {
         "id": "knowledge-orb",
-        "amount": 20
+        "amount": 25
       }
     ]
   },
@@ -824,7 +824,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 30
+        "amount": 25
       }
     ]
   },
@@ -867,7 +867,7 @@
       },
       {
         "id": "knowledge-orb",
-        "amount": 20
+        "amount": 25
       }
     ]
   },
@@ -953,7 +953,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 30
+        "amount": 25
       }
     ]
   },
@@ -996,7 +996,7 @@
       },
       {
         "id": "knowledge-orb",
-        "amount": 20
+        "amount": 25
       }
     ]
   },
@@ -1082,7 +1082,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 30
+        "amount": 25
       }
     ]
   },
@@ -1125,7 +1125,7 @@
       },
       {
         "id": "knowledge-orb",
-        "amount": 20
+        "amount": 25
       }
     ]
   },
@@ -1211,7 +1211,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 30
+        "amount": 25
       }
     ]
   },
@@ -1254,7 +1254,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 35
+        "amount": 25
       }
     ]
   },
@@ -1297,7 +1297,7 @@
       },
       {
         "id": "knowledge-orb",
-        "amount": 20
+        "amount": 25
       }
     ]
   },
@@ -1383,7 +1383,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 30
+        "amount": 25
       }
     ]
   },
@@ -1426,7 +1426,7 @@
       },
       {
         "id": "knowledge-orb",
-        "amount": 20
+        "amount": 25
       }
     ]
   },
@@ -1512,7 +1512,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 30
+        "amount": 25
       }
     ]
   },
@@ -1555,7 +1555,7 @@
       },
       {
         "id": "gemstone",
-        "amount": 35
+        "amount": 25
       }
     ]
   },
@@ -1598,11 +1598,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 800
+        "amount": 600
       },
       {
         "id": "kelp",
-        "amount": 40
+        "amount": 50
       }
     ]
   },
@@ -1645,11 +1645,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 900
+        "amount": 600
       },
       {
         "id": "cloth",
-        "amount": 45
+        "amount": 50
       }
     ]
   },
@@ -1692,7 +1692,7 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1000
+        "amount": 600
       },
       {
         "id": "night-shard",
@@ -1739,11 +1739,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 800
+        "amount": 600
       },
       {
         "id": "kelp",
-        "amount": 40
+        "amount": 50
       }
     ]
   },
@@ -1786,11 +1786,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 900
+        "amount": 600
       },
       {
         "id": "cloth",
-        "amount": 45
+        "amount": 50
       }
     ]
   },
@@ -1833,7 +1833,7 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1000
+        "amount": 600
       },
       {
         "id": "night-shard",
@@ -1880,11 +1880,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 800
+        "amount": 600
       },
       {
         "id": "kelp",
-        "amount": 40
+        "amount": 50
       }
     ]
   },
@@ -1927,11 +1927,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 900
+        "amount": 600
       },
       {
         "id": "cloth",
-        "amount": 45
+        "amount": 50
       }
     ]
   },
@@ -1974,7 +1974,7 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1000
+        "amount": 600
       },
       {
         "id": "night-shard",
@@ -2021,11 +2021,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 800
+        "amount": 600
       },
       {
         "id": "kelp",
-        "amount": 40
+        "amount": 50
       }
     ]
   },
@@ -2068,11 +2068,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 900
+        "amount": 600
       },
       {
         "id": "cloth",
-        "amount": 45
+        "amount": 50
       }
     ]
   },
@@ -2115,7 +2115,7 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1000
+        "amount": 600
       },
       {
         "id": "night-shard",
@@ -2162,11 +2162,11 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1100
+        "amount": 600
       },
       {
         "id": "night-shard",
-        "amount": 55
+        "amount": 50
       }
     ]
   },
@@ -2209,11 +2209,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 800
+        "amount": 600
       },
       {
         "id": "kelp",
-        "amount": 40
+        "amount": 50
       }
     ]
   },
@@ -2256,11 +2256,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 900
+        "amount": 600
       },
       {
         "id": "cloth",
-        "amount": 45
+        "amount": 50
       }
     ]
   },
@@ -2303,7 +2303,7 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1000
+        "amount": 600
       },
       {
         "id": "night-shard",
@@ -2350,11 +2350,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 800
+        "amount": 600
       },
       {
         "id": "kelp",
-        "amount": 40
+        "amount": 50
       }
     ]
   },
@@ -2397,11 +2397,11 @@
       },
       {
         "id": "cooked-meat",
-        "amount": 900
+        "amount": 600
       },
       {
         "id": "cloth",
-        "amount": 45
+        "amount": 50
       }
     ]
   },
@@ -2444,7 +2444,7 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1000
+        "amount": 600
       },
       {
         "id": "night-shard",
@@ -2491,11 +2491,11 @@
       },
       {
         "id": "cooked-fish",
-        "amount": 1100
+        "amount": 600
       },
       {
         "id": "night-shard",
-        "amount": 55
+        "amount": 50
       }
     ]
   },
@@ -2537,16 +2537,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "cheese",
-        "amount": 1200
+        "amount": 1000
       },
       {
         "id": "pearl",
-        "amount": 60
+        "amount": 100
       }
     ]
   },
@@ -2588,16 +2584,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "meat-stew",
-        "amount": 1300
+        "amount": 1000
       },
       {
         "id": "scale",
-        "amount": 65
+        "amount": 100
       }
     ]
   },
@@ -2639,16 +2631,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1400
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 70
+        "amount": 100
       }
     ]
   },
@@ -2690,16 +2678,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "cheese",
-        "amount": 1200
+        "amount": 1000
       },
       {
         "id": "pearl",
-        "amount": 60
+        "amount": 100
       }
     ]
   },
@@ -2741,16 +2725,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "meat-stew",
-        "amount": 1300
+        "amount": 1000
       },
       {
         "id": "scale",
-        "amount": 65
+        "amount": 100
       }
     ]
   },
@@ -2792,16 +2772,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1400
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 70
+        "amount": 100
       }
     ]
   },
@@ -2843,16 +2819,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "cheese",
-        "amount": 1200
+        "amount": 1000
       },
       {
         "id": "pearl",
-        "amount": 60
+        "amount": 100
       }
     ]
   },
@@ -2894,16 +2866,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "meat-stew",
-        "amount": 1300
+        "amount": 1000
       },
       {
         "id": "scale",
-        "amount": 65
+        "amount": 100
       }
     ]
   },
@@ -2945,16 +2913,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1400
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 70
+        "amount": 100
       }
     ]
   },
@@ -2996,16 +2960,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "cheese",
-        "amount": 1200
+        "amount": 1000
       },
       {
         "id": "pearl",
-        "amount": 60
+        "amount": 100
       }
     ]
   },
@@ -3047,16 +3007,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "meat-stew",
-        "amount": 1300
+        "amount": 1000
       },
       {
         "id": "scale",
-        "amount": 65
+        "amount": 100
       }
     ]
   },
@@ -3098,16 +3054,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1400
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 70
+        "amount": 100
       }
     ]
   },
@@ -3149,16 +3101,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1500
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 75
+        "amount": 100
       }
     ]
   },
@@ -3200,16 +3148,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "cheese",
-        "amount": 1200
+        "amount": 1000
       },
       {
         "id": "pearl",
-        "amount": 60
+        "amount": 100
       }
     ]
   },
@@ -3251,16 +3195,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "meat-stew",
-        "amount": 1300
+        "amount": 1000
       },
       {
         "id": "scale",
-        "amount": 65
+        "amount": 100
       }
     ]
   },
@@ -3302,16 +3242,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1400
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 70
+        "amount": 100
       }
     ]
   },
@@ -3353,16 +3289,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1500
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 75
+        "amount": 100
       }
     ]
   },
@@ -3404,16 +3336,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "cheese",
-        "amount": 1200
+        "amount": 1000
       },
       {
         "id": "pearl",
-        "amount": 60
+        "amount": 100
       }
     ]
   },
@@ -3455,16 +3383,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "meat-stew",
-        "amount": 1300
+        "amount": 1000
       },
       {
         "id": "scale",
-        "amount": 65
+        "amount": 100
       }
     ]
   },
@@ -3506,16 +3430,12 @@
         "amount": 10000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 600
-      },
-      {
         "id": "bread",
-        "amount": 1400
+        "amount": 1000
       },
       {
         "id": "ancient-tome",
-        "amount": 70
+        "amount": 100
       }
     ]
   },
@@ -3557,16 +3477,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1600
+        "amount": 1400
       },
       {
         "id": "poison-vial",
-        "amount": 80
+        "amount": 200
       }
     ]
   },
@@ -3608,16 +3524,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1700
+        "amount": 1400
       },
       {
         "id": "coral",
-        "amount": 85
+        "amount": 200
       }
     ]
   },
@@ -3659,16 +3571,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1800
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 90
+        "amount": 200
       }
     ]
   },
@@ -3710,16 +3618,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1900
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 95
+        "amount": 200
       }
     ]
   },
@@ -3761,16 +3665,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1600
+        "amount": 1400
       },
       {
         "id": "poison-vial",
-        "amount": 80
+        "amount": 200
       }
     ]
   },
@@ -3812,16 +3712,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1700
+        "amount": 1400
       },
       {
         "id": "coral",
-        "amount": 85
+        "amount": 200
       }
     ]
   },
@@ -3863,16 +3759,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1800
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 90
+        "amount": 200
       }
     ]
   },
@@ -3914,16 +3806,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1600
+        "amount": 1400
       },
       {
         "id": "poison-vial",
-        "amount": 80
+        "amount": 200
       }
     ]
   },
@@ -3965,16 +3853,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1700
+        "amount": 1400
       },
       {
         "id": "coral",
-        "amount": 85
+        "amount": 200
       }
     ]
   },
@@ -4016,16 +3900,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1800
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 90
+        "amount": 200
       }
     ]
   },
@@ -4067,16 +3947,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1900
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 95
+        "amount": 200
       }
     ]
   },
@@ -4118,16 +3994,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1600
+        "amount": 1400
       },
       {
         "id": "poison-vial",
-        "amount": 80
+        "amount": 200
       }
     ]
   },
@@ -4169,16 +4041,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1700
+        "amount": 1400
       },
       {
         "id": "coral",
-        "amount": 85
+        "amount": 200
       }
     ]
   },
@@ -4220,16 +4088,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1800
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 90
+        "amount": 200
       }
     ]
   },
@@ -4271,16 +4135,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1600
+        "amount": 1400
       },
       {
         "id": "poison-vial",
-        "amount": 80
+        "amount": 200
       }
     ]
   },
@@ -4322,16 +4182,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1700
+        "amount": 1400
       },
       {
         "id": "coral",
-        "amount": 85
+        "amount": 200
       }
     ]
   },
@@ -4373,16 +4229,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1800
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 90
+        "amount": 200
       }
     ]
   },
@@ -4424,16 +4276,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1600
+        "amount": 1400
       },
       {
         "id": "poison-vial",
-        "amount": 80
+        "amount": 200
       }
     ]
   },
@@ -4475,16 +4323,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "cheeseburger",
-        "amount": 1700
+        "amount": 1400
       },
       {
         "id": "coral",
-        "amount": 85
+        "amount": 200
       }
     ]
   },
@@ -4526,16 +4370,12 @@
         "amount": 25000
       },
       {
-        "id": "dungeon-rune",
-        "amount": 800
-      },
-      {
         "id": "canned-food",
-        "amount": 1800
+        "amount": 1400
       },
       {
         "id": "night-feather",
-        "amount": 90
+        "amount": 200
       }
     ]
   },
@@ -4578,15 +4418,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2000
+        "amount": 1800
       },
       {
         "id": "artifact",
-        "amount": 100
+        "amount": 400
       }
     ]
   },
@@ -4629,15 +4469,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2100
+        "amount": 1800
       },
       {
         "id": "skull",
-        "amount": 105
+        "amount": 400
       }
     ]
   },
@@ -4680,15 +4520,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2200
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 110
+        "amount": 400
       }
     ]
   },
@@ -4731,15 +4571,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2000
+        "amount": 1800
       },
       {
         "id": "artifact",
-        "amount": 100
+        "amount": 400
       }
     ]
   },
@@ -4782,15 +4622,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2100
+        "amount": 1800
       },
       {
         "id": "skull",
-        "amount": 105
+        "amount": 400
       }
     ]
   },
@@ -4833,15 +4673,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2200
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 110
+        "amount": 400
       }
     ]
   },
@@ -4884,15 +4724,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2300
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 115
+        "amount": 400
       }
     ]
   },
@@ -4935,15 +4775,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2000
+        "amount": 1800
       },
       {
         "id": "artifact",
-        "amount": 100
+        "amount": 400
       }
     ]
   },
@@ -4986,15 +4826,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2100
+        "amount": 1800
       },
       {
         "id": "skull",
-        "amount": 105
+        "amount": 400
       }
     ]
   },
@@ -5037,15 +4877,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2200
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 110
+        "amount": 400
       }
     ]
   },
@@ -5088,15 +4928,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2000
+        "amount": 1800
       },
       {
         "id": "artifact",
-        "amount": 100
+        "amount": 400
       }
     ]
   },
@@ -5139,15 +4979,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2100
+        "amount": 1800
       },
       {
         "id": "skull",
-        "amount": 105
+        "amount": 400
       }
     ]
   },
@@ -5190,15 +5030,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2200
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 110
+        "amount": 400
       }
     ]
   },
@@ -5241,15 +5081,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2000
+        "amount": 1800
       },
       {
         "id": "artifact",
-        "amount": 100
+        "amount": 400
       }
     ]
   },
@@ -5292,15 +5132,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2100
+        "amount": 1800
       },
       {
         "id": "skull",
-        "amount": 105
+        "amount": 400
       }
     ]
   },
@@ -5343,15 +5183,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2200
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 110
+        "amount": 400
       }
     ]
   },
@@ -5394,15 +5234,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2000
+        "amount": 1800
       },
       {
         "id": "artifact",
-        "amount": 100
+        "amount": 400
       }
     ]
   },
@@ -5445,15 +5285,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "cooked-crab",
-        "amount": 2100
+        "amount": 1800
       },
       {
         "id": "skull",
-        "amount": 105
+        "amount": 400
       }
     ]
   },
@@ -5496,15 +5336,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2200
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 110
+        "amount": 400
       }
     ]
   },
@@ -5547,15 +5387,15 @@
       },
       {
         "id": "dungeon-rune",
-        "amount": 1000
+        "amount": 1800
       },
       {
         "id": "carrot-cake",
-        "amount": 2300
+        "amount": 1800
       },
       {
         "id": "blood-vial",
-        "amount": 115
+        "amount": 400
       }
     ]
   }

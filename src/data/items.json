@@ -4,88 +4,6 @@
     "name": "Chopping Charm",
     "type": "Currency",
     "sources": ["chopping", "pouch", "charm-crate"],
-    "summoning": [
-      {
-        "id": "moss",
-        "name": "Moss"
-      },
-      {
-        "id": "sunny",
-        "name": "Sunny"
-      },
-      {
-        "id": "mizu",
-        "name": "Mizu"
-      },
-      {
-        "id": "ranger",
-        "name": "Ranger"
-      },
-      {
-        "id": "miko",
-        "name": "Miko"
-      },
-      {
-        "id": "penny",
-        "name": "Penny"
-      },
-      {
-        "id": "buzz",
-        "name": "Buzz"
-      },
-      {
-        "id": "honey",
-        "name": "Honey"
-      },
-      {
-        "id": "mooyak",
-        "name": "Mooyak"
-      },
-      {
-        "id": "winter",
-        "name": "Winter"
-      },
-      {
-        "id": "mantis",
-        "name": "Mantis"
-      },
-      {
-        "id": "snooze",
-        "name": "Snooze"
-      },
-      {
-        "id": "joeyroo",
-        "name": "Joeyroo"
-      },
-      {
-        "id": "skitter",
-        "name": "Skitter"
-      },
-      {
-        "id": "naria",
-        "name": "Naria"
-      },
-      {
-        "id": "ruff",
-        "name": "Ruff"
-      },
-      {
-        "id": "kong",
-        "name": "Kong"
-      },
-      {
-        "id": "rusty",
-        "name": "Rusty"
-      },
-      {
-        "id": "blitz",
-        "name": "Blitz"
-      },
-      {
-        "id": "ravager",
-        "name": "Ravager"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -138,12 +56,6 @@
     "name": "Leaf",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "moss",
-        "name": "Moss"
-      }
-    ],
     "description": "A small leaf, left behind by a tree. Found while Chopping.",
     "recipes": []
   },
@@ -160,12 +72,6 @@
     "name": "Twig",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "sunny",
-        "name": "Sunny"
-      }
-    ],
     "description": "A small twig, left behind by a tree. Found while Chopping.",
     "recipes": []
   },
@@ -174,12 +80,6 @@
     "name": "Pine Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "mizu",
-        "name": "Mizu"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -188,12 +88,6 @@
     "name": "Birch Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "ranger",
-        "name": "Ranger"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -202,12 +96,6 @@
     "name": "Oak Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "miko",
-        "name": "Miko"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -216,12 +104,6 @@
     "name": "Maple Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "penny",
-        "name": "Penny"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -230,12 +112,6 @@
     "name": "Cedar Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "buzz",
-        "name": "Buzz"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -244,12 +120,6 @@
     "name": "Ash Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "honey",
-        "name": "Honey"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -258,12 +128,6 @@
     "name": "Spruce Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "mooyak",
-        "name": "Mooyak"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -272,12 +136,6 @@
     "name": "Willow Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "winter",
-        "name": "Winter"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -286,12 +144,6 @@
     "name": "Runic Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "mantis",
-        "name": "Mantis"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -300,12 +152,6 @@
     "name": "Elder Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "snooze",
-        "name": "Snooze"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -314,40 +160,6 @@
     "name": "Arcanum Log",
     "type": "Gathered",
     "sources": ["chopping"],
-    "summoning": [
-      {
-        "id": "joeyroo",
-        "name": "Joeyroo"
-      },
-      {
-        "id": "skitter",
-        "name": "Skitter"
-      },
-      {
-        "id": "naria",
-        "name": "Naria"
-      },
-      {
-        "id": "ruff",
-        "name": "Ruff"
-      },
-      {
-        "id": "kong",
-        "name": "Kong"
-      },
-      {
-        "id": "rusty",
-        "name": "Rusty"
-      },
-      {
-        "id": "blitz",
-        "name": "Blitz"
-      },
-      {
-        "id": "ravager",
-        "name": "Ravager"
-      }
-    ],
     "description": "Found while Chopping.",
     "recipes": []
   },
@@ -356,84 +168,6 @@
     "name": "Mining Charm",
     "type": "Currency",
     "sources": ["mining", "crate", "charm-crate"],
-    "summoning": [
-      {
-        "id": "scoots",
-        "name": "Scoots"
-      },
-      {
-        "id": "slick",
-        "name": "Slick"
-      },
-      {
-        "id": "chroma",
-        "name": "Chroma"
-      },
-      {
-        "id": "krubs",
-        "name": "Krubs"
-      },
-      {
-        "id": "hippa",
-        "name": "Hippa"
-      },
-      {
-        "id": "zibby",
-        "name": "Zibby"
-      },
-      {
-        "id": "flaire",
-        "name": "Flaire"
-      },
-      {
-        "id": "koral",
-        "name": "Koral"
-      },
-      {
-        "id": "spike",
-        "name": "Spike"
-      },
-      {
-        "id": "porkie",
-        "name": "Porkie"
-      },
-      {
-        "id": "rumble",
-        "name": "Rumble"
-      },
-      {
-        "id": "terra",
-        "name": "Terra"
-      },
-      {
-        "id": "kango",
-        "name": "Kango"
-      },
-      {
-        "id": "brunk",
-        "name": "Brunk"
-      },
-      {
-        "id": "astra",
-        "name": "Astra"
-      },
-      {
-        "id": "shelldon",
-        "name": "Shelldon"
-      },
-      {
-        "id": "ivan",
-        "name": "Ivan"
-      },
-      {
-        "id": "clad",
-        "name": "Clad"
-      },
-      {
-        "id": "kragg",
-        "name": "Kragg"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -478,16 +212,6 @@
     "name": "Stone",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "scoots",
-        "name": "Scoots"
-      },
-      {
-        "id": "gummy",
-        "name": "Gummy"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -496,12 +220,6 @@
     "name": "Copper Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "slick",
-        "name": "Slick"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -510,12 +228,6 @@
     "name": "Tin Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "chroma",
-        "name": "Chroma"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -524,12 +236,6 @@
     "name": "Coal",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "krubs",
-        "name": "Krubs"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": [
       {
@@ -543,7 +249,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -554,9 +260,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 2,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -567,9 +273,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 2,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -580,9 +286,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 2,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -593,9 +299,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 3,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -606,9 +312,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 3,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -619,9 +325,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 3,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -632,9 +338,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 4,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       },
       {
         "workstation": "Furnace",
@@ -645,9 +351,9 @@
             "amount": 4
           }
         ],
-        "outputAmount": 1,
+        "outputAmount": 4,
         "craftTime": 16,
-        "experience": 16
+        "experience": 8
       }
     ]
   },
@@ -656,12 +362,6 @@
     "name": "Iron Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "hippa",
-        "name": "Hippa"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -670,12 +370,6 @@
     "name": "Silver Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "zibby",
-        "name": "Zibby"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -684,12 +378,6 @@
     "name": "Gold Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "flaire",
-        "name": "Flaire"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -698,12 +386,6 @@
     "name": "Platinum Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "koral",
-        "name": "Koral"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -712,12 +394,6 @@
     "name": "Adamantite Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "spike",
-        "name": "Spike"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -726,12 +402,6 @@
     "name": "Runic Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "porkie",
-        "name": "Porkie"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -740,12 +410,6 @@
     "name": "Solarite Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "rumble",
-        "name": "Rumble"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -754,40 +418,6 @@
     "name": "Arcanum Ore",
     "type": "Gathered",
     "sources": ["mining"],
-    "summoning": [
-      {
-        "id": "terra",
-        "name": "Terra"
-      },
-      {
-        "id": "kango",
-        "name": "Kango"
-      },
-      {
-        "id": "brunk",
-        "name": "Brunk"
-      },
-      {
-        "id": "astra",
-        "name": "Astra"
-      },
-      {
-        "id": "shelldon",
-        "name": "Shelldon"
-      },
-      {
-        "id": "ivan",
-        "name": "Ivan"
-      },
-      {
-        "id": "clad",
-        "name": "Clad"
-      },
-      {
-        "id": "kragg",
-        "name": "Kragg"
-      }
-    ],
     "description": "Found while Mining.",
     "recipes": []
   },
@@ -796,88 +426,6 @@
     "name": "Digging Charm",
     "type": "Currency",
     "sources": ["digging", "burried-chest", "charm-crate"],
-    "summoning": [
-      {
-        "id": "gummy",
-        "name": "Gummy"
-      },
-      {
-        "id": "sizzle",
-        "name": "Sizzle"
-      },
-      {
-        "id": "crank",
-        "name": "Crank"
-      },
-      {
-        "id": "ignis",
-        "name": "Ignis"
-      },
-      {
-        "id": "luna",
-        "name": "Luna"
-      },
-      {
-        "id": "nibsy",
-        "name": "Nibsy"
-      },
-      {
-        "id": "dottie",
-        "name": "Dottie"
-      },
-      {
-        "id": "kroko",
-        "name": "Kroko"
-      },
-      {
-        "id": "strawberry",
-        "name": "Strawberry"
-      },
-      {
-        "id": "whisk",
-        "name": "Whisk"
-      },
-      {
-        "id": "nutty",
-        "name": "Nutty"
-      },
-      {
-        "id": "rookie",
-        "name": "Rookie"
-      },
-      {
-        "id": "rascal",
-        "name": "Rascal"
-      },
-      {
-        "id": "chonk",
-        "name": "Chonk"
-      },
-      {
-        "id": "bandit",
-        "name": "Bandit"
-      },
-      {
-        "id": "bill",
-        "name": "Bill"
-      },
-      {
-        "id": "scruff",
-        "name": "Scruff"
-      },
-      {
-        "id": "cackle",
-        "name": "Cackle"
-      },
-      {
-        "id": "hedge",
-        "name": "Hedge"
-      },
-      {
-        "id": "quill",
-        "name": "Quill"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -965,12 +513,6 @@
     "name": "Clay",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "sizzle",
-        "name": "Sizzle"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -979,12 +521,6 @@
     "name": "Sand",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "crank",
-        "name": "Crank"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -993,12 +529,6 @@
     "name": "Mud",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "ignis",
-        "name": "Ignis"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1007,12 +537,6 @@
     "name": "Ice",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "luna",
-        "name": "Luna"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1021,12 +545,6 @@
     "name": "Gravel",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "dottie",
-        "name": "Dottie"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1035,12 +553,6 @@
     "name": "Fossil",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "kroko",
-        "name": "Kroko"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1049,44 +561,6 @@
     "name": "Key Fragment",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "rookie",
-        "name": "Rookie"
-      },
-      {
-        "id": "rascal",
-        "name": "Rascal"
-      },
-      {
-        "id": "chonk",
-        "name": "Chonk"
-      },
-      {
-        "id": "bandit",
-        "name": "Bandit"
-      },
-      {
-        "id": "bill",
-        "name": "Bill"
-      },
-      {
-        "id": "scruff",
-        "name": "Scruff"
-      },
-      {
-        "id": "cackle",
-        "name": "Cackle"
-      },
-      {
-        "id": "hedge",
-        "name": "Hedge"
-      },
-      {
-        "id": "quill",
-        "name": "Quill"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1095,12 +569,6 @@
     "name": "Runestone",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "whisk",
-        "name": "Whisk"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1109,12 +577,6 @@
     "name": "Volcanic Rock",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "nutty",
-        "name": "Nutty"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1123,12 +585,6 @@
     "name": "Dungeon Dust",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "strawberry",
-        "name": "Strawberry"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1137,12 +593,6 @@
     "name": "Obsidian",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "nibsy",
-        "name": "Nibsy"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1151,92 +601,6 @@
     "name": "Exploring Charm",
     "type": "Currency",
     "sources": ["exploring", "backpack", "charm-crate"],
-    "summoning": [
-      {
-        "id": "poko",
-        "name": "Poko"
-      },
-      {
-        "id": "sakura",
-        "name": "Sakura"
-      },
-      {
-        "id": "coco",
-        "name": "Coco"
-      },
-      {
-        "id": "luma",
-        "name": "Luma"
-      },
-      {
-        "id": "misty",
-        "name": "Misty"
-      },
-      {
-        "id": "echo",
-        "name": "Echo"
-      },
-      {
-        "id": "gusty",
-        "name": "Gusty"
-      },
-      {
-        "id": "flutter",
-        "name": "Flutter"
-      },
-      {
-        "id": "peach",
-        "name": "Peach"
-      },
-      {
-        "id": "rustle",
-        "name": "Rustle"
-      },
-      {
-        "id": "toto",
-        "name": "Toto"
-      },
-      {
-        "id": "skipper",
-        "name": "Skipper"
-      },
-      {
-        "id": "twilight",
-        "name": "Twilight"
-      },
-      {
-        "id": "prism",
-        "name": "Prism"
-      },
-      {
-        "id": "twitch",
-        "name": "Twitch"
-      },
-      {
-        "id": "mothie",
-        "name": "Mothie"
-      },
-      {
-        "id": "snowby",
-        "name": "Snowby"
-      },
-      {
-        "id": "gale",
-        "name": "Gale"
-      },
-      {
-        "id": "lilith",
-        "name": "Lilith"
-      },
-      {
-        "id": "orango",
-        "name": "Orango"
-      },
-      {
-        "id": "rocket",
-        "name": "Rocket"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1281,12 +645,6 @@
     "name": "Berry",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "poko",
-        "name": "Poko"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1295,12 +653,6 @@
     "name": "Mushroom",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "gusty",
-        "name": "Gusty"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1309,12 +661,6 @@
     "name": "Shell",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "coco",
-        "name": "Coco"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1323,12 +669,6 @@
     "name": "Reed",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "misty",
-        "name": "Misty"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1337,12 +677,6 @@
     "name": "Vine",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "peach",
-        "name": "Peach"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1351,12 +685,6 @@
     "name": "Geode",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "rustle",
-        "name": "Rustle"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1381,12 +709,6 @@
     "name": "Butterfly",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "sakura",
-        "name": "Sakura"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1395,12 +717,6 @@
     "name": "Horn",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "luma",
-        "name": "Luma"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1409,12 +725,6 @@
     "name": "Lichen",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "echo",
-        "name": "Echo"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1423,12 +733,6 @@
     "name": "Memory Orb",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "flutter",
-        "name": "Flutter"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1437,48 +741,6 @@
     "name": "Legacy Fragment",
     "type": "Gathered",
     "sources": ["exploring"],
-    "summoning": [
-      {
-        "id": "skipper",
-        "name": "Skipper"
-      },
-      {
-        "id": "twilight",
-        "name": "Twilight"
-      },
-      {
-        "id": "prism",
-        "name": "Prism"
-      },
-      {
-        "id": "twitch",
-        "name": "Twitch"
-      },
-      {
-        "id": "mothie",
-        "name": "Mothie"
-      },
-      {
-        "id": "snowby",
-        "name": "Snowby"
-      },
-      {
-        "id": "gale",
-        "name": "Gale"
-      },
-      {
-        "id": "lilith",
-        "name": "Lilith"
-      },
-      {
-        "id": "orango",
-        "name": "Orango"
-      },
-      {
-        "id": "rocket",
-        "name": "Rocket"
-      }
-    ],
     "description": "Found while Exploring.",
     "recipes": []
   },
@@ -1487,12 +749,6 @@
     "name": "Snow",
     "type": "Gathered",
     "sources": ["digging"],
-    "summoning": [
-      {
-        "id": "toto",
-        "name": "Toto"
-      }
-    ],
     "description": "Found while Digging.",
     "recipes": []
   },
@@ -1501,88 +757,6 @@
     "name": "Fishing Charm",
     "type": "Currency",
     "sources": ["fishing", "treasure-chest", "charm-crate"],
-    "summoning": [
-      {
-        "id": "mochi",
-        "name": "Mochi"
-      },
-      {
-        "id": "pips",
-        "name": "Pips"
-      },
-      {
-        "id": "stella",
-        "name": "Stella"
-      },
-      {
-        "id": "splash",
-        "name": "Splash"
-      },
-      {
-        "id": "spud",
-        "name": "Spud"
-      },
-      {
-        "id": "squish",
-        "name": "Squish"
-      },
-      {
-        "id": "tuskers",
-        "name": "Tuskers"
-      },
-      {
-        "id": "bubbles",
-        "name": "Bubbles"
-      },
-      {
-        "id": "corala",
-        "name": "Corala"
-      },
-      {
-        "id": "ruby",
-        "name": "Ruby"
-      },
-      {
-        "id": "diamond",
-        "name": "Diamond"
-      },
-      {
-        "id": "wally",
-        "name": "Wally"
-      },
-      {
-        "id": "finn",
-        "name": "Finn"
-      },
-      {
-        "id": "nari",
-        "name": "Nari"
-      },
-      {
-        "id": "floe",
-        "name": "Floe"
-      },
-      {
-        "id": "blorp",
-        "name": "Blorp"
-      },
-      {
-        "id": "zorb",
-        "name": "Zorb"
-      },
-      {
-        "id": "sarge",
-        "name": "Sarge"
-      },
-      {
-        "id": "tooth",
-        "name": "Tooth"
-      },
-      {
-        "id": "coralite",
-        "name": "Coralite"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1659,12 +833,6 @@
     "name": "Minnow",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "mochi",
-        "name": "Mochi"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1673,12 +841,6 @@
     "name": "Walleye",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "splash",
-        "name": "Splash"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1687,12 +849,6 @@
     "name": "Trout",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "pips",
-        "name": "Pips"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1701,12 +857,6 @@
     "name": "Bass",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "stella",
-        "name": "Stella"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1715,12 +865,6 @@
     "name": "Snail",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "squish",
-        "name": "Squish"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1729,12 +873,6 @@
     "name": "Salmon",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "spud",
-        "name": "Spud"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1743,12 +881,6 @@
     "name": "Carp",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "tuskers",
-        "name": "Tuskers"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1757,12 +889,6 @@
     "name": "Magical Carp",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "bubbles",
-        "name": "Bubbles"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1771,12 +897,6 @@
     "name": "Crab",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "corala",
-        "name": "Corala"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1785,12 +905,6 @@
     "name": "Redfish",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "ruby",
-        "name": "Ruby"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1799,12 +913,6 @@
     "name": "Rainbow Fish",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "diamond",
-        "name": "Diamond"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1813,44 +921,6 @@
     "name": "Emberfish",
     "type": "Gathered",
     "sources": ["fishing"],
-    "summoning": [
-      {
-        "id": "wally",
-        "name": "Wally"
-      },
-      {
-        "id": "finn",
-        "name": "Finn"
-      },
-      {
-        "id": "nari",
-        "name": "Nari"
-      },
-      {
-        "id": "floe",
-        "name": "Floe"
-      },
-      {
-        "id": "blorp",
-        "name": "Blorp"
-      },
-      {
-        "id": "zorb",
-        "name": "Zorb"
-      },
-      {
-        "id": "sarge",
-        "name": "Sarge"
-      },
-      {
-        "id": "tooth",
-        "name": "Tooth"
-      },
-      {
-        "id": "coralite",
-        "name": "Coralite"
-      }
-    ],
     "description": "Found while Fishing.",
     "recipes": []
   },
@@ -1859,88 +929,6 @@
     "name": "Farming Charm",
     "type": "Currency",
     "sources": ["farming", "herb-pouch", "charm-crate"],
-    "summoning": [
-      {
-        "id": "baabaa",
-        "name": "Baabaa"
-      },
-      {
-        "id": "dinkee",
-        "name": "Dinkee"
-      },
-      {
-        "id": "mooberry",
-        "name": "Mooberry"
-      },
-      {
-        "id": "mushy",
-        "name": "Mushy"
-      },
-      {
-        "id": "karn",
-        "name": "Karn"
-      },
-      {
-        "id": "wiggle",
-        "name": "Wiggle"
-      },
-      {
-        "id": "belle",
-        "name": "Belle"
-      },
-      {
-        "id": "budbud",
-        "name": "Budbud"
-      },
-      {
-        "id": "peak",
-        "name": "Peak"
-      },
-      {
-        "id": "tilly",
-        "name": "Tilly"
-      },
-      {
-        "id": "pandy",
-        "name": "Pandy"
-      },
-      {
-        "id": "pudge",
-        "name": "Pudge"
-      },
-      {
-        "id": "chomp",
-        "name": "Chomp"
-      },
-      {
-        "id": "fleece",
-        "name": "Fleece"
-      },
-      {
-        "id": "bram",
-        "name": "Bram"
-      },
-      {
-        "id": "porkchop",
-        "name": "Porkchop"
-      },
-      {
-        "id": "wooly",
-        "name": "Wooly"
-      },
-      {
-        "id": "firebelly",
-        "name": "Firebelly"
-      },
-      {
-        "id": "midnight",
-        "name": "Midnight"
-      },
-      {
-        "id": "pippy",
-        "name": "Pippy"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2001,12 +989,6 @@
     "name": "Grass",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "baabaa",
-        "name": "Baabaa"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2015,12 +997,6 @@
     "name": "Wheat",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "dinkee",
-        "name": "Dinkee"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2029,12 +1005,6 @@
     "name": "Carrot",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "mooberry",
-        "name": "Mooberry"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2043,12 +1013,6 @@
     "name": "Lettuce",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "karn",
-        "name": "Karn"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2057,12 +1021,6 @@
     "name": "Onion",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "peak",
-        "name": "Peak"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2071,12 +1029,6 @@
     "name": "Tomato",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "mushy",
-        "name": "Mushy"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2085,12 +1037,6 @@
     "name": "Eggplant",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "budbud",
-        "name": "Budbud"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2099,12 +1045,6 @@
     "name": "Potato",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "wiggle",
-        "name": "Wiggle"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2113,12 +1053,6 @@
     "name": "Corn",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "belle",
-        "name": "Belle"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2127,12 +1061,6 @@
     "name": "Pepper",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "tilly",
-        "name": "Tilly"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2141,12 +1069,6 @@
     "name": "Pineapple",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "pandy",
-        "name": "Pandy"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2155,44 +1077,6 @@
     "name": "Mango",
     "type": "Gathered",
     "sources": ["farming"],
-    "summoning": [
-      {
-        "id": "pudge",
-        "name": "Pudge"
-      },
-      {
-        "id": "chomp",
-        "name": "Chomp"
-      },
-      {
-        "id": "fleece",
-        "name": "Fleece"
-      },
-      {
-        "id": "bram",
-        "name": "Bram"
-      },
-      {
-        "id": "porkchop",
-        "name": "Porkchop"
-      },
-      {
-        "id": "wooly",
-        "name": "Wooly"
-      },
-      {
-        "id": "firebelly",
-        "name": "Firebelly"
-      },
-      {
-        "id": "midnight",
-        "name": "Midnight"
-      },
-      {
-        "id": "pippy",
-        "name": "Pippy"
-      }
-    ],
     "description": "Found while Farming.",
     "recipes": []
   },
@@ -2253,56 +1137,6 @@
     "name": "Cooked Meat",
     "type": "Refined",
     "sources": ["crafting_stove", "backpack"],
-    "summoning": [
-      {
-        "id": "flaire",
-        "name": "Flaire"
-      },
-      {
-        "id": "koral",
-        "name": "Koral"
-      },
-      {
-        "id": "honey",
-        "name": "Honey"
-      },
-      {
-        "id": "mooyak",
-        "name": "Mooyak"
-      },
-      {
-        "id": "budbud",
-        "name": "Budbud"
-      },
-      {
-        "id": "peak",
-        "name": "Peak"
-      },
-      {
-        "id": "dottie",
-        "name": "Dottie"
-      },
-      {
-        "id": "kroko",
-        "name": "Kroko"
-      },
-      {
-        "id": "bubbles",
-        "name": "Bubbles"
-      },
-      {
-        "id": "corala",
-        "name": "Corala"
-      },
-      {
-        "id": "flutter",
-        "name": "Flutter"
-      },
-      {
-        "id": "peach",
-        "name": "Peach"
-      }
-    ],
     "description": "Cooked meat from raw meat.",
     "sellValue": 2,
     "recipes": [
@@ -2334,40 +1168,6 @@
     "name": "Cooked Fish",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "spike",
-        "name": "Spike"
-      },
-      {
-        "id": "winter",
-        "name": "Winter"
-      },
-      {
-        "id": "tilly",
-        "name": "Tilly"
-      },
-      {
-        "id": "strawberry",
-        "name": "Strawberry"
-      },
-      {
-        "id": "whisk",
-        "name": "Whisk"
-      },
-      {
-        "id": "ruby",
-        "name": "Ruby"
-      },
-      {
-        "id": "rustle",
-        "name": "Rustle"
-      },
-      {
-        "id": "toto",
-        "name": "Toto"
-      }
-    ],
     "description": "Cooked fish from raw fish.",
     "sellValue": 3,
     "recipes": [
@@ -2588,7 +1388,7 @@
     "name": "Spices",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "description": "Spices.",
+    "description": "A blend of herbs and spices.",
     "sellValue": 110,
     "recipes": [
       {
@@ -2654,32 +1454,6 @@
     "name": "Cheese",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "porkie",
-        "name": "Porkie"
-      },
-      {
-        "id": "mantis",
-        "name": "Mantis"
-      },
-      {
-        "id": "pandy",
-        "name": "Pandy"
-      },
-      {
-        "id": "nutty",
-        "name": "Nutty"
-      },
-      {
-        "id": "diamond",
-        "name": "Diamond"
-      },
-      {
-        "id": "skipper",
-        "name": "Skipper"
-      }
-    ],
     "description": "A block of cheese.",
     "sellValue": 125,
     "recipes": [
@@ -2711,32 +1485,6 @@
     "name": "Meat Stew",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "rumble",
-        "name": "Rumble"
-      },
-      {
-        "id": "snooze",
-        "name": "Snooze"
-      },
-      {
-        "id": "pudge",
-        "name": "Pudge"
-      },
-      {
-        "id": "rookie",
-        "name": "Rookie"
-      },
-      {
-        "id": "wally",
-        "name": "Wally"
-      },
-      {
-        "id": "twilight",
-        "name": "Twilight"
-      }
-    ],
     "description": "Cooked meat from raw meat stew.",
     "sellValue": 235,
     "recipes": [
@@ -2843,56 +1591,6 @@
     "name": "Cooked Crab",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "ivan",
-        "name": "Ivan"
-      },
-      {
-        "id": "clad",
-        "name": "Clad"
-      },
-      {
-        "id": "kong",
-        "name": "Kong"
-      },
-      {
-        "id": "rusty",
-        "name": "Rusty"
-      },
-      {
-        "id": "firebelly",
-        "name": "Firebelly"
-      },
-      {
-        "id": "midnight",
-        "name": "Midnight"
-      },
-      {
-        "id": "cackle",
-        "name": "Cackle"
-      },
-      {
-        "id": "hedge",
-        "name": "Hedge"
-      },
-      {
-        "id": "sarge",
-        "name": "Sarge"
-      },
-      {
-        "id": "tooth",
-        "name": "Tooth"
-      },
-      {
-        "id": "gale",
-        "name": "Gale"
-      },
-      {
-        "id": "lilith",
-        "name": "Lilith"
-      }
-    ],
     "description": "Cooked crab from raw crab.",
     "sellValue": 25,
     "recipes": [
@@ -2940,15 +1638,11 @@
             "amount": 4
           },
           {
-            "id": "onion",
+            "id": "tomato",
             "amount": 4
           },
           {
             "id": "knife",
-            "amount": 1
-          },
-          {
-            "id": "empty-can",
             "amount": 1
           }
         ],
@@ -2963,40 +1657,6 @@
     "name": "Bread",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "terra",
-        "name": "Terra"
-      },
-      {
-        "id": "joeyroo",
-        "name": "Joeyroo"
-      },
-      {
-        "id": "chomp",
-        "name": "Chomp"
-      },
-      {
-        "id": "rascal",
-        "name": "Rascal"
-      },
-      {
-        "id": "chonk",
-        "name": "Chonk"
-      },
-      {
-        "id": "finn",
-        "name": "Finn"
-      },
-      {
-        "id": "nari",
-        "name": "Nari"
-      },
-      {
-        "id": "prism",
-        "name": "Prism"
-      }
-    ],
     "description": "A loaf of bread.",
     "sellValue": 125,
     "recipes": [
@@ -3032,56 +1692,6 @@
     "name": "Cheeseburger",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "kango",
-        "name": "Kango"
-      },
-      {
-        "id": "brunk",
-        "name": "Brunk"
-      },
-      {
-        "id": "skitter",
-        "name": "Skitter"
-      },
-      {
-        "id": "naria",
-        "name": "Naria"
-      },
-      {
-        "id": "fleece",
-        "name": "Fleece"
-      },
-      {
-        "id": "bram",
-        "name": "Bram"
-      },
-      {
-        "id": "bandit",
-        "name": "Bandit"
-      },
-      {
-        "id": "bill",
-        "name": "Bill"
-      },
-      {
-        "id": "floe",
-        "name": "Floe"
-      },
-      {
-        "id": "blorp",
-        "name": "Blorp"
-      },
-      {
-        "id": "twitch",
-        "name": "Twitch"
-      },
-      {
-        "id": "mothie",
-        "name": "Mothie"
-      }
-    ],
     "description": "A cheeseburger.",
     "sellValue": 380,
     "recipes": [
@@ -3121,40 +1731,6 @@
     "name": "Canned Food",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "astra",
-        "name": "Astra"
-      },
-      {
-        "id": "shelldon",
-        "name": "Shelldon"
-      },
-      {
-        "id": "ruff",
-        "name": "Ruff"
-      },
-      {
-        "id": "porkchop",
-        "name": "Porkchop"
-      },
-      {
-        "id": "wooly",
-        "name": "Wooly"
-      },
-      {
-        "id": "scruff",
-        "name": "Scruff"
-      },
-      {
-        "id": "zorb",
-        "name": "Zorb"
-      },
-      {
-        "id": "snowby",
-        "name": "Snowby"
-      }
-    ],
     "description": "A can of food.",
     "sellValue": 125,
     "recipes": [
@@ -3411,40 +1987,6 @@
     "name": "Carrot Cake",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "summoning": [
-      {
-        "id": "kragg",
-        "name": "Kragg"
-      },
-      {
-        "id": "blitz",
-        "name": "Blitz"
-      },
-      {
-        "id": "ravager",
-        "name": "Ravager"
-      },
-      {
-        "id": "pippy",
-        "name": "Pippy"
-      },
-      {
-        "id": "quill",
-        "name": "Quill"
-      },
-      {
-        "id": "coralite",
-        "name": "Coralite"
-      },
-      {
-        "id": "orango",
-        "name": "Orango"
-      },
-      {
-        "id": "rocket",
-        "name": "Rocket"
-      }
-    ],
     "description": "A carrot cake.",
     "sellValue": 600,
     "recipes": [
@@ -3521,7 +2063,7 @@
         "ingredients": [
           {
             "id": "copper-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3552,7 +2094,7 @@
         "ingredients": [
           {
             "id": "tin-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3583,7 +2125,7 @@
         "ingredients": [
           {
             "id": "iron-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3614,7 +2156,7 @@
         "ingredients": [
           {
             "id": "silver-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3645,7 +2187,7 @@
         "ingredients": [
           {
             "id": "gold-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3676,7 +2218,7 @@
         "ingredients": [
           {
             "id": "platinum-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3707,7 +2249,7 @@
         "ingredients": [
           {
             "id": "adamantite-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3738,7 +2280,7 @@
         "ingredients": [
           {
             "id": "runic-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3769,7 +2311,7 @@
         "ingredients": [
           {
             "id": "solarite-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3800,7 +2342,7 @@
         "ingredients": [
           {
             "id": "arcanum-ore",
-            "amount": 16
+            "amount": 8
           },
           {
             "id": "coal",
@@ -3885,7 +2427,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 38
       },
       {
         "workstation": "Workbench",
@@ -3902,7 +2444,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 40
       },
       {
         "workstation": "Workbench",
@@ -3919,7 +2461,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 42
       },
       {
         "workstation": "Workbench",
@@ -3936,7 +2478,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 44
       },
       {
         "workstation": "Workbench",
@@ -3953,7 +2495,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 46
       },
       {
         "workstation": "Workbench",
@@ -3970,7 +2512,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 48
       },
       {
         "workstation": "Workbench",
@@ -3987,7 +2529,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 50
       },
       {
         "workstation": "Workbench",
@@ -4004,7 +2546,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 52
       },
       {
         "workstation": "Workbench",
@@ -4021,7 +2563,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 54
       },
       {
         "workstation": "Workbench",
@@ -4038,7 +2580,7 @@
         ],
         "outputAmount": 1,
         "craftTime": 32,
-        "experience": 36
+        "experience": 56
       }
     ]
   },
@@ -4147,52 +2689,6 @@
     "name": "Pure Earth Essence",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "spike",
-        "name": "Spike"
-      },
-      {
-        "id": "winter",
-        "name": "Winter"
-      },
-      {
-        "id": "budbud",
-        "name": "Budbud"
-      },
-      {
-        "id": "tilly",
-        "name": "Tilly"
-      },
-      {
-        "id": "whisk",
-        "name": "Whisk"
-      },
-      {
-        "id": "rustle",
-        "name": "Rustle"
-      },
-      {
-        "id": "rumble",
-        "name": "Rumble"
-      },
-      {
-        "id": "terra",
-        "name": "Terra"
-      },
-      {
-        "id": "mantis",
-        "name": "Mantis"
-      },
-      {
-        "id": "rookie",
-        "name": "Rookie"
-      },
-      {
-        "id": "rascal",
-        "name": "Rascal"
-      }
-    ],
     "description": "Purified raw earth essence.",
     "recipes": [
       {
@@ -4215,52 +2711,6 @@
     "name": "Pure Fire Essence",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "flaire",
-        "name": "Flaire"
-      },
-      {
-        "id": "mooyak",
-        "name": "Mooyak"
-      },
-      {
-        "id": "dottie",
-        "name": "Dottie"
-      },
-      {
-        "id": "strawberry",
-        "name": "Strawberry"
-      },
-      {
-        "id": "ruby",
-        "name": "Ruby"
-      },
-      {
-        "id": "porkie",
-        "name": "Porkie"
-      },
-      {
-        "id": "snooze",
-        "name": "Snooze"
-      },
-      {
-        "id": "pudge",
-        "name": "Pudge"
-      },
-      {
-        "id": "chomp",
-        "name": "Chomp"
-      },
-      {
-        "id": "finn",
-        "name": "Finn"
-      },
-      {
-        "id": "prism",
-        "name": "Prism"
-      }
-    ],
     "description": "Purified raw fire essence.",
     "recipes": [
       {
@@ -4283,40 +2733,6 @@
     "name": "Pure Water Essence",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "koral",
-        "name": "Koral"
-      },
-      {
-        "id": "kroko",
-        "name": "Kroko"
-      },
-      {
-        "id": "bubbles",
-        "name": "Bubbles"
-      },
-      {
-        "id": "corala",
-        "name": "Corala"
-      },
-      {
-        "id": "pandy",
-        "name": "Pandy"
-      },
-      {
-        "id": "diamond",
-        "name": "Diamond"
-      },
-      {
-        "id": "wally",
-        "name": "Wally"
-      },
-      {
-        "id": "nari",
-        "name": "Nari"
-      }
-    ],
     "description": "Purified raw water essence.",
     "recipes": [
       {
@@ -4339,48 +2755,6 @@
     "name": "Pure Wind Essence",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "honey",
-        "name": "Honey"
-      },
-      {
-        "id": "peak",
-        "name": "Peak"
-      },
-      {
-        "id": "flutter",
-        "name": "Flutter"
-      },
-      {
-        "id": "peach",
-        "name": "Peach"
-      },
-      {
-        "id": "toto",
-        "name": "Toto"
-      },
-      {
-        "id": "joeyroo",
-        "name": "Joeyroo"
-      },
-      {
-        "id": "nutty",
-        "name": "Nutty"
-      },
-      {
-        "id": "chonk",
-        "name": "Chonk"
-      },
-      {
-        "id": "skipper",
-        "name": "Skipper"
-      },
-      {
-        "id": "twilight",
-        "name": "Twilight"
-      }
-    ],
     "description": "Purified raw wind essence.",
     "recipes": [
       {
@@ -5060,28 +3434,6 @@
     "name": "Earth Stone",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "skitter",
-        "name": "Skitter"
-      },
-      {
-        "id": "naria",
-        "name": "Naria"
-      },
-      {
-        "id": "porkchop",
-        "name": "Porkchop"
-      },
-      {
-        "id": "bill",
-        "name": "Bill"
-      },
-      {
-        "id": "scruff",
-        "name": "Scruff"
-      }
-    ],
     "description": "Compressed essence of earth",
     "recipes": [
       {
@@ -5108,28 +3460,6 @@
     "name": "Fire Stone",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "kango",
-        "name": "Kango"
-      },
-      {
-        "id": "astra",
-        "name": "Astra"
-      },
-      {
-        "id": "ruff",
-        "name": "Ruff"
-      },
-      {
-        "id": "bram",
-        "name": "Bram"
-      },
-      {
-        "id": "bandit",
-        "name": "Bandit"
-      }
-    ],
     "description": "Compressed essence of fire",
     "recipes": [
       {
@@ -5156,32 +3486,6 @@
     "name": "Water Stone",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "shelldon",
-        "name": "Shelldon"
-      },
-      {
-        "id": "fleece",
-        "name": "Fleece"
-      },
-      {
-        "id": "floe",
-        "name": "Floe"
-      },
-      {
-        "id": "blorp",
-        "name": "Blorp"
-      },
-      {
-        "id": "zorb",
-        "name": "Zorb"
-      },
-      {
-        "id": "snowby",
-        "name": "Snowby"
-      }
-    ],
     "description": "Compressed essence of water",
     "recipes": [
       {
@@ -5208,24 +3512,6 @@
     "name": "Wind Stone",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "brunk",
-        "name": "Brunk"
-      },
-      {
-        "id": "wooly",
-        "name": "Wooly"
-      },
-      {
-        "id": "twitch",
-        "name": "Twitch"
-      },
-      {
-        "id": "mothie",
-        "name": "Mothie"
-      }
-    ],
     "description": "Compressed essence of wind",
     "recipes": [
       {
@@ -5275,6 +3561,13 @@
   {
     "id": "awaken-points",
     "name": "Awaken Points",
+    "type": "Currency",
+    "description": "Description to be written...",
+    "recipes": []
+  },
+  {
+    "id": "prestige-points",
+    "name": "Prestige Points",
     "type": "Currency",
     "description": "Description to be written...",
     "recipes": []
@@ -5332,20 +3625,6 @@
     "id": "raw-fire-essence",
     "name": "Raw Fire Essence",
     "type": "Gathered",
-    "summoning": [
-      {
-        "id": "ignis",
-        "name": "Ignis"
-      },
-      {
-        "id": "luna",
-        "name": "Luna"
-      },
-      {
-        "id": "karn",
-        "name": "Karn"
-      }
-    ],
     "description": "Description to be written...",
     "recipes": []
   },
@@ -5353,28 +3632,6 @@
     "id": "raw-wind-essence",
     "name": "Raw Wind Essence",
     "type": "Gathered",
-    "summoning": [
-      {
-        "id": "wiggle",
-        "name": "Wiggle"
-      },
-      {
-        "id": "zibby",
-        "name": "Zibby"
-      },
-      {
-        "id": "misty",
-        "name": "Misty"
-      },
-      {
-        "id": "gusty",
-        "name": "Gusty"
-      },
-      {
-        "id": "buzz",
-        "name": "Buzz"
-      }
-    ],
     "description": "Description to be written...",
     "recipes": []
   },
@@ -5382,28 +3639,6 @@
     "id": "raw-earth-essence",
     "name": "Raw Earth Essence",
     "type": "Gathered",
-    "summoning": [
-      {
-        "id": "nibsy",
-        "name": "Nibsy"
-      },
-      {
-        "id": "krubs",
-        "name": "Krubs"
-      },
-      {
-        "id": "hippa",
-        "name": "Hippa"
-      },
-      {
-        "id": "echo",
-        "name": "Echo"
-      },
-      {
-        "id": "penny",
-        "name": "Penny"
-      }
-    ],
     "description": "Description to be written...",
     "recipes": []
   },
@@ -5411,36 +3646,6 @@
     "id": "raw-water-essence",
     "name": "Raw Water Essence",
     "type": "Gathered",
-    "summoning": [
-      {
-        "id": "belle",
-        "name": "Belle"
-      },
-      {
-        "id": "luma",
-        "name": "Luma"
-      },
-      {
-        "id": "miko",
-        "name": "Miko"
-      },
-      {
-        "id": "splash",
-        "name": "Splash"
-      },
-      {
-        "id": "spud",
-        "name": "Spud"
-      },
-      {
-        "id": "squish",
-        "name": "Squish"
-      },
-      {
-        "id": "tuskers",
-        "name": "Tuskers"
-      }
-    ],
     "description": "Description to be written...",
     "recipes": []
   },
@@ -5449,9 +3654,9 @@
     "name": "Task Board Potion",
     "type": "Consumable",
     "buyValue": 40000,
-    "dailyLimit": 1,
     "description": "A potion that allows you to reset every task board quest instantly. Can be bought at the Merchant.",
-    "recipes": []
+    "recipes": [],
+    "weeklyLimit": 7
   },
   {
     "id": "awaken-tree-reset-potion",
@@ -5467,32 +3672,6 @@
     "name": "Knowledge Orb",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-1"],
-    "summoning": [
-      {
-        "id": "ignis",
-        "name": "Ignis"
-      },
-      {
-        "id": "karn",
-        "name": "Karn"
-      },
-      {
-        "id": "krubs",
-        "name": "Krubs"
-      },
-      {
-        "id": "luma",
-        "name": "Luma"
-      },
-      {
-        "id": "miko",
-        "name": "Miko"
-      },
-      {
-        "id": "splash",
-        "name": "Splash"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5502,32 +3681,6 @@
     "name": "Web",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-2"],
-    "summoning": [
-      {
-        "id": "luna",
-        "name": "Luna"
-      },
-      {
-        "id": "wiggle",
-        "name": "Wiggle"
-      },
-      {
-        "id": "hippa",
-        "name": "Hippa"
-      },
-      {
-        "id": "misty",
-        "name": "Misty"
-      },
-      {
-        "id": "penny",
-        "name": "Penny"
-      },
-      {
-        "id": "spud",
-        "name": "Spud"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5546,40 +3699,6 @@
     "name": "Gemstone",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-4"],
-    "summoning": [
-      {
-        "id": "nibsy",
-        "name": "Nibsy"
-      },
-      {
-        "id": "belle",
-        "name": "Belle"
-      },
-      {
-        "id": "zibby",
-        "name": "Zibby"
-      },
-      {
-        "id": "echo",
-        "name": "Echo"
-      },
-      {
-        "id": "gusty",
-        "name": "Gusty"
-      },
-      {
-        "id": "buzz",
-        "name": "Buzz"
-      },
-      {
-        "id": "squish",
-        "name": "Squish"
-      },
-      {
-        "id": "tuskers",
-        "name": "Tuskers"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5589,32 +3708,6 @@
     "name": "Kelp",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-5"],
-    "summoning": [
-      {
-        "id": "flaire",
-        "name": "Flaire"
-      },
-      {
-        "id": "honey",
-        "name": "Honey"
-      },
-      {
-        "id": "budbud",
-        "name": "Budbud"
-      },
-      {
-        "id": "dottie",
-        "name": "Dottie"
-      },
-      {
-        "id": "bubbles",
-        "name": "Bubbles"
-      },
-      {
-        "id": "flutter",
-        "name": "Flutter"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5624,32 +3717,6 @@
     "name": "Cloth",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-6"],
-    "summoning": [
-      {
-        "id": "koral",
-        "name": "Koral"
-      },
-      {
-        "id": "mooyak",
-        "name": "Mooyak"
-      },
-      {
-        "id": "peak",
-        "name": "Peak"
-      },
-      {
-        "id": "kroko",
-        "name": "Kroko"
-      },
-      {
-        "id": "corala",
-        "name": "Corala"
-      },
-      {
-        "id": "peach",
-        "name": "Peach"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5659,40 +3726,6 @@
     "name": "Night Shard",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-7"],
-    "summoning": [
-      {
-        "id": "spike",
-        "name": "Spike"
-      },
-      {
-        "id": "winter",
-        "name": "Winter"
-      },
-      {
-        "id": "tilly",
-        "name": "Tilly"
-      },
-      {
-        "id": "strawberry",
-        "name": "Strawberry"
-      },
-      {
-        "id": "whisk",
-        "name": "Whisk"
-      },
-      {
-        "id": "ruby",
-        "name": "Ruby"
-      },
-      {
-        "id": "rustle",
-        "name": "Rustle"
-      },
-      {
-        "id": "toto",
-        "name": "Toto"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5711,32 +3744,6 @@
     "name": "Pearl",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-9"],
-    "summoning": [
-      {
-        "id": "porkie",
-        "name": "Porkie"
-      },
-      {
-        "id": "mantis",
-        "name": "Mantis"
-      },
-      {
-        "id": "pandy",
-        "name": "Pandy"
-      },
-      {
-        "id": "nutty",
-        "name": "Nutty"
-      },
-      {
-        "id": "diamond",
-        "name": "Diamond"
-      },
-      {
-        "id": "skipper",
-        "name": "Skipper"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 50,
     "recipes": []
@@ -5791,32 +3798,6 @@
     "name": "Scale",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-13"],
-    "summoning": [
-      {
-        "id": "rumble",
-        "name": "Rumble"
-      },
-      {
-        "id": "snooze",
-        "name": "Snooze"
-      },
-      {
-        "id": "pudge",
-        "name": "Pudge"
-      },
-      {
-        "id": "rookie",
-        "name": "Rookie"
-      },
-      {
-        "id": "wally",
-        "name": "Wally"
-      },
-      {
-        "id": "twilight",
-        "name": "Twilight"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5826,40 +3807,6 @@
     "name": "Ancient Tome",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-14"],
-    "summoning": [
-      {
-        "id": "terra",
-        "name": "Terra"
-      },
-      {
-        "id": "joeyroo",
-        "name": "Joeyroo"
-      },
-      {
-        "id": "chomp",
-        "name": "Chomp"
-      },
-      {
-        "id": "rascal",
-        "name": "Rascal"
-      },
-      {
-        "id": "chonk",
-        "name": "Chonk"
-      },
-      {
-        "id": "finn",
-        "name": "Finn"
-      },
-      {
-        "id": "nari",
-        "name": "Nari"
-      },
-      {
-        "id": "prism",
-        "name": "Prism"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5869,32 +3816,6 @@
     "name": "Poison Vial",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-15"],
-    "summoning": [
-      {
-        "id": "kango",
-        "name": "Kango"
-      },
-      {
-        "id": "skitter",
-        "name": "Skitter"
-      },
-      {
-        "id": "fleece",
-        "name": "Fleece"
-      },
-      {
-        "id": "bandit",
-        "name": "Bandit"
-      },
-      {
-        "id": "floe",
-        "name": "Floe"
-      },
-      {
-        "id": "twitch",
-        "name": "Twitch"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5904,32 +3825,6 @@
     "name": "Coral",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-16"],
-    "summoning": [
-      {
-        "id": "brunk",
-        "name": "Brunk"
-      },
-      {
-        "id": "naria",
-        "name": "Naria"
-      },
-      {
-        "id": "bram",
-        "name": "Bram"
-      },
-      {
-        "id": "bill",
-        "name": "Bill"
-      },
-      {
-        "id": "blorp",
-        "name": "Blorp"
-      },
-      {
-        "id": "mothie",
-        "name": "Mothie"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5939,40 +3834,6 @@
     "name": "Night Feather",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-17"],
-    "summoning": [
-      {
-        "id": "astra",
-        "name": "Astra"
-      },
-      {
-        "id": "shelldon",
-        "name": "Shelldon"
-      },
-      {
-        "id": "ruff",
-        "name": "Ruff"
-      },
-      {
-        "id": "porkchop",
-        "name": "Porkchop"
-      },
-      {
-        "id": "wooly",
-        "name": "Wooly"
-      },
-      {
-        "id": "scruff",
-        "name": "Scruff"
-      },
-      {
-        "id": "zorb",
-        "name": "Zorb"
-      },
-      {
-        "id": "snowby",
-        "name": "Snowby"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -5982,32 +3843,6 @@
     "name": "Artifact",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-18"],
-    "summoning": [
-      {
-        "id": "ivan",
-        "name": "Ivan"
-      },
-      {
-        "id": "kong",
-        "name": "Kong"
-      },
-      {
-        "id": "firebelly",
-        "name": "Firebelly"
-      },
-      {
-        "id": "cackle",
-        "name": "Cackle"
-      },
-      {
-        "id": "sarge",
-        "name": "Sarge"
-      },
-      {
-        "id": "gale",
-        "name": "Gale"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -6017,32 +3852,6 @@
     "name": "Skull",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-19"],
-    "summoning": [
-      {
-        "id": "clad",
-        "name": "Clad"
-      },
-      {
-        "id": "rusty",
-        "name": "Rusty"
-      },
-      {
-        "id": "midnight",
-        "name": "Midnight"
-      },
-      {
-        "id": "hedge",
-        "name": "Hedge"
-      },
-      {
-        "id": "tooth",
-        "name": "Tooth"
-      },
-      {
-        "id": "lilith",
-        "name": "Lilith"
-      }
-    ],
     "description": "Found while completing expeditions.",
     "sellValue": 15,
     "recipes": []
@@ -6052,40 +3861,6 @@
     "name": "Blood Vial",
     "type": "Gathered",
     "sources": ["completing expeditions", "expedition_expedition-type-20"],
-    "summoning": [
-      {
-        "id": "kragg",
-        "name": "Kragg"
-      },
-      {
-        "id": "blitz",
-        "name": "Blitz"
-      },
-      {
-        "id": "ravager",
-        "name": "Ravager"
-      },
-      {
-        "id": "pippy",
-        "name": "Pippy"
-      },
-      {
-        "id": "quill",
-        "name": "Quill"
-      },
-      {
-        "id": "coralite",
-        "name": "Coralite"
-      },
-      {
-        "id": "orango",
-        "name": "Orango"
-      },
-      {
-        "id": "rocket",
-        "name": "Rocket"
-      }
-    ],
     "sellValue": 15,
     "description": "Found while completing expeditions.",
     "recipes": []
@@ -6095,248 +3870,6 @@
     "name": "Chronicle Rune",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "porkie",
-        "name": "Porkie"
-      },
-      {
-        "id": "rumble",
-        "name": "Rumble"
-      },
-      {
-        "id": "terra",
-        "name": "Terra"
-      },
-      {
-        "id": "mantis",
-        "name": "Mantis"
-      },
-      {
-        "id": "snooze",
-        "name": "Snooze"
-      },
-      {
-        "id": "joeyroo",
-        "name": "Joeyroo"
-      },
-      {
-        "id": "pandy",
-        "name": "Pandy"
-      },
-      {
-        "id": "pudge",
-        "name": "Pudge"
-      },
-      {
-        "id": "chomp",
-        "name": "Chomp"
-      },
-      {
-        "id": "nutty",
-        "name": "Nutty"
-      },
-      {
-        "id": "rookie",
-        "name": "Rookie"
-      },
-      {
-        "id": "rascal",
-        "name": "Rascal"
-      },
-      {
-        "id": "chonk",
-        "name": "Chonk"
-      },
-      {
-        "id": "diamond",
-        "name": "Diamond"
-      },
-      {
-        "id": "wally",
-        "name": "Wally"
-      },
-      {
-        "id": "finn",
-        "name": "Finn"
-      },
-      {
-        "id": "nari",
-        "name": "Nari"
-      },
-      {
-        "id": "skipper",
-        "name": "Skipper"
-      },
-      {
-        "id": "twilight",
-        "name": "Twilight"
-      },
-      {
-        "id": "prism",
-        "name": "Prism"
-      },
-      {
-        "id": "kango",
-        "name": "Kango"
-      },
-      {
-        "id": "brunk",
-        "name": "Brunk"
-      },
-      {
-        "id": "astra",
-        "name": "Astra"
-      },
-      {
-        "id": "shelldon",
-        "name": "Shelldon"
-      },
-      {
-        "id": "skitter",
-        "name": "Skitter"
-      },
-      {
-        "id": "naria",
-        "name": "Naria"
-      },
-      {
-        "id": "ruff",
-        "name": "Ruff"
-      },
-      {
-        "id": "fleece",
-        "name": "Fleece"
-      },
-      {
-        "id": "bram",
-        "name": "Bram"
-      },
-      {
-        "id": "porkchop",
-        "name": "Porkchop"
-      },
-      {
-        "id": "wooly",
-        "name": "Wooly"
-      },
-      {
-        "id": "bandit",
-        "name": "Bandit"
-      },
-      {
-        "id": "bill",
-        "name": "Bill"
-      },
-      {
-        "id": "scruff",
-        "name": "Scruff"
-      },
-      {
-        "id": "floe",
-        "name": "Floe"
-      },
-      {
-        "id": "blorp",
-        "name": "Blorp"
-      },
-      {
-        "id": "zorb",
-        "name": "Zorb"
-      },
-      {
-        "id": "twitch",
-        "name": "Twitch"
-      },
-      {
-        "id": "mothie",
-        "name": "Mothie"
-      },
-      {
-        "id": "snowby",
-        "name": "Snowby"
-      },
-      {
-        "id": "ivan",
-        "name": "Ivan"
-      },
-      {
-        "id": "clad",
-        "name": "Clad"
-      },
-      {
-        "id": "kragg",
-        "name": "Kragg"
-      },
-      {
-        "id": "kong",
-        "name": "Kong"
-      },
-      {
-        "id": "rusty",
-        "name": "Rusty"
-      },
-      {
-        "id": "blitz",
-        "name": "Blitz"
-      },
-      {
-        "id": "ravager",
-        "name": "Ravager"
-      },
-      {
-        "id": "firebelly",
-        "name": "Firebelly"
-      },
-      {
-        "id": "midnight",
-        "name": "Midnight"
-      },
-      {
-        "id": "pippy",
-        "name": "Pippy"
-      },
-      {
-        "id": "cackle",
-        "name": "Cackle"
-      },
-      {
-        "id": "hedge",
-        "name": "Hedge"
-      },
-      {
-        "id": "quill",
-        "name": "Quill"
-      },
-      {
-        "id": "sarge",
-        "name": "Sarge"
-      },
-      {
-        "id": "tooth",
-        "name": "Tooth"
-      },
-      {
-        "id": "coralite",
-        "name": "Coralite"
-      },
-      {
-        "id": "gale",
-        "name": "Gale"
-      },
-      {
-        "id": "lilith",
-        "name": "Lilith"
-      },
-      {
-        "id": "orango",
-        "name": "Orango"
-      },
-      {
-        "id": "rocket",
-        "name": "Rocket"
-      }
-    ],
     "description": "A rune forged with the dust of the past",
     "recipes": [
       {
@@ -6395,88 +3928,6 @@
     "name": "Infinity Stone",
     "type": "Refined",
     "sources": ["crafting_workbench"],
-    "summoning": [
-      {
-        "id": "ivan",
-        "name": "Ivan"
-      },
-      {
-        "id": "clad",
-        "name": "Clad"
-      },
-      {
-        "id": "kragg",
-        "name": "Kragg"
-      },
-      {
-        "id": "kong",
-        "name": "Kong"
-      },
-      {
-        "id": "rusty",
-        "name": "Rusty"
-      },
-      {
-        "id": "blitz",
-        "name": "Blitz"
-      },
-      {
-        "id": "ravager",
-        "name": "Ravager"
-      },
-      {
-        "id": "firebelly",
-        "name": "Firebelly"
-      },
-      {
-        "id": "midnight",
-        "name": "Midnight"
-      },
-      {
-        "id": "pippy",
-        "name": "Pippy"
-      },
-      {
-        "id": "cackle",
-        "name": "Cackle"
-      },
-      {
-        "id": "hedge",
-        "name": "Hedge"
-      },
-      {
-        "id": "quill",
-        "name": "Quill"
-      },
-      {
-        "id": "sarge",
-        "name": "Sarge"
-      },
-      {
-        "id": "tooth",
-        "name": "Tooth"
-      },
-      {
-        "id": "coralite",
-        "name": "Coralite"
-      },
-      {
-        "id": "gale",
-        "name": "Gale"
-      },
-      {
-        "id": "lilith",
-        "name": "Lilith"
-      },
-      {
-        "id": "orango",
-        "name": "Orango"
-      },
-      {
-        "id": "rocket",
-        "name": "Rocket"
-      }
-    ],
     "description": "The most powerful stone in Koltera",
     "recipes": [
       {
