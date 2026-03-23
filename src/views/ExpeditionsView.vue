@@ -16,7 +16,7 @@ import {
   Target,
   X,
 } from 'lucide-vue-next'
-import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import summonedIcon from '@/assets/icons/summoned.png'
@@ -69,7 +69,7 @@ const {
 } = useExpeditions(creatures.value)
 
 
-const { collectionLevels, isOwned, isAwakened } = useCreatureCollection()
+const { isOwned, isAwakened } = useCreatureCollection()
 
 
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
@@ -196,10 +196,6 @@ function handleFileUpload(event: Event) {
 function handleReset() {
   if (window.confirm('Reset all expedition parties and creature levels?')) {
     resetAllExpeditions()
-    autoFilledCreatures.clear()
-    for (const [id, level] of Object.entries(collectionLevels.value)) {
-      updateCreatureLevel(id, level)
-    }
   }
 }
 
@@ -289,21 +285,6 @@ const filteredRecommended = computed(() => {
       selectedCreatureTiers.value.includes(creature.tier)
     return matchesSearch && matchesType && matchesTier
   })
-})
-
-
-// Auto-fill creature levels from collection (once per creature, so manual edits aren't overwritten)
-const autoFilledCreatures = new Set<string>()
-watchEffect(() => {
-  const levels = collectionLevels.value
-  for (const [id, level] of Object.entries(levels)) {
-    if (autoFilledCreatures.has(id)) continue
-    const rec = recommendedCreatures.value.find((r) => r.creature.id === id)
-    if (rec && rec.level === 1) {
-      autoFilledCreatures.add(id)
-      updateCreatureLevel(id, level)
-    }
-  }
 })
 
 
