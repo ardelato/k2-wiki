@@ -7,30 +7,30 @@ import { planLevelingPath, type LevelingPlan } from '@/utils/levelPlanner'
 
 export function useLevelPlanner(creatureId: Ref<string>, targetLevel: Ref<number>) {
   const { creatures } = useCreatures()
-  const { getLevel, isAwakened: getIsAwakened } = useCreatureCollection()
+  const { getLevel, isAwakened } = useCreatureCollection()
 
   const creature = computed(() => creatures.value.find((c) => c.id === creatureId.value) ?? null)
 
+  const awakened = computed(() => (creature.value ? isAwakened(creature.value.id) : false))
+
+  const creatureMaxLevel = computed(() => maxLevelForState(awakened.value))
+
   const startLevel = computed(() => (creature.value ? getLevel(creature.value.id) : 1))
 
-  const awakened = computed(() => (creature.value ? getIsAwakened(creature.value.id) : false))
-
   const isMaxLevel = computed(
-    () =>
-      startLevel.value >= maxLevelForState(awakened.value) && targetLevel.value <= startLevel.value,
+    () => startLevel.value >= creatureMaxLevel.value && targetLevel.value <= startLevel.value,
   )
+
+  /** True when the target exceeds the creature's current cap (needs awaken mid-plan) */
+  const needsAwaken = computed(() => !awakened.value && targetLevel.value > PRE_AWAKEN_MAX)
 
   const totalXpNeeded = computed(() => {
     if (!creature.value) return 0
-    // If unawakened and targeting past 70: XP for start→70 + XP for 1→target (level resets on awaken)
-    if (
-      !awakened.value &&
-      targetLevel.value > PRE_AWAKEN_MAX &&
-      startLevel.value <= PRE_AWAKEN_MAX
-    ) {
-      const preAwakenXp = xpForLevel(PRE_AWAKEN_MAX) - xpForLevel(startLevel.value)
-      const postAwakenXp = xpForLevel(targetLevel.value) - xpForLevel(1)
-      return Math.max(0, preAwakenXp + postAwakenXp)
+    if (needsAwaken.value) {
+      // XP to reach 70 + XP from 1 to target (post-awaken resets to level 1)
+      const preXp = Math.max(0, xpForLevel(PRE_AWAKEN_MAX) - xpForLevel(startLevel.value))
+      const postXp = Math.max(0, xpForLevel(targetLevel.value) - xpForLevel(1))
+      return preXp + postXp
     }
     return Math.max(0, xpForLevel(targetLevel.value) - xpForLevel(startLevel.value))
   })
@@ -50,8 +50,9 @@ export function useLevelPlanner(creatureId: Ref<string>, targetLevel: Ref<number
     startLevel,
     targetLevel,
     plan,
+    needsAwaken,
     totalXpNeeded,
     isMaxLevel,
-    awakened,
+    creatureMaxLevel,
   }
 }

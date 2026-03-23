@@ -18,7 +18,6 @@ import {
   biomeMultiplier,
 } from '@/utils/formulas'
 
-import { useCreatureCollection } from './useCreatureCollection'
 import { useGameConfig } from './useGameConfig'
 
 const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
@@ -26,7 +25,6 @@ const biomes = ref<Biome[]>(biomesData as Biome[])
 
 export function useExpeditions(creatures: Creature[]) {
   const { excludedCreatureIds } = useGameConfig()
-  const { collectionLevels } = useCreatureCollection()
   const showExcludedCreatures = ref(false)
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
@@ -36,11 +34,7 @@ export function useExpeditions(creatures: Creature[]) {
   const partySlots = ref<(Creature | null)[]>([])
   const activeSlotIndex = ref<number | null>(null)
   const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
-  const levelOverrides = ref<Record<string, number>>({})
-  const creatureLevels = computed(() => ({
-    ...collectionLevels.value,
-    ...levelOverrides.value,
-  }))
+  const creatureLevels = useLocalStorage<Record<string, number>>('expedition-creature-levels', {})
 
   const filteredExpeditions = computed(() => {
     return expeditions.value
@@ -106,7 +100,8 @@ export function useExpeditions(creatures: Creature[]) {
     const diff = calculateDifficultyRating(exp, tier)
     const duration = calculateDuration(score, exp, tier)
     const activeCreatures = partyCreatures.length
-    const xpPerCreature = calculateExpeditionXp(exp, tier, loopCount.value, activeCreatures)
+    const loops = expeditionLoopCounts.value[exp.id] ?? 0
+    const xpPerCreature = calculateExpeditionXp(exp, tier, loops, activeCreatures)
     const xpPerSecond = duration > 0 ? xpPerCreature / duration : 0
 
     return { xpPerCreature, xpPerSecond, duration, scoreRatio: diff > 0 ? score / diff : 0 }
@@ -235,7 +230,19 @@ export function useExpeditions(creatures: Creature[]) {
     return partyScore.value / difficultyRating.value
   })
 
-  const loopCount = ref(0)
+  const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
+
+  const loopCount = computed({
+    get: () =>
+      selectedExpedition.value ? (expeditionLoopCounts.value[selectedExpedition.value.id] ?? 0) : 0,
+    set: (val: number) => {
+      if (!selectedExpedition.value) return
+      expeditionLoopCounts.value = {
+        ...expeditionLoopCounts.value,
+        [selectedExpedition.value.id]: val,
+      }
+    },
+  })
 
   const loopBonusPercent = computed(() => {
     return Math.round(getLoopXpBonus(loopCount.value) * 100)
@@ -328,10 +335,7 @@ export function useExpeditions(creatures: Creature[]) {
   }
 
   const updateCreatureLevel = (creatureId: string, level: number) => {
-    levelOverrides.value = {
-      ...levelOverrides.value,
-      [creatureId]: Math.max(1, Math.min(120, level)),
-    }
+    creatureLevels.value[creatureId] = Math.max(1, Math.min(120, level))
   }
 
   const uniqueBiomes = computed(() => {
@@ -351,6 +355,7 @@ export function useExpeditions(creatures: Creature[]) {
       parties: expeditionParties.value,
       levels: assignedLevels,
       tiers: expeditionTiers.value,
+      loopCounts: expeditionLoopCounts.value,
     })
   }
 
@@ -361,10 +366,13 @@ export function useExpeditions(creatures: Creature[]) {
         expeditionParties.value = data.parties
       }
       if (data.levels && typeof data.levels === 'object') {
-        levelOverrides.value = data.levels
+        creatureLevels.value = data.levels
       }
       if (data.tiers && typeof data.tiers === 'object') {
         expeditionTiers.value = data.tiers
+      }
+      if (data.loopCounts && typeof data.loopCounts === 'object') {
+        expeditionLoopCounts.value = data.loopCounts
       }
       // Refresh current view
       if (selectedExpedition.value) {
@@ -385,8 +393,9 @@ export function useExpeditions(creatures: Creature[]) {
 
   function resetAllExpeditions() {
     expeditionParties.value = {}
-    levelOverrides.value = {}
+    creatureLevels.value = {}
     expeditionTiers.value = {}
+    expeditionLoopCounts.value = {}
     selectedTier.value = 1
     if (selectedExpedition.value) {
       partySlots.value = Array(selectedExpedition.value.maxPartySize).fill(null)

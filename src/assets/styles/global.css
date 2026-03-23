@@ -48,6 +48,7 @@
       radial-gradient(circle at 8% -20%, hsl(var(--accent) / 0.22), transparent 36%),
       radial-gradient(circle at 92% 4%, hsl(var(--primary) / 0.16), transparent 34%),
       linear-gradient(180deg, hsl(var(--background)) 0%, hsl(227 42% 6%) 100%);
+    background-attachment: fixed;
   }
 
   ::selection {
@@ -58,7 +59,7 @@
 
 @layer utilities {
   .surface-card {
-    @apply rounded-xl border border-border bg-card/80 shadow-card backdrop-blur;
+    @apply rounded-xl border border-border bg-card shadow-card;
   }
 
   .focus-ring {

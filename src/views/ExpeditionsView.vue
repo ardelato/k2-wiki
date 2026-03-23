@@ -16,7 +16,7 @@ import {
   Target,
   X,
 } from 'lucide-vue-next'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import summonedIcon from '@/assets/icons/summoned.png'
@@ -44,6 +44,7 @@ const {
   selectedTier,
   partySlots,
   activeSlotIndex,
+  creatureLevels,
   recommendedCreatures,
   difficultyRating,
   partyScore,
@@ -69,7 +70,7 @@ const {
 } = useExpeditions(creatures.value)
 
 
-const { isOwned, isAwakened } = useCreatureCollection()
+const { collectionLevels, isOwned, isAwakened } = useCreatureCollection()
 
 
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
@@ -196,6 +197,10 @@ function handleFileUpload(event: Event) {
 function handleReset() {
   if (window.confirm('Reset all expedition parties and creature levels?')) {
     resetAllExpeditions()
+    autoFilledCreatures.clear()
+    for (const [id, level] of Object.entries(collectionLevels.value)) {
+      updateCreatureLevel(id, level)
+    }
   }
 }
 
@@ -285,6 +290,21 @@ const filteredRecommended = computed(() => {
       selectedCreatureTiers.value.includes(creature.tier)
     return matchesSearch && matchesType && matchesTier
   })
+})
+
+
+// Auto-fill creature levels from collection (once per creature, so manual edits aren't overwritten)
+const autoFilledCreatures = new Set<string>()
+watchEffect(() => {
+  const levels = collectionLevels.value
+  for (const [id, level] of Object.entries(levels)) {
+    if (autoFilledCreatures.has(id)) continue
+    const rec = recommendedCreatures.value.find((r) => r.creature.id === id)
+    if (rec && rec.level === 1) {
+      autoFilledCreatures.add(id)
+      updateCreatureLevel(id, level)
+    }
+  }
 })
 
 
@@ -745,47 +765,57 @@ function toggleCreatureTier(tier: number) {
               <div
                 v-for="(slot, index) in partySlots"
                 :key="index"
-                class="relative size-20 overflow-hidden rounded-lg border transition"
-                :class="[
-                  slot
-                    ? 'border-border bg-card/50'
-                    : activeSlotIndex === index
-                      ? 'border-dashed border-primary bg-primary/10'
-                      : 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45',
-                ]"
-                @click="!slot ? setActiveSlot(index) : undefined"
+                class="flex flex-col items-center gap-1"
               >
-                <template v-if="slot">
-                  <img
-                    :src="getCreatureImage(slot)"
-                    :alt="`${slot.name} artwork`"
-                    class="size-full object-cover"
-                  />
-                  <div
-                    class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/75 px-1.5 py-1"
-                  >
-                    <p class="min-w-0 truncate text-[10px] font-semibold text-white">
-                      {{ slot.name }}
-                    </p>
-                    <span class="shrink-0 font-mono text-[10px] font-semibold text-primary">{{
-                      getCreatureSlotRating(slot)
-                    }}</span>
-                  </div>
-                  <button
-                    class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
-                    @click.stop="removeCreatureFromSlot(index)"
-                  >
-                    <X class="size-3" />
-                  </button>
-                </template>
-                <template v-else>
-                  <div class="flex size-full flex-col items-center justify-center gap-1">
-                    <Plus class="size-4 text-muted-foreground/50" />
-                    <span v-if="activeSlotIndex === index" class="text-[9px] text-primary"
-                      >Select</span
+                <div
+                  class="relative size-20 overflow-hidden rounded-lg border transition"
+                  :class="[
+                    slot
+                      ? 'border-border bg-card/50'
+                      : activeSlotIndex === index
+                        ? 'border-dashed border-primary bg-primary/10'
+                        : 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45',
+                  ]"
+                  @click="!slot ? setActiveSlot(index) : undefined"
+                >
+                  <template v-if="slot">
+                    <img
+                      :src="getCreatureImage(slot)"
+                      :alt="`${slot.name} artwork`"
+                      class="size-full object-cover"
+                    />
+                    <span
+                      class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary"
                     >
-                  </div>
-                </template>
+                      {{ getCreatureSlotRating(slot) }}
+                    </span>
+                    <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
+                      <p class="truncate text-center text-[10px] font-semibold text-white">
+                        {{ slot.name }}
+                      </p>
+                    </div>
+                    <button
+                      class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                      @click.stop="removeCreatureFromSlot(index)"
+                    >
+                      <X class="size-3" />
+                    </button>
+                  </template>
+                  <template v-else>
+                    <div class="flex size-full flex-col items-center justify-center gap-1">
+                      <Plus class="size-4 text-muted-foreground/50" />
+                      <span v-if="activeSlotIndex === index" class="text-[9px] text-primary"
+                        >Select</span
+                      >
+                    </div>
+                  </template>
+                </div>
+                <span
+                  v-if="slot"
+                  class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
+                >
+                  LVL {{ creatureLevels[slot.id] || 1 }}
+                </span>
               </div>
             </div>
           </div>
