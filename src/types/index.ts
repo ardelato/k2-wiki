@@ -240,6 +240,49 @@ export interface AwakenGatherUpgrade {
   durationTier: number // 0–4, each tier = -5% activity duration
 }
 
+export interface PartyPlanCreature {
+  creature: Creature
+  startLevel: number
+  targetLevel: number
+  isBooster: boolean
+  awakened: boolean
+}
+
+export interface PartyPlanStep {
+  expedition: Expedition
+  tier: number
+  party: { creatureId: string; fromLevel: number; toLevel: number; xpGained: number }[]
+  runs: number
+  timeSeconds: number
+  xpPerMinute: number
+  biomeName: string
+  loopCount: number
+  startTime?: number
+  isAwakeningStep?: boolean
+}
+
+export interface CreatureLevelingSummary {
+  creatureId: string
+  startLevel: number
+  endLevel: number
+  totalTimeSeconds: number
+  totalRuns: number
+  expeditionsUsed: string[]
+}
+
+export interface AwakenEvent {
+  creatureId: string
+  clockTime: number
+}
+
+export interface PartyLevelingPlan {
+  steps: PartyPlanStep[]
+  summaries: CreatureLevelingSummary[]
+  awakenEvents: AwakenEvent[]
+  totalTimeSeconds: number
+  totalRuns: number
+}
+
 export type CreatureStatKey = keyof CreatureStats
 export type ExpeditionStatKey = keyof ExpeditionStatWeights
 export type JobKey = keyof Jobs
