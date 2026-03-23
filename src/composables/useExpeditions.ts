@@ -18,6 +18,7 @@ import {
   biomeMultiplier,
 } from '@/utils/formulas'
 
+import { useCreatureCollection } from './useCreatureCollection'
 import { useGameConfig } from './useGameConfig'
 
 const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
@@ -25,6 +26,7 @@ const biomes = ref<Biome[]>(biomesData as Biome[])
 
 export function useExpeditions(creatures: Creature[]) {
   const { excludedCreatureIds } = useGameConfig()
+  const { collectionLevels } = useCreatureCollection()
   const showExcludedCreatures = ref(false)
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
@@ -34,7 +36,11 @@ export function useExpeditions(creatures: Creature[]) {
   const partySlots = ref<(Creature | null)[]>([])
   const activeSlotIndex = ref<number | null>(null)
   const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
-  const creatureLevels = useLocalStorage<Record<string, number>>('expedition-creature-levels', {})
+  const levelOverrides = ref<Record<string, number>>({})
+  const creatureLevels = computed(() => ({
+    ...collectionLevels.value,
+    ...levelOverrides.value,
+  }))
 
   const filteredExpeditions = computed(() => {
     return expeditions.value
@@ -322,7 +328,10 @@ export function useExpeditions(creatures: Creature[]) {
   }
 
   const updateCreatureLevel = (creatureId: string, level: number) => {
-    creatureLevels.value[creatureId] = Math.max(1, Math.min(120, level))
+    levelOverrides.value = {
+      ...levelOverrides.value,
+      [creatureId]: Math.max(1, Math.min(120, level)),
+    }
   }
 
   const uniqueBiomes = computed(() => {
@@ -352,7 +361,7 @@ export function useExpeditions(creatures: Creature[]) {
         expeditionParties.value = data.parties
       }
       if (data.levels && typeof data.levels === 'object') {
-        creatureLevels.value = data.levels
+        levelOverrides.value = data.levels
       }
       if (data.tiers && typeof data.tiers === 'object') {
         expeditionTiers.value = data.tiers
@@ -376,7 +385,7 @@ export function useExpeditions(creatures: Creature[]) {
 
   function resetAllExpeditions() {
     expeditionParties.value = {}
-    creatureLevels.value = {}
+    levelOverrides.value = {}
     expeditionTiers.value = {}
     selectedTier.value = 1
     if (selectedExpedition.value) {
