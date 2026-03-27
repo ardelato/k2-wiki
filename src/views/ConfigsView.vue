@@ -11,7 +11,7 @@ import {
   Plus,
   X,
 } from 'lucide-vue-next'
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, toRaw } from 'vue'
 
 import LevelPlannerCreaturePicker from '@/components/level-planner/LevelPlannerCreaturePicker.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
@@ -70,18 +70,18 @@ function startEditing(section: EditableSection) {
   switch (section) {
     case 'exclusions':
       sectionSnapshot = {
-        sanctuaryCreatureIds: structuredClone(sanctuaryCreatureIds.value),
-        helperCreatureIds: structuredClone(helperCreatureIds.value),
-        machineCreatureIds: structuredClone(machineCreatureIds.value),
+        sanctuaryCreatureIds: structuredClone(toRaw(sanctuaryCreatureIds.value)),
+        helperCreatureIds: structuredClone(toRaw(helperCreatureIds.value)),
+        machineCreatureIds: structuredClone(toRaw(machineCreatureIds.value)),
       }
       break
     case 'garden':
-      sectionSnapshot = structuredClone(gardenFlowers.value)
+      sectionSnapshot = structuredClone(toRaw(gardenFlowers.value))
       break
     case 'awaken':
       sectionSnapshot = {
-        awakenGatherUpgrades: structuredClone(awakenGatherUpgrades.value),
-        awakenSpeedTiers: structuredClone(awakenSpeedTiers.value),
+        awakenGatherUpgrades: structuredClone(toRaw(awakenGatherUpgrades.value)),
+        awakenSpeedTiers: structuredClone(toRaw(awakenSpeedTiers.value)),
       }
       break
   }
