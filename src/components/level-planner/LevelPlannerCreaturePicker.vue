@@ -13,10 +13,12 @@ const props = withDefaults(
     modelValue: string
     ownedOnly?: boolean
     excludeIds?: Set<string>
+    partyMode?: boolean
   }>(),
   {
     ownedOnly: false,
     excludeIds: () => new Set<string>(),
+    partyMode: false,
   },
 )
 
@@ -140,7 +142,9 @@ function close() {
       </template>
       <template v-else>
         <div class="size-10 rounded-xl border border-dashed border-border/60 bg-muted/30" />
-        <span class="text-sm text-muted-foreground">Choose a creature</span>
+        <span class="text-sm text-muted-foreground">{{
+          partyMode ? "Follow a Creature's Plan" : 'Choose a creature'
+        }}</span>
       </template>
       <svg
         class="ml-auto size-4 shrink-0 text-muted-foreground"

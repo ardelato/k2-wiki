@@ -15,6 +15,7 @@ interface PartyMember {
   fromLevel: number
   toLevel: number
   xpGained: number
+  isBooster?: boolean
 }
 
 
@@ -28,7 +29,9 @@ defineProps<{
   timePercent: number
   partyMembers?: PartyMember[]
   hideNode?: boolean
+  hideGutter?: boolean
   scoreRatioMet?: boolean
+  highlightCreatureId?: string
 }>()
 
 
@@ -43,44 +46,41 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
   if (status === 'disadvantage') return 'var(--color-destructive)'
   return 'hsl(var(--primary))'
 }
-
-
-function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
-  if (status === 'advantage') return 'var(--color-green)'
-  if (status === 'disadvantage') return 'var(--color-destructive)'
-  return 'hsl(var(--primary))'
-}
 </script>
 
 <template>
   <div class="flex gap-3">
-    <!-- Timeline gutter -->
-    <div class="relative flex w-8 shrink-0 flex-col items-center sm:w-10">
-      <!-- Top connector line -->
-      <div class="w-0.5 flex-1" :class="isFirst ? 'bg-transparent' : 'bg-border/60'" />
-      <!-- Node circle (hidden for parallel steps sharing same wave) -->
+    <!-- Timeline gutter (hidden when parent provides a shared gutter) -->
+    <div v-if="!hideGutter" class="relative w-8 shrink-0 sm:w-10">
+      <!-- Connector line (absolute, spans full gutter height) -->
+      <div
+        v-if="!(isFirst && isLast)"
+        class="absolute left-1/2 w-0.5 -translate-x-1/2 bg-border/60"
+        :class="[isFirst ? 'top-[1.1rem]' : 'top-0', isLast ? 'bottom-[1.1rem]' : 'bottom-0']"
+      />
+      <!-- Node circle (sticky while scrolling, hidden for parallel steps sharing same wave) -->
       <template v-if="!hideNode">
-        <div
-          v-if="step.isAwakeningStep"
-          class="relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
-          style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
-        >
-          <img :src="awakenedSummonedIcon" alt="" class="size-4" />
-        </div>
-        <div
-          v-else
-          class="relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold sm:size-8"
-          :style="{
-            borderColor: nodeColor(step.biomeStatus),
-            backgroundColor: 'hsl(var(--card))',
-            color: nodeColor(step.biomeStatus),
-          }"
-        >
-          {{ index + 1 }}
+        <div class="sticky top-[calc(var(--header-height)+0.75rem)] z-10 flex justify-center">
+          <div
+            v-if="step.isAwakeningStep"
+            class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
+            style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
+          >
+            <img :src="awakenedSummonedIcon" alt="" class="size-4" />
+          </div>
+          <div
+            v-else
+            class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold sm:size-8"
+            :style="{
+              borderColor: nodeColor(step.biomeStatus),
+              backgroundColor: 'hsl(var(--card))',
+              color: nodeColor(step.biomeStatus),
+            }"
+          >
+            {{ index + 1 }}
+          </div>
         </div>
       </template>
-      <!-- Bottom connector line -->
-      <div class="w-0.5 flex-1" :class="isLast ? 'bg-transparent' : 'bg-border/60'" />
     </div>
 
     <!-- Awakening step card -->
@@ -178,7 +178,12 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                 class="flex flex-col items-center gap-1"
               >
                 <div
-                  class="relative size-16 overflow-hidden rounded-lg border border-border bg-card/50 sm:size-20"
+                  class="relative size-16 overflow-hidden rounded-lg border bg-card/50 sm:size-20"
+                  :class="
+                    highlightCreatureId && member.creatureId === highlightCreatureId
+                      ? 'border-primary ring-2 ring-primary/50'
+                      : 'border-border'
+                  "
                 >
                   <img
                     v-if="member.creature"
@@ -187,7 +192,14 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                     class="size-full object-cover"
                   />
                   <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
-                    <p class="truncate text-center text-[10px] font-semibold text-white">
+                    <p
+                      class="truncate text-center text-[10px] font-semibold"
+                      :class="
+                        highlightCreatureId && member.creatureId === highlightCreatureId
+                          ? 'text-primary'
+                          : 'text-white'
+                      "
+                    >
                       {{ member.creature?.name ?? member.creatureId }}
                     </p>
                   </div>
@@ -195,7 +207,8 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                 <span
                   class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
                 >
-                  LVL {{ member.fromLevel }}&rarr;{{ member.toLevel }}
+                  <template v-if="member.isBooster">Booster</template>
+                  <template v-else>LVL {{ member.fromLevel }}&rarr;{{ member.toLevel }}</template>
                 </span>
               </div>
             </div>
@@ -289,7 +302,7 @@ function barColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                   class="h-full rounded-full transition-all duration-300"
                   :style="{
                     width: Math.max(2, timePercent) + '%',
-                    backgroundColor: barColor(step.biomeStatus),
+                    backgroundColor: nodeColor(step.biomeStatus),
                     opacity: 0.6,
                   }"
                 />
