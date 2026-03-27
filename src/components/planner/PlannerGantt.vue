@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Minus, Plus, RotateCcw } from 'lucide-vue-next'
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref } from 'vue'
 
+import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
 import type { PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
 import { formatDuration, methodKindClasses } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
@@ -31,87 +32,19 @@ const tasksByResource = computed(() => {
 })
 
 
-function niceTimeStep(total: number): number {
-  if (total <= 0) return 1
-  const rough = total / 6
-  const candidates = [
-    1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400,
-  ]
-  for (const c of candidates) {
-    if (c >= rough) return c
-  }
-  return candidates[candidates.length - 1]
-}
-
-
-const ZOOM_LEVELS = [1, 1.5, 2, 3, 5, 8, 12, 16, 20, 25, 30]
-const DEFAULT_ZOOM_INDEX = 2 // 2x
-const zoomIndex = ref(DEFAULT_ZOOM_INDEX)
-const zoom = computed(() => ZOOM_LEVELS[zoomIndex.value])
-const canZoomIn = computed(() => zoomIndex.value < ZOOM_LEVELS.length - 1)
-const canZoomOut = computed(() => zoomIndex.value > 0)
-const isDefaultZoom = computed(() => zoomIndex.value === DEFAULT_ZOOM_INDEX)
-
-
-function zoomIn() {
-  if (canZoomIn.value) zoomIndex.value++
-}
-function zoomOut() {
-  if (canZoomOut.value) zoomIndex.value--
-}
-function resetZoom() {
-  zoomIndex.value = DEFAULT_ZOOM_INDEX
-}
-
-
-const laneMinWidth = computed(() => `${Math.round(400 * zoom.value)}px`)
-
-
 const ganttRef = ref<HTMLElement | null>(null)
-const zoomModifierHeld = ref(false)
-const shiftHeld = ref(false)
-
-
-function onKeyDown(e: KeyboardEvent) {
-  if (e.ctrlKey || e.metaKey) zoomModifierHeld.value = true
-  if (e.shiftKey) shiftHeld.value = true
-}
-
-
-function onKeyUp(e: KeyboardEvent) {
-  if (!e.ctrlKey && !e.metaKey) zoomModifierHeld.value = false
-  if (!e.shiftKey) shiftHeld.value = false
-}
-
-
-function onBlur() {
-  zoomModifierHeld.value = false
-  shiftHeld.value = false
-}
-
-
-function onWheel(e: WheelEvent) {
-  if (!e.ctrlKey && !e.metaKey) return
-  e.preventDefault()
-  if (e.deltaY < 0) zoomIn()
-  else if (e.deltaY > 0) zoomOut()
-}
-
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeyDown)
-  window.addEventListener('keyup', onKeyUp)
-  window.addEventListener('blur', onBlur)
-  ganttRef.value?.addEventListener('wheel', onWheel, { passive: false })
-})
-
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeyDown)
-  window.removeEventListener('keyup', onKeyUp)
-  window.removeEventListener('blur', onBlur)
-  ganttRef.value?.removeEventListener('wheel', onWheel)
-})
+const {
+  zoom,
+  canZoomIn,
+  canZoomOut,
+  isDefaultZoom,
+  zoomIn,
+  zoomOut,
+  resetZoom,
+  laneMinWidth,
+  zoomModifierHeld,
+  shiftHeld,
+} = useGanttZoom(ganttRef)
 
 
 const timeMarkers = computed(() => {
@@ -134,6 +67,15 @@ const timeMarkers = computed(() => {
   >
     <!-- Zoom controls -->
     <div class="flex items-center justify-end gap-2 border-b border-border/40 px-4 py-2">
+      <button
+        class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+        :class="isDefaultZoom ? 'invisible' : ''"
+        title="Reset zoom"
+        @click="resetZoom"
+      >
+        <RotateCcw class="size-3" />
+        Reset
+      </button>
       <span class="text-[11px] font-semibold text-muted-foreground">{{ zoom }}x</span>
       <div class="inline-flex items-center overflow-hidden rounded-lg border border-border/60">
         <button
@@ -153,15 +95,6 @@ const timeMarkers = computed(() => {
           <Plus class="size-3.5" />
         </button>
       </div>
-      <button
-        v-if="!isDefaultZoom"
-        class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-        title="Reset zoom"
-        @click="resetZoom"
-      >
-        <RotateCcw class="size-3" />
-        Reset
-      </button>
     </div>
 
     <!-- Scrollable timeline area -->

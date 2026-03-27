@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Clock3, Minus, Plus, Repeat, RotateCcw, Users, Zap } from 'lucide-vue-next'
-import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
+import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
 import biomesData from '@/data/biomes.json'
-import type { PartyLevelingPlan, PartyPlanStep, Creature } from '@/types'
+import type { PartyLevelingPlan, PartyPlanStep, Creature, AwakenEvent } from '@/types'
 import type { Biome } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration } from '@/utils/format'
@@ -14,10 +16,16 @@ import {
 } from '@/utils/formulas'
 import { getItemImage } from '@/utils/itemImages'
 
-const props = defineProps<{
-  plan: PartyLevelingPlan
-  creatures: Map<string, Creature>
-}>()
+const props = withDefaults(
+  defineProps<{
+    plan: PartyLevelingPlan
+    creatures: Map<string, Creature>
+    filterCreatureId?: string
+  }>(),
+  {
+    filterCreatureId: '',
+  },
+)
 
 
 interface GanttBar {
@@ -37,6 +45,10 @@ interface GanttBar {
 const bars = computed<GanttBar[]>(() => {
   return props.plan.steps
     .filter((s) => s.startTime != null && !s.isAwakeningStep)
+    .filter(
+      (s) =>
+        !props.filterCreatureId || s.party.some((m) => m.creatureId === props.filterCreatureId),
+    )
     .map((step) => {
       const start = step.startTime ?? 0
       return {
@@ -97,79 +109,21 @@ const totalTime = computed(() => {
 
 
 // Zoom
-const ZOOM_LEVELS = [1, 1.5, 2, 3, 5, 8, 12, 16, 24, 36, 50, 75, 100]
-const DEFAULT_ZOOM_INDEX = 2
-const zoomIndex = ref(DEFAULT_ZOOM_INDEX)
-const zoom = computed(() => ZOOM_LEVELS[zoomIndex.value])
-const canZoomIn = computed(() => zoomIndex.value < ZOOM_LEVELS.length - 1)
-const canZoomOut = computed(() => zoomIndex.value > 0)
-const isDefaultZoom = computed(() => zoomIndex.value === DEFAULT_ZOOM_INDEX)
-
-
-function zoomIn() {
-  if (canZoomIn.value) zoomIndex.value++
-}
-function zoomOut() {
-  if (canZoomOut.value) zoomIndex.value--
-}
-function resetZoom() {
-  zoomIndex.value = DEFAULT_ZOOM_INDEX
-}
-
-
-const laneMinWidth = computed(() => `${Math.round(400 * zoom.value)}px`)
-
-
 const ganttRef = ref<HTMLElement | null>(null)
-const zoomModifierHeld = ref(false)
-const shiftHeld = ref(false)
-
-
-function onKeyDown(e: KeyboardEvent) {
-  if (e.ctrlKey || e.metaKey) zoomModifierHeld.value = true
-  if (e.shiftKey) shiftHeld.value = true
-}
-function onKeyUp(e: KeyboardEvent) {
-  if (!e.ctrlKey && !e.metaKey) zoomModifierHeld.value = false
-  if (!e.shiftKey) shiftHeld.value = false
-}
-function onBlur() {
-  zoomModifierHeld.value = false
-  shiftHeld.value = false
-}
-function onWheel(e: WheelEvent) {
-  if (!e.ctrlKey && !e.metaKey) return
-  e.preventDefault()
-  if (e.deltaY < 0) zoomIn()
-  else if (e.deltaY > 0) zoomOut()
-}
-
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeyDown)
-  window.addEventListener('keyup', onKeyUp)
-  window.addEventListener('blur', onBlur)
-  ganttRef.value?.addEventListener('wheel', onWheel, { passive: false })
+const {
+  zoom,
+  canZoomIn,
+  canZoomOut,
+  isDefaultZoom,
+  zoomIn,
+  zoomOut,
+  resetZoom,
+  laneMinWidth,
+  zoomModifierHeld,
+  shiftHeld,
+} = useGanttZoom(ganttRef, {
+  zoomLevels: [1, 1.5, 2, 3, 5, 8, 12, 16, 24, 36, 50, 75, 100],
 })
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeyDown)
-  window.removeEventListener('keyup', onKeyUp)
-  window.removeEventListener('blur', onBlur)
-  ganttRef.value?.removeEventListener('wheel', onWheel)
-})
-
-
-function niceTimeStep(visibleDuration: number): number {
-  if (visibleDuration <= 0) return 1
-  const rough = visibleDuration / 6
-  const candidates = [
-    1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400,
-  ]
-  for (const c of candidates) {
-    if (c >= rough) return c
-  }
-  return candidates[candidates.length - 1]
-}
 
 
 const timeMarkers = computed(() => {
@@ -205,6 +159,7 @@ const popoverRef = ref<HTMLElement | null>(null)
 
 
 function togglePopover(bar: GanttBar, event: MouseEvent) {
+  activeAwakenMarker.value = null
   if (activeBar.value === bar) {
     activeBar.value = null
     return
@@ -262,6 +217,88 @@ function closePopover() {
 }
 
 
+// Awakening markers — vertical pins on the timeline
+interface AwakenMarker {
+  event: AwakenEvent
+  creature: Creature | undefined
+  pct: number
+}
+
+
+const awakenMarkers = computed<AwakenMarker[]>(() => {
+  if (!props.plan.awakenEvents || props.plan.awakenEvents.length === 0) return []
+  const total = totalTime.value
+  if (total <= 0) return []
+  return props.plan.awakenEvents
+    .filter((e) => !props.filterCreatureId || e.creatureId === props.filterCreatureId)
+    .map((e) => ({
+      event: e,
+      creature: props.creatures.get(e.creatureId),
+      pct: (e.clockTime / total) * 100,
+    }))
+})
+
+
+// Awaken marker popover state
+const activeAwakenMarker = ref<AwakenMarker | null>(null)
+const awakenPopoverStyle = ref<Record<string, string>>({})
+const awakenPopoverRef = ref<HTMLElement | null>(null)
+
+
+function toggleAwakenPopover(marker: AwakenMarker, event: MouseEvent) {
+  activeBar.value = null
+  if (activeAwakenMarker.value === marker) {
+    activeAwakenMarker.value = null
+    return
+  }
+  activeAwakenMarker.value = marker
+
+
+  const target = event.currentTarget as HTMLElement
+  if (!target) return
+
+
+  const rect = target.getBoundingClientRect()
+  const POPOVER_WIDTH = 240
+  const GAP = 8
+
+
+  let top = rect.bottom + GAP
+  let left = rect.left + rect.width / 2 - POPOVER_WIDTH / 2
+
+
+  if (left + POPOVER_WIDTH > window.innerWidth - GAP) {
+    left = window.innerWidth - POPOVER_WIDTH - GAP
+  }
+  if (left < GAP) left = GAP
+
+
+  awakenPopoverStyle.value = {
+    position: 'fixed',
+    top: `${top}px`,
+    left: `${left}px`,
+  }
+
+
+  nextTick(() => {
+    if (!awakenPopoverRef.value) return
+    const popRect = awakenPopoverRef.value.getBoundingClientRect()
+    if (popRect.bottom > window.innerHeight - GAP) {
+      awakenPopoverStyle.value = {
+        position: 'fixed',
+        top: `${rect.top - popRect.height - GAP}px`,
+        left: `${left}px`,
+      }
+    }
+  })
+}
+
+
+function closeAwakenPopover() {
+  activeAwakenMarker.value = null
+}
+
+
 const activeBarScoreRatio = computed(() => {
   if (!activeBar.value) return null
   const step = activeBar.value.step
@@ -285,6 +322,15 @@ const activeBarScoreRatio = computed(() => {
     <!-- Header -->
     <div class="flex items-center justify-end border-b border-border/40 px-4 py-2">
       <div class="flex items-center gap-2">
+        <button
+          class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+          :class="isDefaultZoom ? 'invisible' : ''"
+          title="Reset zoom"
+          @click="resetZoom"
+        >
+          <RotateCcw class="size-3" />
+          Reset
+        </button>
         <span class="text-[11px] font-semibold text-muted-foreground">{{ zoom }}x</span>
         <div class="inline-flex items-center overflow-hidden rounded-lg border border-border/60">
           <button
@@ -304,15 +350,6 @@ const activeBarScoreRatio = computed(() => {
             <Plus class="size-3.5" />
           </button>
         </div>
-        <button
-          v-if="!isDefaultZoom"
-          class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-          title="Reset zoom"
-          @click="resetZoom"
-        >
-          <RotateCcw class="size-3" />
-          Reset
-        </button>
       </div>
     </div>
 
@@ -329,6 +366,26 @@ const activeBarScoreRatio = computed(() => {
           >
             {{ marker.label }}
           </span>
+          <!-- Awakening creature pins in the time axis -->
+          <button
+            v-for="(marker, mi) in awakenMarkers"
+            :key="`pin-${mi}`"
+            class="absolute bottom-0 flex flex-col items-center"
+            :style="{ left: `${marker.pct}%`, transform: 'translateX(-50%)' }"
+            @click.stop="toggleAwakenPopover(marker, $event)"
+          >
+            <div
+              class="size-7 overflow-hidden rounded-full border-2 border-pink-500 bg-card shadow-md shadow-pink-500/20 transition-transform hover:scale-110"
+              :class="activeAwakenMarker === marker ? 'ring-2 ring-pink-400/60' : ''"
+            >
+              <img
+                v-if="marker.creature"
+                :src="getCreatureImage(marker.creature)"
+                :alt="marker.creature.name"
+                class="size-full object-cover"
+              />
+            </div>
+          </button>
         </div>
       </div>
 
@@ -344,8 +401,15 @@ const activeBarScoreRatio = computed(() => {
           />
           <span class="text-sm font-bold leading-tight text-foreground/80">{{ lane }}</span>
         </div>
-        <!-- Bars -->
+        <!-- Bars + per-lane awakening lines -->
         <div class="relative flex-1 py-2" :style="{ minWidth: laneMinWidth, minHeight: '56px' }">
+          <!-- Awakening vertical lines within this lane -->
+          <div
+            v-for="(marker, mi) in awakenMarkers"
+            :key="`awaken-${mi}`"
+            class="pointer-events-none absolute inset-y-0 w-0.5 bg-pink-500/40"
+            :style="{ left: `${marker.pct}%`, transform: 'translateX(-50%)' }"
+          />
           <div
             v-for="(bar, i) in barsByLane[lane]"
             :key="i"
@@ -436,9 +500,11 @@ const activeBarScoreRatio = computed(() => {
             <div class="flex items-center gap-1.5 text-xs">
               <Zap class="size-3 shrink-0 text-purple-400" />
               <span class="text-muted-foreground">Loop bonus</span>
-              <span class="ml-auto font-mono font-semibold text-foreground"
-                >+{{ Math.round(getLoopXpBonus(activeBar.step.loopCount) * 100) }}%</span
-              >
+              <span class="ml-auto font-mono font-semibold text-foreground">
+                +{{ Math.round(getLoopXpBonus(activeBar.step.loopCountStart) * 100) }}%&rarr;+{{
+                  Math.round(getLoopXpBonus(activeBar.step.loopCountEnd) * 100)
+                }}%
+              </span>
             </div>
             <div class="flex items-center gap-1.5 text-xs">
               <Users class="size-3 shrink-0 text-sky-400" />
@@ -446,6 +512,26 @@ const activeBarScoreRatio = computed(() => {
               <span class="ml-auto font-mono font-semibold text-foreground">{{
                 activeBar.step.party.length
               }}</span>
+            </div>
+            <div class="col-span-2 flex items-center gap-1.5 text-xs">
+              <Repeat class="size-3 shrink-0 text-amber-400" />
+              <span class="text-muted-foreground">Loop streak</span>
+              <span class="ml-auto font-mono font-semibold text-foreground">
+                {{ activeBar.step.loopCountStart }}&rarr;{{ activeBar.step.loopCountEnd }}
+              </span>
+            </div>
+            <div class="col-span-2 flex items-center gap-1.5 text-xs">
+              <RotateCcw class="size-3 shrink-0 text-muted-foreground" />
+              <span class="text-muted-foreground">Route state</span>
+              <span class="ml-auto font-mono font-semibold text-foreground">
+                {{
+                  activeBar.step.preservedLoopBonus
+                    ? 'Preserved'
+                    : activeBar.step.wasReconfigured
+                      ? 'Reset'
+                      : 'Fresh'
+                }}
+              </span>
             </div>
             <div class="flex items-center gap-1.5 text-xs">
               <span
@@ -493,14 +579,64 @@ const activeBarScoreRatio = computed(() => {
                     {{ creatures.get(member.creatureId)?.name ?? member.creatureId }}
                   </p>
                   <p class="text-[10px] text-muted-foreground">
-                    LVL {{ member.fromLevel }}&rarr;{{ member.toLevel }}
-                    <span class="ml-1 text-primary"
-                      >+{{ member.xpGained.toLocaleString() }} XP</span
-                    >
+                    <template v-if="member.isBooster">
+                      Booster at LVL {{ member.fromLevel }}
+                    </template>
+                    <template v-else>
+                      LVL {{ member.fromLevel }}&rarr;{{ member.toLevel }}
+                      <span class="ml-1 text-primary"
+                        >+{{ member.xpGained.toLocaleString() }} XP</span
+                      >
+                    </template>
                   </p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Awaken marker popover -->
+    <Teleport to="body">
+      <div v-if="activeAwakenMarker" class="fixed inset-0 z-40" @click="closeAwakenPopover" />
+      <Transition name="popover">
+        <div
+          v-if="activeAwakenMarker"
+          ref="awakenPopoverRef"
+          class="z-50 w-60 rounded-xl border border-pink-500/30 bg-card shadow-xl shadow-black/30"
+          :style="awakenPopoverStyle"
+          @click.stop
+        >
+          <div class="px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card"
+              >
+                <img
+                  v-if="activeAwakenMarker.creature"
+                  :src="getCreatureImage(activeAwakenMarker.creature)"
+                  :alt="activeAwakenMarker.creature.name"
+                  class="size-full object-cover"
+                />
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <img
+                    :src="awakenedSummonedIcon"
+                    alt="Awaken"
+                    class="size-4 shrink-0 object-contain"
+                  />
+                  <p class="text-sm font-bold text-pink-400">Manually Awaken</p>
+                </div>
+                <p class="mt-0.5 truncate text-xs text-foreground">
+                  {{ activeAwakenMarker.creature?.name ?? activeAwakenMarker.event.creatureId }}
+                </p>
+              </div>
+            </div>
+            <p class="mt-2 text-xs text-muted-foreground">
+              Awaken this creature to continue leveling past 70
+            </p>
           </div>
         </div>
       </Transition>
