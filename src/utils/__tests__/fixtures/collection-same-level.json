@@ -1,0 +1,11 @@
+{
+  "description": "All creatures at same level — edge case for tie-breaking",
+  "creatures": [
+    { "creatureId": "moss", "startLevel": 50, "targetLevel": 120, "awakened": true },
+    { "creatureId": "slick", "startLevel": 50, "targetLevel": 120, "awakened": true },
+    { "creatureId": "chroma", "startLevel": 50, "targetLevel": 120, "awakened": true },
+    { "creatureId": "sunny", "startLevel": 50, "targetLevel": 120, "awakened": true },
+    { "creatureId": "baabaa", "startLevel": 50, "targetLevel": 120, "awakened": true }
+  ],
+  "expeditions": {}
+}

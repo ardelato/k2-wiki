@@ -1,0 +1,11 @@
+{
+  "description": "Small 5-creature collection for fast iteration, mixed levels",
+  "creatures": [
+    { "creatureId": "moss", "startLevel": 112, "targetLevel": 120, "awakened": true },
+    { "creatureId": "gummy", "startLevel": 118, "targetLevel": 120, "awakened": true },
+    { "creatureId": "karn", "startLevel": 38, "targetLevel": 120, "awakened": true },
+    { "creatureId": "buzz", "startLevel": 6, "targetLevel": 120, "awakened": true },
+    { "creatureId": "mochi", "startLevel": 119, "targetLevel": 120, "awakened": true }
+  ],
+  "expeditions": {}
+}

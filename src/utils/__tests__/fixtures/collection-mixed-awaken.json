@@ -1,0 +1,12 @@
+{
+  "description": "Mix of awakened and non-awakened creatures",
+  "creatures": [
+    { "creatureId": "moss", "startLevel": 50, "targetLevel": 120, "awakened": true },
+    { "creatureId": "slick", "startLevel": 50, "targetLevel": 70, "awakened": false },
+    { "creatureId": "karn", "startLevel": 10, "targetLevel": 120, "awakened": true },
+    { "creatureId": "buzz", "startLevel": 10, "targetLevel": 70, "awakened": false },
+    { "creatureId": "gummy", "startLevel": 60, "targetLevel": 120, "awakened": true },
+    { "creatureId": "luna", "startLevel": 40, "targetLevel": 70, "awakened": false }
+  ],
+  "expeditions": {}
+}
