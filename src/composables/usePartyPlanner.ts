@@ -20,6 +20,10 @@ export function usePartyPlanner(
   targetLevel: { value: number },
   strategy: { value: PlannerStrategy } = { value: 'optimal' },
   timeBudget: { value: PlannerTimeBudget } = { value: 'quick' },
+  creatureOverrides?: {
+    plannerExcluded: { value: Set<string> }
+    plannerIncluded: { value: Set<string> }
+  },
 ) {
   const { creatures } = useCreatures()
   const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
@@ -73,10 +77,20 @@ export function usePartyPlanner(
     if (debounceTimer) clearTimeout(debounceTimer)
   }
 
-  /** All owned creatures (excluding sanctuary, helpers, machines), auto-classified as levelers or boosters */
+  /** All owned creatures with override-aware exclusion, auto-classified as levelers or boosters */
   const partyCreatures = computed<PartyPlanCreature[]>(() => {
+    const globalExcluded = excludedCreatureIds.value
+    const plannerExcluded = creatureOverrides?.plannerExcluded.value ?? new Set<string>()
+    const plannerIncluded = creatureOverrides?.plannerIncluded.value ?? new Set<string>()
+
     return creatures.value
-      .filter((c) => ownedCreatureIds.value.has(c.id) && !excludedCreatureIds.value.has(c.id))
+      .filter((c) => {
+        if (!ownedCreatureIds.value.has(c.id)) return false
+        // effective excluded = (globalExcluded - plannerIncluded) + plannerExcluded
+        const effectivelyExcluded =
+          (globalExcluded.has(c.id) && !plannerIncluded.has(c.id)) || plannerExcluded.has(c.id)
+        return !effectivelyExcluded
+      })
       .map((c) => {
         const level = getLevel(c.id)
         const awakened = isAwakened(c.id)
