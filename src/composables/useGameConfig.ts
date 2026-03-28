@@ -7,7 +7,7 @@ import { calculateJobTiersFromSanctuary } from '@/utils/parseSave'
 const sanctuaryCreatureIds = useLocalStorage<string[]>('config-sanctuary-creatures', [])
 const helperCreatureIds = useLocalStorage<string[]>('config-helper-creatures', [])
 const machineCreatureIds = useLocalStorage<string[]>('config-machine-creature-ids', [])
-const expeditionToolXpBonus = useLocalStorage<number>('config-tool-xp-bonus', 0)
+const expeditionToolXpBonus = useLocalStorage<number>('config-tool-xp-bonus', 1)
 
 const inventoryAmounts = useLocalStorage<Record<string, number>>('config-inventory', {})
 const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(

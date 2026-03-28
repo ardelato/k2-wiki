@@ -81,7 +81,7 @@ export function useExpeditions(creatures: Creature[]) {
         sum += evaluation.xpPerSecond
       }
     }
-    return sum * (expeditionToolXpBonus.value || 1)
+    return sum * expeditionToolXpBonus.value
   })
 
   function evaluateExpedition(
