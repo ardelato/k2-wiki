@@ -131,6 +131,7 @@ export function useGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
     machineCreatureIds.value = []
+    expeditionToolXpBonus.value = 1
     resetInventory()
     resetGarden()
     resetAwaken()
