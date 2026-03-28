@@ -42,6 +42,7 @@ const {
   setHelperCreatures,
   setMachineCreatures,
   resetGameConfig,
+  setExpeditionToolXpBonus,
 } = useGameConfig()
 
 
@@ -524,12 +525,19 @@ function applyAwaken() {
 }
 
 
+function applyTools() {
+  if (!saveConfig.value) return
+  setExpeditionToolXpBonus(((saveConfig.value?.tools?.sword || 0) * 5) / 100 + 1)
+}
+
+
 function applyAll() {
   applyCreatureCollection()
   applyExclusions()
   applyInventory()
   applyGarden()
   applyAwaken()
+  applyTools()
 }
 
 
