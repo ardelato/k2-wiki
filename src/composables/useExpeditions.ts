@@ -24,7 +24,7 @@ const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
 const biomes = ref<Biome[]>(biomesData as Biome[])
 
 export function useExpeditions(creatures: Creature[]) {
-  const { excludedCreatureIds } = useGameConfig()
+  const { excludedCreatureIds, expeditionToolXpBonus } = useGameConfig()
   const showExcludedCreatures = ref(false)
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
@@ -81,7 +81,7 @@ export function useExpeditions(creatures: Creature[]) {
         sum += evaluation.xpPerSecond
       }
     }
-    return sum
+    return sum * expeditionToolXpBonus.value
   })
 
   function evaluateExpedition(
@@ -92,6 +92,9 @@ export function useExpeditions(creatures: Creature[]) {
     const partyCreatures = partyIds
       .map((id) => creatures.find((c) => c.id === id))
       .filter((c): c is Creature => c !== null)
+    const xpEligibleCreatures = partyCreatures.filter(
+      (c): c is Creature => c !== null && (creatureLevels.value[c.id] || 1) < 120,
+    )
     if (partyCreatures.length === 0) return null
 
     const biome = getBiome(exp.biome)
@@ -102,7 +105,7 @@ export function useExpeditions(creatures: Creature[]) {
     const activeCreatures = partyCreatures.length
     const loops = expeditionLoopCounts.value[exp.id] ?? 0
     const xpPerCreature = calculateExpeditionXp(exp, tier, loops, activeCreatures)
-    const xpPerSecond = duration > 0 ? xpPerCreature / duration : 0
+    const xpPerSecond = duration > 0 ? (xpPerCreature * xpEligibleCreatures.length) / duration : 0
 
     return { xpPerCreature, xpPerSecond, duration, scoreRatio: diff > 0 ? score / diff : 0 }
   }

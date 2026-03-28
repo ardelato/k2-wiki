@@ -42,6 +42,7 @@ export interface SaveConfig {
   awakenSpeedTiers: Record<string, number>
   jobTiers: Record<string, number>
   creatures: SaveCreature[]
+  tools?: { sword?: number }
 }
 
 const GATHER_JOBS = new Set(['Chopping', 'Mining', 'Digging', 'Exploring', 'Fishing', 'Farming'])
@@ -74,6 +75,8 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
 
   const jobTiers = parseSanctuaryJobTiers(sanctuary)
 
+  const tools = save.tools || {}
+
   return {
     sanctuary,
     helpers,
@@ -84,6 +87,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     awakenSpeedTiers,
     jobTiers,
     creatures,
+    tools,
   }
 }
 
