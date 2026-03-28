@@ -104,9 +104,8 @@ export function useExpeditions(creatures: Creature[]) {
     const duration = calculateDuration(score, exp, tier)
     const activeCreatures = partyCreatures.length
     const loops = expeditionLoopCounts.value[exp.id] ?? 0
-    const xpPerCreature =
-      calculateExpeditionXp(exp, tier, loops, activeCreatures) * xpEligibleCreatures.length
-    const xpPerSecond = duration > 0 ? xpPerCreature / duration : 0
+    const xpPerCreature = calculateExpeditionXp(exp, tier, loops, activeCreatures)
+    const xpPerSecond = duration > 0 ? (xpPerCreature * xpEligibleCreatures.length) / duration : 0
 
     return { xpPerCreature, xpPerSecond, duration, scoreRatio: diff > 0 ? score / diff : 0 }
   }
