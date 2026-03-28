@@ -17,14 +17,25 @@ import LevelPlannerCreaturePicker from '@/components/level-planner/LevelPlannerC
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
-import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
+import expeditionsData from '@/data/expeditions.json'
+import type { Expedition, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { decryptSave } from '@/utils/decrypt'
+import {
+  getTotalCompletedExpeditions,
+  getMaxUnlockedTier,
+  TIER_UNLOCK_REQUIREMENTS,
+} from '@/utils/expeditionUnlocks'
 import { toTitleCase } from '@/utils/format'
 import { levelFromXp } from '@/utils/formulas'
 import { sourceIcons, sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractSaveConfig, type SaveConfig } from '@/utils/parseSave'
+
+const allExpeditions = (expeditionsData as Expedition[]).toSorted(
+  (a, b) => a.requiredExpeditionCompletions - b.requiredExpeditionCompletions,
+)
+
 
 const { creatures } = useCreatures()
 const { setOwned, setLevel, setAwakened, isOwned, getLevel, isAwakened, resetCollection } =
@@ -41,6 +52,8 @@ const {
   setSanctuaryCreatures,
   setHelperCreatures,
   setMachineCreatures,
+  expeditionCompletions,
+  setExpeditionCompletions,
   resetGameConfig,
 } = useGameConfig()
 
@@ -330,6 +343,53 @@ const jobTiersHasDiff = computed(() => {
 // jobTiers is derived from sanctuaryCreatureIds — no apply needed
 
 
+const expeditionCompletionsHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  return (
+    JSON.stringify(expeditionCompletions.value) !==
+    JSON.stringify(saveConfig.value.expeditionCompletions)
+  )
+})
+
+
+const expeditionDisplay = computed(() => {
+  const completions = saveConfig.value
+    ? saveConfig.value.expeditionCompletions
+    : expeditionCompletions.value
+  const totalCompletions = getTotalCompletedExpeditions(completions)
+  const unlockedCount = allExpeditions.filter(
+    (e) => totalCompletions >= e.requiredExpeditionCompletions,
+  ).length
+
+  // Find the next locked expedition's requirement to show "N more needed"
+  const nextLocked = allExpeditions.find((e) => totalCompletions < e.requiredExpeditionCompletions)
+  const completionsUntilNext = nextLocked
+    ? nextLocked.requiredExpeditionCompletions - totalCompletions
+    : 0
+
+  const items = allExpeditions.map((expedition) => {
+    const unlocked = totalCompletions >= expedition.requiredExpeditionCompletions
+    const maxTier = unlocked ? getMaxUnlockedTier(expedition.id, completions) : 0
+    const expCompletions = completions[expedition.id]
+    const tiers = [1, 2, 3, 4, 5].map((t) => {
+      const isUnlocked = t <= maxTier
+      const prevTierCount = expCompletions?.[t - 1] ?? 0
+      const required = TIER_UNLOCK_REQUIREMENTS[t] ?? 0
+      const remaining = isUnlocked || t === 1 ? 0 : Math.max(0, required - prevTierCount)
+      return { tier: t, unlocked: isUnlocked || t === 1, remaining }
+    })
+    return { expedition, unlocked, tiers }
+  })
+
+  const totalTiersUnlocked = items.reduce(
+    (sum, item) => sum + (item.unlocked ? item.tiers.filter((t) => t.unlocked).length : 0),
+    0,
+  )
+
+  return { items, unlockedCount, completionsUntilNext, totalTiersUnlocked }
+})
+
+
 // Unified display computeds: always same shape with optional save
 const awakenGatherDisplay = computed(() => {
   const saveGather = saveConfig.value?.awakenGatherUpgrades
@@ -473,6 +533,7 @@ watch(saveConfig, () => {
     if (!gardenHasDiff.value) sectionsCollapsed.value.garden = true
     if (!awakenHasDiff.value) sectionsCollapsed.value.awaken = true
     if (!jobTiersHasDiff.value) sectionsCollapsed.value.jobTiers = true
+    if (!expeditionCompletionsHasDiff.value) sectionsCollapsed.value.expeditions = true
   })
 })
 
@@ -524,12 +585,21 @@ function applyAwaken() {
 }
 
 
+function applyExpeditionCompletions() {
+  if (!saveConfig.value) return
+  setExpeditionCompletions({ ...saveConfig.value.expeditionCompletions })
+  appliedSections.value = { ...appliedSections.value, expeditions: true }
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, expeditions: true }
+}
+
+
 function applyAll() {
   applyCreatureCollection()
   applyExclusions()
   applyInventory()
   applyGarden()
   applyAwaken()
+  applyExpeditionCompletions()
 }
 
 
@@ -567,11 +637,17 @@ function resetAwaken() {
 }
 
 
+function resetExpeditions() {
+  expeditionCompletions.value = {}
+}
+
+
 function resetAll() {
   resetExclusions()
   resetInventory()
   resetGarden()
   resetAwaken()
+  resetExpeditions()
   resetCollection()
 }
 
@@ -2080,6 +2156,104 @@ function jobTierLabel(tier: number): string {
                   >Tier {{ j.save }} · {{ jobTierLabel(j.save!) }}</span
                 >
               </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expeditions -->
+      <div class="rounded-xl border border-border bg-card/50 p-4">
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-2" @click="toggleSection('expeditions')">
+            <component
+              :is="sectionsCollapsed.expeditions ? ChevronDown : ChevronUp"
+              class="size-4 text-muted-foreground"
+            />
+            <h3 class="text-sm font-bold">Expeditions</h3>
+          </button>
+          <div class="flex items-center gap-2">
+            <div class="flex flex-wrap gap-2 text-xs">
+              <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
+                {{ expeditionDisplay.unlockedCount }}/{{ allExpeditions.length }} unlocked
+              </span>
+              <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
+                {{ expeditionDisplay.totalTiersUnlocked }}/{{ allExpeditions.length * 5 }} tiers
+              </span>
+              <span
+                v-if="expeditionDisplay.completionsUntilNext > 0"
+                class="rounded-md bg-amber-500/15 px-2 py-1 font-medium text-amber-400"
+              >
+                {{ expeditionDisplay.completionsUntilNext }} until next
+              </span>
+            </div>
+            <template v-if="saveConfig">
+              <button
+                v-if="!appliedSections.expeditions && expeditionCompletionsHasDiff"
+                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                @click="applyExpeditionCompletions"
+              >
+                Apply
+              </button>
+              <span
+                v-else-if="!appliedSections.expeditions && !expeditionCompletionsHasDiff"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Matches Save
+              </span>
+              <span
+                v-else-if="appliedSections.expeditions"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Applied
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <div v-if="!sectionsCollapsed.expeditions" class="mt-3 space-y-1">
+          <div
+            v-for="item in expeditionDisplay.items"
+            :key="item.expedition.id"
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
+            :class="item.unlocked ? '' : 'opacity-50'"
+          >
+            <div class="flex items-center gap-2">
+              <img
+                v-if="
+                  item.expedition.rewards.length > 0 &&
+                  getItemImage({ id: item.expedition.rewards[0].itemId })
+                "
+                :src="getItemImage({ id: item.expedition.rewards[0].itemId })"
+                :alt="item.expedition.rewards[0].itemId"
+                class="size-5 shrink-0 object-contain"
+              />
+              <span class="font-medium">{{ item.expedition.name }}</span>
+              <span class="text-[11px] text-muted-foreground">
+                ({{ item.expedition.requiredExpeditionCompletions }} req.)
+              </span>
+            </div>
+            <div class="flex items-center gap-1 text-xs tabular-nums">
+              <template v-if="item.unlocked">
+                <span
+                  v-for="t in item.tiers"
+                  :key="t.tier"
+                  class="inline-flex w-10 flex-col items-center justify-center rounded py-0.5 text-[11px] font-medium"
+                  :class="
+                    t.unlocked
+                      ? 'bg-emerald-500/15 text-emerald-400'
+                      : 'bg-muted/50 text-muted-foreground'
+                  "
+                >
+                  <span>T{{ t.tier }}</span>
+                  <span
+                    v-if="!t.unlocked && t.remaining > 0"
+                    class="text-[9px] leading-none opacity-70"
+                  >
+                    {{ t.remaining }} left
+                  </span>
+                </span>
+              </template>
+              <span v-else class="text-muted-foreground">Locked</span>
             </div>
           </div>
         </div>
