@@ -541,6 +541,7 @@ watch(saveConfig, () => {
 
 // --- Apply Functions ---
 function applyCreatureCollection() {
+  resetCollection()
   for (const c of previewCreatures.value) {
     setOwned(c.id, true)
     setLevel(c.id, c.level)
