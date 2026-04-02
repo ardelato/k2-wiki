@@ -1,0 +1,128 @@
+import { useGameConfig } from '@/composables/useGameConfig'
+
+describe('useGameConfig', () => {
+  beforeEach(() => {
+    const { resetGameConfig } = useGameConfig()
+    resetGameConfig()
+  })
+
+  test('excludedCreatureIds combines sanctuary, helper, and machine IDs', () => {
+    const { excludedCreatureIds, setSanctuaryCreatures, setHelperCreatures, setMachineCreatures } =
+      useGameConfig()
+    setSanctuaryCreatures(['s1', 's2'])
+    setHelperCreatures(['h1'])
+    setMachineCreatures(['m1'])
+    expect(excludedCreatureIds.value.has('s1')).toBe(true)
+    expect(excludedCreatureIds.value.has('s2')).toBe(true)
+    expect(excludedCreatureIds.value.has('h1')).toBe(true)
+    expect(excludedCreatureIds.value.has('m1')).toBe(true)
+    expect(excludedCreatureIds.value.size).toBe(4)
+  })
+
+  test('excludedCreatureIds deduplicates IDs that appear in multiple sources', () => {
+    const { excludedCreatureIds, setSanctuaryCreatures, setHelperCreatures, setMachineCreatures } =
+      useGameConfig()
+    setSanctuaryCreatures(['shared', 'unique-s'])
+    setHelperCreatures(['shared', 'unique-h'])
+    setMachineCreatures(['shared'])
+    expect(excludedCreatureIds.value.has('shared')).toBe(true)
+    expect(excludedCreatureIds.value.size).toBe(3)
+  })
+
+  test('setInventory stores a positive amount', () => {
+    const { inventoryAmounts, setInventory } = useGameConfig()
+    setInventory('twig', 10)
+    expect(inventoryAmounts.value['twig']).toBe(10)
+  })
+
+  test('setInventory removes the item when amount is <= 0', () => {
+    const { inventoryAmounts, setInventory } = useGameConfig()
+    setInventory('twig', 5)
+    setInventory('twig', 0)
+    expect(inventoryAmounts.value['twig']).toBeUndefined()
+
+    setInventory('twig', 3)
+    setInventory('twig', -1)
+    expect(inventoryAmounts.value['twig']).toBeUndefined()
+  })
+
+  test('setAwakenGatherYieldBonus clamps value to [0, 2]', () => {
+    const { awakenGatherUpgrades, setAwakenGatherYieldBonus } = useGameConfig()
+    setAwakenGatherYieldBonus('Chopping', -1)
+    expect(awakenGatherUpgrades.value['Chopping'].yieldBonus).toBe(0)
+
+    setAwakenGatherYieldBonus('Chopping', 5)
+    expect(awakenGatherUpgrades.value['Chopping'].yieldBonus).toBe(2)
+
+    setAwakenGatherYieldBonus('Chopping', 1)
+    expect(awakenGatherUpgrades.value['Chopping'].yieldBonus).toBe(1)
+  })
+
+  test('setAwakenGatherDurationTier clamps value to [0, 4]', () => {
+    const { awakenGatherUpgrades, setAwakenGatherDurationTier } = useGameConfig()
+    setAwakenGatherDurationTier('Mining', -1)
+    expect(awakenGatherUpgrades.value['Mining'].durationTier).toBe(0)
+
+    setAwakenGatherDurationTier('Mining', 10)
+    expect(awakenGatherUpgrades.value['Mining'].durationTier).toBe(4)
+
+    setAwakenGatherDurationTier('Mining', 2)
+    expect(awakenGatherUpgrades.value['Mining'].durationTier).toBe(2)
+  })
+
+  test('setAwakenSpeedTier clamps value to [0, 4]', () => {
+    const { awakenSpeedTiers, setAwakenSpeedTier } = useGameConfig()
+    setAwakenSpeedTier('Furnace', -1)
+    expect(awakenSpeedTiers.value['Furnace']).toBe(0)
+
+    setAwakenSpeedTier('Furnace', 10)
+    expect(awakenSpeedTiers.value['Furnace']).toBe(4)
+
+    setAwakenSpeedTier('Furnace', 3)
+    expect(awakenSpeedTiers.value['Furnace']).toBe(3)
+  })
+
+  test('resetGameConfig clears all state', () => {
+    const {
+      inventoryAmounts,
+      sanctuaryCreatureIds,
+      awakenGatherUpgrades,
+      awakenSpeedTiers,
+      setSanctuaryCreatures,
+      setInventory,
+      setAwakenGatherYieldBonus,
+      setAwakenSpeedTier,
+      resetGameConfig,
+    } = useGameConfig()
+
+    setSanctuaryCreatures(['c1', 'c2'])
+    setInventory('twig', 5)
+    setAwakenGatherYieldBonus('Chopping', 2)
+    setAwakenSpeedTier('Furnace', 3)
+
+    resetGameConfig()
+
+    expect(sanctuaryCreatureIds.value).toEqual([])
+    expect(inventoryAmounts.value).toEqual({})
+    expect(awakenGatherUpgrades.value['Chopping'].yieldBonus).toBe(0)
+    expect(awakenSpeedTiers.value['Furnace']).toBe(0)
+  })
+
+  test('setSanctuaryCreatures updates the sanctuary ref', () => {
+    const { sanctuaryCreatureIds, setSanctuaryCreatures } = useGameConfig()
+    setSanctuaryCreatures(['a', 'b', 'c'])
+    expect(sanctuaryCreatureIds.value).toEqual(['a', 'b', 'c'])
+  })
+
+  test('setHelperCreatures updates the helper ref', () => {
+    const { helperCreatureIds, setHelperCreatures } = useGameConfig()
+    setHelperCreatures(['h1', 'h2'])
+    expect(helperCreatureIds.value).toEqual(['h1', 'h2'])
+  })
+
+  test('setMachineCreatures updates the machine ref', () => {
+    const { machineCreatureIds, setMachineCreatures } = useGameConfig()
+    setMachineCreatures(['m1'])
+    expect(machineCreatureIds.value).toEqual(['m1'])
+  })
+})
