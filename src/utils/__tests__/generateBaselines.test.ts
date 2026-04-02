@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Baseline generation script.
  * Run with: npx vitest run src/utils/__tests__/generateBaselines.ts

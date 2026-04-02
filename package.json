@@ -11,8 +11,11 @@
     "lint:fix": "oxlint -c oxlintrc.json --vue-plugin --fix",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "test": "vitest run",
+    "test": "vitest run --exclude 'src/utils/__tests__/partyPlanner.test.ts' --exclude 'src/utils/__tests__/generateBaselines.test.ts'",
+    "test:all": "vitest",
     "test:watch": "vitest",
+    "test:planner": "vitest run src/utils/__tests__/partyPlanner.test.ts",
+    "test:coverage": "vitest run --coverage",
     "generate-tables": "npx tsx --tsconfig tsconfig.app.json scripts/generate-tables.ts",
     "prepare": "lefthook install"
   },
@@ -28,7 +31,10 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@vitejs/plugin-vue": "^5.2.3",
+    "@vitest/coverage-v8": "^4.1.2",
+    "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.27",
+    "happy-dom": "^20.8.9",
     "lefthook": "^2.1.4",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",
