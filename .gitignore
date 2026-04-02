@@ -26,3 +26,5 @@ lefthook-local.yml
 
 # Test artifacts
 coverage/
+test-results/
+playwright-report/

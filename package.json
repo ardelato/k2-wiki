@@ -16,6 +16,8 @@
     "test:watch": "vitest",
     "test:planner": "vitest run src/utils/__tests__/partyPlanner.test.ts",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "generate-tables": "npx tsx --tsconfig tsconfig.app.json scripts/generate-tables.ts",
     "prepare": "lefthook install"
   },
@@ -29,6 +31,7 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "^25.5.0",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vitest/coverage-v8": "^4.1.2",
