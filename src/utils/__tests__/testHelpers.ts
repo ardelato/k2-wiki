@@ -49,5 +49,6 @@ export function buildPlannerInput(
     expeditions,
     strategy: options.strategy,
     timeBudget: options.timeBudget,
+    wallClockLimitMs: Infinity,
   }
 }

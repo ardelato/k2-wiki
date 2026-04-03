@@ -238,7 +238,7 @@ export function planPartyLevelingPath(
   const creaturesInput = normalized.creatures
   const levelers = creaturesInput.filter((entry) => entry.startLevel < entry.targetLevel)
   const startedAt = Date.now()
-  let searchDeadline = startedAt + WALL_CLOCK_FALLBACK_MS
+  let searchDeadline = startedAt + (normalized.wallClockLimitMs ?? WALL_CLOCK_FALLBACK_MS)
   let exploredStates = 0
   let completedIterations = 0
   let currentPhase: PartyPlannerProgress['phase'] = 'initializing'

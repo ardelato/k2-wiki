@@ -23,3 +23,8 @@ Thumbs.db
 
 # Lefthook local overrides
 lefthook-local.yml
+
+# Test artifacts
+coverage/
+test-results/
+playwright-report/

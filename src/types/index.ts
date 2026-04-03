@@ -263,6 +263,7 @@ export interface PartyPlannerInput {
   expeditions: Record<string, PartyPlannerExpeditionState>
   strategy?: PlannerStrategy
   timeBudget?: PlannerTimeBudget
+  wallClockLimitMs?: number
 }
 
 export interface PartyPlannerProgress {

@@ -1,0 +1,42 @@
+{
+  "sanctuary": ["moss", "scoots", "slick"],
+  "helpers": [{ "creatureId": "chroma", "skillId": "s1", "activityId": "a1" }],
+  "creatures": [
+    { "id": "inst-1", "species": "moss", "experience": 50000, "awakened": true },
+    { "id": "inst-2", "species": "scoots", "experience": 30000, "awakened": false },
+    { "id": "inst-3", "species": "slick", "experience": 10000, "awakened": false },
+    { "id": "inst-4", "species": "chroma", "experience": 20000, "awakened": false },
+    { "id": "inst-5", "species": "sunny", "experience": 5000, "awakened": false }
+  ],
+  "inventory": [
+    { "id": "coal", "amount": 150 },
+    { "id": "copper-ore", "amount": 80 }
+  ],
+  "garden": {
+    "flowers": [
+      { "flowerId": "fire-flower", "x": 0, "y": 0, "level": 3 },
+      { "flowerId": "fire-flower", "x": 1, "y": 0, "level": 3 },
+      { "flowerId": "water-flower", "x": 2, "y": 0, "level": 1 }
+    ]
+  },
+  "purchasedUpgrades": [
+    "chopping-yield-i",
+    "chopping-yield-ii",
+    "chopping-duration-i",
+    "mining-duration-i",
+    "furnace-speed-i",
+    "furnace-speed-ii"
+  ],
+  "machines": {
+    "machines": {
+      "m1": { "id": "m1", "purchased": true, "assignedCreatureId": "inst-5" },
+      "m2": { "id": "m2", "purchased": true, "assignedCreatureId": null },
+      "m3": { "id": "m3", "purchased": false, "assignedCreatureId": null }
+    }
+  },
+  "expeditionCompletions": {
+    "expedition-type-1": { "1": 25, "2": 10 }
+  },
+  "activeExpeditions": [],
+  "tools": { "sword": 2 }
+}
