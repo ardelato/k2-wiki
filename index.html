@@ -11,7 +11,8 @@
       ;(function () {
         var t = localStorage.getItem('k2-wiki-theme')
         var d =
-          t === 'dark' || (!t || t === 'system') && matchMedia('(prefers-color-scheme: dark)').matches
+          t === 'dark' ||
+          ((!t || t === 'system') && matchMedia('(prefers-color-scheme: dark)').matches)
         if (d) document.documentElement.classList.add('dark')
       })()
     </script>

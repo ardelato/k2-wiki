@@ -316,12 +316,12 @@ test.describe('creature drawer', () => {
 
 // ── Search & filtering ───────────────────────────────────────────────
 
-test.describe('search and filtering', () => {
-  /** Count visible creature cards via their status icon (one per card) */
-  function creatureCards(page: import('@playwright/test').Page) {
-    return page.locator('img[alt="Not summoned"], img[alt="Summoned"], img[alt="Awakened"]')
-  }
+/** Count visible creature cards via their status icon (one per card) */
+function creatureCards(page: import('@playwright/test').Page) {
+  return page.locator('img[alt="Not summoned"], img[alt="Summoned"], img[alt="Awakened"]')
+}
 
+test.describe('search and filtering', () => {
   test('search filters creatures by name', async ({ page }) => {
     await page.getByPlaceholder('Search').fill('Moss')
     await expect(creatureCards(page)).toHaveCount(1)
