@@ -7,6 +7,28 @@
 
 @layer base {
   :root {
+    --background: 220 20% 97%;
+    --foreground: 224 40% 14%;
+    --muted: 220 16% 90%;
+    --muted-foreground: 220 12% 44%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 40% 14%;
+    --border: 220 16% 84%;
+    --input: 220 16% 88%;
+    --ring: 189 78% 42%;
+    --primary: 189 82% 38%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 193 79% 38%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 82% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --type-fire: 8 84% 48%;
+    --type-water: 198 88% 42%;
+    --type-wind: 154 72% 34%;
+    --type-earth: 42 88% 42%;
+  }
+
+  .dark {
     --background: 225 38% 7%;
     --foreground: 214 32% 92%;
     --muted: 226 24% 18%;
@@ -45,10 +67,17 @@
   body {
     @apply bg-background font-sans text-foreground antialiased;
     background-image:
+      radial-gradient(circle at 8% -20%, hsl(var(--accent) / 0.08), transparent 36%),
+      radial-gradient(circle at 92% 4%, hsl(var(--primary) / 0.06), transparent 34%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(220 20% 94%) 100%);
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image:
       radial-gradient(circle at 8% -20%, hsl(var(--accent) / 0.22), transparent 36%),
       radial-gradient(circle at 92% 4%, hsl(var(--primary) / 0.16), transparent 34%),
       linear-gradient(180deg, hsl(var(--background)) 0%, hsl(227 42% 6%) 100%);
-    background-attachment: fixed;
   }
 
   ::selection {
