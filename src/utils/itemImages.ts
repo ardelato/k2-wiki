@@ -13,10 +13,21 @@ const itemImagesById = Object.fromEntries(
   }),
 )
 
+const imageAliases: Record<string, string> = {
+  'water-bucket': 'bucket-of-water',
+  planks: 'plank',
+  'water-vial': 'water-vials',
+}
+
 export function getItemImage(item: Pick<Item, 'id'> & { image?: string }): string | undefined {
   if (item.image) {
     const imageId = item.image.replace('.png', '').toLowerCase()
     return itemImagesById[imageId] ?? itemImagesById[item.id.toLowerCase()]
   }
-  return itemImagesById[item.id.toLowerCase()]
+  const id = item.id.toLowerCase()
+  return (
+    itemImagesById[id] ??
+    itemImagesById[imageAliases[id] ?? ''] ??
+    itemImagesById[id.replace('raw-', '')]
+  )
 }

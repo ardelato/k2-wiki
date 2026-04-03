@@ -11,6 +11,7 @@ type PlannerItemOption = {
   name: string
   type: ItemType
   source: string
+  image?: string
 }
 
 
@@ -104,8 +105,8 @@ function selectOption(itemId: string) {
     >
       <template v-if="selectedOption">
         <img
-          v-if="getItemImage({ id: selectedOption.id })"
-          :src="getItemImage({ id: selectedOption.id })"
+          v-if="getItemImage({ id: selectedOption.id, image: selectedOption.image })"
+          :src="getItemImage({ id: selectedOption.id, image: selectedOption.image })"
           :alt="selectedOption.name"
           class="size-10 rounded-xl border border-border object-contain"
           :style="{
@@ -198,8 +199,8 @@ function selectOption(itemId: string) {
               :style="{ color: itemTypeColor(option.type) }"
             >
               <img
-                v-if="getItemImage({ id: option.id })"
-                :src="getItemImage({ id: option.id })"
+                v-if="getItemImage({ id: option.id, image: option.image })"
+                :src="getItemImage({ id: option.id, image: option.image })"
                 :alt="option.name"
                 class="size-8 object-contain"
               />
