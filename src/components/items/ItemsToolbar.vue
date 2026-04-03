@@ -2,6 +2,8 @@
 import { Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 
+import ActiveFilters from '@/components/shared/ActiveFilters.vue'
+import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import type { SourceCategory } from '@/composables/useItems'
 import type { ItemType } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format'
@@ -15,6 +17,7 @@ const props = defineProps<{
   resultCount: number
   sourceSubFilter: Set<string>
   availableSubFilters: string[]
+  activeFilters: ActiveFilter[]
 }>()
 
 
@@ -25,6 +28,8 @@ const emit = defineEmits<{
   'update:viewMode': [value: 'grid' | 'table']
   'toggle-sub-filter': [value: string]
   'clear-sub-filters': []
+  'remove-filter': [key: string]
+  'clear-all-filters': []
 }>()
 
 
@@ -38,21 +43,17 @@ const hasActiveFilters = computed(
 
 
 function selectSource(value: SourceCategory) {
+  if (props.sourceFilter === value) {
+    emit('clear-sub-filters')
+    emit('update:sourceFilter', 'all')
+    return
+  }
   if (props.sourceFilter !== value) emit('clear-sub-filters')
   emit('update:sourceFilter', value)
 }
 
 
-function clearAllFilters() {
-  emit('update:searchQuery', '')
-  emit('update:typeFilter', 'all')
-  emit('update:sourceFilter', 'all')
-  emit('clear-sub-filters')
-}
-
-
-const typeOptions: Array<{ value: ItemType | 'all'; label: string }> = [
-  { value: 'all', label: 'All Types' },
+const typeOptions: Array<{ value: ItemType; label: string }> = [
   { value: 'Currency', label: 'Currency' },
   { value: 'Container', label: 'Container' },
   { value: 'Gathered', label: 'Gathered' },
@@ -62,8 +63,7 @@ const typeOptions: Array<{ value: ItemType | 'all'; label: string }> = [
 ]
 
 
-const sourceOptions: Array<{ value: SourceCategory; label: string }> = [
-  { value: 'all', label: 'All Sources' },
+const sourceOptions: Array<{ value: Exclude<SourceCategory, 'all'>; label: string }> = [
   { value: 'job', label: 'Jobs' },
   { value: 'workstation', label: 'Workstations' },
   { value: 'container', label: 'Containers' },
@@ -161,11 +161,13 @@ const showFilters = ref(false)
           :aria-checked="props.typeFilter === option.value"
           class="pill focus-ring active:scale-[0.96]"
           :class="props.typeFilter === option.value ? 'pill-active' : ''"
-          @click="emit('update:typeFilter', option.value)"
+          @click="
+            emit('update:typeFilter', props.typeFilter === option.value ? 'all' : option.value)
+          "
         >
           <span
-            v-if="option.value !== 'all'"
             class="mr-1.5 inline-block size-2 rounded-full"
+            :class="props.typeFilter === option.value ? 'ring-1 ring-white/60' : ''"
             :style="{ backgroundColor: itemTypeColor(option.value as ItemType) }"
           />
           {{ option.label }}
@@ -192,20 +194,11 @@ const showFilters = ref(false)
           {{ option.label }}
         </button>
 
-        <div class="ml-auto flex items-center gap-2">
-          <button
-            v-if="hasActiveFilters"
-            class="focus-ring rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground active:scale-[0.96]"
-            @click="clearAllFilters"
-          >
-            Clear all
-          </button>
-          <div
-            class="rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
-            aria-live="polite"
-          >
-            {{ props.resultCount }} results
-          </div>
+        <div
+          class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
+          aria-live="polite"
+        >
+          {{ props.resultCount }} results
         </div>
       </div>
 
@@ -224,14 +217,13 @@ const showFilters = ref(false)
           <img v-if="sourceIcons[sub]" :src="sourceIcons[sub]" alt="" class="size-4" />
           {{ sourceLabel(sub) }}
         </button>
-        <button
-          v-if="props.sourceSubFilter.size > 0"
-          class="focus-ring rounded-full border border-border bg-card px-2.5 py-0.5 text-xs font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground active:scale-[0.96]"
-          @click="emit('clear-sub-filters')"
-        >
-          Clear
-        </button>
       </div>
+      <!-- Active filter chips -->
+      <ActiveFilters
+        :filters="props.activeFilters"
+        @remove="emit('remove-filter', $event)"
+        @clear-all="emit('clear-all-filters')"
+      />
     </div>
   </div>
 </template>
