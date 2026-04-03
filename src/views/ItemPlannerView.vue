@@ -73,6 +73,7 @@ const plannerItemOptions = computed(() =>
       name: item.name,
       type: item.type,
       source: item.sources?.find(Boolean) ? sourceLabel(item.sources.find(Boolean)!) : 'Unknown',
+      image: item.image,
     })),
 )
 
@@ -197,9 +198,15 @@ const quantityStep = ref(1)
 
 
 function changeQuantity(direction: 1 | -1) {
-  quantityInput.value = String(
-    Math.max(1, normalizeQuantity(quantityInput.value) + direction * quantityStep.value),
-  )
+  const current = normalizeQuantity(quantityInput.value)
+  const step = quantityStep.value
+  let next: number
+  if (direction === 1 && current === 1 && step > 1) {
+    next = step
+  } else {
+    next = current + direction * step
+  }
+  quantityInput.value = String(Math.max(1, next))
   applyQuantity()
 }
 
@@ -370,7 +377,7 @@ function switchTab(tab: 'craft' | 'levelup') {
               class="inline-flex items-center overflow-hidden rounded-xl border border-border/70 bg-background/70"
             >
               <button
-                v-for="step in [1, 5, 10, 25, 100, 1000]"
+                v-for="step in [1, 10, 100, 1000]"
                 :key="step"
                 class="focus-ring h-9 px-3 text-xs font-semibold transition"
                 :class="

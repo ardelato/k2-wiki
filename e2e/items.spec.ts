@@ -56,7 +56,7 @@ test.describe('search and filtering', () => {
     const filteredCount = await itemCards(page).count()
     expect(filteredCount).toBeLessThan(197)
 
-    await page.getByRole('radio', { name: 'All Types' }).click()
+    await page.getByRole('radio', { name: 'Gathered' }).click()
     await expect(itemCards(page)).toHaveCount(197)
   })
 })

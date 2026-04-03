@@ -72,7 +72,7 @@ test.describe('quantity controls', () => {
     await page.getByRole('button', { name: '+', exact: true }).first().click()
 
     const qtyInput = page.locator('input[type="number"]').first()
-    await expect(qtyInput).toHaveValue('11')
+    await expect(qtyInput).toHaveValue('10')
   })
 
   test('quantity updates URL', async ({ page }) => {

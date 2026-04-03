@@ -54,7 +54,6 @@ const {
   setMachineCreatures,
   expeditionCompletions,
   setExpeditionCompletions,
-  resetGameConfig,
   setExpeditionToolXpBonus,
 } = useGameConfig()
 
@@ -100,6 +99,7 @@ function startEditing(section: EditableSection) {
       break
   }
   editingSection.value = section
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, [section]: false }
 }
 
 
@@ -633,7 +633,9 @@ function applyAll() {
 
 // --- Reset Functions ---
 function resetExclusions() {
-  resetGameConfig()
+  setSanctuaryCreatures([])
+  setHelperCreatures([])
+  setMachineCreatures([])
 }
 
 
@@ -1865,9 +1867,9 @@ function jobTierLabel(tier: number): string {
                           tier.changed
                             ? 'border-amber-500/40 bg-amber-500/10'
                             : tier.level >= 4
-                              ? 'border-lime-400/40 bg-lime-400/10 text-lime-300'
+                              ? 'border-lime-700/40 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/10 dark:text-lime-300'
                               : tier.level >= 2
-                                ? 'border-lime-400/25 bg-lime-400/5 text-lime-300/80'
+                                ? 'border-lime-700/25 bg-lime-50 text-lime-700 dark:border-lime-400/25 dark:bg-lime-400/5 dark:text-lime-300/80'
                                 : 'border-border/50 bg-background/50 text-muted-foreground'
                         "
                       >
@@ -1920,9 +1922,9 @@ function jobTierLabel(tier: number): string {
                       class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold"
                       :class="
                         entry.level >= 4
-                          ? 'border-lime-400/40 bg-lime-400/10 text-lime-300'
+                          ? 'border-lime-700/40 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/10 dark:text-lime-300'
                           : entry.level >= 2
-                            ? 'border-lime-400/25 bg-lime-400/5 text-lime-300/80'
+                            ? 'border-lime-700/25 bg-lime-50 text-lime-700 dark:border-lime-400/25 dark:bg-lime-400/5 dark:text-lime-300/80'
                             : 'border-border/50 bg-background/50 text-muted-foreground'
                       "
                     >

@@ -18,7 +18,7 @@ test.describe('card state validation', () => {
     await expect(page.locator('img[alt="Not summoned"]')).toHaveCount(120)
 
     // Summon all creatures
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Done' }).click()
@@ -29,7 +29,7 @@ test.describe('card state validation', () => {
 
   test('awakened card icons match after bulk awaken', async ({ page }) => {
     // Summon and awaken all
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Awaken', exact: true }).first().click()
@@ -47,7 +47,7 @@ test.describe('card state validation', () => {
 
   test('level display on cards matches after bulk set level', async ({ page }) => {
     // Summon all and set level to 25
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     const levelInput = page.getByRole('textbox', { name: 'Bulk level' })
@@ -70,21 +70,21 @@ test.describe('card state validation', () => {
 // ── Edit mode lifecycle ──────────────────────────────────────────────
 
 test.describe('edit mode lifecycle', () => {
-  test('clicking Edit Collection enters edit mode', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+  test('clicking Edit My Collection enters edit mode', async ({ page }) => {
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
 
     await expect(page.getByRole('button', { name: 'Done' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Edit Collection' })).toBeHidden()
+    await expect(page.getByRole('button', { name: 'Edit My Collection' })).toBeHidden()
   })
 
   test('Done exits edit mode and persists changes', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Done' }).click()
 
-    await expect(page.getByRole('button', { name: 'Edit Collection' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Edit My Collection' })).toBeVisible()
 
     // Reload and verify changes persisted
     await page.reload()
@@ -93,12 +93,12 @@ test.describe('edit mode lifecycle', () => {
   })
 
   test('Cancel reverts all changes', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Cancel' }).click()
 
-    await expect(page.getByRole('button', { name: 'Edit Collection' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Edit My Collection' })).toBeVisible()
     await expect(page.locator('img[alt="Not summoned"]')).toHaveCount(120)
   })
 })
@@ -107,7 +107,7 @@ test.describe('edit mode lifecycle', () => {
 
 test.describe('bulk actions', () => {
   test('bulk summon marks creatures as owned', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Done' }).click()
@@ -117,7 +117,7 @@ test.describe('bulk actions', () => {
 
   test('bulk unsummon removes ownership', async ({ page }) => {
     // First summon all
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
 
@@ -129,7 +129,7 @@ test.describe('bulk actions', () => {
   })
 
   test('bulk awaken sets awakened state', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Awaken', exact: true }).first().click()
@@ -143,7 +143,7 @@ test.describe('bulk actions', () => {
   })
 
   test('bulk set level applies level to owned creatures', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
 
@@ -162,7 +162,7 @@ test.describe('bulk actions', () => {
   })
 
   test('select all and clear update selection count', async ({ page }) => {
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
 
     await expect(page.getByText('0 of 120 selected')).toBeVisible()
 
@@ -179,12 +179,12 @@ test.describe('bulk actions', () => {
 test.describe('individual creature editing', () => {
   test.beforeEach(async ({ page }) => {
     // Own all creatures first
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
     await page.getByRole('button', { name: 'Select All' }).click()
     await page.getByRole('button', { name: 'Summoned', exact: true }).click()
     await page.getByRole('button', { name: 'Done' }).click()
     // Re-enter edit mode
-    await page.getByRole('button', { name: 'Edit Collection' }).click()
+    await page.getByRole('button', { name: 'Edit My Collection' }).click()
   })
 
   test('increase button raises creature level', async ({ page }) => {
@@ -316,12 +316,12 @@ test.describe('creature drawer', () => {
 
 // ── Search & filtering ───────────────────────────────────────────────
 
-test.describe('search and filtering', () => {
-  /** Count visible creature cards via their status icon (one per card) */
-  function creatureCards(page: import('@playwright/test').Page) {
-    return page.locator('img[alt="Not summoned"], img[alt="Summoned"], img[alt="Awakened"]')
-  }
+/** Count visible creature cards via their status icon (one per card) */
+function creatureCards(page: import('@playwright/test').Page) {
+  return page.locator('img[alt="Not summoned"], img[alt="Summoned"], img[alt="Awakened"]')
+}
 
+test.describe('search and filtering', () => {
   test('search filters creatures by name', async ({ page }) => {
     await page.getByPlaceholder('Search').fill('Moss')
     await expect(creatureCards(page)).toHaveCount(1)
@@ -336,6 +336,7 @@ test.describe('search and filtering', () => {
   })
 
   test('type filter narrows results', async ({ page }) => {
+    await page.getByRole('button', { name: 'More filters' }).click()
     await page.getByRole('radio', { name: 'Fire' }).click()
 
     const count = await creatureCards(page).count()
@@ -349,6 +350,7 @@ test.describe('search and filtering', () => {
   })
 
   test('combined filters narrow results further', async ({ page }) => {
+    await page.getByRole('button', { name: 'More filters' }).click()
     await page.getByRole('radio', { name: 'Fire' }).click()
     const fireCount = await creatureCards(page).count()
 
@@ -358,12 +360,13 @@ test.describe('search and filtering', () => {
     expect(fireT1Count).toBeLessThan(fireCount)
   })
 
-  test('resetting filter to All restores full list', async ({ page }) => {
+  test('toggling active filter off restores full list', async ({ page }) => {
+    await page.getByRole('button', { name: 'More filters' }).click()
     await page.getByRole('radio', { name: 'Fire' }).click()
     const filteredCount = await creatureCards(page).count()
     expect(filteredCount).toBeLessThan(120)
 
-    await page.getByRole('radio', { name: 'All Types' }).click()
+    await page.getByRole('radio', { name: 'Fire' }).click()
     await expect(creatureCards(page)).toHaveCount(120)
   })
 })

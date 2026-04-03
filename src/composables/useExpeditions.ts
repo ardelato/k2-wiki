@@ -464,6 +464,7 @@ export function useExpeditions(creatures: Creature[]) {
     resetAllExpeditions,
     expeditionTiers,
     expeditionParties,
+    expeditionLoopCounts,
     showExcludedCreatures,
   }
 }

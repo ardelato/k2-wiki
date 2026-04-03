@@ -218,7 +218,7 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
 .avatar-letter {
   font-size: 30px;
   font-weight: 700;
-  color: oklch(0.92 0.01 285 / 0.8);
+  color: hsl(var(--foreground) / 0.7);
 }
 .detail-info {
   flex: 1;
@@ -268,7 +268,7 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
 }
 .description {
   font-size: 13px;
-  color: oklch(0.92 0.01 285 / 0.8);
+  color: hsl(var(--foreground) / 0.7);
   line-height: 1.5;
 }
 .stat-grid {
@@ -282,7 +282,7 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
   }
 }
 .stat-cell {
-  background: oklch(0.22 0.03 285 / 0.5);
+  background: hsl(var(--muted) / 0.5);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   text-align: center;
@@ -325,7 +325,7 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
     border-color 0.15s;
 }
 .cost-item:hover {
-  background: oklch(0.22 0.03 285 / 0.5);
+  background: hsl(var(--muted) / 0.5);
   border-color: var(--color-primary);
 }
 </style>

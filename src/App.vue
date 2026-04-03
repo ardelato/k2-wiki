@@ -1,14 +1,26 @@
 <script setup lang="ts">
-import { BookOpen, Compass, FileCog, GitBranch, Github, Package } from 'lucide-vue-next'
+import {
+  BookOpen,
+  Compass,
+  FileCog,
+  GitBranch,
+  Github,
+  Moon,
+  Package,
+  Sun,
+  SunMoon,
+} from 'lucide-vue-next'
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import SteamIcon from '@/components/icons/SteamIcon.vue'
 import AppFooter from '@/components/layout/AppFooter.vue'
+import { useTheme } from '@/composables/useTheme'
 import meta from '@/data/meta.json'
 import { cn } from '@/lib/utils'
 
 const route = useRoute()
+const { preference, cycle } = useTheme()
 
 
 const navItems = [
@@ -81,6 +93,15 @@ function isActive(path: string) {
         </nav>
 
         <div class="flex items-center gap-1">
+          <button
+            aria-label="Toggle theme"
+            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+            @click="cycle"
+          >
+            <SunMoon v-if="preference === 'system'" class="size-5" />
+            <Sun v-else-if="preference === 'light'" class="size-5" />
+            <Moon v-else class="size-5" />
+          </button>
           <a
             href="https://github.com/ardelato/k2-wiki"
             target="_blank"

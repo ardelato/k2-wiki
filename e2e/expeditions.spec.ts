@@ -65,7 +65,9 @@ test.describe('tier and loop configuration', () => {
   })
 
   test('clicking tier button changes difficulty rating', async ({ page }) => {
-    const difficultyValue = page.locator('p.font-mono.text-lg.font-semibold').first()
+    // Rating is inside the "Advanced Details" collapsible section
+    await page.getByRole('button', { name: 'Advanced Details' }).click()
+    const difficultyValue = page.locator('p.font-mono.font-semibold').first()
     const initialDifficulty = parseInt((await difficultyValue.textContent())!)
 
     await page.getByAltText('Tier 3').click()
@@ -89,14 +91,16 @@ test.describe('tier and loop configuration', () => {
   })
 
   test('loop bonus badge shows after 10 loops', async ({ page }) => {
-    // Before loops, no bonus percentage badge (only the static help text exists)
-    await expect(page.getByText('+1%', { exact: true })).toBeHidden()
+    // Scope to the container holding the loop stepper and bonus badge
+    const loopSection = page.getByRole('textbox', { name: 'Loop count' }).locator('../..')
+
+    await expect(loopSection.getByText('+1%', { exact: true })).toBeHidden()
 
     await page.getByLabel('Increase loop count by 10').click()
-    await expect(page.getByText('+1%', { exact: true })).toBeVisible()
+    await expect(loopSection.getByText('+1%', { exact: true })).toBeVisible()
 
     await page.getByLabel('Increase loop count by 10').click()
-    await expect(page.getByText('+2%', { exact: true })).toBeVisible()
+    await expect(loopSection.getByText('+2%', { exact: true })).toBeVisible()
   })
 })
 
@@ -239,7 +243,9 @@ test.describe('suggested level validation', () => {
 
   test('suggested level has color indicator', async ({ page }) => {
     const suggestedSpan = page
-      .locator('[class*="text-emerald-400"], [class*="text-amber-400"]')
+      .locator(
+        '[class*="text-emerald-700"], [class*="text-amber-700"], [class*="text-emerald-400"], [class*="text-amber-400"]',
+      )
       .filter({ hasText: /Suggested/ })
     await expect(suggestedSpan.first()).toBeVisible()
   })
@@ -289,6 +295,9 @@ test.describe('creature filtering', () => {
 
   test('element type toggle narrows creature list', async ({ page }) => {
     const countBefore = await creatureCards(page).count()
+
+    // Expand "More filters" to access element type buttons
+    await page.getByRole('button', { name: 'More filters' }).click()
 
     // The Fire toggle button doesn't contain an artwork image, so it won't match creatureCards
     // Find it specifically as a small toggle button with exact text
