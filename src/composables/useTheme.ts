@@ -27,13 +27,15 @@ watchEffect(() => {
 })
 
 export function useTheme() {
-  function toggle() {
-    preference.value = isDark.value ? 'light' : 'dark'
+  function cycle() {
+    const order: Theme[] = ['system', 'light', 'dark']
+    const i = order.indexOf(preference.value)
+    preference.value = order[(i + 1) % order.length]
   }
 
   function setTheme(theme: Theme) {
     preference.value = theme
   }
 
-  return { preference, isDark, toggle, setTheme }
+  return { preference, isDark, cycle, setTheme }
 }
