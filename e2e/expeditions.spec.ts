@@ -91,14 +91,16 @@ test.describe('tier and loop configuration', () => {
   })
 
   test('loop bonus badge shows after 10 loops', async ({ page }) => {
-    // Before loops, no bonus percentage badge (only the static help text exists)
-    await expect(page.getByText('+1%', { exact: true })).toBeHidden()
+    // Scope to the container holding the loop stepper and bonus badge
+    const loopSection = page.getByRole('textbox', { name: 'Loop count' }).locator('../..')
+
+    await expect(loopSection.getByText('+1%', { exact: true })).toBeHidden()
 
     await page.getByLabel('Increase loop count by 10').click()
-    await expect(page.getByText('+1%', { exact: true })).toBeVisible()
+    await expect(loopSection.getByText('+1%', { exact: true })).toBeVisible()
 
     await page.getByLabel('Increase loop count by 10').click()
-    await expect(page.getByText('+2%', { exact: true })).toBeVisible()
+    await expect(loopSection.getByText('+2%', { exact: true })).toBeVisible()
   })
 })
 
