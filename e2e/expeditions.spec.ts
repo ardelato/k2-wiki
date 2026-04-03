@@ -65,7 +65,9 @@ test.describe('tier and loop configuration', () => {
   })
 
   test('clicking tier button changes difficulty rating', async ({ page }) => {
-    const difficultyValue = page.locator('p.font-mono.text-lg.font-semibold').first()
+    // Rating is inside the "Advanced Details" collapsible section
+    await page.getByRole('button', { name: 'Advanced Details' }).click()
+    const difficultyValue = page.locator('p.font-mono.font-semibold').first()
     const initialDifficulty = parseInt((await difficultyValue.textContent())!)
 
     await page.getByAltText('Tier 3').click()
@@ -239,7 +241,9 @@ test.describe('suggested level validation', () => {
 
   test('suggested level has color indicator', async ({ page }) => {
     const suggestedSpan = page
-      .locator('[class*="text-emerald-400"], [class*="text-amber-400"]')
+      .locator(
+        '[class*="text-emerald-700"], [class*="text-amber-700"], [class*="text-emerald-400"], [class*="text-amber-400"]',
+      )
       .filter({ hasText: /Suggested/ })
     await expect(suggestedSpan.first()).toBeVisible()
   })
@@ -289,6 +293,9 @@ test.describe('creature filtering', () => {
 
   test('element type toggle narrows creature list', async ({ page }) => {
     const countBefore = await creatureCards(page).count()
+
+    // Expand "More filters" to access element type buttons
+    await page.getByRole('button', { name: 'More filters' }).click()
 
     // The Fire toggle button doesn't contain an artwork image, so it won't match creatureCards
     // Find it specifically as a small toggle button with exact text
