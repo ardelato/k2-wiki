@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 import ItemCard from '@/components/items/ItemCard.vue'
 import ItemDetail from '@/components/items/ItemDetail.vue'
 import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
+import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import { useItems } from '@/composables/useItems'
 import { summoningIndex } from '@/data/indexes'
 import type { Item } from '@/types'
@@ -160,6 +161,57 @@ const hasActiveFilters = computed(
 )
 
 
+const activeFilters = computed<ActiveFilter[]>(() => {
+  const filters: ActiveFilter[] = []
+  if (searchQuery.value)
+    filters.push({
+      key: 'search',
+      group: 'Search',
+      label:
+        searchQuery.value.length > 20 ? `${searchQuery.value.slice(0, 20)}…` : searchQuery.value,
+    })
+  if (typeFilter.value !== 'all')
+    filters.push({
+      key: 'type',
+      group: 'Type',
+      label: typeFilter.value,
+      color: itemTypeColor(typeFilter.value),
+    })
+  if (sourceFilter.value !== 'all')
+    filters.push({ key: 'source', group: 'Source', label: sourceLabel(sourceFilter.value) })
+  for (const sub of sourceSubFilter.value) {
+    filters.push({
+      key: `sub:${sub}`,
+      group: 'Source',
+      label: sourceLabel(sub),
+      image: sourceIcons[sub],
+    })
+  }
+  return filters
+})
+
+
+function removeFilter(key: string) {
+  if (key === 'search') {
+    searchQuery.value = ''
+    return
+  }
+  if (key === 'type') {
+    typeFilter.value = 'all'
+    return
+  }
+  if (key === 'source') {
+    sourceFilter.value = 'all'
+    sourceSubFilter.value.clear()
+    return
+  }
+  if (key.startsWith('sub:')) {
+    sourceSubFilter.value.delete(key.slice(4))
+    return
+  }
+}
+
+
 const route = useRoute()
 
 
@@ -181,8 +233,11 @@ onMounted(() => {
       :result-count="filteredItems.length"
       :source-sub-filter="sourceSubFilter"
       :available-sub-filters="availableSubFilters"
+      :active-filters="activeFilters"
       @toggle-sub-filter="toggleSubFilter"
       @clear-sub-filters="clearSubFilters"
+      @remove-filter="removeFilter"
+      @clear-all-filters="clearFilters"
     />
 
     <div class="flex gap-5">
@@ -432,7 +487,9 @@ onMounted(() => {
                       >
                     </div>
                   </td>
-                  <td class="whitespace-nowrap px-2 py-2.5 font-mono text-sm text-yellow-400">
+                  <td
+                    class="whitespace-nowrap px-2 py-2.5 font-mono text-sm text-yellow-700 dark:text-yellow-400"
+                  >
                     {{ item.buyValue ?? '—' }} / {{ item.sellValue ?? '—' }}
                   </td>
                   <td class="px-2 py-2.5 text-sm text-foreground">

@@ -65,11 +65,16 @@ export function methodKindLabel(kind: PlannerMethodKind): string {
 
 export function methodKindClasses(kind: PlannerMethodKind): string {
   if (kind === 'craft') return 'border-primary/35 bg-primary/12 text-primary'
-  if (kind === 'gather') return 'border-emerald-400/35 bg-emerald-400/12 text-emerald-300'
-  if (kind === 'garden') return 'border-lime-400/35 bg-lime-400/10 text-lime-200'
-  if (kind === 'container') return 'border-yellow-400/35 bg-yellow-400/10 text-yellow-200'
-  if (kind === 'expedition') return 'border-sky-400/35 bg-sky-400/10 text-sky-200'
-  if (kind === 'buy') return 'border-fuchsia-400/35 bg-fuchsia-400/10 text-fuchsia-200'
+  if (kind === 'gather')
+    return 'border-emerald-600/35 bg-emerald-100 text-emerald-800 dark:border-emerald-400/35 dark:bg-emerald-400/12 dark:text-emerald-300'
+  if (kind === 'garden')
+    return 'border-lime-600/35 bg-lime-100 text-lime-800 dark:border-lime-400/35 dark:bg-lime-400/10 dark:text-lime-200'
+  if (kind === 'container')
+    return 'border-yellow-600/35 bg-yellow-100 text-yellow-800 dark:border-yellow-400/35 dark:bg-yellow-400/10 dark:text-yellow-200'
+  if (kind === 'expedition')
+    return 'border-sky-600/35 bg-sky-100 text-sky-800 dark:border-sky-400/35 dark:bg-sky-400/10 dark:text-sky-200'
+  if (kind === 'buy')
+    return 'border-fuchsia-600/35 bg-fuchsia-100 text-fuchsia-800 dark:border-fuchsia-400/35 dark:bg-fuchsia-400/10 dark:text-fuchsia-200'
   return 'border-destructive/40 bg-destructive/10 text-destructive-foreground'
 }
 

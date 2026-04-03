@@ -226,7 +226,7 @@ const hasAnyChanges = computed(
             @click="emit('reset-inventory')"
           >
             <RotateCcw class="size-3" />
-            Reset All
+            Reset
           </button>
         </div>
 
@@ -244,7 +244,7 @@ const hasAnyChanges = computed(
             class="flex items-center gap-3 rounded-xl border px-3 py-2.5 transition"
             :class="
               (inventoryAmounts[item.itemId] ?? 0) > 0
-                ? 'border-emerald-400/30 bg-emerald-400/5'
+                ? 'border-emerald-700/50 bg-emerald-100 dark:border-emerald-400/30 dark:bg-emerald-400/5'
                 : 'border-border/40 bg-background/30'
             "
           >
@@ -272,7 +272,7 @@ const hasAnyChanges = computed(
               class="focus-ring h-8 w-20 shrink-0 rounded-lg border bg-background/80 px-2 text-center text-sm font-semibold text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               :class="
                 (inventoryAmounts[item.itemId] ?? 0) > 0
-                  ? 'border-emerald-400/40'
+                  ? 'border-emerald-700/60 dark:border-emerald-400/40'
                   : 'border-border/70'
               "
               @change="applyInventory(item.itemId, $event)"

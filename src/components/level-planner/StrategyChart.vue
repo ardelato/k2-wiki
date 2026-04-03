@@ -283,7 +283,7 @@ function onPointLeave() {
           width="84"
           height="42"
           rx="4"
-          class="fill-popover stroke-border"
+          class="fill-card stroke-border"
           stroke-width="1"
         />
         <circle cx="-28" cy="-38" r="3" :fill="hover.color" />
