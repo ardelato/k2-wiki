@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ChevronDown, Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
 import notSummonedIcon from '@/assets/icons/not_summoned.png'
 import summonedIcon from '@/assets/icons/summoned.png'
+import ActiveFilters from '@/components/shared/ActiveFilters.vue'
+import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import type { ElementType } from '@/types'
 import { toTitleCase } from '@/utils/format'
 import { jobIcons } from '@/utils/icons'
@@ -22,6 +24,7 @@ const props = defineProps<{
   resultCount: number
   traitOptions: string[]
   jobOptions: string[]
+  activeFilters: ActiveFilter[]
 }>()
 
 
@@ -34,6 +37,8 @@ const emit = defineEmits<{
   'update:viewMode': [value: 'grid' | 'table']
   'update:ownedFilter': [value: 'all' | 'owned' | 'unowned']
   'update:awakenedFilter': [value: 'all' | 'awakened' | 'unawakened']
+  'clear-all': []
+  'remove-filter': [key: string]
 }>()
 
 
@@ -42,6 +47,24 @@ const tierOptions = ['all', 0, 1, 2, 3, 4, 5] as const
 
 
 const showFilters = ref(false)
+const showMoreFilters = ref(false)
+
+
+const hasSecondaryFilters = computed(
+  () => props.typeFilter !== 'all' || props.traitFilter !== 'all',
+)
+
+
+const hasActiveFilters = computed(
+  () =>
+    props.searchQuery !== '' ||
+    props.typeFilter !== 'all' ||
+    props.tierFilter !== 'all' ||
+    props.traitFilter !== 'all' ||
+    props.jobFilter !== 'all' ||
+    props.ownedFilter !== 'all' ||
+    props.awakenedFilter !== 'all',
+)
 
 
 const typeDotColor: Record<ElementType, string> = {
@@ -64,7 +87,7 @@ const typeDotColor: Record<ElementType, string> = {
           :value="props.searchQuery"
           type="text"
           class="focus-ring w-full rounded-xl border border-input bg-background/70 py-2.5 pl-10 pr-4 text-sm"
-          placeholder="Search creatures by name, type, trait, or role"
+          placeholder="Search creatures by name, type, trait, or job"
           @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
         />
       </label>
@@ -114,6 +137,11 @@ const typeDotColor: Record<ElementType, string> = {
       >
         <SlidersHorizontal class="size-4" />
         Filters
+        <span
+          v-if="hasActiveFilters"
+          class="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+          >!</span
+        >
       </button>
     </div>
 
@@ -123,44 +151,21 @@ const typeDotColor: Record<ElementType, string> = {
       class="mt-4 space-y-3"
       :class="showFilters ? 'block' : 'hidden lg:block'"
     >
-      <!-- Type filter -->
-      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by type">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Type</span
-        >
-        <button
-          v-for="option in typeOptions"
-          :key="option"
-          role="radio"
-          :aria-checked="props.typeFilter === option"
-          class="pill focus-ring"
-          :class="props.typeFilter === option ? 'pill-active' : ''"
-          @click="emit('update:typeFilter', option)"
-        >
-          <span
-            v-if="option !== 'all'"
-            class="mr-1.5 inline-block size-2 rounded-full"
-            :style="{ backgroundColor: typeDotColor[option as ElementType] }"
-          />
-          {{ option === 'all' ? 'All Types' : option }}
-        </button>
-      </div>
-
       <!-- Tier filter -->
       <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by tier">
         <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
           >Tier</span
         >
         <button
-          v-for="option in tierOptions"
+          v-for="option in tierOptions.filter((o) => o !== 'all')"
           :key="option"
           role="radio"
           :aria-checked="props.tierFilter === option"
           class="pill focus-ring font-mono"
           :class="props.tierFilter === option ? 'pill-active' : ''"
-          @click="emit('update:tierFilter', option)"
+          @click="emit('update:tierFilter', props.tierFilter === option ? 'all' : option)"
         >
-          {{ option === 'all' ? 'All' : `T${(option as number) + 1}` }}
+          T{{ (option as number) + 1 }}
         </button>
       </div>
 
@@ -170,22 +175,13 @@ const typeDotColor: Record<ElementType, string> = {
           >Job</span
         >
         <button
-          role="radio"
-          :aria-checked="props.jobFilter === 'all'"
-          class="pill focus-ring"
-          :class="props.jobFilter === 'all' ? 'pill-active' : ''"
-          @click="emit('update:jobFilter', 'all')"
-        >
-          All Jobs
-        </button>
-        <button
           v-for="job in props.jobOptions"
           :key="job"
           role="radio"
           :aria-checked="props.jobFilter === job"
           class="pill focus-ring gap-1.5"
           :class="props.jobFilter === job ? 'pill-active' : ''"
-          @click="emit('update:jobFilter', job)"
+          @click="emit('update:jobFilter', props.jobFilter === job ? 'all' : job)"
         >
           <img
             v-if="jobIcons[job.toLowerCase()]"
@@ -194,33 +190,6 @@ const typeDotColor: Record<ElementType, string> = {
             class="size-4"
           />
           {{ toTitleCase(job) }}
-        </button>
-      </div>
-
-      <!-- Trait filter -->
-      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by trait">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Trait</span
-        >
-        <button
-          role="radio"
-          :aria-checked="props.traitFilter === 'all'"
-          class="pill focus-ring"
-          :class="props.traitFilter === 'all' ? 'pill-active' : ''"
-          @click="emit('update:traitFilter', 'all')"
-        >
-          All Traits
-        </button>
-        <button
-          v-for="trait in props.traitOptions"
-          :key="trait"
-          role="radio"
-          :aria-checked="props.traitFilter === trait"
-          class="pill focus-ring"
-          :class="props.traitFilter === trait ? 'pill-active' : ''"
-          @click="emit('update:traitFilter', trait)"
-        >
-          {{ toTitleCase(trait) }}
         </button>
       </div>
 
@@ -234,17 +203,17 @@ const typeDotColor: Record<ElementType, string> = {
           >Summoned</span
         >
         <button
-          v-for="option in ['all', 'owned', 'unowned'] as const"
+          v-for="option in ['owned', 'unowned'] as const"
           :key="option"
           role="radio"
           :aria-checked="props.ownedFilter === option"
           class="pill focus-ring gap-1.5"
           :class="props.ownedFilter === option ? 'pill-active' : ''"
-          @click="emit('update:ownedFilter', option)"
+          @click="emit('update:ownedFilter', props.ownedFilter === option ? 'all' : option)"
         >
           <img v-if="option === 'owned'" :src="summonedIcon" alt="" class="size-4" />
           <img v-if="option === 'unowned'" :src="notSummonedIcon" alt="" class="size-4" />
-          {{ option === 'all' ? 'All' : option === 'owned' ? 'Summoned' : 'Not Summoned' }}
+          {{ option === 'owned' ? 'Summoned' : 'Not Summoned' }}
         </button>
       </div>
 
@@ -258,16 +227,16 @@ const typeDotColor: Record<ElementType, string> = {
           >Awakened</span
         >
         <button
-          v-for="option in ['all', 'awakened', 'unawakened'] as const"
+          v-for="option in ['awakened', 'unawakened'] as const"
           :key="option"
           role="radio"
           :aria-checked="props.awakenedFilter === option"
           class="pill focus-ring gap-1.5"
           :class="props.awakenedFilter === option ? 'pill-active' : ''"
-          @click="emit('update:awakenedFilter', option)"
+          @click="emit('update:awakenedFilter', props.awakenedFilter === option ? 'all' : option)"
         >
           <img v-if="option === 'awakened'" :src="awakenedSummonedIcon" alt="" class="size-4" />
-          {{ option === 'all' ? 'All' : option === 'awakened' ? 'Awakened' : 'Not Awakened' }}
+          {{ option === 'awakened' ? 'Awakened' : 'Not Awakened' }}
         </button>
 
         <div
@@ -277,6 +246,83 @@ const typeDotColor: Record<ElementType, string> = {
           {{ props.ownedCount }} summoned · {{ props.resultCount }} results
         </div>
       </div>
+      <!-- More filters toggle -->
+      <div>
+        <button
+          class="focus-ring inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+          :aria-expanded="showMoreFilters || hasSecondaryFilters"
+          aria-controls="beastiary-more-filters"
+          @click="showMoreFilters = !showMoreFilters"
+        >
+          <ChevronDown
+            class="size-3.5 transition-transform"
+            :class="showMoreFilters || hasSecondaryFilters ? '' : '-rotate-90'"
+          />
+          More filters
+        </button>
+
+        <div
+          id="beastiary-more-filters"
+          class="mt-3 space-y-3"
+          :class="showMoreFilters || hasSecondaryFilters ? 'block' : 'hidden'"
+        >
+          <!-- Type filter -->
+          <div
+            class="flex flex-wrap items-center gap-2"
+            role="radiogroup"
+            aria-label="Filter by type"
+          >
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+              >Type</span
+            >
+            <button
+              v-for="option in typeOptions.filter((o) => o !== 'all')"
+              :key="option"
+              role="radio"
+              :aria-checked="props.typeFilter === option"
+              class="pill focus-ring"
+              :class="props.typeFilter === option ? 'pill-active' : ''"
+              @click="emit('update:typeFilter', props.typeFilter === option ? 'all' : option)"
+            >
+              <span
+                class="mr-1.5 inline-block size-2 rounded-full"
+                :class="props.typeFilter === option ? 'ring-1 ring-white/60' : ''"
+                :style="{ backgroundColor: typeDotColor[option as ElementType] }"
+              />
+              {{ option }}
+            </button>
+          </div>
+
+          <!-- Trait filter -->
+          <div
+            class="flex flex-wrap items-center gap-2"
+            role="radiogroup"
+            aria-label="Filter by trait"
+          >
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+              >Trait</span
+            >
+            <button
+              v-for="trait in props.traitOptions"
+              :key="trait"
+              role="radio"
+              :aria-checked="props.traitFilter === trait"
+              class="pill focus-ring"
+              :class="props.traitFilter === trait ? 'pill-active' : ''"
+              @click="emit('update:traitFilter', props.traitFilter === trait ? 'all' : trait)"
+            >
+              {{ toTitleCase(trait) }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active filter chips -->
+      <ActiveFilters
+        :filters="props.activeFilters"
+        @remove="emit('remove-filter', $event)"
+        @clear-all="emit('clear-all')"
+      />
     </div>
   </div>
 </template>

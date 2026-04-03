@@ -25,6 +25,7 @@ const { getItemById } = useItems()
 import BeastiaryToolbar from '@/components/beastiary/BeastiaryToolbar.vue'
 import ProficiencyRing from '@/components/beastiary/ProficiencyRing.vue'
 import StatRadarChart from '@/components/beastiary/StatRadarChart.vue'
+import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 
 const {
   filteredCreatures,
@@ -178,6 +179,89 @@ function normalizeCollectionLevelOnBlur(id: string, event: FocusEvent) {
 
 
 const viewMode = ref<'grid' | 'table'>('grid')
+
+
+function clearFilters() {
+  searchQuery.value = ''
+  typeFilter.value = 'all'
+  tierFilter.value = 'all'
+  traitFilter.value = 'all'
+  jobFilter.value = 'all'
+  ownedFilter.value = 'all'
+  awakenedFilter.value = 'all'
+}
+
+
+const activeFilters = computed<ActiveFilter[]>(() => {
+  const filters: ActiveFilter[] = []
+  if (searchQuery.value)
+    filters.push({
+      key: 'search',
+      group: 'Search',
+      label:
+        searchQuery.value.length > 20 ? `${searchQuery.value.slice(0, 20)}…` : searchQuery.value,
+    })
+  if (typeFilter.value !== 'all')
+    filters.push({
+      key: 'type',
+      group: 'Type',
+      label: typeFilter.value,
+      color: typeColor(typeFilter.value),
+    })
+  if (tierFilter.value !== 'all')
+    filters.push({ key: 'tier', group: 'Tier', label: `T${(tierFilter.value as number) + 1}` })
+  if (jobFilter.value !== 'all')
+    filters.push({
+      key: 'job',
+      group: 'Job',
+      label: toTitleCase(jobFilter.value),
+      image: jobIcons[jobFilter.value.toLowerCase()],
+    })
+  if (traitFilter.value !== 'all')
+    filters.push({ key: 'trait', group: 'Trait', label: toTitleCase(traitFilter.value) })
+  if (ownedFilter.value !== 'all')
+    filters.push({
+      key: 'owned',
+      group: 'Summoned',
+      label: ownedFilter.value === 'owned' ? 'Summoned' : 'Not Summoned',
+      image: ownedFilter.value === 'owned' ? summonedIcon : notSummonedIcon,
+    })
+  if (awakenedFilter.value !== 'all')
+    filters.push({
+      key: 'awakened',
+      group: 'Awakened',
+      label: awakenedFilter.value === 'awakened' ? 'Awakened' : 'Not Awakened',
+      image: awakenedFilter.value === 'awakened' ? awakenedSummonedIcon : undefined,
+    })
+  return filters
+})
+
+
+function removeFilter(key: string) {
+  switch (key) {
+    case 'search':
+      searchQuery.value = ''
+      break
+    case 'type':
+      typeFilter.value = 'all'
+      break
+    case 'tier':
+      tierFilter.value = 'all'
+      break
+    case 'job':
+      jobFilter.value = 'all'
+      break
+    case 'trait':
+      traitFilter.value = 'all'
+      break
+    case 'owned':
+      ownedFilter.value = 'all'
+      break
+    case 'awakened':
+      awakenedFilter.value = 'all'
+      break
+  }
+}
 const selectedCreature = ref<Creature | null>(null)
 
 
@@ -294,6 +378,9 @@ const maxJobLevel = 10
       :result-count="displayCreatures.length"
       :trait-options="allTraits"
       :job-options="allJobs"
+      :active-filters="activeFilters"
+      @clear-all="clearFilters"
+      @remove-filter="removeFilter"
     />
 
     <!-- Collection edit bar -->
@@ -305,7 +392,7 @@ const maxJobLevel = 10
             @click="startEditing"
           >
             <Pencil class="size-4" />
-            Edit Collection
+            Edit My Collection
           </button>
         </div>
       </template>
@@ -461,7 +548,7 @@ const maxJobLevel = 10
             </h2>
             <div class="h-px flex-1 bg-border/60" />
           </div>
-          <div class="flex flex-wrap justify-evenly gap-8">
+          <div class="grid grid-cols-[repeat(auto-fill,var(--card-w))] justify-evenly gap-8">
             <div
               v-for="creature in group.creatures"
               :key="creature.id"
@@ -481,17 +568,6 @@ const maxJobLevel = 10
               ]"
               @click="editing ? toggleSelected(creature.id) : selectCreature(creature)"
             >
-              <!-- Type gradient bar -->
-              <div
-                class="h-1 rounded-t-xl"
-                :style="{
-                  background:
-                    creature.types.length > 1
-                      ? `linear-gradient(to right, ${typeColor(creature.types[0])}, ${typeColor(creature.types[1])})`
-                      : typeColor(creature.types[0]),
-                }"
-              />
-
               <!-- Selection indicator (edit mode) -->
               <div
                 v-if="editing"
@@ -537,10 +613,11 @@ const maxJobLevel = 10
                 <span
                   v-for="type in creature.types"
                   :key="type"
-                  class="rounded-full px-1.5 py-px text-[10px] font-semibold leading-tight shadow-sm"
+                  class="rounded-full border px-1.5 py-px text-[10px] font-semibold leading-tight shadow-sm"
                   :style="{
                     color: typeColor(type),
-                    backgroundColor: `hsl(${typeColorVar(type)} / 0.2)`,
+                    backgroundColor: `hsl(${typeColorVar(type)} / 0.15)`,
+                    borderColor: `hsl(${typeColorVar(type)} / 0.35)`,
                   }"
                 >
                   {{ type }}
@@ -549,7 +626,7 @@ const maxJobLevel = 10
 
               <!-- Hero image -->
               <div
-                class="flex items-center justify-center px-4 pb-5 pt-6"
+                class="flex items-center justify-center rounded-t-xl px-4 pb-5 pt-6"
                 :style="{
                   background: `linear-gradient(180deg, hsl(${typeColorVar(creature.types[0])} / 0.12) 0%, hsl(var(--card)) 100%)`,
                 }"
@@ -570,7 +647,11 @@ const maxJobLevel = 10
                 <div class="text-center">
                   <p
                     class="truncate text-lg font-extrabold"
-                    :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-foreground'"
+                    :class="
+                      isAwakened(creature.id)
+                        ? 'text-pink-600 dark:text-pink-400'
+                        : 'text-foreground/80'
+                    "
                   >
                     {{ creature.name }}
                   </p>
@@ -820,7 +901,11 @@ const maxJobLevel = 10
                     </div>
                     <span
                       class="font-semibold"
-                      :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-foreground'"
+                      :class="
+                        isAwakened(creature.id)
+                          ? 'text-pink-600 dark:text-pink-400'
+                          : 'text-foreground/80'
+                      "
                       >{{ creature.name }}</span
                     >
                     <span
