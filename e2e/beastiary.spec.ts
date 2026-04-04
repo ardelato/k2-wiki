@@ -239,7 +239,7 @@ test.describe('creature drawer', () => {
   test('clicking a creature opens the drawer', async ({ page }) => {
     await page.locator('.cursor-pointer').first().click()
 
-    const drawer = page.locator('.fixed.inset-y-0')
+    const drawer = page.locator('.fixed.inset-y-0.right-0')
     await expect(drawer).toBeVisible()
     await expect(drawer.locator('h2')).not.toBeEmpty()
   })
@@ -247,7 +247,7 @@ test.describe('creature drawer', () => {
   test('close button dismisses the drawer', async ({ page }) => {
     await page.locator('.cursor-pointer').first().click()
 
-    const drawer = page.locator('.fixed.inset-y-0')
+    const drawer = page.locator('.fixed.inset-y-0.right-0')
     await expect(drawer).toBeVisible()
 
     // Close button is the first button inside the drawer
