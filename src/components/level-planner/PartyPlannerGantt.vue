@@ -14,6 +14,7 @@ import {
   calculateDifficultyRating,
   getLoopXpBonus,
 } from '@/utils/formulas'
+import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const props = withDefaults(
@@ -442,7 +443,12 @@ const activeBarScoreRatio = computed(() => {
                 loading="lazy"
               />
             </div>
-            <span class="truncate">T{{ bar.tier }}</span>
+            <img
+              :src="expeditionTierIcons[bar.tier]"
+              :alt="`Tier ${bar.tier}`"
+              class="size-5 shrink-0 object-contain"
+              loading="lazy"
+            />
             <span class="ml-auto shrink-0 pl-1 font-mono text-[11px] opacity-70">{{
               formatDuration(bar.step.timeSeconds)
             }}</span>
@@ -480,11 +486,12 @@ const activeBarScoreRatio = computed(() => {
               <p class="truncate text-sm font-bold text-foreground">
                 {{ activeBar.expeditionName }}
               </p>
-              <span
-                class="shrink-0 rounded bg-muted/50 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground"
-              >
-                T{{ activeBar.tier }}
-              </span>
+              <img
+                :src="expeditionTierIcons[activeBar.tier]"
+                :alt="`Tier ${activeBar.tier}`"
+                class="size-5 shrink-0 object-contain"
+                loading="lazy"
+              />
             </div>
             <p class="mt-1 text-xs text-muted-foreground">{{ activeBar.step.biomeName }}</p>
           </div>

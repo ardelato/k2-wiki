@@ -15,6 +15,7 @@ export interface LevelPlannerInput {
   startLevel: number
   targetLevel: number
   isAwakened: boolean
+  expeditionMaxTiers?: Record<string, number>
 }
 
 export interface PlanStep {
@@ -117,12 +118,16 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const biomes = biomesData as Biome[]
   const biomeMap = new Map(biomes.map((b) => [b.id, b]))
 
-  const { creature, startLevel, targetLevel, isAwakened } = settings
+  const { creature, startLevel, targetLevel, isAwakened, expeditionMaxTiers } = settings
+  const maxTiers = expeditionMaxTiers ?? {}
+  const hasMaxTierRestrictions = Object.keys(maxTiers).length > 0
 
-  const candidates: ExpeditionWithBiome[] = expeditions.map((exp) => ({
-    expedition: exp,
-    biome: biomeMap.get(exp.biome),
-  }))
+  const candidates: ExpeditionWithBiome[] = expeditions
+    .filter((exp) => !hasMaxTierRestrictions || (maxTiers[exp.id] ?? 5) > 0)
+    .map((exp) => ({
+      expedition: exp,
+      biome: biomeMap.get(exp.biome),
+    }))
 
   const rawSteps: PlanStep[] = []
   let currentCombo: ComboKey | null = null
@@ -150,7 +155,8 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     // Find the absolute best option (all combos at loop count 0)
     let bestFresh: EvalResult | null = null
     for (const { expedition, biome } of candidates) {
-      for (let tier = 1; tier <= 5; tier++) {
+      const maxTier = maxTiers[expedition.id] ?? 5
+      for (let tier = 1; tier <= maxTier; tier++) {
         const result = evaluateCombo(creature, expedition, biome, tier, level, 0)
         if (
           result &&

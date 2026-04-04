@@ -7,6 +7,7 @@ import { useRoute, useRouter } from 'vue-router'
 import LevelPlannerCreaturePicker from '@/components/level-planner/LevelPlannerCreaturePicker.vue'
 import LevelPlannerResults from '@/components/level-planner/LevelPlannerResults.vue'
 import PartyCreatureFilter from '@/components/level-planner/PartyCreatureFilter.vue'
+import PartyExpeditionFilter from '@/components/level-planner/PartyExpeditionFilter.vue'
 import PartyPlannerResults from '@/components/level-planner/PartyPlannerResults.vue'
 import PlannerLoadingProgress from '@/components/level-planner/PlannerLoadingProgress.vue'
 import PlannerBadge from '@/components/planner/PlannerBadge.vue'
@@ -14,17 +15,25 @@ import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
 import PlannerToolbar from '@/components/planner/PlannerToolbar.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
+import { useExpeditionMaxTiers } from '@/composables/useExpeditionMaxTiers'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useLevelPlanner } from '@/composables/useLevelPlanner'
 import { usePartyPlanner } from '@/composables/usePartyPlanner'
 import type { PlannerStrategy, PlannerTimeBudget } from '@/types'
 import { maxLevelForState } from '@/utils/formulas'
+import { expeditions as allExpeditions } from '@/utils/precomputedTables'
 
 const route = useRoute()
 const router = useRouter()
 const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
 const { excludedCreatureIds } = useGameConfig()
+const {
+  expeditionMaxTierOverrides,
+  includeAllExpeditions,
+  defaultExpeditionMaxTiers,
+  effectiveExpeditionMaxTiers,
+} = useExpeditionMaxTiers()
 
 
 // Mode: single or party
@@ -47,6 +56,7 @@ const singleTargetPresets = [70, 120]
 const { creature, startLevel, plan, needsAwaken, totalXpNeeded, isMaxLevel } = useLevelPlanner(
   creatureId,
   targetLevel,
+  effectiveExpeditionMaxTiers,
 )
 
 
@@ -130,6 +140,34 @@ function toggleTierOverride(ids: string[], include: boolean) {
 function resetCreatureOverrides() {
   plannerExcluded.value = new Set()
   plannerIncluded.value = new Set()
+}
+
+
+// Expedition filter handlers
+function setExpeditionMaxTier(expeditionId: string, maxTier: number) {
+  const defaultTier = defaultExpeditionMaxTiers.value[expeditionId] ?? 0
+  if (maxTier === defaultTier) {
+    // Matches default — remove override instead of storing it
+    removeExpeditionOverride(expeditionId)
+    return
+  }
+  expeditionMaxTierOverrides.value = {
+    ...expeditionMaxTierOverrides.value,
+    [expeditionId]: maxTier,
+  }
+}
+
+
+function removeExpeditionOverride(expeditionId: string) {
+  const updated = { ...expeditionMaxTierOverrides.value }
+  delete updated[expeditionId]
+  expeditionMaxTierOverrides.value = updated
+}
+
+
+function resetExpeditionOverrides() {
+  expeditionMaxTierOverrides.value = {}
+  includeAllExpeditions.value = false
 }
 
 
@@ -374,6 +412,17 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
         </template>
       </PlannerToolbar>
 
+      <PartyExpeditionFilter
+        :expeditions="allExpeditions"
+        :effective-max-tiers="effectiveExpeditionMaxTiers"
+        :overrides="expeditionMaxTierOverrides"
+        :include-all="includeAllExpeditions"
+        @set-max-tier="setExpeditionMaxTier"
+        @remove-override="removeExpeditionOverride"
+        @reset="resetExpeditionOverrides"
+        @update:include-all="includeAllExpeditions = $event"
+      />
+
       <!-- No creature selected -->
       <PlannerEmptyState
         v-if="!creature && !creatureId"
@@ -414,6 +463,17 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
         @toggle="toggleCreatureOverride"
         @toggle-tier="toggleTierOverride"
         @reset="resetCreatureOverrides"
+      />
+
+      <PartyExpeditionFilter
+        :expeditions="allExpeditions"
+        :effective-max-tiers="effectiveExpeditionMaxTiers"
+        :overrides="expeditionMaxTierOverrides"
+        :include-all="includeAllExpeditions"
+        @set-max-tier="setExpeditionMaxTier"
+        @remove-override="removeExpeditionOverride"
+        @reset="resetExpeditionOverrides"
+        @update:include-all="includeAllExpeditions = $event"
       />
 
       <section class="surface-card relative z-20">

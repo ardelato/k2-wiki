@@ -28,7 +28,13 @@ import {
 } from '@/utils/expeditionUnlocks'
 import { toTitleCase } from '@/utils/format'
 import { levelFromXp } from '@/utils/formulas'
-import { sourceIcons, sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/icons'
+import {
+  sourceIcons,
+  sanctuaryIcon,
+  helpersIcon,
+  machinesIcon,
+  expeditionTierIcons,
+} from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractSaveConfig, type SaveConfig } from '@/utils/parseSave'
 
@@ -80,7 +86,7 @@ const saveConfig = ref<SaveConfig | null>(null)
 
 
 // Per-section edit mode
-type EditableSection = 'exclusions' | 'garden' | 'awaken'
+type EditableSection = 'exclusions' | 'garden' | 'awaken' | 'expeditions'
 const editingSection = ref<EditableSection | null>(null)
 
 
@@ -108,6 +114,9 @@ function startEditing(section: EditableSection) {
         awakenGatherUpgrades: structuredClone(toRaw(awakenGatherUpgrades.value)),
         awakenSpeedTiers: structuredClone(toRaw(awakenSpeedTiers.value)),
       }
+      break
+    case 'expeditions':
+      sectionSnapshot = structuredClone(toRaw(expeditionCompletions.value))
       break
   }
   editingSection.value = section
@@ -148,6 +157,9 @@ function cancelEditing() {
         awakenSpeedTiers.value = snap.awakenSpeedTiers
         break
       }
+      case 'expeditions':
+        expeditionCompletions.value = sectionSnapshot as Record<string, Record<number, number>>
+        break
     }
   }
   sectionSnapshot = null
@@ -387,9 +399,10 @@ const fabricationHasDiff = computed(() => {
 
 
 const expeditionDisplay = computed(() => {
-  const completions = saveConfig.value
-    ? saveConfig.value.expeditionCompletions
-    : expeditionCompletions.value
+  const completions =
+    saveConfig.value && editingSection.value !== 'expeditions'
+      ? saveConfig.value.expeditionCompletions
+      : expeditionCompletions.value
   const totalCompletions = getTotalCompletedExpeditions(completions)
   const unlockedCount = allExpeditions.filter(
     (e) => totalCompletions >= e.requiredExpeditionCompletions,
@@ -727,6 +740,68 @@ function resetAwaken() {
 
 function resetExpeditions() {
   expeditionCompletions.value = {}
+}
+
+
+function toggleExpeditionTier(expeditionId: string, tier: number) {
+  // Build desired max tiers from current derived state
+  const desiredTiers: Record<string, number> = {}
+  const currentTotal = getTotalCompletedExpeditions(expeditionCompletions.value)
+
+
+  for (const exp of allExpeditions) {
+    if (currentTotal >= exp.requiredExpeditionCompletions) {
+      desiredTiers[exp.id] = getMaxUnlockedTier(exp.id, expeditionCompletions.value)
+    }
+  }
+
+
+  // Apply toggle
+  const currentMax = desiredTiers[expeditionId] ?? 0
+  if (tier <= currentMax) {
+    // Unchecking: set max to tier - 1 (0 means fully remove)
+    if (tier <= 1) {
+      delete desiredTiers[expeditionId]
+    } else {
+      desiredTiers[expeditionId] = tier - 1
+    }
+  } else {
+    // Checking: unlock up to this tier, and ensure prior expeditions are unlocked
+    desiredTiers[expeditionId] = tier
+    for (const exp of allExpeditions) {
+      if (exp.id === expeditionId) break
+      if (!desiredTiers[exp.id]) desiredTiers[exp.id] = 1
+    }
+  }
+
+
+  // Recompute minimum completions from desired tiers
+  const completions: Record<string, Record<number, number>> = {}
+
+
+  for (const [expId, maxTier] of Object.entries(desiredTiers)) {
+    if (maxTier <= 0) continue
+    completions[expId] = {}
+    for (let t = 1; t < maxTier; t++) {
+      completions[expId][t] = TIER_UNLOCK_REQUIREMENTS[t + 1]
+    }
+  }
+
+
+  // Ensure total meets requirements for each desired expedition (processed in order)
+  for (const exp of allExpeditions) {
+    if (!desiredTiers[exp.id]) continue
+    const total = getTotalCompletedExpeditions(completions)
+    if (total < exp.requiredExpeditionCompletions) {
+      const deficit = exp.requiredExpeditionCompletions - total
+      const firstExpId = allExpeditions[0].id
+      if (!completions[firstExpId]) completions[firstExpId] = {}
+      completions[firstExpId][1] = (completions[firstExpId][1] ?? 0) + deficit
+    }
+  }
+
+
+  expeditionCompletions.value = completions
 }
 
 
@@ -2507,6 +2582,36 @@ function jobTierLabel(tier: number): string {
                 <Check class="size-3.5" /> Applied
               </span>
             </template>
+            <button
+              v-if="editingSection === 'expeditions'"
+              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+              @click="resetExpeditions"
+            >
+              <RotateCcw class="size-3" />
+            </button>
+            <template v-if="editingSection !== 'expeditions'">
+              <button
+                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
+                @click="startEditing('expeditions')"
+              >
+                <Pencil class="size-3.5" />
+                Edit
+              </button>
+            </template>
+            <template v-else>
+              <button
+                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
+                @click="cancelEditing"
+              >
+                Cancel
+              </button>
+              <button
+                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition"
+                @click="finishEditing"
+              >
+                Done
+              </button>
+            </template>
           </div>
         </div>
 
@@ -2534,27 +2639,29 @@ function jobTierLabel(tier: number): string {
               </span>
             </div>
             <div class="flex items-center gap-1 text-xs tabular-nums">
-              <template v-if="item.unlocked">
-                <span
-                  v-for="t in item.tiers"
-                  :key="t.tier"
-                  class="inline-flex w-10 flex-col items-center justify-center rounded py-0.5 text-[11px] font-medium"
-                  :class="
-                    t.unlocked
-                      ? 'bg-emerald-500/15 text-emerald-400'
-                      : 'bg-muted/50 text-muted-foreground'
-                  "
-                >
-                  <span>T{{ t.tier }}</span>
-                  <span
-                    v-if="!t.unlocked && t.remaining > 0"
-                    class="text-[9px] leading-none opacity-70"
-                  >
-                    {{ t.remaining }} left
-                  </span>
-                </span>
-              </template>
-              <span v-else class="text-muted-foreground">Locked</span>
+              <component
+                :is="editingSection === 'expeditions' ? 'button' : 'span'"
+                v-for="t in item.tiers"
+                :key="t.tier"
+                class="inline-flex flex-col items-center justify-center rounded-md px-1.5 py-1"
+                :class="[
+                  item.unlocked && t.unlocked ? 'bg-emerald-500/15' : 'opacity-40 grayscale',
+                  editingSection === 'expeditions'
+                    ? 'cursor-pointer transition hover:ring-1 hover:ring-foreground/20'
+                    : '',
+                ]"
+                @click="
+                  editingSection === 'expeditions' &&
+                  toggleExpeditionTier(item.expedition.id, t.tier)
+                "
+              >
+                <img
+                  :src="expeditionTierIcons[t.tier]"
+                  :alt="`Tier ${t.tier}`"
+                  class="size-7 object-contain"
+                  loading="lazy"
+                />
+              </component>
             </div>
           </div>
         </div>

@@ -5,7 +5,11 @@ import { useCreatures } from '@/composables/useCreatures'
 import { xpForLevel, maxLevelForState, PRE_AWAKEN_MAX } from '@/utils/formulas'
 import { planLevelingPath, type LevelingPlan } from '@/utils/levelPlanner'
 
-export function useLevelPlanner(creatureId: Ref<string>, targetLevel: Ref<number>) {
+export function useLevelPlanner(
+  creatureId: Ref<string>,
+  targetLevel: Ref<number>,
+  expeditionMaxTiers?: { value: Record<string, number> },
+) {
   const { creatures } = useCreatures()
   const { getLevel, isAwakened } = useCreatureCollection()
 
@@ -42,6 +46,7 @@ export function useLevelPlanner(creatureId: Ref<string>, targetLevel: Ref<number
       startLevel: startLevel.value,
       targetLevel: targetLevel.value,
       isAwakened: awakened.value,
+      expeditionMaxTiers: expeditionMaxTiers?.value,
     })
   })
 

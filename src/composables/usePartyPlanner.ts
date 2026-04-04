@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
+import { useExpeditionMaxTiers } from '@/composables/useExpeditionMaxTiers'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type {
   PartyPlanCreature,
@@ -31,6 +32,7 @@ export function usePartyPlanner(
   const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
   const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
   const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
+  const { effectiveExpeditionMaxTiers } = useExpeditionMaxTiers()
 
   function cachePrefix(): string {
     return `party-planner-cache-${strategy.value}-${timeBudget.value}`
@@ -131,7 +133,11 @@ export function usePartyPlanner(
         return `${id}:${party}:${tier}:${loops}`
       })
       .join('|')
-    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}`
+    const maxTiersKey = Object.entries(effectiveExpeditionMaxTiers.value)
+      .toSorted(([a], [b]) => a.localeCompare(b))
+      .map(([id, t]) => `${id}:${t}`)
+      .join(',')
+    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${maxTiersKey}`
   }
 
   // Load cached plan immediately if available (all inputs are localStorage-backed so fingerprint is stable on init)
@@ -143,10 +149,12 @@ export function usePartyPlanner(
   }
 
   function buildPlannerInput(): PartyPlannerInput {
+    const maxTiers = effectiveExpeditionMaxTiers.value
     return {
       creatures: partyCreatures.value,
       strategy: strategy.value,
       timeBudget: timeBudget.value,
+      expeditionMaxTiers: Object.keys(maxTiers).length > 0 ? maxTiers : undefined,
       expeditions: Object.fromEntries(
         Object.keys({
           ...expeditionParties.value,
@@ -214,6 +222,14 @@ export function usePartyPlanner(
     const cached = readCachedPlan()
     const currentKey = buildInputFingerprint()
     plan.value = cached && currentKey === cached.key ? cached.plan : null
+  })
+
+  // Terminate in-flight workers when expedition max tier restrictions change
+  watch(effectiveExpeditionMaxTiers, () => {
+    cleanupWorker()
+    isComputing.value = false
+    progress.value = null
+    plan.value = null
   })
 
   // Terminate in-flight workers when creature data changes (collection edits invalidate results)
@@ -298,5 +314,6 @@ export function usePartyPlanner(
     progress,
     calculate,
     recalculate,
+    effectiveExpeditionMaxTiers,
   }
 }

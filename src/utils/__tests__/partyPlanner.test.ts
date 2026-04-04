@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
 
+import expeditionsData from '@/data/expeditions.json'
+import type { Expedition } from '@/types'
 import { planPartyLevelingPath } from '@/utils/partyPlanner'
+
+const allExpeditions = expeditionsData as Expedition[]
 import type { PlanScore } from '@/utils/planScorer'
 import { scorePlan } from '@/utils/planScorer'
 
@@ -93,5 +97,47 @@ describe('edge cases', () => {
   test('hands-free: small collection completes', { timeout: 120_000 }, () => {
     const { score } = runPlan(collectionSmall, 'hands-free')
     expect(score.isComplete).toBe(true)
+  })
+})
+
+// ── Expedition max tier filtering ──────────────────────────────────────
+describe('expedition max tier filtering', () => {
+  test(
+    'expeditionMaxTiers with tier 0 excludes expedition from plan steps',
+    { timeout: 120_000 },
+    () => {
+      const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
+      // Exclude the first expedition used in the fixture
+      const firstExpId = Object.keys(input.expeditions)[0]
+      input.expeditionMaxTiers = { [firstExpId]: 0 }
+
+      const plan = planPartyLevelingPath(input)
+      for (const step of plan.steps) {
+        expect(step.expedition.id).not.toBe(firstExpId)
+      }
+    },
+  )
+
+  test('expeditionMaxTiers caps tier in plan steps', { timeout: 120_000 }, () => {
+    const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
+    // Cap all expeditions to tier 2
+    const maxTiers: Record<string, number> = {}
+    for (const exp of allExpeditions) {
+      maxTiers[exp.id] = 2
+    }
+    input.expeditionMaxTiers = maxTiers
+
+    const plan = planPartyLevelingPath(input)
+    for (const step of plan.steps) {
+      expect(step.tier).toBeLessThanOrEqual(2)
+    }
+  })
+
+  test('empty expeditionMaxTiers applies no restrictions', { timeout: 120_000 }, () => {
+    const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
+    input.expeditionMaxTiers = {}
+
+    const plan = planPartyLevelingPath(input)
+    expect(plan.steps.length).toBeGreaterThan(0)
   })
 })

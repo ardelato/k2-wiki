@@ -536,3 +536,99 @@ test.describe('save file import', () => {
     await expect(exclusionSec.getByText('Matches Save')).toBeVisible()
   })
 })
+
+// ── Expeditions section — display and editing ───────────────────────
+
+/** Locate the expeditions config section (starts expanded by default) */
+async function expeditionsSection(page: Page) {
+  const sec = page
+    .locator('div.rounded-xl')
+    .filter({ has: page.locator('h3', { hasText: 'Expeditions' }) })
+    .first()
+  await expect(sec.getByText('Expedition Training').first()).toBeVisible()
+  return sec
+}
+
+test.describe('expeditions section', () => {
+  test('shows expedition list with skull tier icons', async ({ page }) => {
+    const sec = await expeditionsSection(page)
+
+    await expect(sec.getByText('Expedition Training').first()).toBeVisible()
+    await expect(sec.locator('img[alt="Tier 1"]').first()).toBeVisible()
+  })
+
+  test('Edit button enables tier toggling', async ({ page }) => {
+    const sec = await expeditionsSection(page)
+
+    await sec.getByRole('button', { name: 'Edit', exact: true }).click()
+    await expect(sec.getByRole('button', { name: 'Done', exact: true })).toBeVisible()
+    await expect(sec.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible()
+  })
+
+  test('Cancel reverts expedition tier changes', async ({ page }) => {
+    // Seed some expedition completions
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'config-expedition-completions',
+        JSON.stringify({ 'expedition-type-1': { 1: 10 } }),
+      )
+    })
+    await page.reload()
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
+
+    const sec = await expeditionsSection(page)
+
+    // Enter edit mode and click a tier icon to toggle
+    await sec.getByRole('button', { name: 'Edit', exact: true }).click()
+    await sec.locator('img[alt="Tier 1"]').first().click()
+
+    // Cancel should revert
+    await sec.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(sec.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+  })
+
+  test('Done persists expedition changes after reload', async ({ page }) => {
+    const sec = await expeditionsSection(page)
+
+    await sec.getByRole('button', { name: 'Edit', exact: true }).click()
+    await sec.locator('img[alt="Tier 1"]').first().click()
+
+    await sec.getByRole('button', { name: 'Done', exact: true }).click()
+    await expect(sec.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+
+    // Verify persists after reload
+    await page.reload()
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
+    await expect(
+      page
+        .locator('div.rounded-xl')
+        .filter({ has: page.locator('h3', { hasText: 'Expeditions' }) })
+        .first(),
+    ).toBeVisible()
+  })
+
+  test('shows unlocked/locked status with completion data', async ({ page }) => {
+    // Seed completion data directly
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'config-expedition-completions',
+        JSON.stringify({
+          'expedition-type-1': { 1: 20, 2: 15, 3: 10 },
+          'expedition-type-2': { 1: 5 },
+        }),
+      )
+    })
+    await page.reload()
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
+
+    const sec = page
+      .locator('div.rounded-xl')
+      .filter({ has: page.locator('h3', { hasText: 'Expeditions' }) })
+      .first()
+
+    // Should show unlocked count badge
+    await expect(sec.getByText(/\d+\/\d+ unlocked/)).toBeVisible()
+    // Should show tier count badge
+    await expect(sec.getByText(/\d+\/\d+ tiers/)).toBeVisible()
+  })
+})

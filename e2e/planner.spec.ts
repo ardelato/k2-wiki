@@ -429,3 +429,91 @@ test.describe('level up - party mode computation', () => {
     await expect(page.getByText('Hands-Free', { exact: true })).toBeVisible()
   })
 })
+
+// ── Level Up — expedition filter ─────────────────────────────────────
+
+test.describe('level up - expedition filter', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.evaluate(() => localStorage.clear())
+    await seedCreatures(page)
+  })
+
+  test('expedition filter is visible in single mode', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Collapsible header should show expedition count
+    await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
+    await expect(page.getByText('Expeditions', { exact: true }).first()).toBeVisible()
+  })
+
+  test('expanding expedition filter shows list with tier skull icons', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Click to expand
+    await page.getByText('Expeditions', { exact: true }).first().click()
+
+    // Should show expedition names and skull icons
+    await expect(page.getByText('Expedition Training').first()).toBeVisible()
+    await expect(page.locator('img[alt="Tier 1"]').first()).toBeVisible()
+  })
+
+  test('expedition filter is visible in party mode', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&mode=party')
+    await page.getByText('Party Level Up').waitFor()
+
+    await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
+  })
+
+  test('Include All button toggles all expeditions', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Expand
+    await page.getByText('Expeditions', { exact: true }).first().click()
+
+    // Click Include All
+    await page.getByRole('button', { name: 'Include All' }).click()
+
+    // Should show all expeditions included (20 of 20)
+    await expect(page.getByText('20 of 20 included')).toBeVisible()
+  })
+
+  test('expedition filter persists after page refresh', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Expand and toggle Include All
+    await page.getByText('Expeditions', { exact: true }).first().click()
+    await page.getByRole('button', { name: 'Include All' }).click()
+    await expect(page.getByText('20 of 20 included')).toBeVisible()
+
+    // Refresh
+    await page.reload()
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Should still show as filtered
+    await expect(page.getByText('20 of 20 included')).toBeVisible()
+  })
+
+  test('Reset button clears overrides', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Locate the expedition filter section
+    const expSection = page.locator('.surface-card', { hasText: 'Expeditions' }).first()
+
+    // Expand and toggle Include All
+    await page.getByText('Expeditions', { exact: true }).first().click()
+    await page.getByRole('button', { name: 'Include All' }).click()
+    await expect(expSection.getByText('Filtered')).toBeVisible()
+
+    // Click Reset within expedition section
+    await expSection.getByRole('button', { name: 'Reset', exact: true }).click()
+
+    // Filtered badge should be gone from expedition section
+    await expect(expSection.getByText('Filtered')).toBeHidden()
+  })
+})

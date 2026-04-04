@@ -329,9 +329,14 @@ export function planPartyLevelingPath(
     number,
     { expeditionId: string; result: RunCandidate | null }
   >()
-  const orderedExpeditionIds = expeditions.map((expedition) => expedition.id)
+  const expeditionMaxTiers = normalized.expeditionMaxTiers ?? {}
+  const hasMaxTierRestrictions = Object.keys(expeditionMaxTiers).length > 0
+  const activeExpeditions = hasMaxTierRestrictions
+    ? expeditions.filter((e) => (expeditionMaxTiers[e.id] ?? 5) > 0)
+    : expeditions
+  const orderedExpeditionIds = activeExpeditions.map((expedition) => expedition.id)
 
-  const initialState = createInitialState(normalized, expeditions, creatureMap)
+  const initialState = createInitialState(normalized, activeExpeditions, creatureMap)
   initialState.rank = estimateStateRank(initialState)
 
   let beam: SearchState[] = [initialState]
@@ -541,7 +546,7 @@ export function planPartyLevelingPath(
 
   function freeExpeditionIds(state: SearchState): string[] {
     const busy = new Set(state.activeRuns.map((run) => run.expeditionId))
-    return expeditions
+    return activeExpeditions
       .map((expedition) => expedition.id)
       .filter((expeditionId) => !busy.has(expeditionId))
   }
@@ -909,7 +914,8 @@ export function planPartyLevelingPath(
     if (cached !== undefined && cached.expeditionId === expedition.id) return cached.result
 
     let best: RunCandidate | null = null
-    for (let tier = 1; tier <= 5; tier++) {
+    const maxTier = expeditionMaxTiers[expedition.id] ?? 5
+    for (let tier = 1; tier <= maxTier; tier++) {
       const candidate = buildCandidate(state, expedition, tier, orderedMemberIds)
       if (!candidate) continue
       if (!best || isBetterCandidate(candidate, best, strategy)) best = candidate

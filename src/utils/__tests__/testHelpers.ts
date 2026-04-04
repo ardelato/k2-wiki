@@ -18,6 +18,7 @@ interface FixtureData {
   description: string
   creatures: FixtureCreature[]
   expeditions: Record<string, { party: string[]; tier: number; loopCount: number }>
+  expeditionMaxTiers?: Record<string, number>
 }
 
 const creatureMap = new Map((creaturesData as Creature[]).map((c) => [c.id, c]))
@@ -47,6 +48,7 @@ export function buildPlannerInput(
   return {
     creatures,
     expeditions,
+    expeditionMaxTiers: fixture.expeditionMaxTiers,
     strategy: options.strategy,
     timeBudget: options.timeBudget,
     wallClockLimitMs: Infinity,
