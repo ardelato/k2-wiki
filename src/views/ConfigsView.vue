@@ -32,9 +32,11 @@ import { sourceIcons, sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/i
 import { getItemImage } from '@/utils/itemImages'
 import { extractSaveConfig, type SaveConfig } from '@/utils/parseSave'
 
-const allExpeditions = (expeditionsData as Expedition[]).toSorted(
-  (a, b) => a.requiredExpeditionCompletions - b.requiredExpeditionCompletions,
-)
+const allExpeditions = (expeditionsData as Expedition[]).toSorted((a, b) => {
+  const diff = a.requiredExpeditionCompletions - b.requiredExpeditionCompletions
+  if (diff !== 0) return diff
+  return a.baseRating - b.baseRating
+})
 
 
 const { creatures } = useCreatures()
