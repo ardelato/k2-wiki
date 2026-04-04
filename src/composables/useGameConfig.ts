@@ -1,6 +1,11 @@
 import { useLocalStorage } from '@vueuse/core'
 import { computed } from 'vue'
 
+import {
+  defaultAwakenGatherUpgrades,
+  defaultAwakenSpeedTiers,
+  defaultGardenFlowers,
+} from '@/data/defaults'
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { calculateJobTiersFromSanctuary } from '@/utils/parseSave'
 
@@ -12,31 +17,25 @@ const expeditionToolXpBonus = useLocalStorage<number>('config-tool-xp-bonus', 1)
 const inventoryAmounts = useLocalStorage<Record<string, number>>('config-inventory', {})
 const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
   'config-garden-flowers',
-  {
-    'fire-flower': [],
-    'wind-flower': [],
-    'earth-flower': [],
-    'water-flower': [],
-  },
+  defaultGardenFlowers(),
 )
 const awakenGatherUpgrades = useLocalStorage<Record<string, AwakenGatherUpgrade>>(
   'config-awaken-gather',
-  {
-    Chopping: { yieldBonus: 0, durationTier: 0 },
-    Mining: { yieldBonus: 0, durationTier: 0 },
-    Digging: { yieldBonus: 0, durationTier: 0 },
-    Exploring: { yieldBonus: 0, durationTier: 0 },
-    Fishing: { yieldBonus: 0, durationTier: 0 },
-    Farming: { yieldBonus: 0, durationTier: 0 },
-  },
+  defaultAwakenGatherUpgrades(),
 )
-const awakenSpeedTiers = useLocalStorage<Record<string, number>>('config-awaken-speed', {
-  Furnace: 0,
-  Stove: 0,
-  Workbench: 0,
-})
+const awakenSpeedTiers = useLocalStorage<Record<string, number>>(
+  'config-awaken-speed',
+  defaultAwakenSpeedTiers(),
+)
 const expeditionCompletions = useLocalStorage<Record<string, Record<number, number>>>(
   'config-expedition-completions',
+  {},
+)
+const toolLevels = useLocalStorage<Record<string, number>>('config-tool-levels', {})
+const machineLevels = useLocalStorage<Record<string, number>>('config-machine-levels', {})
+const machineRecipes = useLocalStorage<Record<string, string | null>>('config-machine-recipes', {})
+const fabricationAllocations = useLocalStorage<Record<string, number>>(
+  'config-fabrication-allocations',
   {},
 )
 
@@ -88,12 +87,7 @@ export function useGameConfig() {
   }
 
   function resetGarden() {
-    gardenFlowers.value = {
-      'fire-flower': [],
-      'wind-flower': [],
-      'earth-flower': [],
-      'water-flower': [],
-    }
+    gardenFlowers.value = defaultGardenFlowers()
   }
 
   function setAwakenGatherYieldBonus(jobId: string, yieldBonus: number) {
@@ -120,19 +114,41 @@ export function useGameConfig() {
   }
 
   function resetAwaken() {
-    awakenGatherUpgrades.value = {
-      Chopping: { yieldBonus: 0, durationTier: 0 },
-      Mining: { yieldBonus: 0, durationTier: 0 },
-      Digging: { yieldBonus: 0, durationTier: 0 },
-      Exploring: { yieldBonus: 0, durationTier: 0 },
-      Fishing: { yieldBonus: 0, durationTier: 0 },
-      Farming: { yieldBonus: 0, durationTier: 0 },
-    }
-    awakenSpeedTiers.value = { Furnace: 0, Stove: 0, Workbench: 0 }
+    awakenGatherUpgrades.value = defaultAwakenGatherUpgrades()
+    awakenSpeedTiers.value = defaultAwakenSpeedTiers()
   }
 
   function setExpeditionCompletions(completions: Record<string, Record<number, number>>) {
     expeditionCompletions.value = completions
+  }
+
+  function setToolLevels(levels: Record<string, number>) {
+    toolLevels.value = levels
+  }
+
+  function resetToolLevels() {
+    toolLevels.value = {}
+  }
+
+  function setMachineLevels(levels: Record<string, number>) {
+    machineLevels.value = levels
+  }
+
+  function setMachineRecipes(recipes: Record<string, string | null>) {
+    machineRecipes.value = recipes
+  }
+
+  function resetMachines() {
+    machineLevels.value = {}
+    machineRecipes.value = {}
+  }
+
+  function setFabricationAllocations(allocations: Record<string, number>) {
+    fabricationAllocations.value = allocations
+  }
+
+  function resetFabrication() {
+    fabricationAllocations.value = {}
   }
 
   function resetGameConfig() {
@@ -144,6 +160,9 @@ export function useGameConfig() {
     resetGarden()
     resetAwaken()
     expeditionCompletions.value = {}
+    resetToolLevels()
+    resetMachines()
+    resetFabrication()
   }
 
   return {
@@ -157,6 +176,10 @@ export function useGameConfig() {
     awakenGatherUpgrades,
     awakenSpeedTiers,
     expeditionCompletions,
+    toolLevels,
+    machineLevels,
+    machineRecipes,
+    fabricationAllocations,
     setSanctuaryCreatures,
     setHelperCreatures,
     setMachineCreatures,
@@ -169,6 +192,13 @@ export function useGameConfig() {
     setAwakenGatherDurationTier,
     setAwakenSpeedTier,
     resetAwaken,
+    setToolLevels,
+    resetToolLevels,
+    setMachineLevels,
+    setMachineRecipes,
+    resetMachines,
+    setFabricationAllocations,
+    resetFabrication,
     resetGameConfig,
     setExpeditionToolXpBonus,
     expeditionToolXpBonus,
