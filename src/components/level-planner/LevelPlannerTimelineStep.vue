@@ -6,6 +6,7 @@ import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration } from '@/utils/format'
 import { getLoopXpBonus } from '@/utils/formulas'
+import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import type { PlanStep } from '@/utils/levelPlanner'
 
@@ -147,11 +148,13 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                 <p class="truncate text-sm font-semibold text-foreground">
                   {{ step.expedition.name }}
                 </p>
-                <span
-                  class="shrink-0 rounded bg-muted/50 px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground"
-                >
-                  T{{ step.tier }}
-                </span>
+                <img
+                  v-if="step.tier > 0"
+                  :src="expeditionTierIcons[step.tier]"
+                  :alt="`Tier ${step.tier}`"
+                  class="size-5 shrink-0 object-contain"
+                  loading="lazy"
+                />
                 <span
                   v-if="step.traitMatch"
                   class="shrink-0 text-[10px] font-semibold text-primary"
