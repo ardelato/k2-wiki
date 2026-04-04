@@ -142,6 +142,7 @@ const hasAnything = computed(() => activeCount.value > 0)
               :src="getItemImage({ id: item.itemId })"
               :alt="item.itemName"
               class="size-5 object-contain"
+              loading="lazy"
             />
             <span class="min-w-0 truncate text-sm text-foreground">{{ item.itemName }}</span>
             <span
@@ -174,6 +175,7 @@ const hasAnything = computed(() => activeCount.value > 0)
                 :src="getItemImage({ id: flower.flowerId })"
                 :alt="flower.flowerName"
                 class="size-5 object-contain"
+                loading="lazy"
               />
               <span class="min-w-0 text-sm font-semibold text-foreground">{{
                 flower.flowerName
@@ -228,6 +230,7 @@ const hasAnything = computed(() => activeCount.value > 0)
               :src="sourceIcons[upgrade.jobId]"
               alt=""
               class="size-4 shrink-0"
+              loading="lazy"
             />
             <span class="min-w-0 text-sm text-foreground">{{ upgrade.jobId }}</span>
             <div class="ml-auto flex items-center gap-3">
@@ -269,6 +272,7 @@ const hasAnything = computed(() => activeCount.value > 0)
               :src="sourceIcons[ws.workstation]"
               alt=""
               class="size-4 shrink-0"
+              loading="lazy"
             />
             <span class="min-w-0 text-sm text-foreground">{{ ws.workstation }}</span>
             <span class="ml-auto shrink-0 text-xs font-semibold" style="color: hsl(var(--primary))">
@@ -297,6 +301,7 @@ const hasAnything = computed(() => activeCount.value > 0)
               :src="sourceIcons[job.jobId]"
               alt=""
               class="size-4 shrink-0"
+              loading="lazy"
             />
             <span class="min-w-0 text-sm text-foreground">{{ job.jobId }}</span>
             <span class="ml-auto shrink-0 text-xs font-semibold" style="color: rgb(52, 211, 153)">

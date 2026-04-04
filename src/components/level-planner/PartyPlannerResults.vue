@@ -3,7 +3,7 @@ import { GanttChart, List, BarChart3, ExternalLink, Copy, Check, X } from 'lucid
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import biomesData from '@/data/biomes.json'
 import type { PartyLevelingPlan, Creature, PartyPlanStep, PlannerStrategy } from '@/types'
 import type { Biome } from '@/types'
@@ -466,7 +466,7 @@ const stepsByWave = computed(() => {
               class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
               style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
             >
-              <img :src="awakenedSummonedIcon" alt="" class="size-4" />
+              <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
             </div>
             <div
               v-else

@@ -2,11 +2,11 @@
 import { ChevronDown, Clock } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 
-import farmingIcon from '@/assets/icons/farming.png'
-import furnaceIcon from '@/assets/icons/furnace.png'
-import refineryIcon from '@/assets/icons/refinery.png'
-import stoveIcon from '@/assets/icons/stove.png'
-import workbenchIcon from '@/assets/icons/workbench.png'
+import farmingIcon from '@/assets/icons/farming.webp'
+import furnaceIcon from '@/assets/icons/furnace.webp'
+import refineryIcon from '@/assets/icons/refinery.webp'
+import stoveIcon from '@/assets/icons/stove.webp'
+import workbenchIcon from '@/assets/icons/workbench.webp'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useMachines } from '@/composables/useMachines'
 import { itemById } from '@/data/indexes'
@@ -113,6 +113,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
               :src="getMachineImage(machine)!"
               :alt="machine.name"
               class="size-8"
+              loading="lazy"
             />
             <div class="min-w-0 flex-1">
               <div class="flex items-center justify-between">
@@ -136,6 +137,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                   :src="getItemImage({ id: 'gold' })!"
                   alt=""
                   class="size-4"
+                  loading="lazy"
                 />
                 {{ formatGold(machine.cost) }}
               </div>
@@ -148,6 +150,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                   :src="getItemImage(itemById.get(machine.outputItemId)!)!"
                   alt=""
                   class="size-4"
+                  loading="lazy"
                 />
                 <span class="font-medium">{{ itemName(machine.outputItemId!) }}</span>
               </div>
@@ -192,6 +195,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
               :src="getMachineImage(machine)!"
               :alt="machine.name"
               class="size-8 shrink-0"
+              loading="lazy"
             />
             <div class="min-w-0 flex-1">
               <div class="flex items-center justify-between">
@@ -233,6 +237,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                   :src="getItemImage({ id: 'gold' })!"
                   alt=""
                   class="size-4"
+                  loading="lazy"
                 />
                 {{ formatGold(machine.cost) }}
               </div>
@@ -286,6 +291,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                           :src="getItemImage(itemById.get(recipe.inputItemId)!)!"
                           alt=""
                           class="size-4"
+                          loading="lazy"
                         />
                         <span>{{ recipe.inputAmount }}x {{ itemName(recipe.inputItemId) }}</span>
                       </div>
@@ -297,6 +303,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                             :src="getItemImage(itemById.get(recipe.secondaryInputItemId)!)!"
                             alt=""
                             class="size-4"
+                            loading="lazy"
                           />
                           <span>
                             {{ recipe.secondaryInputAmount }}x
@@ -313,6 +320,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                         :src="getItemImage(itemById.get(recipe.outputItemId)!)!"
                         alt=""
                         class="size-4"
+                        loading="lazy"
                       />
                       <span class="font-medium">
                         {{ recipe.outputAmount }}x {{ itemName(recipe.outputItemId) }}
@@ -351,6 +359,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                   :src="getMachineImage(machine)!"
                   :alt="machine.name"
                   class="mx-auto size-5"
+                  loading="lazy"
                 />
               </th>
             </tr>
@@ -384,6 +393,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                     :src="getItemImage(itemById.get(cost.barId)!)!"
                     alt=""
                     class="size-4"
+                    loading="lazy"
                   />
                   <span>{{ itemName(cost.barId) }}</span>
                 </div>

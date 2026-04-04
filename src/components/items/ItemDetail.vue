@@ -214,6 +214,7 @@ const jobColorMap: Record<string, string> = {
           :src="getItemImage(item)"
           :alt="item.name"
           class="size-24 object-contain drop-shadow-lg"
+          loading="lazy"
         />
         <span
           v-else
@@ -298,6 +299,7 @@ const jobColorMap: Record<string, string> = {
                 :src="sourceIcons[group.jobId]"
                 alt=""
                 class="size-4 shrink-0"
+                loading="lazy"
               />
               <span
                 v-else
@@ -337,6 +339,7 @@ const jobColorMap: Record<string, string> = {
                   :src="sourceIcons[group.jobId]"
                   alt=""
                   class="size-4 shrink-0"
+                  loading="lazy"
                 />
                 <span
                   v-else
@@ -408,6 +411,7 @@ const jobColorMap: Record<string, string> = {
               :src="getItemImage({ id: cs.containerId })"
               :alt="cs.containerName"
               class="size-5 shrink-0 object-contain"
+              loading="lazy"
             />
             <span
               v-else
@@ -461,6 +465,7 @@ const jobColorMap: Record<string, string> = {
                 :src="sourceIcons[recipe.workstation]"
                 alt=""
                 class="size-4"
+                loading="lazy"
               />
               {{ recipe.workstation }}
             </p>
@@ -497,6 +502,7 @@ const jobColorMap: Record<string, string> = {
                   :src="getItemImage({ id: ingredient.id })"
                   :alt="getItemById(ingredient.id)?.name"
                   class="size-5 shrink-0 object-contain"
+                  loading="lazy"
                 />
                 <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
                 <span class="flex-1 text-sm text-foreground transition hover:text-primary">{{
@@ -536,6 +542,7 @@ const jobColorMap: Record<string, string> = {
                       :src="getItemImage({ id: variant })"
                       :alt="getItemById(variant)?.name"
                       class="size-5 shrink-0 object-contain"
+                      loading="lazy"
                     />
                     <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/40" />
                     <span class="flex-1 text-sm text-foreground transition hover:text-primary">
@@ -566,6 +573,7 @@ const jobColorMap: Record<string, string> = {
               :src="getItemImage({ id: usage.outputItemId })"
               :alt="usage.outputItemName"
               class="size-5 shrink-0 object-contain"
+              loading="lazy"
             />
             <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
             <div class="min-w-0 flex-1">
@@ -598,6 +606,7 @@ const jobColorMap: Record<string, string> = {
               :src="getItemImage({ id: entry.id })"
               :alt="getItemById(entry.id)?.name"
               class="size-5 shrink-0 object-contain"
+              loading="lazy"
             />
             <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
             <span
@@ -630,6 +639,7 @@ const jobColorMap: Record<string, string> = {
               :src="getCreatureImage({ id: creature.id, image: '' })"
               :alt="`${creature.name} artwork`"
               class="size-full object-cover"
+              loading="lazy"
             />
             <div
               v-else

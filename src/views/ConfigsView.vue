@@ -1141,6 +1141,7 @@ function jobTierLabel(tier: number): string {
                 :src="getCreatureImage(c)"
                 :alt="c.name"
                 class="size-7 rounded object-cover"
+                loading="lazy"
               />
               <div v-else class="size-7 rounded bg-muted" />
               <span class="flex-1 font-medium" :class="c.awakened ? 'text-pink-400' : ''">
@@ -1247,7 +1248,7 @@ function jobTierLabel(tier: number): string {
           <h3
             class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
           >
-            <img :src="sanctuaryIcon" alt="" class="size-4" />
+            <img :src="sanctuaryIcon" alt="" class="size-4" loading="lazy" />
             <template v-if="saveConfig && !appliedSections.exclusions && sanctuaryHasDiff">
               Sanctuary ({{ sanctuaryCreatureIds.length }} &rarr; {{ sanctuaryPreview.length }})
             </template>
@@ -1283,6 +1284,7 @@ function jobTierLabel(tier: number): string {
                   :src="getCreatureImage(slot)"
                   :alt="slot.name"
                   class="size-full object-cover"
+                  loading="lazy"
                 />
                 <div
                   v-else
@@ -1344,6 +1346,7 @@ function jobTierLabel(tier: number): string {
                     :src="getCreatureImage(c)"
                     :alt="c.name"
                     class="size-full object-cover"
+                    loading="lazy"
                   />
                   <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
                     <p class="truncate text-center text-[8px] font-semibold text-white">
@@ -1370,7 +1373,7 @@ function jobTierLabel(tier: number): string {
           <h3
             class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
           >
-            <img :src="helpersIcon" alt="" class="size-4" />
+            <img :src="helpersIcon" alt="" class="size-4" loading="lazy" />
             Helpers ({{ helperCreatureIds.length }}/{{ HELPERS_MAX }})
           </h3>
           <div class="flex flex-wrap gap-2">
@@ -1401,6 +1404,7 @@ function jobTierLabel(tier: number): string {
                   :src="getCreatureImage(slot)"
                   :alt="slot.name"
                   class="size-full object-cover"
+                  loading="lazy"
                 />
                 <div
                   v-else
@@ -1462,6 +1466,7 @@ function jobTierLabel(tier: number): string {
                     :src="getCreatureImage(c)"
                     :alt="c.name"
                     class="size-full object-cover"
+                    loading="lazy"
                   />
                   <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
                     <p class="truncate text-center text-[8px] font-semibold text-white">
@@ -1488,7 +1493,7 @@ function jobTierLabel(tier: number): string {
           <h3
             class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
           >
-            <img :src="machinesIcon" alt="" class="size-4" />
+            <img :src="machinesIcon" alt="" class="size-4" loading="lazy" />
             <template v-if="saveConfig && !appliedSections.exclusions && machineHasDiff">
               Machines ({{ machineCreatureIds.length }} &rarr; {{ saveConfig.machines.length }})
             </template>
@@ -1524,6 +1529,7 @@ function jobTierLabel(tier: number): string {
                   :src="getCreatureImage(slot)"
                   :alt="slot.name"
                   class="size-full object-cover"
+                  loading="lazy"
                 />
                 <div
                   v-else
@@ -1585,6 +1591,7 @@ function jobTierLabel(tier: number): string {
                     :src="getCreatureImage(c)"
                     :alt="c.name"
                     class="size-full object-cover"
+                    loading="lazy"
                   />
                   <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
                     <p class="truncate text-center text-[8px] font-semibold text-white">
@@ -1689,6 +1696,7 @@ function jobTierLabel(tier: number): string {
                   :src="getItemImage({ id: d.id })"
                   :alt="d.name"
                   class="size-5 object-contain"
+                  loading="lazy"
                 />
                 <span class="font-medium">{{ d.name }}</span>
               </div>
@@ -1812,6 +1820,7 @@ function jobTierLabel(tier: number): string {
                     :src="getItemImage({ id: flower.id })"
                     :alt="flower.name"
                     class="size-5 object-contain"
+                    loading="lazy"
                   />
                 </div>
                 <span class="min-w-0 flex-1 text-sm font-semibold text-foreground">{{
@@ -1896,6 +1905,7 @@ function jobTierLabel(tier: number): string {
                       :src="getItemImage({ id: f.id })"
                       :alt="f.name"
                       class="size-5 object-contain"
+                      loading="lazy"
                     />
                     <span class="min-w-0 text-sm font-semibold text-foreground">{{ f.name }}</span>
                     <span class="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
@@ -1962,6 +1972,7 @@ function jobTierLabel(tier: number): string {
                       :src="getItemImage({ id: flower.flowerId })"
                       :alt="flower.flowerName"
                       class="size-5 object-contain"
+                      loading="lazy"
                     />
                     <span class="min-w-0 text-sm font-semibold text-foreground">{{
                       flower.flowerName
@@ -2085,6 +2096,7 @@ function jobTierLabel(tier: number): string {
                     :src="sourceIcons[g.job]"
                     alt=""
                     class="size-5 object-contain"
+                    loading="lazy"
                   />
                   <span class="font-medium">{{ g.job }}</span>
                 </div>
@@ -2164,6 +2176,7 @@ function jobTierLabel(tier: number): string {
                     :src="sourceIcons[s.workstation]"
                     alt=""
                     class="size-5 object-contain"
+                    loading="lazy"
                   />
                   <span class="font-medium">{{ s.workstation }}</span>
                 </div>
@@ -2236,6 +2249,7 @@ function jobTierLabel(tier: number): string {
                 :src="sourceIcons[j.job]"
                 alt=""
                 class="size-5 object-contain"
+                loading="lazy"
               />
               <span class="font-medium">{{ j.job }}</span>
             </div>
@@ -2427,6 +2441,7 @@ function jobTierLabel(tier: number): string {
                 :src="getItemImage({ id: itemId })!"
                 alt=""
                 class="size-4"
+                loading="lazy"
               />
               <span class="font-medium capitalize">{{ itemId.replace(/-/g, ' ') }}</span>
             </div>
@@ -2510,6 +2525,7 @@ function jobTierLabel(tier: number): string {
                 "
                 :src="getItemImage({ id: item.expedition.rewards[0].itemId })"
                 :alt="item.expedition.rewards[0].itemId"
+                loading="lazy"
                 class="size-5 shrink-0 object-contain"
               />
               <span class="font-medium">{{ item.expedition.name }}</span>

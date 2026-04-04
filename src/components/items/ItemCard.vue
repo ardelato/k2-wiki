@@ -35,6 +35,7 @@ defineEmits<{
         :src="getItemImage(item)"
         :alt="item.name"
         class="size-16 object-contain drop-shadow-md"
+        loading="lazy"
       />
       <span
         v-else

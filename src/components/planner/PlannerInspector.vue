@@ -214,6 +214,7 @@ function openDisplayNodePlanner() {
           :src="getItemImage({ id: displayNode.itemId })"
           :alt="displayNode.itemName"
           class="size-20 object-contain drop-shadow-lg"
+          loading="lazy"
         />
         <span
           v-else
@@ -342,6 +343,7 @@ function openDisplayNodePlanner() {
                 :src="sourceIcons[method.title]"
                 alt=""
                 class="size-4 shrink-0"
+                loading="lazy"
               />
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-semibold text-foreground">{{ method.title }}</p>
@@ -452,6 +454,7 @@ function openDisplayNodePlanner() {
                       :src="getItemImage({ id: child.itemId })"
                       :alt="nodesById[child.nodeId]?.itemName ?? child.itemId"
                       class="size-5 object-contain"
+                      loading="lazy"
                     />
                     <div>
                       <p class="text-sm font-semibold text-foreground">
@@ -585,6 +588,7 @@ function openDisplayNodePlanner() {
                 :src="getItemImage({ id: leaf.itemId })"
                 :alt="leaf.itemName"
                 class="size-5 object-contain"
+                loading="lazy"
               />
               <span class="text-sm font-medium text-foreground">{{ leaf.itemName }}</span>
             </div>

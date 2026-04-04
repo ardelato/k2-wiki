@@ -111,7 +111,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
     >
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-1.5">
-          <img v-if="prestigeImage" :src="prestigeImage" alt="" class="size-5" />
+          <img v-if="prestigeImage" :src="prestigeImage" alt="" class="size-5" loading="lazy" />
           <span class="font-semibold">{{ totalPoints }} points</span>
         </div>
         <div
@@ -151,6 +151,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             :src="sourceIcons[toTitleCase(col.source)]"
             alt=""
             class="size-5"
+            loading="lazy"
           />
           <h2 class="text-sm font-semibold">{{ col.label }}</h2>
         </div>
@@ -181,6 +182,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
               :src="getItemImage({ id: item.id })!"
               :alt="item.name"
               class="size-7 shrink-0"
+              loading="lazy"
             />
 
             <!-- Name & level -->

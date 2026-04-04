@@ -2,7 +2,7 @@
 import { Clock3, Minus, Plus, Repeat, RotateCcw, Users, Zap } from 'lucide-vue-next'
 import { computed, ref, nextTick } from 'vue'
 
-import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
 import biomesData from '@/data/biomes.json'
 import type { PartyLevelingPlan, PartyPlanStep, Creature, AwakenEvent } from '@/types'
@@ -387,6 +387,7 @@ const activeBarScoreRatio = computed(() => {
                 :src="getCreatureImage(marker.creature)"
                 :alt="marker.creature.name"
                 class="size-full object-cover"
+                loading="lazy"
               />
             </div>
           </button>
@@ -402,6 +403,7 @@ const activeBarScoreRatio = computed(() => {
             :src="getItemImage({ id: laneRewardId[lane]! })"
             :alt="lane"
             class="size-6 shrink-0 object-contain"
+            loading="lazy"
           />
           <span class="text-sm font-bold leading-tight text-foreground/80">{{ lane }}</span>
         </div>
@@ -437,6 +439,7 @@ const activeBarScoreRatio = computed(() => {
                 :src="getCreatureImage(creatures.get(cId)!)"
                 :alt="creatures.get(cId)?.name"
                 class="size-8 rounded-full border-2 border-background object-cover"
+                loading="lazy"
               />
             </div>
             <span class="truncate">T{{ bar.tier }}</span>
@@ -472,6 +475,7 @@ const activeBarScoreRatio = computed(() => {
                 :src="getItemImage({ id: activeBar.rewardItemId })"
                 :alt="activeBar.expeditionName"
                 class="size-5 shrink-0 object-contain"
+                loading="lazy"
               />
               <p class="truncate text-sm font-bold text-foreground">
                 {{ activeBar.expeditionName }}
@@ -577,6 +581,7 @@ const activeBarScoreRatio = computed(() => {
                   :src="getCreatureImage(creatures.get(member.creatureId)!)"
                   :alt="creatures.get(member.creatureId)?.name"
                   class="size-7 shrink-0 rounded-full border border-border object-cover"
+                  loading="lazy"
                 />
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-xs font-semibold text-foreground">
@@ -622,6 +627,7 @@ const activeBarScoreRatio = computed(() => {
                   :src="getCreatureImage(activeAwakenMarker.creature)"
                   :alt="activeAwakenMarker.creature.name"
                   class="size-full object-cover"
+                  loading="lazy"
                 />
               </div>
               <div class="min-w-0 flex-1">
@@ -630,6 +636,7 @@ const activeBarScoreRatio = computed(() => {
                     :src="awakenedSummonedIcon"
                     alt="Awaken"
                     class="size-4 shrink-0 object-contain"
+                    loading="lazy"
                   />
                   <p class="text-sm font-bold text-pink-400">Manually Awaken</p>
                 </div>

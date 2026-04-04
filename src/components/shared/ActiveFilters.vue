@@ -30,7 +30,7 @@ defineEmits<{
         class="pill pill-active focus-ring gap-1.5 active:scale-[0.96]"
         @click="$emit('remove', f.key)"
       >
-        <img v-if="f.image" :src="f.image" alt="" class="size-4" />
+        <img v-if="f.image" :src="f.image" alt="" class="size-4" loading="lazy" />
         <span
           v-if="f.color && !f.image"
           class="inline-block size-2 rounded-full ring-1 ring-white/60"

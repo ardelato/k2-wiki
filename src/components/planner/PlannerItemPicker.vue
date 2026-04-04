@@ -109,6 +109,7 @@ function selectOption(itemId: string) {
           :src="getItemImage({ id: selectedOption.id, image: selectedOption.image })"
           :alt="selectedOption.name"
           class="size-10 rounded-xl border border-border object-contain"
+          loading="lazy"
           :style="{
             backgroundColor: `color-mix(in oklch, ${itemTypeColor(selectedOption.type)} 10%, transparent)`,
           }"
@@ -203,6 +204,7 @@ function selectOption(itemId: string) {
                 :src="getItemImage({ id: option.id, image: option.image })"
                 :alt="option.name"
                 class="size-8 object-contain"
+                loading="lazy"
               />
               <span v-else class="text-sm font-black">
                 {{ option.name.charAt(0) }}

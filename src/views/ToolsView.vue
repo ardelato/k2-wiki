@@ -63,6 +63,7 @@ const toolGroups = computed(() => [
               :src="toolIcons[tool.id]"
               :alt="tool.name"
               class="size-8"
+              loading="lazy"
             />
             <div>
               <h3 class="font-semibold">{{ tool.name }}</h3>
@@ -79,6 +80,7 @@ const toolGroups = computed(() => [
                   :src="sourceIcons[tool.skillId] ?? toolIcons[tool.id]"
                   alt=""
                   class="size-4"
+                  loading="lazy"
                 />
                 {{ tool.skillId }}
               </div>
@@ -136,6 +138,7 @@ const toolGroups = computed(() => [
                     :src="getItemImage(itemById.get(cost.barId)!)!"
                     alt=""
                     class="size-4"
+                    loading="lazy"
                   />
                   <span>{{ itemName(cost.barId) }}</span>
                 </div>

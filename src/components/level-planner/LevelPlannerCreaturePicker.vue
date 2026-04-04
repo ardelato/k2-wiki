@@ -112,6 +112,7 @@ function close() {
           :alt="selected.name"
           class="size-10 rounded-xl border border-border object-cover"
           :style="{ backgroundColor: `hsl(${typeColorVar(selected.types[0])} / 0.1)` }"
+          loading="lazy"
         />
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5">
@@ -203,6 +204,7 @@ function close() {
               :alt="creature.name"
               class="size-10 rounded-xl border border-border object-cover"
               :style="{ backgroundColor: `hsl(${typeColorVar(creature.types[0])} / 0.1)` }"
+              loading="lazy"
             />
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1">

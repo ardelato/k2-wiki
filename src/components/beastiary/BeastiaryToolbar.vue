@@ -2,9 +2,9 @@
 import { ChevronDown, Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 
-import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
-import notSummonedIcon from '@/assets/icons/not_summoned.png'
-import summonedIcon from '@/assets/icons/summoned.png'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import notSummonedIcon from '@/assets/icons/not_summoned.webp'
+import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import type { ElementType } from '@/types'
@@ -188,6 +188,7 @@ const typeDotColor: Record<ElementType, string> = {
             :src="jobIcons[job.toLowerCase()]"
             alt=""
             class="size-4"
+            loading="lazy"
           />
           {{ toTitleCase(job) }}
         </button>
@@ -211,8 +212,14 @@ const typeDotColor: Record<ElementType, string> = {
           :class="props.ownedFilter === option ? 'pill-active' : ''"
           @click="emit('update:ownedFilter', props.ownedFilter === option ? 'all' : option)"
         >
-          <img v-if="option === 'owned'" :src="summonedIcon" alt="" class="size-4" />
-          <img v-if="option === 'unowned'" :src="notSummonedIcon" alt="" class="size-4" />
+          <img v-if="option === 'owned'" :src="summonedIcon" alt="" class="size-4" loading="lazy" />
+          <img
+            v-if="option === 'unowned'"
+            :src="notSummonedIcon"
+            alt=""
+            class="size-4"
+            loading="lazy"
+          />
           {{ option === 'owned' ? 'Summoned' : 'Not Summoned' }}
         </button>
       </div>
@@ -235,7 +242,13 @@ const typeDotColor: Record<ElementType, string> = {
           :class="props.awakenedFilter === option ? 'pill-active' : ''"
           @click="emit('update:awakenedFilter', props.awakenedFilter === option ? 'all' : option)"
         >
-          <img v-if="option === 'awakened'" :src="awakenedSummonedIcon" alt="" class="size-4" />
+          <img
+            v-if="option === 'awakened'"
+            :src="awakenedSummonedIcon"
+            alt=""
+            class="size-4"
+            loading="lazy"
+          />
           {{ option === 'awakened' ? 'Awakened' : 'Not Awakened' }}
         </button>
 

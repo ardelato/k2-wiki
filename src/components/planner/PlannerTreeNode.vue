@@ -101,6 +101,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
           :src="getItemImage({ id: node.itemId })"
           :alt="node.itemName"
           class="size-5 object-contain"
+          loading="lazy"
         />
         <span v-else class="text-[10px] font-bold" :style="{ color: itemTypeColor(node.itemType) }">
           {{ node.itemName.charAt(0) }}
@@ -141,6 +142,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
           :src="getItemImage({ id: node.itemId })"
           :alt="node.itemName"
           class="size-7 object-contain"
+          loading="lazy"
         />
         <span v-else class="text-xs font-bold" :style="{ color: itemTypeColor(node.itemType) }">
           {{ node.itemName.charAt(0) }}
@@ -214,6 +216,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
             :src="sourceIcons[activeMethod.title]"
             alt=""
             class="size-3.5 shrink-0"
+            loading="lazy"
           />
           <span class="min-w-0 truncate text-xs text-muted-foreground">{{
             activeMethod.title

@@ -448,6 +448,7 @@ onMounted(() => {
                           :src="getItemImage(item)"
                           :alt="item.name"
                           class="size-8 object-contain"
+                          loading="lazy"
                         />
                         <template v-else>{{ item.name.charAt(0) }}</template>
                       </div>
@@ -477,6 +478,7 @@ onMounted(() => {
                           :src="sourceIcons[label]"
                           alt=""
                           class="size-3"
+                          loading="lazy"
                         />
                         {{ label }}
                       </span>

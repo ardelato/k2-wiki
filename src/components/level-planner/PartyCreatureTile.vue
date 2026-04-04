@@ -56,6 +56,7 @@ function levelBadgeClass(): string {
         :src="getCreatureImage(creature)"
         :alt="creature.name"
         class="size-full object-cover"
+        loading="lazy"
       />
       <div class="absolute inset-x-0 bottom-0 bg-black/70 px-1 py-0.5">
         <p class="truncate text-center text-[9px] font-semibold" :class="nameClass()">

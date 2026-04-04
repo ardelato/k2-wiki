@@ -111,6 +111,7 @@ const selectedCreatureImage = computed(() => {
             :src="getItemImage({ id: reward.itemId })"
             :alt="toTitleCase(reward.itemId)"
             class="size-4 object-contain"
+            loading="lazy"
           />
           {{ reward.amount }}x {{ toTitleCase(reward.itemId) }}
         </span>
@@ -134,6 +135,7 @@ const selectedCreatureImage = computed(() => {
             :src="selectedCreatureImage"
             :alt="`${selectedCreature.name} artwork`"
             class="creature-avatar-image"
+            loading="lazy"
           />
           <span v-else>{{ selectedCreature.name.charAt(0) }}</span>
         </div>

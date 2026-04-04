@@ -128,6 +128,7 @@ const timeMarkers = computed(() => {
             :src="sourceIcons[resource]"
             alt=""
             class="size-3.5 shrink-0"
+            loading="lazy"
           />
           {{ resource }}
         </div>
@@ -158,6 +159,7 @@ const timeMarkers = computed(() => {
               :src="getItemImage({ id: task.itemId })"
               :alt="task.itemName"
               class="size-4 shrink-0 object-contain"
+              loading="lazy"
             />
             <span class="truncate">{{ task.itemName }}</span>
             <span v-if="nodesById[task.nodeId]" class="shrink-0 text-[10px] opacity-70"
