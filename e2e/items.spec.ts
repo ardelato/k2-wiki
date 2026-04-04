@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./items')
-  await page.waitForLoadState('networkidle')
+  await page.getByPlaceholder('Search items').waitFor()
 })
 
 /** Count visible item cards (each ItemCard is an <article>) */
@@ -143,7 +143,7 @@ test.describe('item selection and detail panel', () => {
 
   test('query param pre-selects item on load', async ({ page }) => {
     await page.goto('./items?item=chopping-charm')
-    await page.waitForLoadState('networkidle')
+    await page.locator('aside').waitFor()
 
     const detail = page.locator('aside')
     await expect(detail).toBeVisible()
@@ -157,7 +157,7 @@ test.describe('detail panel navigation', () => {
   test('clicking linked item in detail navigates to that item', async ({ page }) => {
     // Open Coal which has many recipes with ingredient links
     await page.goto('./items?item=coal')
-    await page.waitForLoadState('networkidle')
+    await page.locator('aside').waitFor()
 
     const detail = page.locator('aside')
     await expect(detail.locator('h2')).toContainText('Coal')

@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./expeditions')
   await page.evaluate(() => localStorage.clear())
   await page.goto('./expeditions')
-  await page.waitForLoadState('networkidle')
+  await page.getByText('Expedition Training').first().waitFor()
 })
 
 /** Creature cards — buttons that contain a creature artwork image */
@@ -52,7 +52,7 @@ test.describe('expedition selection', () => {
 
   test('query param pre-selects expedition', async ({ page }) => {
     await page.goto('./expeditions?expedition=expedition-type-1')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h3', { hasText: 'Expedition Training' }).waitFor()
     await expect(page.locator('h3', { hasText: 'Expedition Training' })).toBeVisible()
   })
 })
@@ -192,7 +192,7 @@ test.describe('XP rate validation', () => {
       localStorage.setItem('expedition-creature-levels', JSON.stringify(levels))
     })
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.getByText('0.00 XP/s').waitFor()
 
     // Party XP/s should be 0.00 (all creatures at max level earn no XP)
     await expect(page.getByText('0.00 XP/s')).toBeVisible()
@@ -280,7 +280,7 @@ test.describe('creature filtering', () => {
       localStorage.setItem('creature-collection', JSON.stringify(coll))
     })
     await page.goto('./expeditions')
-    await page.waitForLoadState('networkidle')
+    await page.getByText('Expedition Training').first().waitFor()
     await selectFirstExpedition(page)
     await showAllCreatures(page)
 
