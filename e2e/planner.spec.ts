@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./planner')
   await page.evaluate(() => localStorage.clear())
   await page.goto('./planner')
-  await page.waitForLoadState('networkidle')
+  await page.getByText('Choose an item to begin planning.').waitFor()
 })
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 async function openItemPlan(page: Page, itemId: string, qty = 1) {
   const qtyParam = qty > 1 ? `?qty=${qty}` : ''
   await page.goto(`./planner/${itemId}${qtyParam}`)
-  await page.waitForLoadState('networkidle')
+  await page.getByText('Gathering List').first().waitFor()
 }
 
 // ── Page rendering & item selection ─────────────────────────────────
@@ -254,7 +254,7 @@ async function seedCreatures(page: Page) {
 test.describe('level up - single mode rendering', () => {
   test('default shows Level Up Planner heading and mode toggle', async ({ page }) => {
     await page.goto('./planner?tab=levelup')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
 
     await expect(page.locator('h1', { hasText: 'Level Up Planner' })).toBeVisible()
     await expect(page.getByText('Single', { exact: true })).toBeVisible()
@@ -263,7 +263,7 @@ test.describe('level up - single mode rendering', () => {
 
   test('empty state shows choose a creature prompt', async ({ page }) => {
     await page.goto('./planner?tab=levelup')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
 
     await expect(page.getByText('Choose a creature to begin planning.')).toBeVisible()
   })
@@ -280,7 +280,7 @@ test.describe('level up - single mode planning', () => {
 
   test('selecting creature via URL shows leveling plan', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
 
     // Heading should show creature name
     await expect(page.locator('h1', { hasText: 'Moss Leveling' })).toBeVisible()
@@ -293,7 +293,7 @@ test.describe('level up - single mode planning', () => {
 
   test('timeline steps show expedition names and level ranges', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
 
     // At least one step should show an expedition name
     // Steps have numbered nodes (1, 2, 3...) and expedition details
@@ -302,7 +302,7 @@ test.describe('level up - single mode planning', () => {
 
   test('target level preset 70 changes the plan', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
 
     // Get step count at target 120
     const stepsText120 = await page
@@ -315,7 +315,10 @@ test.describe('level up - single mode planning', () => {
     await page.getByRole('button', { name: '70', exact: true }).first().click()
 
     // Wait for plan to recalculate
-    await page.waitForLoadState('networkidle')
+    await page
+      .getByText(/\d+ steps?/)
+      .first()
+      .waitFor()
     const stepsText70 = await page
       .getByText(/\d+ steps?/)
       .first()
@@ -335,9 +338,7 @@ test.describe('level up - single mode planning', () => {
       localStorage.setItem('creature-collection', JSON.stringify(coll))
     })
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.waitForLoadState('networkidle')
-
-    await expect(page.getByText('Already at max level!')).toBeVisible()
+    await page.getByText('Already at max level!').waitFor()
   })
 })
 
@@ -347,7 +348,7 @@ test.describe('level up - step interaction', () => {
   test('clicking a step card expands it to show details', async ({ page }) => {
     await seedCreatures(page)
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
 
     // Find the first step card button with aria-expanded
     const stepButton = page.locator('button[aria-expanded="false"]').first()
@@ -366,7 +367,7 @@ test.describe('level up - step interaction', () => {
       )
     })
     await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
 
     // Awakening step should show "Awaken Creature" text
     await expect(page.getByText('Awaken Creature')).toBeVisible()
@@ -381,7 +382,7 @@ test.describe('level up - party mode rendering', () => {
     await page.evaluate(() => localStorage.clear())
     await seedCreatures(page)
     await page.goto('./planner?tab=levelup')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
   })
 
   test('switching to Party mode shows creature filter and Calculate button', async ({ page }) => {
@@ -414,7 +415,7 @@ test.describe('level up - party mode computation', () => {
     await page.evaluate(() => localStorage.clear())
     await seedCreatures(page)
     await page.goto('./planner?tab=levelup&mode=party&partyTarget=70')
-    await page.waitForLoadState('networkidle')
+    await page.getByRole('button', { name: 'Calculate' }).waitFor()
 
     // Click Calculate
     await page.getByRole('button', { name: 'Calculate' }).click()

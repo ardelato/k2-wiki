@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./configs')
   await page.evaluate(() => localStorage.clear())
   await page.goto('./configs')
-  await page.waitForLoadState('networkidle')
+  await page.locator('h1', { hasText: 'Configs' }).waitFor()
 })
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ async function seedOwnedCreatures(page: Page) {
     creatures,
   )
   await page.goto('./configs')
-  await page.waitForLoadState('networkidle')
+  await page.locator('h1', { hasText: 'Configs' }).waitFor()
 }
 
 /**
@@ -109,7 +109,7 @@ test.describe('creature exclusions - edit lifecycle', () => {
     await sec.getByRole('button', { name: 'Done' }).click()
 
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
     await expect(page.getByText('1 excluded')).toBeVisible()
   })
 
@@ -212,7 +212,7 @@ test.describe('garden editing', () => {
     await sec.getByRole('button', { name: 'Done' }).click()
 
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
 
     // Read-only view shows level badge "2×" and "Lv1"
     const gardenSec = configSection(page, 'Garden')
@@ -310,7 +310,7 @@ test.describe('awaken tree editing', () => {
     await sec.getByRole('button', { name: 'Done' }).click()
 
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
     await expect(page.getByText('Yield +1, Duration -0%').first()).toBeVisible()
 
     // Edit again, change, and cancel
@@ -375,7 +375,7 @@ test.describe('reset all', () => {
       )
     })
     await page.goto('./configs')
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
 
     await expect(page.getByText('2 excluded')).toBeVisible()
 
@@ -395,7 +395,7 @@ test.describe('save file import', () => {
   async function uploadSave(page: Page) {
     const fileInput = page.locator('input[type="file"][accept=".json"]')
     await fileInput.setInputFiles(fixturePath)
-    await page.waitForLoadState('networkidle')
+    await page.getByRole('button', { name: 'Apply All From Save' }).waitFor()
   }
 
   test('uploading save file shows Apply All button with counts', async ({ page }) => {
@@ -444,7 +444,7 @@ test.describe('save file import', () => {
     await page.getByRole('button', { name: 'Apply All From Save' }).click()
 
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
 
     // Exclusions should persist
     await expect(page.getByText('5 excluded')).toBeVisible()
@@ -459,7 +459,7 @@ test.describe('save file import', () => {
 
     // Navigate to beastiary (root route)
     await page.goto('./')
-    await page.waitForLoadState('networkidle')
+    await page.locator('img[alt="Not summoned"]').first().waitFor()
 
     // Save has 5 creatures — 4 summoned + 1 awakened (Moss)
     await expect(page.locator('img[alt="Summoned"]')).toHaveCount(4)
@@ -474,7 +474,7 @@ test.describe('save file import', () => {
 
     // Navigate to expeditions
     await page.goto('./expeditions')
-    await page.waitForLoadState('networkidle')
+    await page.getByText('Expedition Training').first().waitFor()
 
     // Select first expedition to show creature panel
     await page.getByText('Expedition Training').first().click()
@@ -528,7 +528,7 @@ test.describe('save file import', () => {
 
     // Reload to clear in-memory appliedSections state, then re-upload
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.locator('h1', { hasText: 'Configs' }).waitFor()
     await uploadSave(page)
 
     // Exclusions should show "Matches Save" since data now matches

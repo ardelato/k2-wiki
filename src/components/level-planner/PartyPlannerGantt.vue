@@ -72,14 +72,18 @@ const bars = computed<GanttBar[]>(() => {
 
 
 const lanes = computed(() => {
-  const laneExpId = new Map<string, string>()
+  const laneExp = new Map<string, PartyPlanStep['expedition']>()
   for (const bar of bars.value) {
-    if (!laneExpId.has(bar.lane)) {
-      laneExpId.set(bar.lane, bar.step.expedition.id)
+    if (!laneExp.has(bar.lane)) {
+      laneExp.set(bar.lane, bar.step.expedition)
     }
   }
-  return [...laneExpId.entries()]
-    .toSorted(([, a], [, b]) => a.localeCompare(b, undefined, { numeric: true }))
+  return [...laneExp.entries()]
+    .toSorted(([, a], [, b]) => {
+      const completionDiff = a.requiredExpeditionCompletions - b.requiredExpeditionCompletions
+      if (completionDiff !== 0) return completionDiff
+      return a.baseRating - b.baseRating
+    })
     .map(([lane]) => lane)
 })
 
