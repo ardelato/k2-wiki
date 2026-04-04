@@ -214,7 +214,13 @@ const showFilters = ref(false)
           :class="props.sourceSubFilter.has(sub) ? 'pill-active' : ''"
           @click="emit('toggle-sub-filter', sub)"
         >
-          <img v-if="sourceIcons[sub]" :src="sourceIcons[sub]" alt="" class="size-4" />
+          <img
+            v-if="sourceIcons[sub]"
+            :src="sourceIcons[sub]"
+            alt=""
+            class="size-4"
+            loading="lazy"
+          />
           {{ sourceLabel(sub) }}
         </button>
       </div>

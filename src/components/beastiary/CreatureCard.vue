@@ -81,7 +81,13 @@ const jobEntries = computed(() =>
     <!-- Job stats grid -->
     <div class="job-grid">
       <div v-for="job in jobEntries" :key="job.key" class="job-cell">
-        <img v-if="jobIcons[job.key]" :src="jobIcons[job.key]" alt="" class="job-icon" />
+        <img
+          v-if="jobIcons[job.key]"
+          :src="jobIcons[job.key]"
+          alt=""
+          class="job-icon"
+          loading="lazy"
+        />
         <span v-else class="job-dot" :style="{ backgroundColor: job.color }" />
         <span class="job-abbr">{{ job.abbr }}</span>
         <span class="job-level">{{ job.level }}</span>

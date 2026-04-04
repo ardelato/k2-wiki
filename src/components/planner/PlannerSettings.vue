@@ -256,6 +256,7 @@ const hasAnyChanges = computed(
                 :src="getItemImage({ id: item.itemId })"
                 :alt="item.itemName"
                 class="size-6 object-contain"
+                loading="lazy"
               />
               <span v-else class="text-[10px] font-bold text-muted-foreground">{{
                 item.itemName.charAt(0)
@@ -333,6 +334,7 @@ const hasAnyChanges = computed(
                   :src="getItemImage({ id: flower.id })"
                   :alt="flower.name"
                   class="size-5 object-contain"
+                  loading="lazy"
                 />
                 <span v-else class="text-[10px] font-bold text-muted-foreground">{{
                   flower.name.charAt(0)
@@ -442,6 +444,7 @@ const hasAnyChanges = computed(
                   :src="sourceIcons[job]"
                   alt=""
                   class="size-4 shrink-0"
+                  loading="lazy"
                 />
                 <span class="min-w-0 flex-1 text-xs font-semibold text-foreground">{{ job }}</span>
 
@@ -508,7 +511,13 @@ const hasAnyChanges = computed(
               class="rounded-xl border border-border/40 bg-background/30 px-3 py-2.5"
             >
               <div class="flex items-center gap-3">
-                <img v-if="sourceIcons[ws]" :src="sourceIcons[ws]" alt="" class="size-4 shrink-0" />
+                <img
+                  v-if="sourceIcons[ws]"
+                  :src="sourceIcons[ws]"
+                  alt=""
+                  class="size-4 shrink-0"
+                  loading="lazy"
+                />
                 <span class="min-w-0 flex-1 text-xs font-semibold text-foreground">{{ ws }}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-[10px] font-semibold text-muted-foreground">Speed</span>
@@ -577,7 +586,13 @@ const hasAnyChanges = computed(
             class="flex items-center justify-between rounded-lg px-2 py-1.5"
           >
             <div class="flex items-center gap-2">
-              <img v-if="sourceIcons[job]" :src="sourceIcons[job]" alt="" class="size-4 shrink-0" />
+              <img
+                v-if="sourceIcons[job]"
+                :src="sourceIcons[job]"
+                alt=""
+                class="size-4 shrink-0"
+                loading="lazy"
+              />
               <span class="text-sm text-foreground">{{ job }}</span>
             </div>
             <div class="flex items-center gap-1">

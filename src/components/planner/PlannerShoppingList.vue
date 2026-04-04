@@ -86,6 +86,7 @@ async function copyToClipboard() {
               :src="getItemImage({ id: leaf.itemId })"
               :alt="leaf.itemName"
               class="size-5 object-contain"
+              loading="lazy"
             />
             <span
               class="min-w-0 truncate text-sm"

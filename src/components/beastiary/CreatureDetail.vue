@@ -76,6 +76,7 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
           :src="creatureImage"
           :alt="`${creature.name} artwork`"
           class="avatar-image"
+          loading="lazy"
         />
         <span v-else class="avatar-letter">{{ creature.name.charAt(0) }}</span>
       </div>
@@ -158,6 +159,7 @@ const creatureImage = computed(() => getCreatureImage(props.creature))
             :src="getItemImage({ id: cost.id })"
             :alt="getItemById(cost.id)?.name ?? toTitleCase(cost.id)"
             style="width: 20px; height: 20px; object-fit: contain"
+            loading="lazy"
           />
           {{ cost.amount }}x {{ getItemById(cost.id)?.name ?? toTitleCase(cost.id) }}
         </router-link>
