@@ -14,6 +14,16 @@ export default defineConfig({
   },
   build: {
     assetsInlineLimit: 0,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'vue-vendor', test: /node_modules\/(vue|vue-router|@vue)/ },
+            { name: 'vueuse', test: /node_modules\/@vueuse/ },
+          ],
+        },
+      },
+    },
   },
   test: {
     globals: true,
