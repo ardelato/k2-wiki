@@ -261,6 +261,7 @@ export type PlannerTimeBudget = 'quick' | 'thorough'
 export interface PartyPlannerInput {
   creatures: PartyPlanCreature[]
   expeditions: Record<string, PartyPlannerExpeditionState>
+  expeditionMaxTiers?: Record<string, number>
   strategy?: PlannerStrategy
   timeBudget?: PlannerTimeBudget
   wallClockLimitMs?: number
