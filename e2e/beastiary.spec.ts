@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test'
 
 test.beforeEach(async ({ page }) => {
-  // Clear localStorage before each test for a fresh state
   await page.goto('/')
   await page.evaluate(() => localStorage.clear())
   await page.goto('/')
-  await page.waitForLoadState('networkidle')
+  await page.locator('img[alt="Not summoned"]').first().waitFor()
 })
 
 // ── Card state validation ─────────────────────────────────────────────
@@ -88,7 +87,7 @@ test.describe('edit mode lifecycle', () => {
 
     // Reload and verify changes persisted
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.locator('img[alt="Summoned"]').first().waitFor()
     await expect(page.locator('img[alt="Summoned"]')).toHaveCount(120)
   })
 
