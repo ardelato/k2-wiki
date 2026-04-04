@@ -1,6 +1,6 @@
 import type { Creature } from '@/types'
 
-const creatureImageModules = import.meta.glob('../assets/creatures/*.png', {
+const creatureImageModules = import.meta.glob('../assets/creatures/*.webp', {
   eager: true,
   import: 'default',
 }) as Record<string, string>
@@ -8,7 +8,7 @@ const creatureImageModules = import.meta.glob('../assets/creatures/*.png', {
 const creatureImagesById = Object.fromEntries(
   Object.entries(creatureImageModules).map(([filePath, imageUrl]) => {
     const filename = filePath.split('/').pop() ?? ''
-    const id = filename.replace('.png', '').toLowerCase()
+    const id = filename.replace('.webp', '').toLowerCase()
     return [id, imageUrl]
   }),
 )

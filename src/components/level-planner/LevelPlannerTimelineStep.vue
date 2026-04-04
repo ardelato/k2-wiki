@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Clock3, Zap, Users, ChevronRight, Repeat, ExternalLink } from 'lucide-vue-next'
 
-import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration } from '@/utils/format'
@@ -66,7 +66,7 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
             class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
             style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
           >
-            <img :src="awakenedSummonedIcon" alt="" class="size-4" />
+            <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
           </div>
           <div
             v-else
@@ -94,6 +94,7 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
             :src="getCreatureImage(partyMembers[0].creature)"
             :alt="creatureName"
             class="size-10 shrink-0 rounded-lg border border-pink-500/30 object-cover sm:size-12"
+            loading="lazy"
           />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
@@ -102,6 +103,7 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                   :src="awakenedSummonedIcon"
                   alt="Awaken"
                   class="size-5 shrink-0 object-contain"
+                  loading="lazy"
                 />
                 <p class="text-sm font-semibold text-pink-400">Awaken Creature</p>
               </div>
@@ -139,6 +141,7 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                   "
                   :src="getItemImage({ id: step.expedition.rewards[0].itemId })"
                   :alt="step.expedition.rewards[0].itemId"
+                  loading="lazy"
                   class="size-5 shrink-0 object-contain"
                 />
                 <p class="truncate text-sm font-semibold text-foreground">
@@ -190,6 +193,7 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                     :src="getCreatureImage(member.creature)"
                     :alt="member.creature?.name ?? member.creatureId"
                     class="size-full object-cover"
+                    loading="lazy"
                   />
                   <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
                     <p

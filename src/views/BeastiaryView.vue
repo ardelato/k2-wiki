@@ -2,9 +2,9 @@
 import { Check, Minus, Pencil, Plus, TrendingUp, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
-import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.png'
-import notSummonedIcon from '@/assets/icons/not_summoned.png'
-import summonedIcon from '@/assets/icons/summoned.png'
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import notSummonedIcon from '@/assets/icons/not_summoned.webp'
+import summonedIcon from '@/assets/icons/summoned.webp'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useItems } from '@/composables/useItems'
@@ -444,7 +444,7 @@ const maxJobLevel = 10
             :disabled="!selectedIds.size"
             @click="bulkSetSummoned(true)"
           >
-            <img :src="summonedIcon" alt="" class="size-4" />
+            <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
             Summoned
           </button>
           <button
@@ -452,7 +452,7 @@ const maxJobLevel = 10
             :disabled="!selectedIds.size"
             @click="bulkSetSummoned(false)"
           >
-            <img :src="notSummonedIcon" alt="" class="size-4" />
+            <img :src="notSummonedIcon" alt="" class="size-4" loading="lazy" />
             Not Summoned
           </button>
 
@@ -464,7 +464,7 @@ const maxJobLevel = 10
             :disabled="!selectedIds.size"
             @click="bulkSetAwakened(true)"
           >
-            <img :src="awakenedSummonedIcon" alt="" class="size-4" />
+            <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
             Awaken
           </button>
           <button
@@ -584,6 +584,7 @@ const maxJobLevel = 10
 
               <!-- Summoned status icon -->
               <img
+                loading="lazy"
                 :src="
                   isOwned(creature.id)
                     ? isAwakened(creature.id)
@@ -828,7 +829,13 @@ const maxJobLevel = 10
                     class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                     @click="sortBy(jobKey)"
                   >
-                    <img v-if="jobIcons[jobKey]" :src="jobIcons[jobKey]" alt="" class="size-3.5" />
+                    <img
+                      v-if="jobIcons[jobKey]"
+                      :src="jobIcons[jobKey]"
+                      alt=""
+                      class="size-3.5"
+                      loading="lazy"
+                    />
                     <span
                       v-else
                       class="inline-block size-1.5 rounded-full"
@@ -1000,6 +1007,7 @@ const maxJobLevel = 10
               :alt="`${selectedCreature.name} artwork`"
               class="size-24 rounded-2xl border-2 border-border object-cover shadow-lg"
               :style="{ backgroundColor: `hsl(${typeColorVar(selectedCreature.types[0])} / 0.1)` }"
+              loading="lazy"
             />
             <h2 class="mt-3 text-center text-2xl font-black leading-tight">
               {{ selectedCreature.name }}
@@ -1189,7 +1197,13 @@ const maxJobLevel = 10
                   :key="jobKey"
                   class="flex flex-col items-center gap-1"
                 >
-                  <img v-if="jobIcons[jobKey]" :src="jobIcons[jobKey]" alt="" class="size-4" />
+                  <img
+                    v-if="jobIcons[jobKey]"
+                    :src="jobIcons[jobKey]"
+                    alt=""
+                    class="size-4"
+                    loading="lazy"
+                  />
                   <ProficiencyRing
                     :label="jobName.slice(0, 3)"
                     :value="selectedCreature.jobs[jobKey]"
@@ -1228,6 +1242,7 @@ const maxJobLevel = 10
                         :src="getItemImage({ id: entry.expedition.rewards[0].itemId })"
                         :alt="toTitleCase(entry.expedition.rewards[0].itemId)"
                         class="size-5 shrink-0 object-contain"
+                        loading="lazy"
                       />
                       <span class="truncate">{{ entry.expedition.name }}</span>
                     </span>
@@ -1268,6 +1283,7 @@ const maxJobLevel = 10
                     :src="getItemImage({ id: cost.id })"
                     :alt="getItemById(cost.id)?.name ?? toTitleCase(cost.id)"
                     class="size-5 shrink-0 object-contain"
+                    loading="lazy"
                   />
                   <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
                   <span class="flex-1 text-sm text-foreground">{{

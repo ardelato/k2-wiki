@@ -21,7 +21,7 @@ import {
 import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import summonedIcon from '@/assets/icons/summoned.png'
+import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
@@ -648,6 +648,7 @@ function toggleCreatureTier(tier: number) {
                   "
                   :src="getItemImage({ id: expedition.rewards[0].itemId })"
                   :alt="expedition.rewards[0].itemId"
+                  loading="lazy"
                   class="size-5 shrink-0 object-contain"
                 />
                 <p class="truncate text-sm font-semibold text-foreground">{{ expedition.name }}</p>
@@ -668,6 +669,7 @@ function toggleCreatureTier(tier: number) {
                   :src="expeditionTierIcons[expeditionTiers[expedition.id] || 1]"
                   :alt="`Tier ${expeditionTiers[expedition.id] || 1}`"
                   class="size-4 object-contain"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -704,6 +706,7 @@ function toggleCreatureTier(tier: number) {
                         :src="getCreatureImage(creature)"
                         :alt="creature.name"
                         class="size-full object-cover"
+                        loading="lazy"
                       />
                     </div>
                     <span class="text-[10px] font-semibold text-foreground">{{
@@ -790,6 +793,7 @@ function toggleCreatureTier(tier: number) {
                   :src="getItemImage({ id: reward.itemId })"
                   :alt="toTitleCase(reward.itemId)"
                   class="size-4 object-contain"
+                  loading="lazy"
                 />
                 {{ reward.amount * tierModifiers.loot[selectedTier - 1] }}x
                 {{ toTitleCase(reward.itemId) }}
@@ -813,6 +817,7 @@ function toggleCreatureTier(tier: number) {
                     :src="getCreatureImage(creature)"
                     :alt="creature.name"
                     class="size-full object-cover"
+                    loading="lazy"
                   />
                 </div>
                 <span class="text-xs font-semibold">{{ creature.name }}</span>
@@ -917,6 +922,7 @@ function toggleCreatureTier(tier: number) {
                     :src="expeditionTierIcons[t]"
                     :alt="`Tier ${t}`"
                     class="size-7 object-contain"
+                    loading="lazy"
                   />
                 </button>
               </div>
@@ -994,6 +1000,7 @@ function toggleCreatureTier(tier: number) {
                       :src="getCreatureImage(slot)"
                       :alt="`${slot.name} artwork`"
                       class="size-full object-cover"
+                      loading="lazy"
                     />
                     <span
                       class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
@@ -1174,7 +1181,7 @@ function toggleCreatureTier(tier: number) {
               :class="ownedOnly ? 'pill-active' : ''"
               @click="ownedOnly = !ownedOnly"
             >
-              <img :src="summonedIcon" alt="" class="size-4" />
+              <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
               Summoned Only
             </button>
             <button
@@ -1288,24 +1295,28 @@ function toggleCreatureTier(tier: number) {
                   :src="getCreatureImage(creature)"
                   :alt="`${creature.name} artwork`"
                   class="size-10 rounded-md border border-border object-cover"
+                  loading="lazy"
                 />
                 <img
                   v-if="sanctuaryCreatureIds.includes(creature.id)"
                   :src="sanctuaryIcon"
                   alt="Sanctuary"
                   class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                  loading="lazy"
                 />
                 <img
                   v-else-if="helperCreatureIds.includes(creature.id)"
                   :src="helpersIcon"
                   alt="Helper"
                   class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                  loading="lazy"
                 />
                 <img
                   v-else-if="machineCreatureIds.includes(creature.id)"
                   :src="machinesIcon"
                   alt="Machine"
                   class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                  loading="lazy"
                 />
               </div>
 
