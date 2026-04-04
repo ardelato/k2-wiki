@@ -12,6 +12,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    assetsInlineLimit: 0,
+  },
   test: {
     globals: true,
     environment: 'happy-dom',

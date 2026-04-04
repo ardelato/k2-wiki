@@ -2,6 +2,7 @@ import type { Creature } from '@/types'
 
 const creatureImageModules = import.meta.glob('../assets/creatures/*.webp', {
   eager: true,
+  query: '?url',
   import: 'default',
 }) as Record<string, string>
 

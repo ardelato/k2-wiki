@@ -2,6 +2,7 @@ import type { Item } from '@/types'
 
 const itemImageModules = import.meta.glob('../assets/items/*.webp', {
   eager: true,
+  query: '?url',
   import: 'default',
 }) as Record<string, string>
 
