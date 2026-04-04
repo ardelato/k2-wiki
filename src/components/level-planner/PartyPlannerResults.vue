@@ -135,9 +135,12 @@ const sortedIndices = computed(() => {
     const timeA = props.plan.steps[a].startTime ?? 0
     const timeB = props.plan.steps[b].startTime ?? 0
     if (timeA !== timeB) return timeA - timeB
-    const idA = props.plan.steps[a].expedition?.id ?? ''
-    const idB = props.plan.steps[b].expedition?.id ?? ''
-    return idA.localeCompare(idB, undefined, { numeric: true })
+    const expA = props.plan.steps[a].expedition
+    const expB = props.plan.steps[b].expedition
+    const completionDiff =
+      (expA?.requiredExpeditionCompletions ?? 0) - (expB?.requiredExpeditionCompletions ?? 0)
+    if (completionDiff !== 0) return completionDiff
+    return (expA?.baseRating ?? 0) - (expB?.baseRating ?? 0)
   })
 })
 
