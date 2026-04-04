@@ -343,3 +343,51 @@ export type CreatureStatKey = keyof CreatureStats
 export type ExpeditionStatKey = keyof ExpeditionStatWeights
 export type JobKey = keyof Jobs
 export type SortField = CreatureStatKey | 'name' | 'tier'
+
+// Machine types
+export type MachineType = 'generator' | 'processor'
+
+export interface MachineRecipe {
+  inputItemId: string
+  inputAmount: number
+  outputItemId: string
+  outputAmount: number
+  secondaryInputItemId?: string
+  secondaryInputAmount?: number
+}
+
+export interface MachineUpgradeCost {
+  barId: string
+  barAmount: number
+  planksAmount: number
+}
+
+export interface Machine {
+  id: string
+  name: string
+  description: string
+  cost: number
+  machineType: MachineType
+  outputItemId: string | null
+  baseInterval: number
+  requiresCreature: boolean
+  creatureTypeRequired: ElementType[] | null
+  recipes: MachineRecipe[]
+}
+
+// Tool types
+export type ToolCategory = 'gathering' | 'other' | 'workstation'
+
+export interface ToolUpgradeCost {
+  barId: string
+  amount: number
+}
+
+export interface Tool {
+  id: string
+  name: string
+  description: string
+  image: string
+  skillId: string
+  category: ToolCategory
+}
