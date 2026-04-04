@@ -50,9 +50,7 @@ async function assignSanctuaryCreature(page: Page, creatureName: string) {
   // Open the creature picker dropdown (Teleported to body)
   await page.getByText('Choose a creature').click()
   await page.getByPlaceholder('Search creatures...').fill(creatureName)
-  const creatureBtn = page.getByRole('button', { name: creatureName }).first()
-  await creatureBtn.scrollIntoViewIfNeeded()
-  await creatureBtn.click()
+  await page.getByRole('button', { name: creatureName }).first().click({ force: true })
 }
 
 // ── Page rendering ──────────────────────────────────────────────────
