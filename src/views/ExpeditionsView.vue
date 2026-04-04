@@ -585,8 +585,8 @@ function toggleCreatureTier(tier: number) {
         class="surface-card flex flex-col overflow-hidden"
         :class="!isDesktop && mobileSection !== 'list' ? 'hidden' : ''"
       >
-        <div class="flex items-center justify-between border-b border-border/70 px-4 py-3">
-          <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between gap-2 border-b border-border/70 px-4 py-3">
+          <div class="flex min-w-0 flex-wrap items-center gap-1.5">
             <h2 class="text-base font-bold">Expeditions</h2>
             <span
               v-if="totalXpPerSecond > 0"
@@ -601,7 +601,7 @@ function toggleCreatureTier(tier: number) {
               +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
             </span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex shrink-0 items-center gap-2">
             <button
               class="focus-ring rounded-lg p-1.5 text-muted-foreground transition hover:text-foreground"
               title="Import"

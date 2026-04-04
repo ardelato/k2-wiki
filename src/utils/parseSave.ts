@@ -1,4 +1,5 @@
 import creaturesData from '@/data/creatures.json'
+import { defaultAwakenGatherUpgrades, defaultAwakenSpeedTiers } from '@/data/defaults'
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 
 import { levelFromXp } from './formulas'
@@ -46,6 +47,10 @@ export interface SaveConfig {
   expeditionCompletions: Record<string, Record<number, number>>
   creatures: SaveCreature[]
   tools?: { sword?: number }
+  toolLevels: Record<string, number>
+  machineLevels: Record<string, number>
+  machineRecipes: Record<string, string | null>
+  fabricationAllocations: Record<string, number>
   currentExpedition: ExpeditionData
 }
 
@@ -87,7 +92,10 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const jobTiers = parseSanctuaryJobTiers(sanctuary)
 
   const tools = save.tools || {}
+  const toolLevels = parseToolLevels(save)
   const expeditionCompletions = parseExpeditionCompletions(save)
+  const { machineLevels, machineRecipes } = parseMachineDetails(save)
+  const fabricationAllocations = parseFabricationAllocations(save)
 
   const currentExpedition = buildExpeditionData(save, creatures)
 
@@ -103,6 +111,10 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     expeditionCompletions,
     creatures,
     tools,
+    toolLevels,
+    machineLevels,
+    machineRecipes,
+    fabricationAllocations,
     currentExpedition,
   }
 }
@@ -176,20 +188,8 @@ export function parseAwakenUpgrades(upgrades: string[]): {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
 } {
-  const awakenGatherUpgrades: Record<string, AwakenGatherUpgrade> = {
-    Chopping: { yieldBonus: 0, durationTier: 0 },
-    Mining: { yieldBonus: 0, durationTier: 0 },
-    Digging: { yieldBonus: 0, durationTier: 0 },
-    Exploring: { yieldBonus: 0, durationTier: 0 },
-    Fishing: { yieldBonus: 0, durationTier: 0 },
-    Farming: { yieldBonus: 0, durationTier: 0 },
-  }
-
-  const awakenSpeedTiers: Record<string, number> = {
-    Furnace: 0,
-    Stove: 0,
-    Workbench: 0,
-  }
+  const awakenGatherUpgrades = defaultAwakenGatherUpgrades()
+  const awakenSpeedTiers = defaultAwakenSpeedTiers()
 
   const pattern = /^(\w+)-(yield|duration|speed)-(i{1,4}v?)$/
   for (const upgrade of upgrades) {
@@ -308,4 +308,60 @@ function parseExpeditionCompletions(
 
 function parseSanctuaryJobTiers(sanctuary: string[]): Record<string, number> {
   return calculateJobTiersFromSanctuary(sanctuary)
+}
+
+function parseToolLevels(save: Record<string, unknown>): Record<string, number> {
+  const tools = save.tools
+  if (!tools || typeof tools !== 'object') return {}
+  const result: Record<string, number> = {}
+  for (const [toolId, level] of Object.entries(tools as Record<string, unknown>)) {
+    if (typeof level === 'number' && level > 0) {
+      result[toolId] = level
+    }
+  }
+  return result
+}
+
+function parseMachineDetails(save: Record<string, unknown>): {
+  machineLevels: Record<string, number>
+  machineRecipes: Record<string, string | null>
+} {
+  const machinesState = save.machines as
+    | {
+        machines?: Record<
+          string,
+          { id: string; purchased: boolean; level?: number; selectedRecipeId?: string | null }
+        >
+      }
+    | undefined
+  if (!machinesState?.machines) return { machineLevels: {}, machineRecipes: {} }
+
+  const machineLevels: Record<string, number> = {}
+  const machineRecipes: Record<string, string | null> = {}
+
+  for (const machine of Object.values(machinesState.machines)) {
+    if (machine.purchased) {
+      if (typeof machine.level === 'number') {
+        machineLevels[machine.id] = machine.level
+      }
+      if (machine.selectedRecipeId !== undefined) {
+        machineRecipes[machine.id] = machine.selectedRecipeId
+      }
+    }
+  }
+
+  return { machineLevels, machineRecipes }
+}
+
+function parseFabricationAllocations(save: Record<string, unknown>): Record<string, number> {
+  const fabrication = save.fabrication as { allocations?: Record<string, number> } | undefined
+  if (!fabrication?.allocations) return {}
+
+  const result: Record<string, number> = {}
+  for (const [itemId, amount] of Object.entries(fabrication.allocations)) {
+    if (typeof amount === 'number' && amount > 0) {
+      result[itemId] = amount
+    }
+  }
+  return result
 }

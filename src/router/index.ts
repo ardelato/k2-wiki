@@ -32,6 +32,21 @@ export const router = createRouter({
       component: () => import('../views/ExpeditionsView.vue'),
     },
     {
+      path: '/machines',
+      name: 'machines',
+      component: () => import('../views/MachinesView.vue'),
+    },
+    {
+      path: '/tools',
+      name: 'tools',
+      component: () => import('../views/ToolsView.vue'),
+    },
+    {
+      path: '/fabrication',
+      name: 'fabrication',
+      component: () => import('../views/FabricationView.vue'),
+    },
+    {
       path: '/configs',
       name: 'configs',
       component: () => import('../views/ConfigsView.vue'),

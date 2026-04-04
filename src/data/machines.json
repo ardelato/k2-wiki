@@ -1,0 +1,353 @@
+{
+  "machines": [
+    {
+      "id": "stone-quarry",
+      "name": "Stone Quarry",
+      "description": "Passively generates stone over time.",
+      "cost": 100000,
+      "machineType": "generator",
+      "outputItemId": "stone",
+      "baseInterval": 60,
+      "requiresCreature": true,
+      "creatureTypeRequired": null,
+      "recipes": []
+    },
+    {
+      "id": "stick-finder",
+      "name": "Stick Finder",
+      "description": "Passively generates twigs over time.",
+      "cost": 100000,
+      "machineType": "generator",
+      "outputItemId": "twig",
+      "baseInterval": 60,
+      "requiresCreature": true,
+      "creatureTypeRequired": null,
+      "recipes": []
+    },
+    {
+      "id": "coal-miner",
+      "name": "Coal Miner",
+      "description": "Passively generates coal over time.",
+      "cost": 200000,
+      "machineType": "generator",
+      "outputItemId": "coal",
+      "baseInterval": 60,
+      "requiresCreature": true,
+      "creatureTypeRequired": null,
+      "recipes": []
+    },
+    {
+      "id": "smelter",
+      "name": "Smelter",
+      "description": "Smelts ore without coal or hammers.",
+      "cost": 400000,
+      "machineType": "processor",
+      "outputItemId": null,
+      "baseInterval": 120,
+      "requiresCreature": true,
+      "creatureTypeRequired": ["Fire"],
+      "recipes": [
+        {
+          "inputItemId": "copper-ore",
+          "inputAmount": 8,
+          "outputItemId": "copper-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "tin-ore",
+          "inputAmount": 8,
+          "outputItemId": "tin-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "iron-ore",
+          "inputAmount": 8,
+          "outputItemId": "iron-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "silver-ore",
+          "inputAmount": 8,
+          "outputItemId": "silver-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "gold-ore",
+          "inputAmount": 8,
+          "outputItemId": "gold-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "platinum-ore",
+          "inputAmount": 8,
+          "outputItemId": "platinum-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "adamantite-ore",
+          "inputAmount": 8,
+          "outputItemId": "adamantite-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "runic-ore",
+          "inputAmount": 8,
+          "outputItemId": "runic-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "solarite-ore",
+          "inputAmount": 8,
+          "outputItemId": "solarite-bar",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "arcanum-ore",
+          "inputAmount": 8,
+          "outputItemId": "arcanum-bar",
+          "outputAmount": 1
+        }
+      ]
+    },
+    {
+      "id": "sawmill",
+      "name": "Sawmill",
+      "description": "Cuts logs into planks without a saw.",
+      "cost": 400000,
+      "machineType": "processor",
+      "outputItemId": null,
+      "baseInterval": 120,
+      "requiresCreature": true,
+      "creatureTypeRequired": ["Wind"],
+      "recipes": [
+        {
+          "inputItemId": "pine-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "birch-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        { "inputItemId": "oak-log", "inputAmount": 4, "outputItemId": "planks", "outputAmount": 1 },
+        {
+          "inputItemId": "maple-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "cedar-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        { "inputItemId": "ash-log", "inputAmount": 4, "outputItemId": "planks", "outputAmount": 1 },
+        {
+          "inputItemId": "spruce-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "willow-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "runic-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "elder-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "arcanum-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        }
+      ]
+    },
+    {
+      "id": "cooker",
+      "name": "Cooker",
+      "description": "Cooks meat without knives or charcoal.",
+      "cost": 400000,
+      "machineType": "processor",
+      "outputItemId": null,
+      "baseInterval": 120,
+      "requiresCreature": true,
+      "creatureTypeRequired": ["Fire"],
+      "recipes": [
+        {
+          "inputItemId": "meat",
+          "inputAmount": 1,
+          "outputItemId": "cooked-meat",
+          "outputAmount": 1
+        }
+      ]
+    },
+    {
+      "id": "greenhouse",
+      "name": "Greenhouse",
+      "description": "Grows herbs and crops passively.",
+      "cost": 200000,
+      "machineType": "processor",
+      "outputItemId": null,
+      "baseInterval": 60,
+      "requiresCreature": true,
+      "creatureTypeRequired": ["Earth"],
+      "recipes": [
+        { "inputItemId": "basil", "inputAmount": 0, "outputItemId": "basil", "outputAmount": 1 },
+        {
+          "inputItemId": "rosemary",
+          "inputAmount": 0,
+          "outputItemId": "rosemary",
+          "outputAmount": 1
+        },
+        { "inputItemId": "thyme", "inputAmount": 0, "outputItemId": "thyme", "outputAmount": 1 },
+        { "inputItemId": "grass", "inputAmount": 0, "outputItemId": "grass", "outputAmount": 1 },
+        { "inputItemId": "wheat", "inputAmount": 0, "outputItemId": "wheat", "outputAmount": 1 },
+        { "inputItemId": "carrot", "inputAmount": 0, "outputItemId": "carrot", "outputAmount": 1 },
+        { "inputItemId": "tomato", "inputAmount": 0, "outputItemId": "tomato", "outputAmount": 1 },
+        {
+          "inputItemId": "lettuce",
+          "inputAmount": 0,
+          "outputItemId": "lettuce",
+          "outputAmount": 1
+        },
+        { "inputItemId": "potato", "inputAmount": 0, "outputItemId": "potato", "outputAmount": 1 },
+        { "inputItemId": "corn", "inputAmount": 0, "outputItemId": "corn", "outputAmount": 1 },
+        {
+          "inputItemId": "eggplant",
+          "inputAmount": 0,
+          "outputItemId": "eggplant",
+          "outputAmount": 1
+        },
+        { "inputItemId": "onion", "inputAmount": 0, "outputItemId": "onion", "outputAmount": 1 },
+        { "inputItemId": "pepper", "inputAmount": 0, "outputItemId": "pepper", "outputAmount": 1 },
+        {
+          "inputItemId": "pineapple",
+          "inputAmount": 0,
+          "outputItemId": "pineapple",
+          "outputAmount": 1
+        },
+        { "inputItemId": "mango", "inputAmount": 0, "outputItemId": "mango", "outputAmount": 1 }
+      ]
+    },
+    {
+      "id": "bakery",
+      "name": "Bakery",
+      "description": "Bakes bread from flour and eggs.",
+      "cost": 600000,
+      "machineType": "processor",
+      "outputItemId": null,
+      "baseInterval": 120,
+      "requiresCreature": true,
+      "creatureTypeRequired": ["Water"],
+      "recipes": [
+        {
+          "inputItemId": "flour",
+          "inputAmount": 2,
+          "secondaryInputItemId": "egg",
+          "secondaryInputAmount": 1,
+          "outputItemId": "bread",
+          "outputAmount": 1
+        }
+      ]
+    },
+    {
+      "id": "refinery",
+      "name": "Refinery",
+      "description": "Refines essences quicker in all forms.",
+      "cost": 800000,
+      "machineType": "processor",
+      "outputItemId": null,
+      "baseInterval": 120,
+      "requiresCreature": true,
+      "creatureTypeRequired": null,
+      "recipes": [
+        {
+          "inputItemId": "raw-fire-essence",
+          "inputAmount": 512,
+          "outputItemId": "pure-fire-essence",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "raw-water-essence",
+          "inputAmount": 512,
+          "outputItemId": "pure-water-essence",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "raw-earth-essence",
+          "inputAmount": 512,
+          "outputItemId": "pure-earth-essence",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "raw-wind-essence",
+          "inputAmount": 512,
+          "outputItemId": "pure-wind-essence",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "pure-fire-essence",
+          "inputAmount": 16,
+          "secondaryInputItemId": "stone",
+          "secondaryInputAmount": 128,
+          "outputItemId": "fire-stone",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "pure-water-essence",
+          "inputAmount": 16,
+          "secondaryInputItemId": "stone",
+          "secondaryInputAmount": 128,
+          "outputItemId": "water-stone",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "pure-earth-essence",
+          "inputAmount": 16,
+          "secondaryInputItemId": "stone",
+          "secondaryInputAmount": 128,
+          "outputItemId": "earth-stone",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "pure-wind-essence",
+          "inputAmount": 16,
+          "secondaryInputItemId": "stone",
+          "secondaryInputAmount": 128,
+          "outputItemId": "wind-stone",
+          "outputAmount": 1
+        }
+      ]
+    }
+  ],
+  "upgradeCosts": [
+    { "barId": "copper-bar", "barAmount": 100, "planksAmount": 100 },
+    { "barId": "tin-bar", "barAmount": 200, "planksAmount": 200 },
+    { "barId": "iron-bar", "barAmount": 300, "planksAmount": 300 },
+    { "barId": "silver-bar", "barAmount": 400, "planksAmount": 400 },
+    { "barId": "gold-bar", "barAmount": 500, "planksAmount": 500 },
+    { "barId": "platinum-bar", "barAmount": 600, "planksAmount": 600 },
+    { "barId": "adamantite-bar", "barAmount": 700, "planksAmount": 700 },
+    { "barId": "runic-bar", "barAmount": 800, "planksAmount": 800 },
+    { "barId": "solarite-bar", "barAmount": 900, "planksAmount": 900 },
+    { "barId": "arcanum-bar", "barAmount": 1000, "planksAmount": 1000 }
+  ],
+  "speedMultipliers": [1.0, 0.9, 0.8, 0.72, 0.64, 0.56, 0.5, 0.44, 0.38, 0.33, 0.28],
+  "maxLevel": 10
+}

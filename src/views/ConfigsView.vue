@@ -57,6 +57,16 @@ const {
   expeditionCompletions,
   setExpeditionCompletions,
   setExpeditionToolXpBonus,
+  toolLevels,
+  machineLevels,
+  fabricationAllocations,
+  setToolLevels,
+  resetToolLevels,
+  setMachineLevels,
+  setMachineRecipes,
+  resetMachines,
+  setFabricationAllocations,
+  resetFabrication,
 } = useGameConfig()
 
 
@@ -355,6 +365,27 @@ const expeditionCompletionsHasDiff = computed(() => {
 })
 
 
+const toolLevelsHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  return JSON.stringify(toolLevels.value) !== JSON.stringify(saveConfig.value.toolLevels)
+})
+
+
+const machineLevelsHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  return JSON.stringify(machineLevels.value) !== JSON.stringify(saveConfig.value.machineLevels)
+})
+
+
+const fabricationHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  return (
+    JSON.stringify(fabricationAllocations.value) !==
+    JSON.stringify(saveConfig.value.fabricationAllocations)
+  )
+})
+
+
 const expeditionDisplay = computed(() => {
   const completions = saveConfig.value
     ? saveConfig.value.expeditionCompletions
@@ -537,6 +568,9 @@ watch(saveConfig, () => {
     if (!awakenHasDiff.value) sectionsCollapsed.value.awaken = true
     if (!jobTiersHasDiff.value) sectionsCollapsed.value.jobTiers = true
     if (!expeditionCompletionsHasDiff.value) sectionsCollapsed.value.expeditions = true
+    if (!toolLevelsHasDiff.value) sectionsCollapsed.value.tools = true
+    if (!machineLevelsHasDiff.value) sectionsCollapsed.value.machineDetails = true
+    if (!fabricationHasDiff.value) sectionsCollapsed.value.fabrication = true
   })
 })
 
@@ -592,6 +626,26 @@ function applyAwaken() {
 function applyTools() {
   if (!saveConfig.value) return
   setExpeditionToolXpBonus(((saveConfig.value?.tools?.sword || 0) * 5) / 100 + 1)
+  setToolLevels({ ...saveConfig.value.toolLevels })
+  appliedSections.value = { ...appliedSections.value, tools: true }
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, tools: true }
+}
+
+
+function applyMachineDetails() {
+  if (!saveConfig.value) return
+  setMachineLevels({ ...saveConfig.value.machineLevels })
+  setMachineRecipes({ ...saveConfig.value.machineRecipes })
+  appliedSections.value = { ...appliedSections.value, machineDetails: true }
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, machineDetails: true }
+}
+
+
+function applyFabrication() {
+  if (!saveConfig.value) return
+  setFabricationAllocations({ ...saveConfig.value.fabricationAllocations })
+  appliedSections.value = { ...appliedSections.value, fabrication: true }
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, fabrication: true }
 }
 
 
@@ -628,6 +682,8 @@ function applyAll() {
   applyGarden()
   applyAwaken()
   applyTools()
+  applyMachineDetails()
+  applyFabrication()
   applyExpeditionCompletions()
   applyExpedition()
 }
@@ -679,6 +735,9 @@ function resetAll() {
   resetInventory()
   resetGarden()
   resetAwaken()
+  resetToolLevels()
+  resetMachines()
+  resetFabrication()
   resetExpeditions()
   resetCollection()
 }
@@ -2189,6 +2248,200 @@ function jobTierLabel(tier: number): string {
                 >
               </template>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="rounded-xl border border-border bg-card/50 p-4">
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-2" @click="toggleSection('tools')">
+            <component
+              :is="sectionsCollapsed.tools ? ChevronDown : ChevronUp"
+              class="size-4 text-muted-foreground"
+            />
+            <h3 class="text-sm font-bold">Tools</h3>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
+              {{ Object.keys(toolLevels).length }} configured
+            </span>
+            <template v-if="saveConfig">
+              <button
+                v-if="!appliedSections.tools && toolLevelsHasDiff"
+                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                @click="applyTools"
+              >
+                Apply
+              </button>
+              <span
+                v-else-if="!appliedSections.tools && !toolLevelsHasDiff"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Matches Save
+              </span>
+              <span
+                v-else-if="appliedSections.tools"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Applied
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <div v-if="!sectionsCollapsed.tools" class="mt-3 space-y-1">
+          <div
+            v-for="[toolId, level] in Object.entries(
+              saveConfig ? saveConfig.toolLevels : toolLevels,
+            )"
+            :key="toolId"
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
+          >
+            <span class="font-medium capitalize">{{ toolId.replace(/-/g, ' ') }}</span>
+            <span class="text-xs tabular-nums text-muted-foreground">
+              Level {{ level }}/10 (+{{ level * 5 }}% XP)
+            </span>
+          </div>
+          <div
+            v-if="Object.keys(saveConfig ? saveConfig.toolLevels : toolLevels).length === 0"
+            class="py-2 text-center text-xs text-muted-foreground"
+          >
+            No tool data available
+          </div>
+        </div>
+      </div>
+
+      <!-- Machine Levels -->
+      <div class="rounded-xl border border-border bg-card/50 p-4">
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-2" @click="toggleSection('machineDetails')">
+            <component
+              :is="sectionsCollapsed.machineDetails ? ChevronDown : ChevronUp"
+              class="size-4 text-muted-foreground"
+            />
+            <h3 class="text-sm font-bold">Machine Levels</h3>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
+              {{ Object.keys(machineLevels).length }} machines
+            </span>
+            <template v-if="saveConfig">
+              <button
+                v-if="!appliedSections.machineDetails && machineLevelsHasDiff"
+                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                @click="applyMachineDetails"
+              >
+                Apply
+              </button>
+              <span
+                v-else-if="!appliedSections.machineDetails && !machineLevelsHasDiff"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Matches Save
+              </span>
+              <span
+                v-else-if="appliedSections.machineDetails"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Applied
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <div v-if="!sectionsCollapsed.machineDetails" class="mt-3 space-y-1">
+          <div
+            v-for="[machineId, level] in Object.entries(
+              saveConfig ? saveConfig.machineLevels : machineLevels,
+            )"
+            :key="machineId"
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
+          >
+            <span class="font-medium capitalize">{{ machineId.replace(/-/g, ' ') }}</span>
+            <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
+          </div>
+          <div
+            v-if="Object.keys(saveConfig ? saveConfig.machineLevels : machineLevels).length === 0"
+            class="py-2 text-center text-xs text-muted-foreground"
+          >
+            No machine level data available
+          </div>
+        </div>
+      </div>
+
+      <!-- Fabrication -->
+      <div class="rounded-xl border border-border bg-card/50 p-4">
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-2" @click="toggleSection('fabrication')">
+            <component
+              :is="sectionsCollapsed.fabrication ? ChevronDown : ChevronUp"
+              class="size-4 text-muted-foreground"
+            />
+            <h3 class="text-sm font-bold">Fabrication</h3>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
+              {{
+                Object.values(
+                  saveConfig ? saveConfig.fabricationAllocations : fabricationAllocations,
+                ).reduce((s, n) => s + n, 0)
+              }}
+              points allocated
+            </span>
+            <template v-if="saveConfig">
+              <button
+                v-if="!appliedSections.fabrication && fabricationHasDiff"
+                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                @click="applyFabrication"
+              >
+                Apply
+              </button>
+              <span
+                v-else-if="!appliedSections.fabrication && !fabricationHasDiff"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Matches Save
+              </span>
+              <span
+                v-else-if="appliedSections.fabrication"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Applied
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <div v-if="!sectionsCollapsed.fabrication" class="mt-3 space-y-1">
+          <div
+            v-for="[itemId, amount] in Object.entries(
+              saveConfig ? saveConfig.fabricationAllocations : fabricationAllocations,
+            ).filter(([, a]) => a > 0)"
+            :key="itemId"
+            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
+          >
+            <div class="flex items-center gap-2">
+              <img
+                v-if="getItemImage({ id: itemId })"
+                :src="getItemImage({ id: itemId })!"
+                alt=""
+                class="size-4"
+              />
+              <span class="font-medium capitalize">{{ itemId.replace(/-/g, ' ') }}</span>
+            </div>
+            <span class="text-xs tabular-nums text-muted-foreground">
+              {{ amount }}/5 points &middot; {{ amount }} per cycle
+            </span>
+          </div>
+          <div
+            v-if="
+              Object.keys(saveConfig ? saveConfig.fabricationAllocations : fabricationAllocations)
+                .length === 0
+            "
+            class="py-2 text-center text-xs text-muted-foreground"
+          >
+            No fabrication data available
           </div>
         </div>
       </div>

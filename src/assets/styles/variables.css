@@ -47,6 +47,8 @@
 
   /* Layout */
   --header-height: 56px;
+  --sidebar-width: 220px;
+  --sidebar-width-collapsed: 56px;
   --max-width: 1440px;
   --radius: 8px;
   --radius-sm: 4px;

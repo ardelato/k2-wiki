@@ -114,7 +114,7 @@ test.describe('item selection and detail panel', () => {
   test('clicking item card opens detail panel', async ({ page }) => {
     await itemCards(page).first().click()
 
-    const detail = page.locator('aside')
+    const detail = page.locator('aside:not(.sidebar-rail)')
     await expect(detail).toBeVisible()
     // Detail should show an item name in an h2
     await expect(detail.locator('h2')).not.toBeEmpty()
@@ -123,7 +123,7 @@ test.describe('item selection and detail panel', () => {
   test('detail panel shows item type', async ({ page }) => {
     await itemCards(page).first().click()
 
-    const detail = page.locator('aside')
+    const detail = page.locator('aside:not(.sidebar-rail)')
     // Type badge should be visible (Currency, Gathered, etc.)
     const typeBadge = detail
       .locator('span')
@@ -143,9 +143,9 @@ test.describe('item selection and detail panel', () => {
 
   test('query param pre-selects item on load', async ({ page }) => {
     await page.goto('./items?item=chopping-charm')
-    await page.locator('aside').waitFor()
+    await page.locator('aside:not(.sidebar-rail)').waitFor()
 
-    const detail = page.locator('aside')
+    const detail = page.locator('aside:not(.sidebar-rail)')
     await expect(detail).toBeVisible()
     await expect(detail.locator('h2')).toContainText('Chopping Charm')
   })
@@ -157,9 +157,9 @@ test.describe('detail panel navigation', () => {
   test('clicking linked item in detail navigates to that item', async ({ page }) => {
     // Open Coal which has many recipes with ingredient links
     await page.goto('./items?item=coal')
-    await page.locator('aside').waitFor()
+    await page.locator('aside:not(.sidebar-rail)').waitFor()
 
-    const detail = page.locator('aside')
+    const detail = page.locator('aside:not(.sidebar-rail)')
     await expect(detail.locator('h2')).toContainText('Coal')
 
     // Find a clickable item button within the recipes/ingredients section

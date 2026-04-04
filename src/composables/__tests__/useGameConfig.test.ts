@@ -125,4 +125,78 @@ describe('useGameConfig', () => {
     setMachineCreatures(['m1'])
     expect(machineCreatureIds.value).toEqual(['m1'])
   })
+
+  test('setToolLevels stores tool levels', () => {
+    const { toolLevels, setToolLevels } = useGameConfig()
+    setToolLevels({ axe: 3, pickaxe: 7 })
+    expect(toolLevels.value).toEqual({ axe: 3, pickaxe: 7 })
+  })
+
+  test('resetToolLevels clears tool levels', () => {
+    const { toolLevels, setToolLevels, resetToolLevels } = useGameConfig()
+    setToolLevels({ axe: 5 })
+    resetToolLevels()
+    expect(toolLevels.value).toEqual({})
+  })
+
+  test('setMachineLevels stores machine levels', () => {
+    const { machineLevels, setMachineLevels } = useGameConfig()
+    setMachineLevels({ smelter: 5, sawmill: 3 })
+    expect(machineLevels.value).toEqual({ smelter: 5, sawmill: 3 })
+  })
+
+  test('setMachineRecipes stores machine recipes', () => {
+    const { machineRecipes, setMachineRecipes } = useGameConfig()
+    setMachineRecipes({ smelter: 'copper-ore', sawmill: null })
+    expect(machineRecipes.value).toEqual({ smelter: 'copper-ore', sawmill: null })
+  })
+
+  test('resetMachines clears machine levels and recipes', () => {
+    const { machineLevels, machineRecipes, setMachineLevels, setMachineRecipes, resetMachines } =
+      useGameConfig()
+    setMachineLevels({ smelter: 5 })
+    setMachineRecipes({ smelter: 'copper-ore' })
+    resetMachines()
+    expect(machineLevels.value).toEqual({})
+    expect(machineRecipes.value).toEqual({})
+  })
+
+  test('setFabricationAllocations stores allocations', () => {
+    const { fabricationAllocations, setFabricationAllocations } = useGameConfig()
+    setFabricationAllocations({ 'pine-log': 3, 'copper-ore': 5 })
+    expect(fabricationAllocations.value).toEqual({ 'pine-log': 3, 'copper-ore': 5 })
+  })
+
+  test('resetFabrication clears allocations', () => {
+    const { fabricationAllocations, setFabricationAllocations, resetFabrication } = useGameConfig()
+    setFabricationAllocations({ 'pine-log': 3 })
+    resetFabrication()
+    expect(fabricationAllocations.value).toEqual({})
+  })
+
+  test('resetGameConfig clears new state fields', () => {
+    const {
+      toolLevels,
+      machineLevels,
+      machineRecipes,
+      fabricationAllocations,
+      setToolLevels,
+      setMachineLevels,
+      setMachineRecipes,
+      setFabricationAllocations,
+      resetGameConfig,
+    } = useGameConfig()
+
+    setToolLevels({ axe: 5 })
+    setMachineLevels({ smelter: 3 })
+    setMachineRecipes({ smelter: 'copper-ore' })
+    setFabricationAllocations({ 'pine-log': 2 })
+
+    resetGameConfig()
+
+    expect(toolLevels.value).toEqual({})
+    expect(machineLevels.value).toEqual({})
+    expect(machineRecipes.value).toEqual({})
+    expect(fabricationAllocations.value).toEqual({})
+  })
 })

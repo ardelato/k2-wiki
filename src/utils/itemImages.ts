@@ -17,6 +17,8 @@ const imageAliases: Record<string, string> = {
   'water-bucket': 'bucket-of-water',
   planks: 'plank',
   'water-vial': 'water-vials',
+  shell: 'shells',
+  'dungeon-dust': 'echo-dust',
 }
 
 export function getItemImage(item: Pick<Item, 'id'> & { image?: string }): string | undefined {

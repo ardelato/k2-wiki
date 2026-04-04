@@ -1,3 +1,4 @@
+import { itemById } from '@/data/indexes'
 import type { ElementType, ItemType, PlannerMethodKind } from '@/types'
 
 export function typeColor(type: ElementType): string {
@@ -97,6 +98,10 @@ export function formatChance(chance: number): string {
     return `2x ${(extra * 100).toFixed(extra < 0.01 ? 2 : 1)}%`
   }
   return `${(chance * 100).toFixed(chance < 0.01 ? 2 : 1)}%`
+}
+
+export function itemName(id: string): string {
+  return itemById.get(id)?.name ?? toTitleCase(id.replace(/-/g, ' '))
 }
 
 export function toTitleCase(str: string): string {
