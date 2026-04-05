@@ -742,6 +742,10 @@ function resetAwaken() {
 
 function resetExpeditions() {
   expeditionCompletions.value = {}
+  localStorage.removeItem('expedition-parties')
+  localStorage.removeItem('expedition-creature-levels')
+  localStorage.removeItem('expedition-tiers')
+  localStorage.removeItem('expedition-loop-counts')
 }
 
 

@@ -42,6 +42,7 @@ const WALL_CLOCK_FALLBACK_MS = 120_000
 const PROGRESS_REPORT_INTERVAL = 8
 const PROGRESS_HEARTBEAT_MS = 100
 const HUGE_TIME = 10 ** 12
+const MAX_AUTO_REQUEUE_SECONDS = 24 * 3600 // 24 hours
 
 interface CreatureProgress {
   level: number
@@ -653,11 +654,10 @@ export function planPartyLevelingPath(
         if (remainingNeeded <= remainingGroups) pushPartial(partial)
 
         for (const candidate of group.candidates) {
-          const seedCreatureId = candidate.levelerIds[0]
-          if (!seedCreatureId || partial.usedCreatureIds.has(seedCreatureId)) continue
+          if (candidate.memberIds.some((id) => partial.usedCreatureIds.has(id))) continue
 
           const usedCreatureIds = new Set(partial.usedCreatureIds)
-          usedCreatureIds.add(seedCreatureId)
+          for (const id of candidate.memberIds) usedCreatureIds.add(id)
           const selected = [...partial.selected, candidate]
           const key = selected.map((item) => candidateKey(item)).join('|')
 
@@ -697,7 +697,7 @@ export function planPartyLevelingPath(
           score: matchingSeeds.reduce((sum, c) => sum + c.priorityScore, 0),
           coverageCount: matchingSeeds.length,
           selected: matchingSeeds,
-          usedCreatureIds: new Set(matchingSeeds.map((c) => c.levelerIds[0]).filter(Boolean)),
+          usedCreatureIds: new Set(matchingSeeds.flatMap((c) => c.memberIds)),
         })
       }
     }
@@ -741,14 +741,17 @@ export function planPartyLevelingPath(
       .toSorted((a, b) => b.bestScore - a.bestScore)
 
     const usedExpeditions = new Set<number>()
+    const usedCreatures = new Set<string>()
     const selected: RunCandidate[] = []
 
     for (const { id } of creatureList) {
       const options = creatureOptions.get(id)!
       for (const { groupIdx, candidate } of options) {
         if (usedExpeditions.has(groupIdx)) continue
+        if (candidate.memberIds.some((mid) => usedCreatures.has(mid))) continue
         selected.push(candidate)
         usedExpeditions.add(groupIdx)
+        for (const mid of candidate.memberIds) usedCreatures.add(mid)
         break
       }
     }
@@ -843,10 +846,8 @@ export function planPartyLevelingPath(
     bestCompleteState: SearchState | null,
   ): RunCandidate[] {
     const parties = new Map(seeds.map((seed) => [seed.expeditionId, seed]))
-    const assignedLevelers = new Set(seeds.flatMap((seed) => seed.levelerIds))
-    const remainingLevelers = unfinishedIds.filter(
-      (creatureId) => !assignedLevelers.has(creatureId),
-    )
+    const assignedMembers = new Set(seeds.flatMap((seed) => seed.memberIds))
+    const remainingLevelers = unfinishedIds.filter((creatureId) => !assignedMembers.has(creatureId))
 
     function fillCreatures(remaining: string[]) {
       while (remaining.length > 0) {
@@ -1124,6 +1125,7 @@ export function planPartyLevelingPath(
     // point when a creature finishes leveling (or awakens) and the party must change.
     const MAX_AUTO_REQUEUE = 10_000
     let autoRequeueCount = 0
+    const autoRequeueEntryTime = next.clock
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -1151,6 +1153,14 @@ export function planPartyLevelingPath(
       // In optimal mode (or if nothing completed), break immediately — one step per iteration
       if (strategy !== 'hands-free' || completedRuns.length === 0) break
       if (autoRequeueCount >= MAX_AUTO_REQUEUE) break
+      if (next.clock - autoRequeueEntryTime > MAX_AUTO_REQUEUE_SECONDS) {
+        // Time cap reached — clear all expedition assignments so the beam search
+        // re-evaluates without stability bonuses, giving alternatives a fair chance
+        for (const run of completedRuns) {
+          next.expeditionAssignments[run.expeditionId] = null
+        }
+        break
+      }
 
       // Try to auto-requeue each completed run with the same party
       const busyCreatureIds = new Set(next.activeRuns.flatMap((r) => r.memberIds))
