@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useLocalStorage } from '@vueuse/core'
 import { Minus, Plus, Sparkles } from 'lucide-vue-next'
-import { ref, computed, watch } from 'vue'
+import { computed } from 'vue'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { items, jobActivityIndex } from '@/data/indexes'
@@ -16,22 +17,26 @@ const CYCLES_PER_HOUR = 3600 / FABRICATION_INTERVAL_SECONDS
 const GATHER_SOURCES = ['chopping', 'mining', 'digging', 'exploring', 'fishing', 'farming'] as const
 
 
+// fabricationAllocations = immutable save baseline (only changed by save import in ConfigsView)
+// simulatedAllocations = user's manual adjustments on this page (separate localStorage)
 const { fabricationAllocations } = useGameConfig()
+const simulatedAllocations = useLocalStorage<Record<string, number>>('fabrication-simulated', {})
 
 
 const columns = computed(() =>
   GATHER_SOURCES.map((source) => {
+    const jobId = toTitleCase(source)
     const sourceItems = items
       .filter((item) => {
         if (!(item.sources ?? []).includes(source)) return false
-        const activities = jobActivityIndex.get(item.id) ?? []
+        const activities = (jobActivityIndex.get(item.id) ?? []).filter((a) => a.jobId === jobId)
         if (activities.length === 0) return false
         const lowestLevel = Math.min(...activities.map((a) => a.levelRequirement))
         const primaryActivity = activities.find((a) => a.levelRequirement === lowestLevel)
         return primaryActivity ? primaryActivity.chance >= 1 : false
       })
       .map((item) => {
-        const activities = jobActivityIndex.get(item.id) ?? []
+        const activities = (jobActivityIndex.get(item.id) ?? []).filter((a) => a.jobId === jobId)
         const level =
           activities.length > 0 ? Math.min(...activities.map((a) => a.levelRequirement)) : 0
         return { id: item.id, name: item.name, level }
@@ -42,37 +47,62 @@ const columns = computed(() =>
 )
 
 
-const allocations = ref<Record<string, number>>({})
-
-
-// Sync from save data when it changes
-watch(
-  fabricationAllocations,
-  (saveData) => {
-    const merged = { ...allocations.value }
-    for (const [itemId, amount] of Object.entries(saveData)) {
-      if (amount > 0) merged[itemId] = amount
-    }
-    allocations.value = merged
-  },
-  { immediate: true },
-)
+// Merged view: save baseline + simulated overrides
+const allocations = computed(() => ({
+  ...fabricationAllocations.value,
+  ...simulatedAllocations.value,
+}))
 
 
 function adjustPoints(itemId: string, delta: number) {
   const current = allocations.value[itemId] ?? 0
   const next = Math.max(0, Math.min(MAX_ALLOCATION_PER_ITEM, current + delta))
-  if (next === 0) {
-    const { [itemId]: _, ...rest } = allocations.value
-    allocations.value = rest
+  const saved = fabricationAllocations.value[itemId] ?? 0
+  if (next === saved) {
+    // Back to save value — remove the override
+    const { [itemId]: _, ...rest } = simulatedAllocations.value
+    simulatedAllocations.value = rest
   } else {
-    allocations.value = { ...allocations.value, [itemId]: next }
+    // Store override (including 0 to override a save value)
+    simulatedAllocations.value = { ...simulatedAllocations.value, [itemId]: next }
   }
 }
 
 
+function resetToSave() {
+  simulatedAllocations.value = {}
+}
+
+
+const hasSimulatedChanges = computed(() => addedPoints.value > 0 || removedPoints.value > 0)
+
+
 function getPoints(itemId: string): number {
   return allocations.value[itemId] ?? 0
+}
+
+
+function getSavePoints(itemId: string): number {
+  return fabricationAllocations.value[itemId] ?? 0
+}
+
+
+function getDotState(itemId: string, dotIndex: number): 'save' | 'simulated' | 'removed' | 'empty' {
+  const current = getPoints(itemId)
+  const saved = getSavePoints(itemId)
+  if (dotIndex <= current && dotIndex <= saved) return 'save'
+  if (dotIndex <= current && dotIndex > saved) return 'simulated'
+  if (dotIndex > current && dotIndex <= saved) return 'removed'
+  return 'empty'
+}
+
+
+function getCardState(itemId: string): 'normal' | 'simulated' | 'removed' {
+  const current = getPoints(itemId)
+  const saved = getSavePoints(itemId)
+  if (current > saved) return 'simulated'
+  if (current < saved) return 'removed'
+  return 'normal'
 }
 
 
@@ -84,10 +114,30 @@ const savePoints = computed(() =>
 )
 
 
-const simulatedPoints = computed(() => totalPoints.value - savePoints.value)
+const addedPoints = computed(() => {
+  let added = 0
+  for (const [itemId, current] of Object.entries(allocations.value)) {
+    const saved = fabricationAllocations.value[itemId] ?? 0
+    if (current > saved) added += current - saved
+  }
+  return added
+})
+
+
+const removedPoints = computed(() => {
+  let removed = 0
+  for (const [itemId, saved] of Object.entries(fabricationAllocations.value)) {
+    const current = allocations.value[itemId] ?? 0
+    if (current < saved) removed += saved - current
+  }
+  return removed
+})
 
 
 const totalPerHour = computed(() => totalPoints.value * CYCLES_PER_HOUR)
+const totalPerMin = computed(
+  () => +(totalPoints.value / (FABRICATION_INTERVAL_SECONDS / 60)).toFixed(1),
+)
 
 
 const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
@@ -98,9 +148,9 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
     <div>
       <h1 class="text-2xl font-bold">Fabrication</h1>
       <p class="mt-1 text-sm text-muted-foreground">
-        Allocate prestige points to passively generate gathering items. Each point produces 1 item
-        every 3 minutes ({{ CYCLES_PER_HOUR }}/hr), up to {{ MAX_ALLOCATION_PER_ITEM }} points per
-        item.
+        Allocate prestige points to passively generate gathering items. Each point produces
+        <strong class="text-foreground">1 item every 3 minutes ({{ CYCLES_PER_HOUR }}/hr)</strong>,
+        up to {{ MAX_ALLOCATION_PER_ITEM }} points per item.
       </p>
     </div>
 
@@ -115,7 +165,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
           <span class="font-semibold">{{ totalPoints }} points</span>
         </div>
         <div
-          v-if="savePoints > 0 || simulatedPoints !== 0"
+          v-if="savePoints > 0 || addedPoints > 0 || removedPoints > 0"
           class="flex items-center gap-2 text-xs text-muted-foreground"
         >
           <span
@@ -125,20 +175,31 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             {{ savePoints }} from save
           </span>
           <span
-            v-if="simulatedPoints > 0"
+            v-if="addedPoints > 0"
             class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
           >
-            +{{ simulatedPoints }} simulated
+            +{{ addedPoints }} simulated
           </span>
           <span
-            v-else-if="simulatedPoints < 0"
+            v-if="removedPoints > 0"
             class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
           >
-            {{ simulatedPoints }} removed
+            -{{ removedPoints }} removed
           </span>
         </div>
       </div>
-      <span class="font-semibold text-primary">{{ totalPerHour }} items/hr</span>
+      <div class="flex items-center gap-2">
+        <button
+          v-if="hasSimulatedChanges"
+          class="rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
+          @click="resetToSave"
+        >
+          Reset
+        </button>
+        <span class="font-semibold text-primary"
+          >{{ totalPerMin }}/min · {{ totalPerHour }}/hr</span
+        >
+      </div>
     </div>
 
     <!-- Item grid by source -->
@@ -163,7 +224,13 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             :key="item.id"
             class="flex items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors"
             :class="
-              getPoints(item.id) > 0 ? 'border-primary/40 bg-primary/5' : 'border-border bg-card'
+              getCardState(item.id) === 'simulated'
+                ? 'border-amber-500/40 bg-amber-500/5'
+                : getCardState(item.id) === 'removed'
+                  ? 'border-red-500/40 bg-red-500/5'
+                  : getPoints(item.id) > 0
+                    ? 'border-primary/40 bg-primary/5'
+                    : 'border-border bg-card'
             "
           >
             <!-- Allocation bar (vertical) -->
@@ -172,7 +239,12 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
                 v-for="dot in MAX_ALLOCATION_PER_ITEM"
                 :key="dot"
                 class="h-1.5 w-3 rounded-sm transition-colors"
-                :class="dot <= getPoints(item.id) ? 'bg-primary' : 'bg-muted'"
+                :class="{
+                  'bg-primary': getDotState(item.id, dot) === 'save',
+                  'bg-amber-500': getDotState(item.id, dot) === 'simulated',
+                  'bg-red-500/50': getDotState(item.id, dot) === 'removed',
+                  'bg-muted': getDotState(item.id, dot) === 'empty',
+                }"
               />
             </div>
 
@@ -188,9 +260,20 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             <!-- Name & level -->
             <div class="min-w-0 flex-1">
               <div class="truncate text-xs font-medium">{{ item.name }}</div>
-              <div class="text-[10px] text-muted-foreground">
+              <div
+                class="text-[10px]"
+                :class="{
+                  'text-amber-600 dark:text-amber-400': getCardState(item.id) === 'simulated',
+                  'text-red-600 dark:text-red-400': getCardState(item.id) === 'removed',
+                  'text-muted-foreground': getCardState(item.id) === 'normal',
+                }"
+              >
                 <template v-if="getPoints(item.id) > 0">
+                  {{ +(getPoints(item.id) / (FABRICATION_INTERVAL_SECONDS / 60)).toFixed(1) }}/min ·
                   {{ getPoints(item.id) * CYCLES_PER_HOUR }}/hr
+                </template>
+                <template v-else-if="getSavePoints(item.id) > 0">
+                  {{ getSavePoints(item.id) * CYCLES_PER_HOUR }}/hr removed
                 </template>
                 <template v-else>Lv {{ item.level }}</template>
               </div>
