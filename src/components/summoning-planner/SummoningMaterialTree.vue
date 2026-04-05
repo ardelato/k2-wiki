@@ -110,6 +110,12 @@ const rootActiveMethod = computed(() => {
 const rootChildren = computed(() => rootActiveMethod.value?.children ?? [])
 
 
+function toggleOpen() {
+  isOpen.value = !isOpen.value
+  if (rootNode.value) selectNode(rootNode.value.id)
+}
+
+
 function selectNode(nodeId: string) {
   selectedNodeId.value = nodeId
   selectedMethodId.value = null
@@ -164,10 +170,7 @@ defineExpose({
   <div v-if="rootNode" class="surface-card overflow-hidden">
     <button
       class="focus-ring flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/15"
-      @click="
-        isOpen = !isOpen
-        selectNode(rootNode!.id)
-      "
+      @click="toggleOpen"
     >
       <component :is="isOpen ? ChevronDown : ChevronRight" class="size-4 text-muted-foreground" />
       <img
