@@ -26,9 +26,10 @@ test.describe('fabrication page', () => {
     const plusButtons = page.locator('button:has(svg.lucide-plus)')
     await plusButtons.first().click()
 
-    // Summary bar should appear
-    await expect(page.getByText('1 points')).toBeVisible()
-    await expect(page.getByText('0.3/min · 20/hr')).toBeVisible()
+    // Summary bar should appear with totals
+    const summaryBar = page.locator('.flex.items-center.justify-between.rounded-xl')
+    await expect(summaryBar.getByText('1 points')).toBeVisible()
+    await expect(summaryBar.getByText('0.3/min · 20/hr')).toBeVisible()
   })
 
   test('clicking - button deallocates a point', async ({ page }) => {
@@ -52,8 +53,10 @@ test.describe('fabrication page', () => {
     await plusButtons.first().click()
     await plusButtons.first().click()
 
-    await expect(page.getByText('3 points')).toBeVisible()
-    await expect(page.getByText('1/min · 60/hr')).toBeVisible()
+    // Summary bar should show totals
+    const summaryBar = page.locator('.flex.items-center.justify-between.rounded-xl')
+    await expect(summaryBar.getByText('3 points')).toBeVisible()
+    await expect(summaryBar.getByText('1/min · 60/hr')).toBeVisible()
   })
 
   test('empty state shows when no allocations', async ({ page }) => {
