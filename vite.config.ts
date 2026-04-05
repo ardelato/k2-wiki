@@ -14,7 +14,6 @@ export default defineConfig({
   },
   build: {
     assetsInlineLimit: 0,
-    // @ts-expect-error -- rolldownOptions is valid in Vite 6 with Rolldown but not yet typed
     rolldownOptions: {
       output: {
         codeSplitting: {
