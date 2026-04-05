@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronRight, ClipboardCopy, ShoppingCart } from 'lucide-vue-next'
+import { ClipboardCopy, ShoppingCart } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { PlannerMethodKind, PlannerSummaryLeaf } from '@/types'
@@ -13,18 +13,32 @@ const props = defineProps<{
 }>()
 
 
-const isOpen = ref(true)
 const copied = ref(false)
 
 
 const groupedItems = computed(() => {
+  // Separate stocked items from non-stocked, group by kind
   const groups = new Map<PlannerMethodKind, PlannerSummaryLeaf[]>()
+  const stockedItems: PlannerSummaryLeaf[] = []
+
   for (const leaf of props.leafItems) {
-    const group = groups.get(leaf.acquisitionKind) ?? []
-    group.push(leaf)
-    groups.set(leaf.acquisitionKind, group)
+    if (leaf.stillNeeded === 0) {
+      stockedItems.push(leaf)
+    } else {
+      const group = groups.get(leaf.acquisitionKind) ?? []
+      group.push(leaf)
+      groups.set(leaf.acquisitionKind, group)
+    }
   }
-  return [...groups.entries()]
+
+  const result: [PlannerMethodKind, PlannerSummaryLeaf[]][] = [...groups.entries()]
+
+  // "In stock" items always last
+  if (stockedItems.length > 0) {
+    result.push(['stocked', stockedItems])
+  }
+
+  return result
 })
 
 
@@ -44,11 +58,7 @@ async function copyToClipboard() {
 <template>
   <div class="surface-card overflow-hidden">
     <div class="flex items-center gap-2 px-4 py-3">
-      <button
-        class="focus-ring -mx-1 flex flex-1 items-center gap-2 rounded-lg px-1 text-left transition hover:bg-muted/15"
-        @click="isOpen = !isOpen"
-      >
-        <component :is="isOpen ? ChevronDown : ChevronRight" class="size-4 text-muted-foreground" />
+      <div class="flex flex-1 items-center gap-2">
         <ShoppingCart class="size-4 text-primary" />
         <span class="text-sm font-bold text-foreground">Gathering List</span>
         <span
@@ -56,9 +66,9 @@ async function copyToClipboard() {
         >
           {{ leafItems.length }}
         </span>
-      </button>
+      </div>
       <button
-        v-if="isOpen && leafItems.length"
+        v-if="leafItems.length"
         class="focus-ring ml-auto inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
         @click="copyToClipboard"
       >
@@ -67,7 +77,7 @@ async function copyToClipboard() {
       </button>
     </div>
 
-    <div v-if="isOpen && leafItems.length" class="space-y-3 px-4 pb-4">
+    <div v-if="leafItems.length" class="space-y-3 px-4 pb-4">
       <div v-for="[kind, leaves] in groupedItems" :key="kind" class="space-y-1">
         <p
           class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em]"
@@ -100,19 +110,45 @@ async function copyToClipboard() {
                 >({{ leaf.inventoryAmount }} in stock)</span
               >
             </span>
-            <span
-              class="ml-auto shrink-0 font-mono text-sm font-semibold"
-              :style="{
-                color: leaf.stillNeeded === 0 ? 'var(--color-green)' : 'var(--color-primary)',
-              }"
-            >
-              {{
-                leaf.stillNeeded === 0
-                  ? 'In Stock'
-                  : leaf.stillNeeded === leaf.amount
-                    ? `x${formatAmount(leaf.amount)}`
-                    : `x${formatAmount(leaf.stillNeeded)} / x${formatAmount(leaf.amount)}`
-              }}
+            <span class="ml-auto shrink-0 font-mono text-sm font-semibold">
+              <template v-if="leaf.stillNeeded === 0">
+                <span style="color: var(--color-green)">In Stock</span>
+              </template>
+              <template v-else-if="leaf.stillNeeded === leaf.amount">
+                <span style="color: var(--color-primary)">x{{ formatAmount(leaf.amount) }}</span>
+              </template>
+              <template v-else>
+                <span class="group/amounts relative">
+                  <span style="color: var(--color-primary)"
+                    >x{{ formatAmount(leaf.stillNeeded) }}</span
+                  >
+                  <span class="font-normal text-muted-foreground"> / </span>
+                  <span class="text-muted-foreground/60">x{{ formatAmount(leaf.amount) }}</span>
+                  <!-- Tooltip -->
+                  <span
+                    class="pointer-events-none absolute bottom-full right-0 mb-2 flex min-w-36 flex-col gap-1 rounded-lg border border-border bg-card px-3 py-2 opacity-0 shadow-lg transition-opacity group-hover/amounts:opacity-100"
+                  >
+                    <span class="flex items-center justify-between gap-3 text-xs">
+                      <span class="font-semibold text-muted-foreground">Needed</span>
+                      <span class="font-bold" style="color: var(--color-primary)"
+                        >x{{ formatAmount(leaf.stillNeeded) }}</span
+                      >
+                    </span>
+                    <span class="flex items-center justify-between gap-3 text-xs">
+                      <span class="font-semibold text-muted-foreground">Total</span>
+                      <span class="font-bold text-foreground"
+                        >x{{ formatAmount(leaf.amount) }}</span
+                      >
+                    </span>
+                    <span class="flex items-center justify-between gap-3 text-xs">
+                      <span class="font-semibold text-muted-foreground">In stock</span>
+                      <span class="font-bold text-emerald-600 dark:text-emerald-400">{{
+                        formatAmount(leaf.inventoryAmount)
+                      }}</span>
+                    </span>
+                  </span>
+                </span>
+              </template>
             </span>
           </div>
         </div>
