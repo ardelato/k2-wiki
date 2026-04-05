@@ -506,10 +506,7 @@ const expeditionAllocations = computed(() => {
     const source = sources?.find((s) => s.expeditionId === best.expedition.id)
     if (!source) continue
 
-    const targetAmount = Math.max(
-      0,
-      (tree.rootNode?.requiredAmount ?? cost.amount) - (tree.inventoryAmounts?.[cost.itemId] ?? 0),
-    )
+    const targetAmount = tree.rootNode?.requiredAmount ?? cost.amount
     if (targetAmount <= 0) continue // Fully stocked, no expedition needed
 
     entries.push({

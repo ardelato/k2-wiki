@@ -51,6 +51,7 @@ export interface SaveConfig {
   machineLevels: Record<string, number>
   machineRecipes: Record<string, string | null>
   fabricationAllocations: Record<string, number>
+  awakenGoldLevel: number
   currentExpedition: ExpeditionData
 }
 
@@ -83,7 +84,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   )
 
   const upgrades = Array.isArray(save.purchasedUpgrades) ? (save.purchasedUpgrades as string[]) : []
-  const { awakenGatherUpgrades, awakenSpeedTiers } = parseAwakenUpgrades(upgrades)
+  const { awakenGatherUpgrades, awakenSpeedTiers, awakenGoldLevel } = parseAwakenUpgrades(upgrades)
 
   const creatures = Array.isArray(save.creatures) ? (save.creatures as SaveCreature[]) : []
 
@@ -115,6 +116,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     machineLevels,
     machineRecipes,
     fabricationAllocations,
+    awakenGoldLevel,
     currentExpedition,
   }
 }
@@ -187,11 +189,13 @@ export function aggregateGardenFlowers(flowers: SaveFlower[]): Record<string, Ga
 export function parseAwakenUpgrades(upgrades: string[]): {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
+  awakenGoldLevel: number
 } {
   const awakenGatherUpgrades = defaultAwakenGatherUpgrades()
   const awakenSpeedTiers = defaultAwakenSpeedTiers()
+  let awakenGoldLevel = 0
 
-  const pattern = /^(\w+)-(yield|duration|speed)-(i{1,4}v?)$/
+  const pattern = /^(\w+)-(yield|duration|speed|gold)-(i{1,4}v?)$/
   for (const upgrade of upgrades) {
     const match = upgrade.match(pattern)
     if (!match) continue
@@ -213,10 +217,12 @@ export function parseAwakenUpgrades(upgrades: string[]): {
         awakenGatherUpgrades[name].durationTier,
         tier,
       )
+    } else if (type === 'gold' && rawName === 'awaken') {
+      awakenGoldLevel = Math.max(awakenGoldLevel, tier)
     }
   }
 
-  return { awakenGatherUpgrades, awakenSpeedTiers }
+  return { awakenGatherUpgrades, awakenSpeedTiers, awakenGoldLevel }
 }
 
 const SCORE_DIVISOR = 60
