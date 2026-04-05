@@ -366,6 +366,7 @@ const hasAnything = computed(() => activeCount.value > 0)
               :src="getMachineImage(machine.id)"
               alt=""
               class="size-4 shrink-0"
+              loading="lazy"
             />
             <span class="min-w-0 text-sm text-foreground">{{ getMachineName(machine.id) }}</span>
             <span class="ml-auto shrink-0 text-xs font-semibold" style="color: hsl(var(--primary))">
@@ -394,6 +395,7 @@ const hasAnything = computed(() => activeCount.value > 0)
               :src="getItemImage({ id: fab.itemId })"
               alt=""
               class="size-4 shrink-0"
+              loading="lazy"
             />
             <span class="min-w-0 text-sm text-foreground">{{ itemName(fab.itemId) }}</span>
             <span class="ml-auto shrink-0 text-xs font-semibold" style="color: rgb(52, 211, 153)">

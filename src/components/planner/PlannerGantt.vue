@@ -135,6 +135,7 @@ const timeMarkers = computed(() => {
             :src="getItemImage({ id: tasksByResource[resource]?.[0]?.itemId ?? '' })"
             alt=""
             class="size-3.5 shrink-0 object-contain"
+            loading="lazy"
           />
           {{ resource }}
         </div>

@@ -701,6 +701,7 @@ const hasAnyChanges = computed(
                 :src="getMachineImage(machine)"
                 alt=""
                 class="size-4 shrink-0"
+                loading="lazy"
               />
               <span class="text-sm text-foreground">{{ machine.name }}</span>
             </div>
@@ -797,6 +798,7 @@ const hasAnyChanges = computed(
                   :src="getItemImage({ id: String(itemId) })"
                   alt=""
                   class="size-4 shrink-0"
+                  loading="lazy"
                 />
                 <span class="text-sm text-foreground">{{ itemName(String(itemId)) }}</span>
                 <span

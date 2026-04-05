@@ -411,7 +411,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
           </PlannerBadge>
           <PlannerBadge> LVL {{ startLevel }} </PlannerBadge>
           <PlannerBadge v-if="expeditionToolXpBonus > 1" color="rgb(217, 119, 6)">
-            <img :src="toolIcons.sword" alt="" class="size-3.5" />
+            <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
             +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
           </PlannerBadge>
         </template>
@@ -566,7 +566,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             </PlannerBadge>
             <PlannerBadge v-if="hasOverrides" color="var(--color-primary)"> Filtered </PlannerBadge>
             <PlannerBadge v-if="expeditionToolXpBonus > 1" color="rgb(217, 119, 6)">
-              <img :src="toolIcons.sword" alt="" class="size-3.5" />
+              <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
               +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
             </PlannerBadge>
           </div>

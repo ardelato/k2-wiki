@@ -1,7 +1,7 @@
 import type { Machine } from '@/types'
 import { getItemImage } from '@/utils/itemImages'
 
-const iconModules = import.meta.glob('../assets/icons/*.png', {
+const iconModules = import.meta.glob('../assets/icons/*.webp', {
   eager: true,
   import: 'default',
 }) as Record<string, string>
@@ -17,7 +17,9 @@ export function getMachineImage(
   machine: Pick<Machine, 'id' | 'image' | 'machineType' | 'outputItemId'>,
 ): string | undefined {
   if (machine.image) {
-    return iconsByFilename[machine.image] ?? getItemImage({ id: machine.image.replace('.png', '') })
+    return (
+      iconsByFilename[machine.image] ?? getItemImage({ id: machine.image.replace('.webp', '') })
+    )
   }
   if (machine.machineType === 'generator' && machine.outputItemId) {
     return getItemImage({ id: machine.outputItemId }) ?? undefined

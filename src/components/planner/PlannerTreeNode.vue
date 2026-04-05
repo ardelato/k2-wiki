@@ -305,7 +305,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
             class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold"
             :class="chip.color"
           >
-            <img v-if="chip.icon" :src="chip.icon" alt="" class="size-3" />
+            <img v-if="chip.icon" :src="chip.icon" alt="" class="size-3" loading="lazy" />
             {{ chip.label }}
           </span>
         </div>

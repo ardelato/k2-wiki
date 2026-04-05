@@ -214,6 +214,7 @@ function openDisplayNodePlanner() {
               :src="getItemImage({ id: passiveTask.itemId })"
               :alt="passiveTask.itemId"
               class="size-16 object-contain drop-shadow-lg"
+              loading="lazy"
             />
           </div>
           <div class="text-center">
