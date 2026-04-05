@@ -1,3 +1,4 @@
+import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, type Ref } from 'vue'
 
 import { useGameConfig } from '@/composables/useGameConfig'
@@ -6,6 +7,8 @@ import {
   jobActivityIndex,
   containerSourceIndex,
   expeditionSourceIndex,
+  machineRecipeIndex,
+  machineSpeedMultipliers,
 } from '@/data/indexes'
 import type {
   AwakenGatherUpgrade,
@@ -30,6 +33,8 @@ export interface PlannerModifiers {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number> // per workstation, 0–4
   jobTiers: Record<string, number>
+  machineLevels: Record<string, number>
+  fabricationAllocations: Record<string, number>
 }
 
 interface GardenSource {
@@ -77,6 +82,77 @@ function formatAmount(value: number): string {
 
 function formatTimeOrUnknown(value: number | null): string {
   return value == null ? 'Unknown' : formatDuration(value)
+}
+
+const FABRICATION_CYCLE_SECONDS = 180
+
+interface PassiveRateResult {
+  rate: number
+  details: { label: string; ratePerMin: number }[]
+}
+
+function applyPassiveRate(
+  requiredAmount: number,
+  activeRate: number,
+  baseTime: number,
+  passive: PassiveRateResult,
+): number {
+  return passive.rate > 0 ? requiredAmount / (activeRate + passive.rate) : baseTime
+}
+
+function passiveFormula(
+  requiredAmount: number,
+  activeRate: number,
+  passive: PassiveRateResult,
+  baseFormula: string,
+): string {
+  return passive.rate > 0
+    ? `${formatAmount(requiredAmount)} ÷ (${(activeRate * 60).toFixed(1)}/min active + ${(passive.rate * 60).toFixed(1)}/min passive)`
+    : baseFormula
+}
+
+function getPassiveRate(
+  itemId: string,
+  modifiers: PlannerModifiers,
+  excludeMachineId?: string,
+  excludeFabrication?: boolean,
+): PassiveRateResult {
+  let rate = 0
+  const details: { label: string; ratePerMin: number }[] = []
+
+  // Machine production rate (one entry per unique machine — a machine can only run one recipe)
+  const seenMachines = new Set<string>()
+  for (const source of machineRecipeIndex.get(itemId) ?? []) {
+    if (source.machineId === excludeMachineId) continue
+    if (seenMachines.has(source.machineId)) continue
+    seenMachines.add(source.machineId)
+    const level = modifiers.machineLevels[source.machineId] ?? 0
+    const mult = machineSpeedMultipliers[Math.min(level, machineSpeedMultipliers.length - 1)]
+    const interval = Math.max(1, Math.floor(source.baseInterval * mult))
+    const machineRate = source.outputAmount / interval
+    rate += machineRate
+    details.push({ label: `Machine — ${source.machineName}`, ratePerMin: machineRate * 60 })
+  }
+
+  // Fabrication production rate
+  if (!excludeFabrication) {
+    const points = modifiers.fabricationAllocations[itemId] ?? 0
+    if (points > 0) {
+      const fabRate = points / FABRICATION_CYCLE_SECONDS
+      rate += fabRate
+      details.push({ label: `Fabrication (${points} pts)`, ratePerMin: fabRate * 60 })
+    }
+  }
+
+  return { rate, details }
+}
+
+function passiveDetailRows(passive: PassiveRateResult): { label: string; value: string }[] {
+  if (passive.rate <= 0) return []
+  return passive.details.map((d) => ({
+    label: d.label,
+    value: `+${d.ratePerMin.toFixed(1)}/min`,
+  }))
 }
 
 function buildPlannerGraph(
@@ -204,7 +280,14 @@ function buildPlannerGraph(
         recipe.craftTime * 0.01,
         recipe.craftTime * (1 - speedReduction),
       )
-      const localTimeSeconds = craftsNeeded * effectiveCraftTime
+      const passive = getPassiveRate(itemId, modifiers)
+      const activeRate = recipe.outputAmount / effectiveCraftTime
+      const localTimeSeconds = applyPassiveRate(
+        requiredAmount,
+        activeRate,
+        craftsNeeded * effectiveCraftTime,
+        passive,
+      )
       const childTimes = children.map((child) => {
         const childNode = nodesById.get(child.nodeId)
         if (!childNode) return null
@@ -241,13 +324,19 @@ function buildPlannerGraph(
                 },
               ]
             : []),
+          ...passiveDetailRows(passive),
           { label: 'Step time', value: formatDuration(localTimeSeconds) },
           { label: 'Total time', value: formatTimeOrUnknown(totalTimeSeconds) },
           ...(totalTimeSeconds != null && totalTimeSeconds > localTimeSeconds
             ? [{ label: 'Deps time', value: formatDuration(totalTimeSeconds - localTimeSeconds) }]
             : []),
         ],
-        formula: `${formatAmount(craftsNeeded)} crafts × ${formatDuration(recipe.craftTime)}`,
+        formula: passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          `${formatAmount(craftsNeeded)} crafts × ${formatDuration(recipe.craftTime)}`,
+        ),
         notes: [],
         children,
       }
@@ -277,7 +366,14 @@ function buildPlannerGraph(
         Math.max(source.duration * 0.01, 1),
         source.duration * (1 - awakenReduction) * (1 - jobReduction),
       )
-      const localTimeSeconds = actionsNeeded * effectiveDuration
+      const passive = getPassiveRate(itemId, modifiers)
+      const activeRate = expectedYield / effectiveDuration
+      const localTimeSeconds = applyPassiveRate(
+        requiredAmount,
+        activeRate,
+        actionsNeeded * effectiveDuration,
+        passive,
+      )
       const isEstimated = source.chance !== 1 || source.min !== source.max
       const method: PlannerMethod = {
         id: `${nodeId}#gather-${sourceIndex}`,
@@ -296,22 +392,45 @@ function buildPlannerGraph(
             label: 'Yield / action',
             value: `${formatChance(source.chance)} × ${formatAmount(expectedAmount(source.min, source.max))}`,
           },
-          ...(yieldBonus > 0 ? [{ label: 'Yield Bonus', value: `+${yieldBonus}` }] : []),
-          ...((awakenGather?.durationTier ?? 0) > 0
-            ? [{ label: 'Awaken Duration', value: `-${(awakenGather?.durationTier ?? 0) * 5}%` }]
-            : []),
-          ...(jobTier > 0
+          ...(yieldBonus > 0 || (awakenGather?.durationTier ?? 0) > 0
             ? [
                 {
-                  label: 'Job Tier',
-                  value: `-${(JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) * 100}%`,
+                  label: 'Awaken Tree',
+                  value: [
+                    ...(yieldBonus > 0 ? [`+${yieldBonus} yield`] : []),
+                    ...((awakenGather?.durationTier ?? 0) > 0
+                      ? [`-${(awakenGather?.durationTier ?? 0) * 5}% duration`]
+                      : []),
+                  ].join(', '),
                 },
               ]
             : []),
+          ...((JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) > 0 ||
+          (JOB_TIER_YIELD_BONUS[jobTier] ?? 0) > 0
+            ? [
+                {
+                  label: 'Sanctuary',
+                  value: `T${jobTier} (${[
+                    ...((JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) > 0
+                      ? [`-${(JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) * 100}% duration`]
+                      : []),
+                    ...((JOB_TIER_YIELD_BONUS[jobTier] ?? 0) > 0
+                      ? [`+${JOB_TIER_YIELD_BONUS[jobTier]} yield`]
+                      : []),
+                  ].join(', ')})`,
+                },
+              ]
+            : []),
+          ...passiveDetailRows(passive),
           { label: 'Actions', value: formatAmount(actionsNeeded), estimated: isEstimated },
           { label: 'Step time', value: formatDuration(localTimeSeconds), estimated: isEstimated },
         ],
-        formula: `${formatAmount(requiredAmount)} ÷ (${formatChance(source.chance)} × ${formatAmount(expectedAmount(source.min, source.max))}) actions × ${formatDuration(source.duration)}`,
+        formula: passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          `${formatAmount(requiredAmount)} ÷ (${formatChance(source.chance)} × ${formatAmount(expectedAmount(source.min, source.max))}) actions × ${formatDuration(source.duration)}`,
+        ),
         notes: ['Expected time uses average yield from chance and output range.'],
         children: [],
       }
@@ -328,7 +447,14 @@ function buildPlannerGraph(
 
       if (yieldPerCycle > 0) {
         const cyclesNeeded = requiredAmount / yieldPerCycle
-        const localTimeSeconds = cyclesNeeded * gardenSource.cycleSeconds
+        const passive = getPassiveRate(itemId, modifiers)
+        const activeRate = yieldPerCycle / gardenSource.cycleSeconds
+        const localTimeSeconds = applyPassiveRate(
+          requiredAmount,
+          activeRate,
+          cyclesNeeded * gardenSource.cycleSeconds,
+          passive,
+        )
         const breakdownParts = entries
           .filter((e) => e.count > 0)
           .map((e) => `${e.count}×Lv${e.level}`)
@@ -347,10 +473,16 @@ function buildPlannerGraph(
             { label: 'Setup', value: breakdownParts.join(' + ') || 'None' },
             { label: 'Total flowers', value: String(totalFlowers) },
             { label: 'Yield / cycle', value: `${formatAmount(yieldPerCycle)} per 60s` },
+            ...passiveDetailRows(passive),
             { label: 'Cycles', value: formatAmount(cyclesNeeded) },
             { label: 'Step time', value: formatDuration(localTimeSeconds) },
           ],
-          formula: `${formatAmount(requiredAmount)} ÷ ${formatAmount(yieldPerCycle)} per cycle × ${formatDuration(gardenSource.cycleSeconds)}`,
+          formula: passiveFormula(
+            requiredAmount,
+            activeRate,
+            passive,
+            `${formatAmount(requiredAmount)} ÷ ${formatAmount(yieldPerCycle)} per cycle × ${formatDuration(gardenSource.cycleSeconds)}`,
+          ),
           notes: [`Garden yield: ${breakdownParts.join(' + ')} = ${yieldPerCycle}/min.`],
           children: [],
         }
@@ -473,6 +605,165 @@ function buildPlannerGraph(
       methodsById.set(method.id, method)
     })
 
+    // Machine methods (processors and generators)
+    ;(machineRecipeIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
+      const machineLevel = modifiers.machineLevels[source.machineId] ?? 0
+      const speedMultiplier =
+        machineSpeedMultipliers[Math.min(machineLevel, machineSpeedMultipliers.length - 1)]
+      const effectiveInterval = Math.max(1, Math.floor(source.baseInterval * speedMultiplier))
+      const cyclesNeeded = Math.ceil(requiredAmount / source.outputAmount)
+      const passive = getPassiveRate(itemId, modifiers, source.machineId)
+      const activeRate = source.outputAmount / effectiveInterval
+      const localTimeSeconds = applyPassiveRate(
+        requiredAmount,
+        activeRate,
+        cyclesNeeded * effectiveInterval,
+        passive,
+      )
+
+      const children: PlannerMethodChild[] = []
+
+      // Input items (processors have inputs, generators don't)
+      if (source.inputItemId) {
+        const inputAmount = source.inputAmount * cyclesNeeded
+        const childPath = `${nodeId}/machine-${sourceIndex}-input:${source.inputItemId}`
+        const childNode = buildNode(
+          source.inputItemId,
+          inputAmount,
+          depth + 1,
+          nextAncestry,
+          childPath,
+        )
+        children.push({
+          itemId: source.inputItemId,
+          amount: inputAmount,
+          nodeId: childNode.id,
+        })
+      }
+
+      // Secondary input (e.g., Bakery: flour + egg, Refinery: essence + stone)
+      if (source.secondaryInputItemId) {
+        const secondaryAmount = (source.secondaryInputAmount ?? 0) * cyclesNeeded
+        if (secondaryAmount > 0) {
+          const childPath = `${nodeId}/machine-${sourceIndex}-secondary:${source.secondaryInputItemId}`
+          const childNode = buildNode(
+            source.secondaryInputItemId,
+            secondaryAmount,
+            depth + 1,
+            nextAncestry,
+            childPath,
+          )
+          children.push({
+            itemId: source.secondaryInputItemId,
+            amount: secondaryAmount,
+            nodeId: childNode.id,
+          })
+        }
+      }
+
+      // Calculate total time including children
+      const childTimes = children.map((child) => {
+        const childNode = nodesById.get(child.nodeId)
+        if (!childNode) return null
+        if (childNode.fulfilled) return 0
+        if (!childNode.defaultMethodId) return null
+        const childMethod = methodsById.get(childNode.defaultMethodId)
+        if (!childMethod) return null
+        return childMethod.totalTimeSeconds ?? null
+      })
+      const knownChildTimes = childTimes.filter((time): time is number => time != null)
+      const maxChildTime = knownChildTimes.length > 0 ? Math.max(...knownChildTimes) : 0
+      const totalTimeSeconds =
+        knownChildTimes.length !== childTimes.length ? null : localTimeSeconds + maxChildTime
+
+      const method: PlannerMethod = {
+        id: `${nodeId}#machine-${sourceIndex}`,
+        nodeId,
+        kind: 'machine',
+        title: source.machineName,
+        subtitle: `${cyclesNeeded} cycle${cyclesNeeded === 1 ? '' : 's'} for ${formatAmount(requiredAmount)} output`,
+        requiredAmount,
+        localTimeSeconds,
+        totalTimeSeconds,
+        cost: null,
+        detailRows: [
+          { label: 'Output', value: `${source.outputAmount} each` },
+          { label: 'Cycles', value: formatAmount(cyclesNeeded) },
+          { label: 'Level', value: `${machineLevel}/${machineSpeedMultipliers.length - 1}` },
+          { label: 'Interval', value: `${effectiveInterval}s per cycle` },
+          ...passiveDetailRows(passive),
+          { label: 'Step time', value: formatDuration(localTimeSeconds) },
+          { label: 'Total time', value: formatTimeOrUnknown(totalTimeSeconds) },
+          ...(totalTimeSeconds != null && totalTimeSeconds > localTimeSeconds
+            ? [{ label: 'Deps time', value: formatDuration(totalTimeSeconds - localTimeSeconds) }]
+            : []),
+        ],
+        formula: passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          `${formatAmount(cyclesNeeded)} cycles × ${effectiveInterval}s`,
+        ),
+        notes:
+          machineLevel > 0
+            ? [
+                `Machine level ${machineLevel} reduces interval from ${source.baseInterval}s to ${effectiveInterval}s.`,
+              ]
+            : [],
+        children,
+      }
+
+      methods.push(method)
+      methodsById.set(method.id, method)
+    })
+
+    // Fabrication method (passive item generation)
+    const allocationPoints = modifiers.fabricationAllocations[itemId] ?? 0
+    if (allocationPoints > 0) {
+      const itemsPerCycle = allocationPoints
+      const cyclesNeeded = requiredAmount / itemsPerCycle
+      const passive = getPassiveRate(itemId, modifiers, undefined, true)
+      const activeRate = itemsPerCycle / FABRICATION_CYCLE_SECONDS
+      const localTimeSeconds = applyPassiveRate(
+        requiredAmount,
+        activeRate,
+        cyclesNeeded * FABRICATION_CYCLE_SECONDS,
+        passive,
+      )
+      const itemsPerHour = itemsPerCycle * (3600 / FABRICATION_CYCLE_SECONDS)
+
+      const method: PlannerMethod = {
+        id: `${nodeId}#fabrication`,
+        nodeId,
+        kind: 'fabrication',
+        title: 'Fabrication',
+        subtitle: `${allocationPoints} point${allocationPoints === 1 ? '' : 's'} allocated`,
+        requiredAmount,
+        localTimeSeconds,
+        totalTimeSeconds: localTimeSeconds,
+        cost: null,
+        detailRows: [
+          { label: 'Points', value: String(allocationPoints) },
+          { label: 'Items / cycle', value: String(itemsPerCycle) },
+          { label: 'Cycle time', value: `${FABRICATION_CYCLE_SECONDS}s` },
+          { label: 'Rate', value: `${formatAmount(itemsPerHour)}/hr` },
+          ...passiveDetailRows(passive),
+          { label: 'Step time', value: formatDuration(localTimeSeconds) },
+        ],
+        formula: passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          `${formatAmount(requiredAmount)} ÷ ${itemsPerCycle}/cycle × ${FABRICATION_CYCLE_SECONDS}s`,
+        ),
+        notes: ['Fabrication generates items passively every 3 minutes.'],
+        children: [],
+      }
+
+      methods.push(method)
+      methodsById.set(method.id, method)
+    }
+
     if (item.buyValue != null) {
       const cost = requiredAmount * item.buyValue
       const method: PlannerMethod = {
@@ -501,7 +792,9 @@ function buildPlannerGraph(
     methods.sort((a, b) => {
       const kindOrder = [
         'craft',
+        'machine',
         'gather',
+        'fabrication',
         'garden',
         'container',
         'expedition',
@@ -561,13 +854,22 @@ function buildPlannerGraph(
 }
 
 const resourceSortPriority = (r: string) =>
-  r.startsWith('Garden:') ? 2 : r.startsWith('Expedition:') ? 3 : 1
+  r.startsWith('Machine:')
+    ? 1.5
+    : r.startsWith('Garden:')
+      ? 2
+      : r.startsWith('Fabrication:')
+        ? 2.5
+        : r.startsWith('Expedition:')
+          ? 3
+          : 1
 
 function computeSchedule(
   root: PlannerNode,
   nodesById: Record<string, PlannerNode>,
   activeMethodIdByNode: Record<string, string | null>,
   methodsById: Record<string, PlannerMethod>,
+  modifiers?: PlannerModifiers,
 ): PlannerSchedule {
   const tasks: ScheduledTask[] = []
   const resourceNextFree: Record<string, number> = {}
@@ -601,6 +903,9 @@ function computeSchedule(
     if (method.kind === 'craft') {
       resource = method.title
       startTime = Math.max(depsReady, resourceNextFree[resource] ?? 0)
+    } else if (method.kind === 'machine') {
+      resource = `Machine: ${method.title}`
+      startTime = Math.max(depsReady, resourceNextFree[resource] ?? 0)
     } else if (method.kind === 'gather') {
       resource = method.title
       startTime = Math.max(depsReady, resourceNextFree[resource] ?? 0)
@@ -609,6 +914,9 @@ function computeSchedule(
       startTime = 0
     } else if (method.kind === 'expedition') {
       resource = `Expedition: ${node.itemName}`
+      startTime = 0
+    } else if (method.kind === 'fabrication') {
+      resource = `Fabrication: ${node.itemName}`
       startTime = 0
     } else {
       // buy, container, stocked, etc. — negligible time
@@ -637,6 +945,105 @@ function computeSchedule(
 
   const totalTime = schedule(root)
 
+  // Add passive generation lanes for machines and fabrication that produce items in the tree
+  // but are NOT the selected method for that item
+  if (modifiers && totalTime > 0) {
+    const treeItemIds = new Set<string>()
+    const activeMethodKindByItem = new Map<string, Set<string>>()
+    const firstNodeIdByItem = new Map<string, string>()
+
+    function collectItems(node: PlannerNode) {
+      if (node.fulfilled) return
+      treeItemIds.add(node.itemId)
+      if (!firstNodeIdByItem.has(node.itemId)) firstNodeIdByItem.set(node.itemId, node.id)
+      const methodId = activeMethodIdByNode[node.id]
+      const method = methodId ? methodsById[methodId] : null
+      if (method) {
+        const kinds = activeMethodKindByItem.get(node.itemId) ?? new Set()
+        // Track which machine IDs are active for this item
+        if (method.kind === 'machine') kinds.add(`machine:${method.title}`)
+        else if (method.kind === 'fabrication') kinds.add('fabrication')
+        activeMethodKindByItem.set(node.itemId, kinds)
+        for (const child of method.children) {
+          const childNode = nodesById[child.nodeId]
+          if (childNode) collectItems(childNode)
+        }
+      }
+    }
+    collectItems(root)
+
+    for (const itemId of treeItemIds) {
+      const item = itemById.get(itemId)
+      const itemName = item?.name ?? itemId
+      const activeKinds = activeMethodKindByItem.get(itemId) ?? new Set()
+
+      // Machine passive lanes (one per unique machine)
+      const seenPassiveMachines = new Set<string>()
+      for (const source of machineRecipeIndex.get(itemId) ?? []) {
+        if (activeKinds.has(`machine:${source.machineName}`)) continue
+        if (seenPassiveMachines.has(source.machineId)) continue
+        seenPassiveMachines.add(source.machineId)
+        const level = modifiers.machineLevels[source.machineId] ?? 0
+        const mult = machineSpeedMultipliers[Math.min(level, machineSpeedMultipliers.length - 1)]
+        const interval = Math.max(1, Math.floor(source.baseInterval * mult))
+        const produced = Math.floor(totalTime / interval) * source.outputAmount
+        if (produced <= 0) continue
+
+        const resource = source.machineName
+        tasks.push({
+          nodeId: `passive:machine:${source.machineId}:${itemId}`,
+          itemId,
+          itemName: `${itemName} ×${produced}`,
+          resource,
+          kind: 'machine',
+          startTime: 0,
+          endTime: totalTime,
+          localTime: totalTime,
+          depth: 0,
+          passive: {
+            kind: 'machine',
+            machineName: source.machineName,
+            machineId: source.machineId,
+            machineLevel: level,
+            baseInterval: source.baseInterval,
+            effectiveInterval: interval,
+            outputAmount: source.outputAmount,
+            produced,
+            ratePerMin: (source.outputAmount / interval) * 60,
+          },
+        })
+      }
+
+      // Fabrication passive lane
+      if (!activeKinds.has('fabrication')) {
+        const points = modifiers.fabricationAllocations[itemId] ?? 0
+        if (points > 0) {
+          const produced = Math.floor((totalTime / 180) * points)
+          if (produced > 0) {
+            const resource = `Fabrication: ${itemName}`
+            tasks.push({
+              nodeId: `passive:fabrication:${itemId}`,
+              itemId,
+              itemName: `${itemName} ×${produced}`,
+              resource,
+              kind: 'fabrication',
+              startTime: 0,
+              endTime: totalTime,
+              localTime: totalTime,
+              depth: 0,
+              passive: {
+                kind: 'fabrication',
+                fabricationPoints: points,
+                produced,
+                ratePerMin: (points / 180) * 60,
+              },
+            })
+          }
+        }
+      }
+    }
+  }
+
   const resourceOrder = [...new Set(tasks.map((t) => t.resource))].toSorted((a, b) => {
     return resourceSortPriority(a) - resourceSortPriority(b) || a.localeCompare(b)
   })
@@ -661,7 +1068,12 @@ export function useCraftPlanner(
     awakenGatherUpgrades: baseAwakenGather,
     awakenSpeedTiers: baseAwakenSpeed,
     jobTiers: baseJobTiers,
+    machineLevels: baseMachineLevels,
+    fabricationAllocations: baseFabricationAllocations,
   } = useGameConfig()
+
+  // Fabrication simulated allocations (from Fabrication page, separate from save baseline)
+  const fabricationSimulated = useLocalStorage<Record<string, number>>('fabrication-simulated', {})
 
   // Temporary overrides — null means "use config value", non-null means "planner simulation"
   const inventoryOverrides = ref<Record<string, number> | null>(null)
@@ -669,18 +1081,30 @@ export function useCraftPlanner(
   const awakenGatherOverrides = ref<Record<string, AwakenGatherUpgrade> | null>(null)
   const awakenSpeedOverrides = ref<Record<string, number> | null>(null)
   const jobTierOverrides = ref<Record<string, number> | null>(null)
+  const machineLevelOverrides = ref<Record<string, number> | null>(null)
+  const fabricationOverrides = ref<Record<string, number> | null>(null)
 
   const inventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
   const gardenFlowers = computed(() => gardenOverrides.value ?? baseGarden.value)
   const awakenGatherUpgrades = computed(() => awakenGatherOverrides.value ?? baseAwakenGather.value)
   const awakenSpeedTiers = computed(() => awakenSpeedOverrides.value ?? baseAwakenSpeed.value)
   const jobTiers = computed(() => jobTierOverrides.value ?? baseJobTiers.value)
+  const machineLevels = computed(() => machineLevelOverrides.value ?? baseMachineLevels.value)
+  const fabricationAllocations = computed(
+    () =>
+      fabricationOverrides.value ?? {
+        ...baseFabricationAllocations.value,
+        ...fabricationSimulated.value,
+      },
+  )
 
   const modifiers = computed<PlannerModifiers>(() => ({
     gardenFlowers: gardenFlowers.value,
     awakenGatherUpgrades: awakenGatherUpgrades.value,
     awakenSpeedTiers: awakenSpeedTiers.value,
     jobTiers: jobTiers.value,
+    machineLevels: machineLevels.value,
+    fabricationAllocations: fabricationAllocations.value,
   }))
 
   const graph = computed(() =>
@@ -718,8 +1142,10 @@ export function useCraftPlanner(
     // Time buckets
     const gatherTimeByJob: Record<string, number> = {}
     const craftTimeByWorkstation: Record<string, number> = {}
+    const machineTimeByMachine: Record<string, number> = {}
     let gardenTimeSeconds = 0
     let expeditionTimeSeconds = 0
+    let fabricationTimeSeconds = 0
 
     function addLeaf(itemId: string, itemName: string, amount: number, kind: PlannerMethodKind) {
       const existing = leafAmounts.get(itemId)
@@ -757,6 +1183,13 @@ export function useCraftPlanner(
             gatherTimeByJob[activeMethod.title] =
               (gatherTimeByJob[activeMethod.title] ?? 0) + activeMethod.localTimeSeconds
             break
+          case 'machine':
+            machineTimeByMachine[activeMethod.title] =
+              (machineTimeByMachine[activeMethod.title] ?? 0) + activeMethod.localTimeSeconds
+            break
+          case 'fabrication':
+            fabricationTimeSeconds = Math.max(fabricationTimeSeconds, activeMethod.localTimeSeconds)
+            break
           case 'garden':
             gardenTimeSeconds = Math.max(gardenTimeSeconds, activeMethod.localTimeSeconds)
             break
@@ -785,8 +1218,13 @@ export function useCraftPlanner(
 
     const maxGatherTime = Math.max(0, ...Object.values(gatherTimeByJob))
     const maxWorkstationTime = Math.max(0, ...Object.values(craftTimeByWorkstation))
-    const activeTimeSeconds = Math.max(maxGatherTime, maxWorkstationTime)
-    const passiveTimeSeconds = Math.max(gardenTimeSeconds, expeditionTimeSeconds)
+    const maxMachineTime = Math.max(0, ...Object.values(machineTimeByMachine))
+    const activeTimeSeconds = Math.max(maxGatherTime, maxWorkstationTime, maxMachineTime)
+    const passiveTimeSeconds = Math.max(
+      gardenTimeSeconds,
+      expeditionTimeSeconds,
+      fabricationTimeSeconds,
+    )
     // Prefer schedule-based total (accounts for dependency ordering + resource contention)
     const scheduledTotal = schedule.value?.totalTime ?? null
     const totalTimeSeconds =
@@ -800,8 +1238,10 @@ export function useCraftPlanner(
         : {
             gatherTimeByJob,
             craftTimeByWorkstation,
+            machineTimeByMachine,
             gardenTimeSeconds,
             expeditionTimeSeconds,
+            fabricationTimeSeconds,
             activeTimeSeconds,
             passiveTimeSeconds,
           }
@@ -925,12 +1365,37 @@ export function useCraftPlanner(
     jobTierOverrides.value = null
   }
 
+  function setMachineLevel(machineId: string, level: number) {
+    const base = machineLevelOverrides.value ?? { ...baseMachineLevels.value }
+    machineLevelOverrides.value = { ...base, [machineId]: Math.max(0, Math.min(10, level)) }
+  }
+
+  function resetMachineLevels() {
+    machineLevelOverrides.value = null
+  }
+
+  function setFabricationAllocation(itemId: string, points: number) {
+    const base = fabricationOverrides.value ?? { ...baseFabricationAllocations.value }
+    if (points <= 0) {
+      const { [itemId]: _, ...rest } = base
+      fabricationOverrides.value = rest
+    } else {
+      fabricationOverrides.value = { ...base, [itemId]: Math.max(0, Math.min(5, points)) }
+    }
+  }
+
+  function resetFabrication() {
+    fabricationOverrides.value = null
+  }
+
   function resetAllSettings() {
     inventoryOverrides.value = null
     gardenOverrides.value = null
     awakenGatherOverrides.value = null
     awakenSpeedOverrides.value = null
     jobTierOverrides.value = null
+    machineLevelOverrides.value = null
+    fabricationOverrides.value = null
     resetPins()
   }
 
@@ -948,6 +1413,7 @@ export function useCraftPlanner(
       graph.value.nodesById,
       activeMethodIdByNode.value,
       graph.value.methodsById,
+      modifiers.value,
     )
   })
 
@@ -1005,6 +1471,12 @@ export function useCraftPlanner(
     jobTiers,
     setJobTier,
     resetJobTiers,
+    machineLevels,
+    setMachineLevel,
+    resetMachineLevels,
+    fabricationAllocations,
+    setFabricationAllocation,
+    resetFabrication,
     resetAllSettings,
     formatAmount,
   }
