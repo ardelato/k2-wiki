@@ -42,6 +42,7 @@ const WALL_CLOCK_FALLBACK_MS = 120_000
 const PROGRESS_REPORT_INTERVAL = 8
 const PROGRESS_HEARTBEAT_MS = 100
 const HUGE_TIME = 10 ** 12
+const MAX_AUTO_REQUEUE_SECONDS = 24 * 3600 // 24 hours
 
 interface CreatureProgress {
   level: number
@@ -1124,6 +1125,7 @@ export function planPartyLevelingPath(
     // point when a creature finishes leveling (or awakens) and the party must change.
     const MAX_AUTO_REQUEUE = 10_000
     let autoRequeueCount = 0
+    const autoRequeueEntryTime = next.clock
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -1151,6 +1153,14 @@ export function planPartyLevelingPath(
       // In optimal mode (or if nothing completed), break immediately — one step per iteration
       if (strategy !== 'hands-free' || completedRuns.length === 0) break
       if (autoRequeueCount >= MAX_AUTO_REQUEUE) break
+      if (next.clock - autoRequeueEntryTime > MAX_AUTO_REQUEUE_SECONDS) {
+        // Time cap reached — clear all expedition assignments so the beam search
+        // re-evaluates without stability bonuses, giving alternatives a fair chance
+        for (const run of completedRuns) {
+          next.expeditionAssignments[run.expeditionId] = null
+        }
+        break
+      }
 
       // Try to auto-requeue each completed run with the same party
       const busyCreatureIds = new Set(next.activeRuns.flatMap((r) => r.memberIds))

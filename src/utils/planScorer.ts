@@ -20,6 +20,9 @@ export interface PlanScore {
   shortStepCount: number
   earlySwapCount: number
 
+  // Step duration
+  maxStepTimeSeconds: number
+
   // Creature coverage
   avgCreatureTimeSeconds: number
   maxCreatureTimeSeconds: number
@@ -65,6 +68,9 @@ export function scorePlan(plan: PartyLevelingPlan): PlanScore {
     (s) => s.wasReconfigured && s.startTime !== undefined && s.startTime < twoHours,
   ).length
 
+  // Step duration
+  const maxStepTimeSeconds = steps.length > 0 ? Math.max(...steps.map((s) => s.timeSeconds)) : 0
+
   // Creature coverage
   const creatureTimes = summaries.map((s) => s.totalTimeSeconds)
   const avgCreatureTimeSeconds =
@@ -85,6 +91,7 @@ export function scorePlan(plan: PartyLevelingPlan): PlanScore {
     avgRunsPerAssignment,
     shortStepCount,
     earlySwapCount,
+    maxStepTimeSeconds,
     avgCreatureTimeSeconds,
     maxCreatureTimeSeconds,
     creaturesFullyLeveled,
