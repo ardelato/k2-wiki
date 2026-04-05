@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { Minus, Plus, RotateCcw } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { Clock3, Minus, Plus, RotateCcw } from 'lucide-vue-next'
+import { computed, nextTick, ref } from 'vue'
 
 import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
 import type { PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
-import { formatDuration, methodKindClasses } from '@/utils/format'
+import { formatDuration, methodKindClasses, methodKindLabel } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+function humanAmount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return n.toLocaleString()
+}
+
 
 const props = defineProps<{
   schedule: PlannerSchedule
@@ -56,6 +63,72 @@ const timeMarkers = computed(() => {
     markers.push({ seconds: t, pct: (t / total) * 100, label: formatDuration(t) })
   }
   return markers
+})
+
+
+// Popover state
+const activeTask = ref<ScheduledTask | null>(null)
+const popoverStyle = ref<Record<string, string>>({})
+const popoverRef = ref<HTMLElement | null>(null)
+
+
+function togglePopover(task: ScheduledTask, event: MouseEvent) {
+  if (activeTask.value === task) {
+    activeTask.value = null
+    return
+  }
+  activeTask.value = task
+  emit('select-node', task.nodeId)
+
+
+  const target = event.currentTarget as HTMLElement
+  if (!target) return
+
+
+  const barRect = target.getBoundingClientRect()
+  const POPOVER_WIDTH = 288
+  const GAP = 8
+
+
+  let top = barRect.bottom + GAP
+  let left = barRect.left + barRect.width / 2 - POPOVER_WIDTH / 2
+
+
+  if (left + POPOVER_WIDTH > window.innerWidth - GAP) {
+    left = window.innerWidth - POPOVER_WIDTH - GAP
+  }
+  if (left < GAP) left = GAP
+
+
+  popoverStyle.value = {
+    position: 'fixed',
+    top: `${top}px`,
+    left: `${left}px`,
+  }
+
+
+  nextTick(() => {
+    if (!popoverRef.value) return
+    const popRect = popoverRef.value.getBoundingClientRect()
+    if (popRect.bottom > window.innerHeight - GAP) {
+      popoverStyle.value = {
+        position: 'fixed',
+        top: `${barRect.top - popRect.height - GAP}px`,
+        left: `${left}px`,
+      }
+    }
+  })
+}
+
+
+function closePopover() {
+  activeTask.value = null
+}
+
+
+const activeTaskNode = computed(() => {
+  if (!activeTask.value) return null
+  return props.nodesById[activeTask.value.nodeId] ?? null
 })
 </script>
 
@@ -158,8 +231,8 @@ const timeMarkers = computed(() => {
               left: `${(task.startTime / schedule.totalTime) * 100}%`,
               width: `${(task.localTime / schedule.totalTime) * 100}%`,
             }"
-            :title="`${task.itemName} — ${formatDuration(task.localTime)} (${formatDuration(task.startTime)} → ${formatDuration(task.endTime)})`"
-            @click="!zoomModifierHeld && !shiftHeld && emit('select-node', task.nodeId)"
+            :title="`${task.itemName} — ${formatDuration(task.localTime)}`"
+            @click="!zoomModifierHeld && !shiftHeld && togglePopover(task, $event)"
           >
             <img
               v-if="getItemImage({ id: task.itemId })"
@@ -169,8 +242,14 @@ const timeMarkers = computed(() => {
               loading="lazy"
             />
             <span class="truncate">{{ task.itemName }}</span>
-            <span v-if="nodesById[task.nodeId]" class="shrink-0 text-[10px] opacity-80"
-              >x{{ Math.round(nodesById[task.nodeId].requiredAmount) }}</span
+            <span
+              v-if="(nodesById[task.nodeId]?.requiredAmount ?? task.passive?.produced ?? 0) > 0"
+              class="shrink-0 font-mono text-[10px] opacity-70"
+              >×{{
+                humanAmount(
+                  Math.round(nodesById[task.nodeId]?.requiredAmount ?? task.passive?.produced ?? 0),
+                )
+              }}</span
             >
             <span class="ml-auto shrink-0 pl-1 font-mono text-[10px] opacity-80">{{
               formatDuration(task.localTime)
@@ -198,4 +277,97 @@ const timeMarkers = computed(() => {
       </span>
     </div>
   </div>
+
+  <!-- Popover -->
+  <Teleport to="body">
+    <div v-if="activeTask" class="fixed inset-0 z-40" @click="closePopover" />
+    <Transition name="popover">
+      <div
+        v-if="activeTask"
+        ref="popoverRef"
+        class="z-50 w-72 rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
+        :style="popoverStyle"
+        @click.stop
+      >
+        <!-- Header -->
+        <div class="border-b border-border/40 px-4 py-3">
+          <div class="flex items-center gap-2">
+            <img
+              v-if="getItemImage({ id: activeTask.itemId })"
+              :src="getItemImage({ id: activeTask.itemId })"
+              :alt="activeTask.itemName"
+              class="size-5 shrink-0 object-contain"
+              loading="lazy"
+            />
+            <p class="truncate text-sm font-bold text-foreground">
+              {{ activeTask.itemName }}
+            </p>
+            <span
+              class="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold"
+              :class="methodKindClasses(activeTask.kind)"
+            >
+              {{ methodKindLabel(activeTask.kind) }}
+            </span>
+          </div>
+          <p class="mt-1 text-xs text-muted-foreground">{{ activeTask.resource }}</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3">
+          <div class="flex items-center gap-1.5 text-xs">
+            <Clock3 class="size-3 shrink-0" style="color: var(--color-green)" />
+            <span class="text-muted-foreground">Duration</span>
+            <span class="ml-auto font-mono font-semibold text-foreground">{{
+              formatDuration(activeTask.localTime)
+            }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="size-3 shrink-0 text-center text-[10px] font-black text-primary">#</span>
+            <span class="text-muted-foreground">Amount</span>
+            <span class="ml-auto font-mono font-semibold text-foreground">
+              {{
+                activeTaskNode ? `×${humanAmount(Math.round(activeTaskNode.requiredAmount))}` : '—'
+              }}
+            </span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="size-3 shrink-0 text-center text-[10px] font-black text-muted-foreground"
+              >▶</span
+            >
+            <span class="text-muted-foreground">Start</span>
+            <span class="ml-auto font-mono font-semibold text-foreground">{{
+              formatDuration(activeTask.startTime)
+            }}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="size-3 shrink-0 text-center text-[10px] font-black text-muted-foreground"
+              >■</span
+            >
+            <span class="text-muted-foreground">End</span>
+            <span class="ml-auto font-mono font-semibold text-foreground">{{
+              formatDuration(activeTask.endTime)
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
+
+<style scoped>
+.popover-enter-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+.popover-leave-active {
+  transition:
+    opacity 0.1s ease,
+    transform 0.1s ease;
+}
+.popover-enter-from,
+.popover-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>
