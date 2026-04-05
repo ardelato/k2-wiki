@@ -373,6 +373,13 @@ test.describe('reset all', () => {
           Farming: { yieldBonus: 0, durationTier: 0 },
         }),
       )
+      localStorage.setItem(
+        'expedition-parties',
+        JSON.stringify({ 'expedition-type-1': ['moss', 'scoots'] }),
+      )
+      localStorage.setItem('expedition-tiers', JSON.stringify({ 'expedition-type-1': 2 }))
+      localStorage.setItem('expedition-creature-levels', JSON.stringify({ moss: 50, scoots: 30 }))
+      localStorage.setItem('expedition-loop-counts', JSON.stringify({ 'expedition-type-1': 5 }))
     })
     await page.goto('./configs')
     await page.locator('h1', { hasText: 'Configs' }).waitFor()
@@ -384,6 +391,18 @@ test.describe('reset all', () => {
     await expect(page.getByText('0 excluded')).toBeVisible()
     await expect(page.getByText('No garden flowers configured.')).toBeVisible()
     await expect(page.getByText('Yield +0, Duration -0%').first()).toBeVisible()
+
+    // Verify expedition setup keys are cleared
+    const expeditionKeys = await page.evaluate(() => ({
+      parties: localStorage.getItem('expedition-parties'),
+      tiers: localStorage.getItem('expedition-tiers'),
+      levels: localStorage.getItem('expedition-creature-levels'),
+      loopCounts: localStorage.getItem('expedition-loop-counts'),
+    }))
+    expect(expeditionKeys.parties).toBeNull()
+    expect(expeditionKeys.tiers).toBeNull()
+    expect(expeditionKeys.levels).toBeNull()
+    expect(expeditionKeys.loopCounts).toBeNull()
   })
 })
 

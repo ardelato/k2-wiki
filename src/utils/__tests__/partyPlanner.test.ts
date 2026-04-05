@@ -2,7 +2,7 @@
 import { describe, expect, test } from 'vitest'
 
 import expeditionsData from '@/data/expeditions.json'
-import type { Expedition } from '@/types'
+import type { Expedition, PartyLevelingPlan, PartyPlanStep } from '@/types'
 import { planPartyLevelingPath } from '@/utils/partyPlanner'
 
 const allExpeditions = expeditionsData as Expedition[]
@@ -57,6 +57,13 @@ describe('plan quality', () => {
 
   test('hands-free has no short steps', () => {
     expect(handsFreeScore.shortStepCount).toBe(0)
+  })
+
+  test('hands-free: longest step is reasonable', () => {
+    // 24h auto-requeue cap forces daily re-evaluation so creatures can
+    // switch to faster expedition slots as they free up.
+    const THREE_DAYS = 3 * 24 * 3600
+    expect(handsFreeScore.maxStepTimeSeconds).toBeLessThan(THREE_DAYS)
   })
 
   test('both strategies have positive XP efficiency', () => {
@@ -140,4 +147,44 @@ describe('expedition max tier filtering', () => {
     const plan = planPartyLevelingPath(input)
     expect(plan.steps.length).toBeGreaterThan(0)
   })
+})
+
+// ── No duplicate creatures in concurrent steps ──────────────────────────
+describe('no duplicate creatures in concurrent steps', () => {
+  function assertNoDuplicatesInConcurrentSteps(plan: PartyLevelingPlan) {
+    const stepsByTime = new Map<number, PartyPlanStep[]>()
+    for (const step of plan.steps) {
+      const t = step.startTime ?? 0
+      if (!stepsByTime.has(t)) stepsByTime.set(t, [])
+      stepsByTime.get(t)!.push(step)
+    }
+    for (const [time, steps] of stepsByTime) {
+      const seen = new Set<string>()
+      for (const step of steps) {
+        for (const member of step.party) {
+          expect(
+            seen.has(member.creatureId),
+            `Creature ${member.creatureId} appears in multiple expeditions at time ${time}`,
+          ).toBe(false)
+          seen.add(member.creatureId)
+        }
+      }
+    }
+  }
+
+  const fixtures = [
+    ['full', collectionFull],
+    ['small', collectionSmall],
+    ['same-level', collectionSameLevel],
+    ['mixed-awaken', collectionMixedAwaken],
+  ] as const
+
+  for (const [name, fixture] of fixtures) {
+    for (const strategy of ['optimal', 'hands-free'] as Strategy[]) {
+      test(`${name} / ${strategy}`, { timeout: 120_000 }, () => {
+        const { plan } = runPlan(fixture, strategy)
+        assertNoDuplicatesInConcurrentSteps(plan)
+      })
+    }
+  }
 })
