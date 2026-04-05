@@ -33,6 +33,8 @@ import {
   sanctuaryIcon,
   helpersIcon,
   machinesIcon,
+  upgradesIcon,
+  toolIcons,
   expeditionTierIcons,
 } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -2095,6 +2097,7 @@ function jobTierLabel(tier: number): string {
               :is="sectionsCollapsed.awaken ? ChevronDown : ChevronUp"
               class="size-4 text-muted-foreground"
             />
+            <img :src="upgradesIcon" alt="" class="size-4" />
             <h3 class="text-sm font-bold">Awaken Tree</h3>
           </button>
           <div class="flex items-center gap-2">
@@ -2387,7 +2390,10 @@ function jobTierLabel(tier: number): string {
             :key="toolId"
             class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
           >
-            <span class="font-medium capitalize">{{ toolId.replace(/-/g, ' ') }}</span>
+            <span class="flex items-center gap-2 font-medium capitalize">
+              <img v-if="toolIcons[toolId]" :src="toolIcons[toolId]" alt="" class="size-5" />
+              {{ toolId.replace(/-/g, ' ') }}
+            </span>
             <span class="text-xs tabular-nums text-muted-foreground">
               Level {{ level }}/10 (+{{ level * 5 }}% XP)
             </span>
@@ -2447,7 +2453,15 @@ function jobTierLabel(tier: number): string {
             :key="machineId"
             class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
           >
-            <span class="font-medium capitalize">{{ machineId.replace(/-/g, ' ') }}</span>
+            <span class="flex items-center gap-2 font-medium capitalize">
+              <img
+                v-if="sourceIcons[toTitleCase(machineId)]"
+                :src="sourceIcons[toTitleCase(machineId)]"
+                alt=""
+                class="size-5"
+              />
+              {{ machineId.replace(/-/g, ' ') }}
+            </span>
             <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
           </div>
           <div

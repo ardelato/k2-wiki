@@ -21,13 +21,14 @@ import { useLevelPlanner } from '@/composables/useLevelPlanner'
 import { usePartyPlanner } from '@/composables/usePartyPlanner'
 import type { PlannerStrategy, PlannerTimeBudget } from '@/types'
 import { maxLevelForState } from '@/utils/formulas'
+import { toolIcons } from '@/utils/icons'
 import { expeditions as allExpeditions } from '@/utils/precomputedTables'
 
 const route = useRoute()
 const router = useRouter()
 const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
-const { excludedCreatureIds } = useGameConfig()
+const { excludedCreatureIds, expeditionToolXpBonus } = useGameConfig()
 const {
   expeditionMaxTierOverrides,
   includeAllExpeditions,
@@ -409,6 +410,10 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             {{ totalXpNeeded.toLocaleString() }} XP needed
           </PlannerBadge>
           <PlannerBadge> LVL {{ startLevel }} </PlannerBadge>
+          <PlannerBadge v-if="expeditionToolXpBonus > 1" color="rgb(217, 119, 6)">
+            <img :src="toolIcons.sword" alt="" class="size-3.5" />
+            +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
+          </PlannerBadge>
         </template>
       </PlannerToolbar>
 
@@ -560,6 +565,10 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
               {{ levelers.length }} to level
             </PlannerBadge>
             <PlannerBadge v-if="hasOverrides" color="var(--color-primary)"> Filtered </PlannerBadge>
+            <PlannerBadge v-if="expeditionToolXpBonus > 1" color="rgb(217, 119, 6)">
+              <img :src="toolIcons.sword" alt="" class="size-3.5" />
+              +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
+            </PlannerBadge>
           </div>
         </div>
 
