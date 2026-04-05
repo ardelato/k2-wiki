@@ -27,6 +27,7 @@ import PlannerToolbar from '@/components/planner/PlannerToolbar.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
 import { useCraftPlanner } from '@/composables/useCraftPlanner'
 import { useItems } from '@/composables/useItems'
+import type { ScheduledTask } from '@/types'
 import { formatDuration, sourceLabel } from '@/utils/format'
 import LevelPlannerView from '@/views/LevelPlannerView.vue'
 
@@ -111,6 +112,12 @@ const {
   jobTiers,
   setJobTier,
   resetJobTiers,
+  machineLevels,
+  setMachineLevel,
+  resetMachineLevels,
+  fabricationAllocations,
+  setFabricationAllocation,
+  resetFabrication,
   resetAllSettings,
   formatAmount,
 } = useCraftPlanner(targetItemId, targetQuantity)
@@ -165,6 +172,12 @@ const selectedNode = computed(() => {
   if (selectedMethod.value) return nodesById.value[selectedMethod.value.nodeId] ?? null
   if (selectedNodeId.value) return nodesById.value[selectedNodeId.value] ?? null
   return rootNode.value
+})
+
+
+const selectedPassiveTask = computed((): ScheduledTask | null => {
+  if (!selectedNodeId.value?.startsWith('passive:')) return null
+  return schedule.value?.tasks.find((t) => t.nodeId === selectedNodeId.value) ?? null
 })
 
 
@@ -442,6 +455,8 @@ function switchTab(tab: 'craft' | 'levelup') {
           :awaken-gather-upgrades="awakenGatherUpgrades"
           :awaken-speed-tiers="awakenSpeedTiers"
           :job-tiers="jobTiers"
+          :machine-levels="machineLevels"
+          :fabrication-allocations="fabricationAllocations"
           @set-inventory="setInventory"
           @reset-inventory="resetInventory"
           @set-garden-flower-entries="setGardenFlowerEntries"
@@ -452,6 +467,10 @@ function switchTab(tab: 'craft' | 'levelup') {
           @reset-awaken="resetAwaken"
           @set-job-tier="setJobTier"
           @reset-job-tiers="resetJobTiers"
+          @set-machine-level="setMachineLevel"
+          @reset-machine-levels="resetMachineLevels"
+          @set-fabrication-allocation="setFabricationAllocation"
+          @reset-fabrication="resetFabrication"
           @reset-all="resetAllSettings"
         />
 
@@ -526,6 +545,8 @@ function switchTab(tab: 'craft' | 'levelup') {
               :awaken-gather-upgrades="awakenGatherUpgrades"
               :awaken-speed-tiers="awakenSpeedTiers"
               :job-tiers="jobTiers"
+              :machine-levels="machineLevels"
+              :fabrication-allocations="fabricationAllocations"
               :tree-items="allTreeItems"
             />
 
@@ -546,6 +567,7 @@ function switchTab(tab: 'craft' | 'levelup') {
             :get-active-method-for-node="getActiveMethod"
             :format-amount="formatAmount"
             :is-root-node="selectedNode?.id === rootNode?.id"
+            :passive-task="selectedPassiveTask"
             @pin-method="pinMethod"
             @select-method="selectMethod"
             @select-node="selectNode"
@@ -579,6 +601,8 @@ function switchTab(tab: 'craft' | 'levelup') {
               :awaken-gather-upgrades="awakenGatherUpgrades"
               :awaken-speed-tiers="awakenSpeedTiers"
               :job-tiers="jobTiers"
+              :machine-levels="machineLevels"
+              :fabrication-allocations="fabricationAllocations"
               :tree-items="allTreeItems"
             />
 
@@ -599,6 +623,7 @@ function switchTab(tab: 'craft' | 'levelup') {
             :get-active-method-for-node="getActiveMethod"
             :format-amount="formatAmount"
             :is-root-node="selectedNode?.id === rootNode?.id"
+            :passive-task="selectedPassiveTask"
             @pin-method="pinMethod"
             @select-method="selectMethod"
             @select-node="selectNode"

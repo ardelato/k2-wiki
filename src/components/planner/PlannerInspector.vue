@@ -11,7 +11,7 @@ import {
 } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-import type { PlannerMethod, PlannerNode, PlannerSchedule } from '@/types'
+import type { PlannerMethod, PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
 import { formatDuration, itemTypeColor, methodKindColor, methodKindLabel } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -25,6 +25,7 @@ const props = defineProps<{
   getActiveMethodForNode: (nodeId: string) => PlannerMethod | null
   formatAmount: (value: number) => string
   isRootNode?: boolean
+  passiveTask?: ScheduledTask | null
 }>()
 
 
@@ -200,9 +201,143 @@ function openDisplayNodePlanner() {
   <aside
     class="surface-card sticky top-[calc(var(--header-height)+1.5rem)] max-h-[calc(100vh-var(--header-height)-2rem)] overflow-y-auto"
   >
+    <!-- Passive task inspector -->
+    <template v-if="passiveTask">
+      <div class="space-y-6 px-5 pb-5 pt-6">
+        <!-- Hero -->
+        <div
+          class="relative flex flex-col items-center gap-4 rounded-2xl border border-border/50 bg-gradient-to-b from-card/80 to-card/40 px-6 pb-6 pt-8"
+        >
+          <div class="flex h-20 w-20 items-center justify-center">
+            <img
+              v-if="getItemImage({ id: passiveTask.itemId })"
+              :src="getItemImage({ id: passiveTask.itemId })"
+              :alt="passiveTask.itemId"
+              class="size-16 object-contain drop-shadow-lg"
+              loading="lazy"
+            />
+          </div>
+          <div class="text-center">
+            <h2 class="text-xl font-black tracking-tight text-foreground">
+              {{
+                passiveTask.passive?.kind === 'machine'
+                  ? passiveTask.passive.machineName
+                  : 'Fabrication'
+              }}
+            </h2>
+            <p class="mt-1 text-sm text-muted-foreground">Passive Generation</p>
+          </div>
+          <span
+            class="rounded-full border px-3 py-1 text-xs font-bold"
+            :class="
+              passiveTask.kind === 'machine'
+                ? 'dark:bg-orange-400/12 border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/35 dark:text-orange-300'
+                : 'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/35 dark:bg-violet-400/10 dark:text-violet-200'
+            "
+          >
+            {{ passiveTask.kind === 'machine' ? 'Machine' : 'Fabrication' }}
+          </span>
+        </div>
+
+        <!-- Details -->
+        <div class="rounded-xl border border-border/40 bg-card/60">
+          <div class="grid grid-cols-2 gap-px bg-border/20">
+            <template v-if="passiveTask.passive?.kind === 'machine'">
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Level
+                </p>
+                <p class="mt-1 text-sm font-bold text-foreground">
+                  {{ passiveTask.passive.machineLevel }}/10
+                </p>
+              </div>
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Output
+                </p>
+                <p class="mt-1 text-sm font-bold text-foreground">
+                  {{ passiveTask.passive.outputAmount }} / cycle
+                </p>
+              </div>
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Interval
+                </p>
+                <p class="mt-1 text-sm font-bold text-foreground">
+                  {{ passiveTask.passive.effectiveInterval }}s
+                  <span
+                    v-if="
+                      passiveTask.passive.baseInterval !== passiveTask.passive.effectiveInterval
+                    "
+                    class="text-xs text-muted-foreground"
+                  >
+                    (base {{ passiveTask.passive.baseInterval }}s)
+                  </span>
+                </p>
+              </div>
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Rate
+                </p>
+                <p class="mt-1 text-sm font-bold" style="color: var(--color-green)">
+                  {{ passiveTask.passive.ratePerMin.toFixed(1) }}/min
+                </p>
+              </div>
+            </template>
+
+            <template v-else-if="passiveTask.passive?.kind === 'fabrication'">
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Points
+                </p>
+                <p class="mt-1 text-sm font-bold text-foreground">
+                  {{ passiveTask.passive.fabricationPoints }}
+                </p>
+              </div>
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Cycle
+                </p>
+                <p class="mt-1 text-sm font-bold text-foreground">180s</p>
+              </div>
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Rate
+                </p>
+                <p class="mt-1 text-sm font-bold" style="color: var(--color-green)">
+                  {{ passiveTask.passive.ratePerMin.toFixed(1) }}/min
+                </p>
+              </div>
+              <div class="bg-card/80 px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Per Hour
+                </p>
+                <p class="mt-1 text-sm font-bold" style="color: var(--color-green)">
+                  {{ (passiveTask.passive.ratePerMin * 60).toFixed(0) }}/hr
+                </p>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Estimated production -->
+        <div class="rounded-xl border border-border/40 bg-card/60 px-4 py-3">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Estimated Production
+          </p>
+          <p class="mt-1 text-lg font-black text-foreground">
+            ×{{ passiveTask.passive?.produced.toLocaleString() }}
+            <span class="text-sm font-semibold text-muted-foreground">
+              over {{ formatDuration(passiveTask.localTime) }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </template>
+
     <!-- Hero: full-bleed gradient header -->
     <div
-      v-if="displayNode"
+      v-else-if="displayNode"
       class="relative flex flex-col items-center px-5 pb-4 pt-6"
       :style="{
         background: `linear-gradient(180deg, color-mix(in oklch, ${itemTypeColor(displayNode.itemType)} 15%, transparent) 0%, color-mix(in oklch, ${itemTypeColor(displayNode.itemType)} 8%, transparent) 100%)`,

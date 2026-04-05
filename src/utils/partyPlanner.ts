@@ -234,6 +234,7 @@ export function planPartyLevelingPath(
 ): PartyLevelingPlan {
   const normalized = normalizePlannerInput(input)
   const strategy: PlannerStrategy = normalized.strategy ?? 'optimal'
+  const swordXpMultiplier = normalized.swordXpMultiplier ?? 1
   const maxIterations = ITERATION_BUDGET_MAP[normalized.timeBudget ?? 'quick']
   const creaturesInput = normalized.creatures
   const levelers = creaturesInput.filter((entry) => entry.startLevel < entry.targetLevel)
@@ -952,7 +953,9 @@ export function planPartyLevelingPath(
     }, 0)
 
     const duration = calculateDuration(partyScore, expedition, tier)
-    const xpPerCreature = calculateExpeditionXp(expedition, tier, loopCountStart, memberIds.length)
+    const xpPerCreature = Math.floor(
+      calculateExpeditionXp(expedition, tier, loopCountStart, memberIds.length) * swordXpMultiplier,
+    )
     if (duration <= 0 || xpPerCreature <= 0) return null
 
     let usefulXp = 0
@@ -1174,11 +1177,9 @@ export function planPartyLevelingPath(
           return sum + getCreatureRating(cid, expedition.id, progress.level)
         }, 0)
         const duration = calculateDuration(partyScore, expedition, run.tier)
-        const xpPerCreature = calculateExpeditionXp(
-          expedition,
-          run.tier,
-          loopCountStart,
-          orderedIds.length,
+        const xpPerCreature = Math.floor(
+          calculateExpeditionXp(expedition, run.tier, loopCountStart, orderedIds.length) *
+            swordXpMultiplier,
         )
         if (duration <= 0 || xpPerCreature <= 0) continue
 

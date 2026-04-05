@@ -121,6 +121,8 @@ export type PlannerMethodKind =
   | 'unknown'
   | 'cycle'
   | 'stocked'
+  | 'machine'
+  | 'fabrication'
 
 export interface RecipeUsage {
   outputItemId: string
@@ -189,8 +191,10 @@ export interface PlannerSummaryLeaf {
 export interface PlannerTimeBreakdown {
   gatherTimeByJob: Record<string, number> // serial within job, parallel across jobs
   craftTimeByWorkstation: Record<string, number> // serial within station, parallel across stations
+  machineTimeByMachine: Record<string, number>
   gardenTimeSeconds: number // passive
   expeditionTimeSeconds: number // passive
+  fabricationTimeSeconds: number
   activeTimeSeconds: number // max(max(per-job), max(per-workstation))
   passiveTimeSeconds: number // max(garden, expedition)
 }
@@ -215,6 +219,18 @@ export interface ScheduledTask {
   endTime: number
   localTime: number
   depth: number
+  passive?: {
+    kind: 'machine' | 'fabrication'
+    machineName?: string
+    machineId?: string
+    machineLevel?: number
+    baseInterval?: number
+    effectiveInterval?: number
+    outputAmount?: number
+    produced: number
+    ratePerMin: number
+    fabricationPoints?: number
+  }
 }
 
 export interface PlannerSchedule {
@@ -265,6 +281,7 @@ export interface PartyPlannerInput {
   strategy?: PlannerStrategy
   timeBudget?: PlannerTimeBudget
   wallClockLimitMs?: number
+  swordXpMultiplier?: number
 }
 
 export interface PartyPlannerProgress {
@@ -367,6 +384,7 @@ export interface Machine {
   id: string
   name: string
   description: string
+  image?: string
   cost: number
   machineType: MachineType
   outputItemId: string | null

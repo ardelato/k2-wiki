@@ -1,0 +1,82 @@
+[
+  {
+    "fixture": "full",
+    "strategy": "optimal",
+    "score": {
+      "isComplete": true,
+      "incompleteCount": 0,
+      "totalTimeSeconds": 286000,
+      "totalRuns": 10283,
+      "avgXpPerMinute": 181.93374391436495,
+      "avgCreatureXpPerSecond": 36.123856643356646,
+      "totalReconfigurations": 212,
+      "swapsPerHour": 2.6685314685314685,
+      "avgRunsPerAssignment": 43.94444444444444,
+      "shortStepCount": 75,
+      "earlySwapCount": 43,
+      "avgCreatureTimeSeconds": 115414.71428571429,
+      "maxCreatureTimeSeconds": 286000,
+      "creaturesFullyLeveled": 35
+    }
+  },
+  {
+    "fixture": "full",
+    "strategy": "hands-free",
+    "score": {
+      "isComplete": true,
+      "incompleteCount": 0,
+      "totalTimeSeconds": 425400,
+      "totalRuns": 11119,
+      "avgXpPerMinute": 181.4775824019447,
+      "avgCreatureXpPerSecond": 24.28262341325811,
+      "totalReconfigurations": 1,
+      "swapsPerHour": 0.008462623413258109,
+      "avgRunsPerAssignment": 327.02941176470586,
+      "shortStepCount": 0,
+      "earlySwapCount": 0,
+      "avgCreatureTimeSeconds": 149412.22857142857,
+      "maxCreatureTimeSeconds": 425400,
+      "creaturesFullyLeveled": 35
+    }
+  },
+  {
+    "fixture": "small",
+    "strategy": "optimal",
+    "score": {
+      "isComplete": true,
+      "incompleteCount": 0,
+      "totalTimeSeconds": 206763,
+      "totalRuns": 1404,
+      "avgXpPerMinute": 213.24089940334073,
+      "avgCreatureXpPerSecond": 7.242446665989563,
+      "totalReconfigurations": 11,
+      "swapsPerHour": 0.19152362850219815,
+      "avgRunsPerAssignment": 61.04347826086956,
+      "shortStepCount": 6,
+      "earlySwapCount": 2,
+      "avgCreatureTimeSeconds": 84269.2,
+      "maxCreatureTimeSeconds": 206763,
+      "creaturesFullyLeveled": 5
+    }
+  },
+  {
+    "fixture": "small",
+    "strategy": "hands-free",
+    "score": {
+      "isComplete": true,
+      "incompleteCount": 0,
+      "totalTimeSeconds": 337800,
+      "totalRuns": 1949,
+      "avgXpPerMinute": 153.6496664956388,
+      "avgCreatureXpPerSecond": 4.43255180580225,
+      "totalReconfigurations": 0,
+      "swapsPerHour": 0,
+      "avgRunsPerAssignment": 389.8,
+      "shortStepCount": 0,
+      "earlySwapCount": 0,
+      "avgCreatureTimeSeconds": 116940,
+      "maxCreatureTimeSeconds": 337800,
+      "creaturesFullyLeveled": 5
+    }
+  }
+]

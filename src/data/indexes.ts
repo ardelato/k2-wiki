@@ -2,6 +2,7 @@ import creaturesData from '@/data/creatures.json'
 import expeditionsData from '@/data/expeditions.json'
 import itemsData from '@/data/items.json'
 import jobsData from '@/data/jobs.json'
+import machinesData from '@/data/machines.json'
 import type {
   Creature,
   ContainerSource,
@@ -100,3 +101,54 @@ for (const creature of creatures) {
     summoningIndex.set(cost.id, existing)
   }
 }
+
+export interface MachineRecipeSource {
+  machineId: string
+  machineName: string
+  baseInterval: number
+  inputItemId: string | null
+  inputAmount: number
+  secondaryInputItemId?: string
+  secondaryInputAmount?: number
+  outputAmount: number
+}
+
+export const machineRecipeIndex = new Map<string, MachineRecipeSource[]>()
+for (const machine of machinesData.machines) {
+  if (machine.recipes.length > 0) {
+    // Processor — index each recipe by output item
+    for (const recipe of machine.recipes) {
+      const outputId = recipe.outputItemId
+      const existing = machineRecipeIndex.get(outputId) ?? []
+      existing.push({
+        machineId: machine.id,
+        machineName: machine.name,
+        baseInterval: machine.baseInterval,
+        inputItemId: recipe.inputItemId,
+        inputAmount: recipe.inputAmount,
+        ...((recipe as any).secondaryInputItemId
+          ? {
+              secondaryInputItemId: (recipe as any).secondaryInputItemId,
+              secondaryInputAmount: (recipe as any).secondaryInputAmount,
+            }
+          : {}),
+        outputAmount: recipe.outputAmount,
+      })
+      machineRecipeIndex.set(outputId, existing)
+    }
+  } else if (machine.outputItemId) {
+    // Generator — outputs 1 item per cycle with no input
+    const existing = machineRecipeIndex.get(machine.outputItemId) ?? []
+    existing.push({
+      machineId: machine.id,
+      machineName: machine.name,
+      baseInterval: machine.baseInterval,
+      inputItemId: null,
+      inputAmount: 0,
+      outputAmount: 1,
+    })
+    machineRecipeIndex.set(machine.outputItemId, existing)
+  }
+}
+
+export const machineSpeedMultipliers = machinesData.speedMultipliers

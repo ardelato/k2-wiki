@@ -100,7 +100,7 @@ const timeMarkers = computed(() => {
     <!-- Scrollable timeline area -->
     <div class="flex flex-col gap-0 overflow-x-auto">
       <!-- Time axis header -->
-      <div class="flex items-end border-b border-border/60 px-3 pb-2 pl-28 pt-3">
+      <div class="flex items-end border-b border-border/60 px-3 pb-2 pl-36 pt-3">
         <div class="relative h-5 flex-1" :style="{ minWidth: laneMinWidth }">
           <span
             v-for="marker in timeMarkers"
@@ -121,13 +121,20 @@ const timeMarkers = computed(() => {
       >
         <!-- Resource label -->
         <div
-          class="flex w-28 shrink-0 items-center gap-1.5 truncate px-3 py-3 text-xs font-bold text-foreground/80"
+          class="flex w-36 shrink-0 items-center gap-1.5 truncate px-3 py-3 text-xs font-bold text-foreground/80"
         >
           <img
             v-if="sourceIcons[resource]"
             :src="sourceIcons[resource]"
             alt=""
             class="size-3.5 shrink-0"
+            loading="lazy"
+          />
+          <img
+            v-else-if="getItemImage({ id: tasksByResource[resource]?.[0]?.itemId ?? '' })"
+            :src="getItemImage({ id: tasksByResource[resource]?.[0]?.itemId ?? '' })"
+            alt=""
+            class="size-3.5 shrink-0 object-contain"
             loading="lazy"
           />
           {{ resource }}
@@ -162,10 +169,10 @@ const timeMarkers = computed(() => {
               loading="lazy"
             />
             <span class="truncate">{{ task.itemName }}</span>
-            <span v-if="nodesById[task.nodeId]" class="shrink-0 text-[10px] opacity-70"
+            <span v-if="nodesById[task.nodeId]" class="shrink-0 text-[10px] opacity-80"
               >x{{ Math.round(nodesById[task.nodeId].requiredAmount) }}</span
             >
-            <span class="ml-auto shrink-0 pl-1 font-mono text-[10px] opacity-70">{{
+            <span class="ml-auto shrink-0 pl-1 font-mono text-[10px] opacity-80">{{
               formatDuration(task.localTime)
             }}</span>
           </button>

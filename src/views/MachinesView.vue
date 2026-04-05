@@ -2,46 +2,18 @@
 import { ChevronDown, Clock } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 
-import farmingIcon from '@/assets/icons/farming.webp'
-import furnaceIcon from '@/assets/icons/furnace.webp'
-import refineryIcon from '@/assets/icons/refinery.webp'
-import stoveIcon from '@/assets/icons/stove.webp'
-import workbenchIcon from '@/assets/icons/workbench.webp'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useMachines } from '@/composables/useMachines'
 import { itemById } from '@/data/indexes'
 import { itemName } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
+import { getMachineImage } from '@/utils/machineImages'
 
 const typeColorMap: Record<string, string> = {
   Fire: 'var(--color-fire)',
   Water: 'var(--color-water)',
   Wind: 'var(--color-wind)',
   Earth: 'var(--color-earth)',
-}
-
-
-const machineIcons: Record<string, string> = {
-  smelter: furnaceIcon,
-  sawmill: workbenchIcon,
-  cooker: stoveIcon,
-  greenhouse: farmingIcon,
-  refinery: refineryIcon,
-}
-
-
-function getMachineImage(machine: {
-  id: string
-  machineType: string
-  outputItemId: string | null
-}): string | undefined {
-  if (machine.machineType === 'generator' && machine.outputItemId) {
-    return getItemImage({ id: machine.outputItemId }) ?? undefined
-  }
-  if (machine.id === 'bakery') {
-    return getItemImage({ id: 'bread' }) ?? undefined
-  }
-  return machineIcons[machine.id]
 }
 
 

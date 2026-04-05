@@ -10,7 +10,7 @@ import {
   methodKindColor,
   methodKindLabel,
 } from '@/utils/format'
-import { sourceIcons } from '@/utils/icons'
+import { upgradesIcon, sanctuaryIcon, machinesIcon, itemGridIcon, sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 defineOptions({
@@ -44,6 +44,45 @@ const emit = defineEmits<{
 const activeMethod = computed(() => {
   const methodId = props.activeMethodIdByNode[props.node.id]
   return props.node.methods.find((m) => m.id === methodId) ?? null
+})
+
+
+const modifierChips = computed(() => {
+  if (!activeMethod.value) return []
+  const chips: { label: string; color: string; icon?: string }[] = []
+  for (const row of activeMethod.value.detailRows) {
+    if (row.label === 'Awaken Tree') {
+      chips.push({
+        label: row.value,
+        icon: upgradesIcon,
+        color:
+          'border-cyan-600/35 bg-cyan-100 text-cyan-800 dark:border-cyan-400/40 dark:bg-cyan-400/20 dark:text-cyan-100',
+      })
+    } else if (row.label === 'Sanctuary') {
+      chips.push({
+        label: row.value,
+        icon: sanctuaryIcon,
+        color:
+          'border-amber-600/35 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/20 dark:text-amber-100',
+      })
+    } else if (row.label.startsWith('Machine')) {
+      const machineName = row.label.replace('Machine — ', '')
+      chips.push({
+        label: `${machineName} ${row.value}`,
+        icon: sourceIcons[machineName] ?? machinesIcon,
+        color:
+          'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100',
+      })
+    } else if (row.label.startsWith('Fabrication')) {
+      chips.push({
+        label: `Fab ${row.value}`,
+        icon: itemGridIcon,
+        color:
+          'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100',
+      })
+    }
+  }
+  return chips
 })
 
 
@@ -253,6 +292,22 @@ function forwardPinMethod(nodeId: string, methodId: string) {
               {{ node.methods.length }}
             </span>
           </div>
+        </div>
+
+        <!-- Row 3: Modifier chips -->
+        <div
+          v-if="activeMethod && modifierChips.length > 0"
+          class="flex flex-wrap gap-1.5 pl-[1.875rem]"
+        >
+          <span
+            v-for="(chip, i) in modifierChips"
+            :key="i"
+            class="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold"
+            :class="chip.color"
+          >
+            <img v-if="chip.icon" :src="chip.icon" alt="" class="size-3" loading="lazy" />
+            {{ chip.label }}
+          </span>
         </div>
       </div>
     </button>

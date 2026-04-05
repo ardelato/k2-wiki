@@ -230,6 +230,22 @@ test.describe('cross-page config integration', () => {
   })
 })
 
+// ── Machine and fabrication methods ─────────────────────────────────
+
+test.describe('machine and fabrication methods', () => {
+  test('copper-bar shows Smelter machine method', async ({ page }) => {
+    await openItemPlan(page, 'copper-bar')
+    await expect(page.getByText('Machine').first()).toBeVisible()
+    await expect(page.getByText('Smelter').first()).toBeVisible()
+  })
+
+  test('stone shows Stone Quarry machine method', async ({ page }) => {
+    await openItemPlan(page, 'stone')
+    await expect(page.getByText('Machine').first()).toBeVisible()
+    await expect(page.getByText('Stone Quarry').first()).toBeVisible()
+  })
+})
+
 // ══════════════════════════════════════════════════════════════════════
 // LEVEL UP PLANNER
 // ══════════════════════════════════════════════════════════════════════

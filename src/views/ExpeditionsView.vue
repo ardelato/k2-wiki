@@ -39,7 +39,13 @@ import {
   statLabels,
   tierModifiers,
 } from '@/utils/formulas'
-import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionTierIcons } from '@/utils/icons'
+import {
+  sanctuaryIcon,
+  helpersIcon,
+  machinesIcon,
+  expeditionTierIcons,
+  toolIcons,
+} from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const route = useRoute()
@@ -596,8 +602,9 @@ function toggleCreatureTier(tier: number) {
             </span>
             <span
               v-if="expeditionToolXpBonus > 1"
-              class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+              class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
             >
+              <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
               +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
             </span>
           </div>

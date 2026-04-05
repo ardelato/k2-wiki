@@ -3,8 +3,26 @@ import { ChevronDown, ChevronRight, SlidersHorizontal } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/composables/useCraftPlanner'
+import { useMachines } from '@/composables/useMachines'
+import { itemName } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+import { getMachineImage as getMachineImageFromData } from '@/utils/machineImages'
+
+const { getMachineById } = useMachines()
+
+
+function getMachineImage(machineId: string): string | undefined {
+  const machine = getMachineById(machineId)
+  if (!machine) return undefined
+  return getMachineImageFromData(machine)
+}
+
+
+function getMachineName(machineId: string): string {
+  return getMachineById(machineId)?.name ?? machineId
+}
+
 
 const props = defineProps<{
   inventoryAmounts: Record<string, number>
@@ -12,6 +30,8 @@ const props = defineProps<{
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
   jobTiers: Record<string, number>
+  machineLevels: Record<string, number>
+  fabricationAllocations: Record<string, number>
   treeItems: { itemId: string; itemName: string; itemType: string }[]
 }>()
 
@@ -88,6 +108,20 @@ const activeJobTiers = computed(() =>
 )
 
 
+const activeMachineLevels = computed(() =>
+  Object.entries(props.machineLevels)
+    .filter(([, level]) => level > 0)
+    .map(([id, level]) => ({ id, level })),
+)
+
+
+const activeFabricationItems = computed(() =>
+  Object.entries(props.fabricationAllocations)
+    .filter(([itemId, p]) => p > 0 && treeItemIds.value.has(itemId))
+    .map(([itemId, points]) => ({ itemId, points })),
+)
+
+
 const isOpen = ref(false)
 
 
@@ -97,7 +131,9 @@ const activeCount = computed(
     activeFlowers.value.length +
     activeGatherUpgrades.value.length +
     activeSpeedTiers.value.length +
-    activeJobTiers.value.length,
+    activeJobTiers.value.length +
+    activeMachineLevels.value.length +
+    activeFabricationItems.value.length,
 )
 
 
@@ -306,6 +342,64 @@ const hasAnything = computed(() => activeCount.value > 0)
             <span class="min-w-0 text-sm text-foreground">{{ job.jobId }}</span>
             <span class="ml-auto shrink-0 text-xs font-semibold" style="color: rgb(52, 211, 153)">
               Duration -{{ job.pct }}%
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Machine Levels -->
+      <div v-if="activeMachineLevels.length" class="space-y-1">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: hsl(var(--primary))"
+        >
+          Machine Levels
+        </p>
+        <div class="space-y-1">
+          <div
+            v-for="machine in activeMachineLevels"
+            :key="machine.id"
+            class="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-muted/20"
+          >
+            <img
+              v-if="getMachineImage(machine.id)"
+              :src="getMachineImage(machine.id)"
+              alt=""
+              class="size-4 shrink-0"
+              loading="lazy"
+            />
+            <span class="min-w-0 text-sm text-foreground">{{ getMachineName(machine.id) }}</span>
+            <span class="ml-auto shrink-0 text-xs font-semibold" style="color: hsl(var(--primary))">
+              Lv{{ machine.level }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fabrication -->
+      <div v-if="activeFabricationItems.length > 0" class="space-y-1">
+        <p
+          class="text-[11px] font-bold uppercase tracking-[0.16em]"
+          style="color: rgb(52, 211, 153)"
+        >
+          Fabrication
+        </p>
+        <div class="space-y-1">
+          <div
+            v-for="fab in activeFabricationItems"
+            :key="fab.itemId"
+            class="flex items-center gap-2 rounded-lg px-2 py-1 transition hover:bg-muted/20"
+          >
+            <img
+              v-if="getItemImage({ id: fab.itemId })"
+              :src="getItemImage({ id: fab.itemId })"
+              alt=""
+              class="size-4 shrink-0"
+              loading="lazy"
+            />
+            <span class="min-w-0 text-sm text-foreground">{{ itemName(fab.itemId) }}</span>
+            <span class="ml-auto shrink-0 text-xs font-semibold" style="color: rgb(52, 211, 153)">
+              {{ fab.points * 20 }}/hr
             </span>
           </div>
         </div>

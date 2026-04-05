@@ -3,8 +3,12 @@ import { ChevronDown, ChevronRight, RotateCcw } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/composables/useCraftPlanner'
+import { useGameConfig } from '@/composables/useGameConfig'
+import { useMachines } from '@/composables/useMachines'
+import { itemName } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+import { getMachineImage } from '@/utils/machineImages'
 
 const props = defineProps<{
   treeItems: { itemId: string; itemName: string; itemType: string }[]
@@ -13,6 +17,8 @@ const props = defineProps<{
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
   jobTiers: Record<string, number>
+  machineLevels: Record<string, number>
+  fabricationAllocations: Record<string, number>
 }>()
 
 
@@ -27,14 +33,33 @@ const emit = defineEmits<{
   'reset-awaken': []
   'set-job-tier': [jobId: string, tier: number]
   'reset-job-tiers': []
+  'set-machine-level': [machineId: string, level: number]
+  'reset-machine-levels': []
+  'set-fabrication-allocation': [itemId: string, points: number]
+  'reset-fabrication': []
   'reset-all': []
 }>()
+
+
+const { machines } = useMachines()
+const { fabricationAllocations: saveFabrication } = useGameConfig()
+
+
+function getFabItemState(itemId: string): 'save' | 'simulated' | 'removed' {
+  const current = props.fabricationAllocations[itemId] ?? 0
+  const saved = saveFabrication.value[itemId] ?? 0
+  if (current > saved) return 'simulated'
+  if (current < saved) return 'removed'
+  return 'save'
+}
 
 
 const isOpen = ref(false)
 const inventoryOpen = ref(false)
 const gardenOpen = ref(false)
 const awakenOpen = ref(false)
+const machinesOpen = ref(false)
+const fabricationOpen = ref(false)
 
 
 function applyInventory(itemId: string, event: Event) {
@@ -166,8 +191,22 @@ function jobTierLabel(tier: number): string {
 const hasJobChanges = computed(() => Object.values(props.jobTiers).some((t) => t > 0))
 
 
+const hasMachineChanges = computed(() => Object.values(props.machineLevels).some((l) => l > 0))
+
+
+const hasFabricationChanges = computed(() =>
+  Object.values(props.fabricationAllocations).some((p) => p > 0),
+)
+
+
 const hasAnyChanges = computed(
-  () => hasAnyStock() || hasGardenChanges.value || hasAwakenChanges.value || hasJobChanges.value,
+  () =>
+    hasAnyStock() ||
+    hasGardenChanges.value ||
+    hasAwakenChanges.value ||
+    hasJobChanges.value ||
+    hasMachineChanges.value ||
+    hasFabricationChanges.value,
 )
 </script>
 
@@ -617,6 +656,202 @@ const hasAnyChanges = computed(
               <span>{{ jobTierLabel(i + 1) }}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Machine Levels -->
+      <div class="border-t border-border/40 px-4 py-3">
+        <div class="flex items-center justify-between">
+          <button
+            class="focus-ring -mx-1 flex items-center gap-2 rounded-lg px-1 text-left transition hover:bg-muted/15"
+            @click="machinesOpen = !machinesOpen"
+          >
+            <component
+              :is="machinesOpen ? ChevronDown : ChevronRight"
+              class="size-4 text-muted-foreground"
+            />
+            <h4 class="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground">
+              Machine Levels
+            </h4>
+            <span v-if="hasMachineChanges" class="size-1.5 rounded-full bg-primary" />
+          </button>
+          <button
+            v-if="hasMachineChanges"
+            class="focus-ring rounded-md p-1 text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
+            title="Reset machine levels"
+            @click="emit('reset-machine-levels')"
+          >
+            <RotateCcw class="size-3" />
+          </button>
+        </div>
+
+        <p class="mt-1 text-[10px] text-muted-foreground">
+          Machine levels affect processing speed in planner time calculations.
+        </p>
+
+        <div v-if="machinesOpen" class="mt-3 space-y-2">
+          <div
+            v-for="machine in machines"
+            :key="machine.id"
+            class="flex items-center justify-between rounded-lg px-2 py-1.5"
+          >
+            <div class="flex items-center gap-2">
+              <img
+                v-if="getMachineImage(machine)"
+                :src="getMachineImage(machine)"
+                alt=""
+                class="size-4 shrink-0"
+                loading="lazy"
+              />
+              <span class="text-sm text-foreground">{{ machine.name }}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <div
+                class="inline-flex items-center overflow-hidden rounded-lg border"
+                :class="
+                  (machineLevels[machine.id] ?? 0) > 0 ? 'border-primary/40' : 'border-border/70'
+                "
+              >
+                <button
+                  class="focus-ring flex h-7 w-6 items-center justify-center text-[11px] font-bold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+                  :disabled="(machineLevels[machine.id] ?? 0) <= 0"
+                  @click="
+                    emit('set-machine-level', machine.id, (machineLevels[machine.id] ?? 0) - 1)
+                  "
+                >
+                  -
+                </button>
+                <span
+                  class="flex h-7 w-8 items-center justify-center border-x text-xs font-semibold"
+                  :class="
+                    (machineLevels[machine.id] ?? 0) > 0
+                      ? 'border-primary/30 text-primary'
+                      : 'border-border/50 text-muted-foreground'
+                  "
+                >
+                  {{ machineLevels[machine.id] ?? 0 }}
+                </span>
+                <button
+                  class="focus-ring flex h-7 w-6 items-center justify-center text-[11px] font-bold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+                  :disabled="(machineLevels[machine.id] ?? 0) >= 10"
+                  @click="
+                    emit('set-machine-level', machine.id, (machineLevels[machine.id] ?? 0) + 1)
+                  "
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fabrication Allocations -->
+      <div class="border-t border-border/40 px-4 py-3">
+        <div class="flex items-center justify-between">
+          <button
+            class="focus-ring -mx-1 flex items-center gap-2 rounded-lg px-1 text-left transition hover:bg-muted/15"
+            @click="fabricationOpen = !fabricationOpen"
+          >
+            <component
+              :is="fabricationOpen ? ChevronDown : ChevronRight"
+              class="size-4 text-muted-foreground"
+            />
+            <h4 class="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground">
+              Fabrication
+            </h4>
+            <span v-if="hasFabricationChanges" class="size-1.5 rounded-full bg-primary" />
+          </button>
+          <button
+            v-if="hasFabricationChanges"
+            class="focus-ring rounded-md p-1 text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
+            title="Reset fabrication"
+            @click="emit('reset-fabrication')"
+          >
+            <RotateCcw class="size-3" />
+          </button>
+        </div>
+
+        <p class="mt-1 text-[10px] text-muted-foreground">
+          Fabrication points generate items passively (each point = 20 items/hr). Loaded from
+          <RouterLink to="/configs" class="font-semibold text-primary hover:underline"
+            >/configs</RouterLink
+          >.
+        </p>
+
+        <div v-if="fabricationOpen" class="mt-3 space-y-2">
+          <template v-if="Object.keys(fabricationAllocations).length > 0">
+            <div
+              v-for="(points, itemId) in fabricationAllocations"
+              :key="itemId"
+              class="flex items-center justify-between rounded-lg border px-2 py-1.5"
+              :class="{
+                'border-amber-500/40 bg-amber-500/5':
+                  getFabItemState(String(itemId)) === 'simulated',
+                'border-red-500/40 bg-red-500/5': getFabItemState(String(itemId)) === 'removed',
+                'border-transparent': getFabItemState(String(itemId)) === 'save',
+              }"
+            >
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="getItemImage({ id: String(itemId) })"
+                  :src="getItemImage({ id: String(itemId) })"
+                  alt=""
+                  class="size-4 shrink-0"
+                  loading="lazy"
+                />
+                <span class="text-sm text-foreground">{{ itemName(String(itemId)) }}</span>
+                <span
+                  v-if="getFabItemState(String(itemId)) === 'simulated'"
+                  class="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400"
+                >
+                  simulated
+                </span>
+                <span
+                  v-else-if="getFabItemState(String(itemId)) === 'removed'"
+                  class="rounded-full bg-red-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-red-600 dark:text-red-400"
+                >
+                  reduced
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-[10px] font-semibold"
+                  :class="{
+                    'text-amber-600 dark:text-amber-400':
+                      getFabItemState(String(itemId)) === 'simulated',
+                    'text-red-600 dark:text-red-400': getFabItemState(String(itemId)) === 'removed',
+                    'text-muted-foreground': getFabItemState(String(itemId)) === 'save',
+                  }"
+                >
+                  {{ points * 20 }}/hr
+                </span>
+                <span
+                  class="text-[10px] font-semibold"
+                  :class="{
+                    'text-amber-600 dark:text-amber-400':
+                      getFabItemState(String(itemId)) === 'simulated',
+                    'text-red-600 dark:text-red-400': getFabItemState(String(itemId)) === 'removed',
+                    'color: var(--color-green)':
+                      getFabItemState(String(itemId)) === 'save' && points > 0,
+                  }"
+                  :style="
+                    getFabItemState(String(itemId)) === 'save' && points > 0
+                      ? { color: 'var(--color-green)' }
+                      : {}
+                  "
+                >
+                  {{ points }} pts
+                </span>
+              </div>
+            </div>
+          </template>
+          <p v-else class="text-[10px] text-muted-foreground/60">
+            No fabrication allocations. Import a save file or configure in
+            <RouterLink to="/fabrication" class="font-semibold text-primary hover:underline"
+              >/fabrication</RouterLink
+            >.
+          </p>
         </div>
       </div>
 
