@@ -115,8 +115,9 @@ function startEditing(section: EditableSection) {
       break
     case 'awaken':
       sectionSnapshot = {
-        awakenGatherUpgrades: structuredClone(toRaw(awakenGatherUpgrades.value)),
-        awakenSpeedTiers: structuredClone(toRaw(awakenSpeedTiers.value)),
+        awakenGatherUpgrades: JSON.parse(JSON.stringify(awakenGatherUpgrades.value)),
+        awakenSpeedTiers: JSON.parse(JSON.stringify(awakenSpeedTiers.value)),
+        awakenGoldLevel: awakenGoldLevel.value,
       }
       break
     case 'expeditions':
@@ -156,9 +157,11 @@ function cancelEditing() {
         const snap = sectionSnapshot as {
           awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
           awakenSpeedTiers: Record<string, number>
+          awakenGoldLevel: number
         }
         awakenGatherUpgrades.value = snap.awakenGatherUpgrades
         awakenSpeedTiers.value = snap.awakenSpeedTiers
+        setAwakenGoldLevel(snap.awakenGoldLevel)
         break
       }
       case 'expeditions':
@@ -358,7 +361,8 @@ const awakenHasDiff = computed(() => {
   return (
     JSON.stringify(awakenGatherUpgrades.value) !==
       JSON.stringify(saveConfig.value.awakenGatherUpgrades) ||
-    JSON.stringify(awakenSpeedTiers.value) !== JSON.stringify(saveConfig.value.awakenSpeedTiers)
+    JSON.stringify(awakenSpeedTiers.value) !== JSON.stringify(saveConfig.value.awakenSpeedTiers) ||
+    awakenGoldLevel.value !== saveConfig.value.awakenGoldLevel
   )
 })
 
@@ -635,6 +639,7 @@ function applyAwaken() {
   if (!saveConfig.value) return
   awakenGatherUpgrades.value = { ...saveConfig.value.awakenGatherUpgrades }
   awakenSpeedTiers.value = { ...saveConfig.value.awakenSpeedTiers }
+  setAwakenGoldLevel(saveConfig.value.awakenGoldLevel)
   appliedSections.value = { ...appliedSections.value, awaken: true }
   sectionsCollapsed.value = { ...sectionsCollapsed.value, awaken: true }
 }
