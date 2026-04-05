@@ -3634,7 +3634,8 @@
     "type": "Currency",
     "sources": [],
     "description": "Description to be written...",
-    "recipes": []
+    "recipes": [],
+    "image": "awaken-points.png"
   },
   {
     "id": "prestige-points",
@@ -3642,7 +3643,8 @@
     "type": "Currency",
     "sources": [],
     "description": "Description to be written...",
-    "recipes": []
+    "recipes": [],
+    "image": "prestige-points.png"
   },
   {
     "id": "Dirt Credits",
