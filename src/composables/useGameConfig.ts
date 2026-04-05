@@ -38,6 +38,7 @@ const fabricationAllocations = useLocalStorage<Record<string, number>>(
   'config-fabrication-allocations',
   {},
 )
+const awakenGoldLevel = useLocalStorage<number>('config-awaken-gold-level', 0)
 
 export function useGameConfig() {
   const excludedCreatureIds = computed(() => {
@@ -151,6 +152,10 @@ export function useGameConfig() {
     fabricationAllocations.value = {}
   }
 
+  function setAwakenGoldLevel(level: number) {
+    awakenGoldLevel.value = Math.max(0, Math.min(5, level))
+  }
+
   function resetGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
@@ -163,6 +168,7 @@ export function useGameConfig() {
     resetToolLevels()
     resetMachines()
     resetFabrication()
+    awakenGoldLevel.value = 0
   }
 
   return {
@@ -202,5 +208,7 @@ export function useGameConfig() {
     resetGameConfig,
     setExpeditionToolXpBonus,
     expeditionToolXpBonus,
+    awakenGoldLevel,
+    setAwakenGoldLevel,
   }
 }

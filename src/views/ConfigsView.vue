@@ -75,6 +75,8 @@ const {
   resetMachines,
   setFabricationAllocations,
   resetFabrication,
+  awakenGoldLevel,
+  setAwakenGoldLevel,
 } = useGameConfig()
 
 
@@ -2236,6 +2238,45 @@ function jobTierLabel(tier: number): string {
                     </span>
                   </template>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gold Upgrades -->
+          <div>
+            <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Gold Upgrades
+            </h4>
+            <div class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm">
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="getItemImage({ id: 'gold' })"
+                  :src="getItemImage({ id: 'gold' })"
+                  alt="Gold"
+                  class="size-5 object-contain"
+                />
+                <span class="font-medium">Awaken Gold</span>
+              </div>
+              <div class="flex items-center gap-4 text-xs tabular-nums">
+                <div v-if="editingSection === 'awaken'" class="flex items-center gap-1">
+                  <span class="text-muted-foreground">Level</span>
+                  <button
+                    class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="awakenGoldLevel <= 0"
+                    @click="setAwakenGoldLevel(awakenGoldLevel - 1)"
+                  >
+                    <Minus class="size-3" />
+                  </button>
+                  <span class="w-6 text-center font-semibold">{{ awakenGoldLevel }}</span>
+                  <button
+                    class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="awakenGoldLevel >= 5"
+                    @click="setAwakenGoldLevel(awakenGoldLevel + 1)"
+                  >
+                    <Plus class="size-3" />
+                  </button>
+                </div>
+                <span v-else class="font-medium">+{{ awakenGoldLevel }} gold/min per creature</span>
               </div>
             </div>
           </div>
