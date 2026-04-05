@@ -286,6 +286,22 @@ function writeExpeditionSetup(steps: PartyPlanStep[], merge: boolean) {
   }
 
 
+  // Remove creatures assigned in new steps from any other expedition's party
+  const newCreatureIds = new Set(steps.flatMap((s) => s.party.map((p) => p.creatureId)))
+  const newExpeditionIds = new Set(steps.map((s) => s.expedition.id))
+  for (const [expeditionId, members] of Object.entries(parties)) {
+    if (newExpeditionIds.has(expeditionId)) continue
+    const filtered = members.filter((id) => !newCreatureIds.has(id))
+    if (filtered.length === 0) {
+      delete parties[expeditionId]
+      delete tiers[expeditionId]
+      delete loopCounts[expeditionId]
+    } else {
+      parties[expeditionId] = filtered
+    }
+  }
+
+
   localStorage.setItem('expedition-parties', JSON.stringify(parties))
   localStorage.setItem('expedition-creature-levels', JSON.stringify(levels))
   localStorage.setItem('expedition-tiers', JSON.stringify(tiers))
