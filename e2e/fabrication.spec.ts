@@ -22,14 +22,13 @@ test.describe('fabrication page', () => {
   })
 
   test('clicking + button allocates a point', async ({ page }) => {
-    const firstPlus = page.getByRole('button', { name: '' }).locator('..').locator('button').first()
     // Use the first + button in the grid
     const plusButtons = page.locator('button:has(svg.lucide-plus)')
     await plusButtons.first().click()
 
     // Summary bar should appear
     await expect(page.getByText('1 points')).toBeVisible()
-    await expect(page.getByText('20 items/hr')).toBeVisible()
+    await expect(page.getByText('0.3/min · 20/hr')).toBeVisible()
   })
 
   test('clicking - button deallocates a point', async ({ page }) => {
@@ -54,12 +53,43 @@ test.describe('fabrication page', () => {
     await plusButtons.first().click()
 
     await expect(page.getByText('3 points')).toBeVisible()
-    await expect(page.getByText('60 items/hr')).toBeVisible()
+    await expect(page.getByText('1/min · 60/hr')).toBeVisible()
   })
 
   test('empty state shows when no allocations', async ({ page }) => {
     await expect(
       page.getByText('Use the +/- buttons above to simulate fabrication allocations'),
     ).toBeVisible()
+  })
+
+  test('simulated chip shows when adding points', async ({ page }) => {
+    const plusButtons = page.locator('button:has(svg.lucide-plus)')
+    await plusButtons.first().click()
+    await expect(page.getByText('+1 simulated')).toBeVisible()
+  })
+
+  test('reset button reverts simulated changes', async ({ page }) => {
+    const plusButtons = page.locator('button:has(svg.lucide-plus)')
+    await plusButtons.first().click()
+    await expect(page.getByText('+1 simulated')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Reset' }).click()
+    await expect(page.getByText('+1 simulated')).not.toBeVisible()
+  })
+
+  test('simulated allocations persist in separate localStorage key', async ({ page }) => {
+    const plusButtons = page.locator('button:has(svg.lucide-plus)')
+    await plusButtons.first().click()
+
+    const simulated = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('fabrication-simulated') || '{}'),
+    )
+    expect(Object.keys(simulated).length).toBeGreaterThan(0)
+
+    // Config should not be modified (still empty from clear)
+    const config = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('config-fabrication-allocations') || '{}'),
+    )
+    expect(Object.keys(config).length).toBe(0)
   })
 })
