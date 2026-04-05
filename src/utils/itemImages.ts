@@ -20,6 +20,15 @@ const imageAliases: Record<string, string> = {
   'water-vial': 'water-vials',
   shell: 'shells',
   'dungeon-dust': 'echo-dust',
+  'burried-chest': 'treasure-chest',
+  'exploring-charm': 'exploration-charm',
+  'herb-pouch': 'pouch',
+  'meat-stew': 'cooked-meat-stew',
+  'carrot-cake': 'cake',
+  'braymens-letter': 'mail',
+  'dirt credits': 'dirt-credits',
+  'task-board-reset-potion': 'task-board-potion',
+  'awaken-tree-reset-potion': 'awaken-potion',
 }
 
 export function getItemImage(item: Pick<Item, 'id'> & { image?: string }): string | undefined {

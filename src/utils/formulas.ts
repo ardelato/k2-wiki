@@ -317,8 +317,10 @@ export function getRecommendedCreatures(
   expedition: Expedition,
   levels: Record<string, number> = {},
   biome?: Biome,
+  excludeIds?: Set<string>,
 ): { creature: Creature; rating: number; level: number }[] {
-  return creatures
+  const pool = excludeIds ? creatures.filter((c) => !excludeIds.has(c.id)) : creatures
+  return pool
     .map((creature) => {
       const level = levels[creature.id] || 1
       return {

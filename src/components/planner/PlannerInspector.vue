@@ -491,8 +491,17 @@ function openDisplayNodePlanner() {
               </div>
               <div class="shrink-0 text-right text-xs font-semibold">
                 <template v-if="method.cost != null">
-                  <span class="font-mono" style="color: var(--color-yellow)"
-                    >{{ Math.round(method.cost).toLocaleString() }} gold</span
+                  <span
+                    class="inline-flex items-center gap-1 font-mono"
+                    style="color: var(--color-yellow)"
+                  >
+                    <img
+                      v-if="getItemImage({ id: 'gold' })"
+                      :src="getItemImage({ id: 'gold' })"
+                      alt="Gold"
+                      class="size-3 object-contain"
+                    />
+                    {{ Math.round(method.cost).toLocaleString() }}</span
                   >
                 </template>
                 <template v-else-if="method.localTimeSeconds != null">
@@ -674,7 +683,16 @@ function openDisplayNodePlanner() {
             <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
               Gold Cost
             </p>
-            <p class="mt-1 font-mono text-sm font-semibold" style="color: var(--color-yellow)">
+            <p
+              class="mt-1 flex items-center gap-1 font-mono text-sm font-semibold"
+              style="color: var(--color-yellow)"
+            >
+              <img
+                v-if="getItemImage({ id: 'gold' })"
+                :src="getItemImage({ id: 'gold' })"
+                alt="Gold"
+                class="size-4 object-contain"
+              />
               {{ Math.round(nodeSubtreeSummary.totalCost).toLocaleString() }}
             </p>
           </div>

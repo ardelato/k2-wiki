@@ -18,16 +18,26 @@ defineOptions({
 })
 
 
-const props = defineProps<{
-  node: PlannerNode
-  nodesById: Record<string, PlannerNode>
-  activeMethodIdByNode: Record<string, string | null>
-  selectedNodeId: string | null
-  selectedMethodId: string | null
-  collapsedNodeIds: Set<string>
-  inventoryAmounts: Record<string, number>
-  completionTimeByNode: Record<string, number>
-}>()
+const props = withDefaults(
+  defineProps<{
+    node: PlannerNode
+    nodesById: Record<string, PlannerNode>
+    activeMethodIdByNode: Record<string, string | null>
+    selectedNodeId: string | null
+    selectedMethodId: string | null
+    collapsedNodeIds: Set<string>
+    inventoryAmounts: Record<string, number>
+    completionTimeByNode: Record<string, number>
+    nodeAnnotations?: Record<string, string>
+    subtreeCostByNode?: Record<string, number>
+    forceCollapsible?: boolean
+  }>(),
+  {
+    nodeAnnotations: () => ({}),
+    subtreeCostByNode: () => ({}),
+    forceCollapsible: false,
+  },
+)
 
 
 const stockOnHand = computed(() => props.inventoryAmounts[props.node.itemId] ?? 0)
@@ -103,7 +113,19 @@ const nodeDepsTime = computed(() => {
 })
 
 
-const hasChildren = computed(() => (activeMethod.value?.children.length ?? 0) > 0)
+const annotation = computed(() => props.nodeAnnotations[props.node.id] ?? null)
+
+
+const displayCost = computed(() => {
+  const subtree = props.subtreeCostByNode[props.node.id]
+  if (subtree != null && subtree > 0) return subtree
+  return activeMethod.value?.cost ?? null
+})
+
+
+const hasChildren = computed(
+  () => (activeMethod.value?.children.length ?? 0) > 0 || props.forceCollapsible,
+)
 const isCollapsed = computed(() => props.collapsedNodeIds.has(props.node.id))
 const isSelected = computed(() => props.selectedNodeId === props.node.id)
 
@@ -222,7 +244,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
 
           <span
             v-if="activeMethod && activeMethod.localTimeSeconds == null && !node.issues.length"
-            class="bg-yellow-400/8 ml-auto shrink-0 rounded-full border border-yellow-400/30 px-2 py-0.5 text-[10px] font-semibold text-yellow-300"
+            class="bg-yellow-400/8 ml-auto shrink-0 rounded-full border border-yellow-400/30 px-2 py-0.5 text-[10px] font-semibold text-yellow-600 dark:text-yellow-300"
             title="Configure in Settings"
           >
             Needs config
@@ -260,6 +282,12 @@ function forwardPinMethod(nodeId: string, methodId: string) {
           <span class="min-w-0 truncate text-xs text-muted-foreground">{{
             activeMethod.title
           }}</span>
+          <span
+            v-if="annotation"
+            class="shrink-0 rounded border border-border/50 bg-muted/40 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground"
+          >
+            {{ annotation }}
+          </span>
 
           <div class="ml-auto flex shrink-0 items-center gap-2 font-mono text-xs">
             <span
@@ -279,6 +307,24 @@ function forwardPinMethod(nodeId: string, methodId: string) {
                 / {{ formatDuration(nodeTotalTime) }}
               </span>
             </template>
+            <span
+              v-if="displayCost != null && displayCost > 0"
+              class="flex items-center gap-1"
+              style="color: var(--color-yellow)"
+              :title="
+                displayCost !== activeMethod?.cost
+                  ? 'Total gold cost (including sub-materials)'
+                  : 'Gold cost'
+              "
+            >
+              <img
+                v-if="getItemImage({ id: 'gold' })"
+                :src="getItemImage({ id: 'gold' })"
+                alt="Gold"
+                class="size-3 object-contain"
+              />
+              {{ Math.round(displayCost).toLocaleString() }}
+            </span>
             <span
               v-if="activeMethod.kind === 'craft' && activeMethod.children.length"
               class="flex items-center gap-1"
@@ -328,6 +374,8 @@ function forwardPinMethod(nodeId: string, methodId: string) {
         :collapsed-node-ids="collapsedNodeIds"
         :inventory-amounts="inventoryAmounts"
         :completion-time-by-node="completionTimeByNode"
+        :node-annotations="nodeAnnotations"
+        :subtree-cost-by-node="subtreeCostByNode"
         @select-node="emit('select-node', $event)"
         @select-method="emit('select-method', $event)"
         @pin-method="forwardPinMethod"

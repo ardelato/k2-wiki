@@ -4,17 +4,18 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   Clock3,
-  Coins,
   GanttChart,
   GitBranch,
   Hammer,
   Network,
   Search,
+  Sparkles,
   TrendingUp,
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
+import GoldRateBadge from '@/components/planner/GoldRateBadge.vue'
 import PlannerActiveMods from '@/components/planner/PlannerActiveMods.vue'
 import PlannerBadge from '@/components/planner/PlannerBadge.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
@@ -29,7 +30,9 @@ import { useCraftPlanner } from '@/composables/useCraftPlanner'
 import { useItems } from '@/composables/useItems'
 import type { ScheduledTask } from '@/types'
 import { formatDuration, sourceLabel } from '@/utils/format'
+import { getItemImage } from '@/utils/itemImages'
 import LevelPlannerView from '@/views/LevelPlannerView.vue'
+import SummoningPlannerView from '@/views/SummoningPlannerView.vue'
 
 function normalizeQuantity(value: unknown): number {
   const parsed = Number(value)
@@ -286,14 +289,18 @@ function expandAll() {
 const collapsedCount = computed(() => collapsedNodeIds.value.size)
 
 
-const activeTab = computed(() => (route.query.tab === 'levelup' ? 'levelup' : 'craft'))
+const activeTab = computed(() => {
+  if (route.query.tab === 'levelup') return 'levelup'
+  if (route.query.tab === 'summoning') return 'summoning'
+  return 'craft'
+})
 
 
-function switchTab(tab: 'craft' | 'levelup') {
+function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
   if (tab === 'craft') {
     router.push({ name: 'planner', params: route.params, query: {} })
   } else {
-    router.push({ path: '/planner', query: { tab: 'levelup' } })
+    router.push({ path: '/planner', query: { tab } })
   }
 }
 </script>
@@ -326,10 +333,24 @@ function switchTab(tab: 'craft' | 'levelup') {
           <TrendingUp class="size-4" />
           Level Up
         </button>
+        <button
+          class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
+          :class="
+            activeTab === 'summoning'
+              ? 'bg-primary/15 text-primary shadow-sm'
+              : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
+          "
+          @click="switchTab('summoning')"
+        >
+          <Sparkles class="size-4" />
+          Summoning
+        </button>
       </div>
     </div>
 
     <LevelPlannerView v-if="activeTab === 'levelup'" />
+
+    <SummoningPlannerView v-else-if="activeTab === 'summoning'" />
 
     <template v-else>
       <div class="flex flex-wrap items-center justify-between gap-4">
@@ -345,6 +366,7 @@ function switchTab(tab: 'craft' | 'levelup') {
               Browse every recipe branch, container route, and gathering path for any item, then pin
               the method you want to use for totals and expected time.
             </p>
+            <GoldRateBadge class="mt-2" />
           </div>
         </div>
       </div>
@@ -415,7 +437,12 @@ function switchTab(tab: 'craft' | 'levelup') {
             {{ summary.totalTimeSeconds != null ? formatDuration(summary.totalTimeSeconds) : '?' }}
           </PlannerBadge>
           <PlannerBadge color="var(--color-yellow)">
-            <Coins class="size-3.5" />
+            <img
+              v-if="getItemImage({ id: 'gold' })"
+              :src="getItemImage({ id: 'gold' })"
+              alt="Gold"
+              class="size-3.5 object-contain"
+            />
             {{ Math.round(summary.totalCost).toLocaleString() }}
           </PlannerBadge>
           <PlannerBadge color="var(--color-primary)">
