@@ -1,4 +1,12 @@
-import { formatChance, formatDuration, sourceLabel, toTitleCase } from '@/utils/format'
+import {
+  formatChance,
+  formatDuration,
+  methodKindClasses,
+  methodKindColor,
+  methodKindLabel,
+  sourceLabel,
+  toTitleCase,
+} from '@/utils/format'
 
 describe('formatDuration', () => {
   test('zero seconds', () => {
@@ -158,5 +166,37 @@ describe('toTitleCase', () => {
 
   test('consecutive separators treated as one', () => {
     expect(toTitleCase('a__b--c')).toBe('A B C')
+  })
+})
+
+describe('methodKindLabel', () => {
+  test('returns Machine for machine kind', () => {
+    expect(methodKindLabel('machine')).toBe('Machine')
+  })
+
+  test('returns Fabrication for fabrication kind', () => {
+    expect(methodKindLabel('fabrication')).toBe('Fabrication')
+  })
+})
+
+describe('methodKindClasses', () => {
+  test('machine kind includes orange classes', () => {
+    const classes = methodKindClasses('machine')
+    expect(classes).toContain('orange')
+  })
+
+  test('fabrication kind includes violet classes', () => {
+    const classes = methodKindClasses('fabrication')
+    expect(classes).toContain('violet')
+  })
+})
+
+describe('methodKindColor', () => {
+  test('machine kind returns orange color', () => {
+    expect(methodKindColor('machine')).toBe('rgb(251, 146, 60)')
+  })
+
+  test('fabrication kind returns violet color', () => {
+    expect(methodKindColor('fabrication')).toBe('rgb(167, 139, 250)')
   })
 })

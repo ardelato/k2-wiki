@@ -10,21 +10,28 @@ import fishingPoleIcon from '@/assets/icons/fishing-pole.webp'
 import fishingIcon from '@/assets/icons/fishing.webp'
 import furnaceIcon from '@/assets/icons/furnace.webp'
 import helpersIcon from '@/assets/icons/helpers.webp'
+import itemGridIcon from '@/assets/icons/item-grid.png'
 import macheteIcon from '@/assets/icons/machete.webp'
 import machinesIcon from '@/assets/icons/machines.webp'
 import miningIcon from '@/assets/icons/mining.webp'
 import pickaxeIcon from '@/assets/icons/pickaxe.webp'
+import refineryIcon from '@/assets/icons/refinery.webp'
 import sanctuaryIcon from '@/assets/icons/sanctuary.webp'
 import shovelIcon from '@/assets/icons/shovel.webp'
 import staffIcon from '@/assets/icons/staff.webp'
 import stoveIcon from '@/assets/icons/stove.webp'
 import toolsIcon from '@/assets/icons/tools.webp'
+import upgradesIcon from '@/assets/icons/upgrades.png'
 import workbenchIcon from '@/assets/icons/workbench.webp'
+import breadItemIcon from '@/assets/items/bread.webp'
+import coalItemIcon from '@/assets/items/coal.webp'
 import hammerItemIcon from '@/assets/items/hammer.webp'
 import knifeItemIcon from '@/assets/items/knife.webp'
 import sawItemIcon from '@/assets/items/saw.webp'
+import stoneItemIcon from '@/assets/items/stone.webp'
+import twigItemIcon from '@/assets/items/twig.webp'
 
-export { helpersIcon, machinesIcon, sanctuaryIcon, toolsIcon }
+export { helpersIcon, itemGridIcon, machinesIcon, sanctuaryIcon, toolsIcon, upgradesIcon }
 
 export const jobIcons: Record<string, string> = {
   chopping: choppingIcon,
@@ -68,6 +75,17 @@ export const sourceIcons: Record<string, string> = {
   Workbench: workbenchIcon,
   Expeditions: expeditionsIcon,
   Helpers: helpersIcon,
+  // Machine names (used in planner method titles)
+  Smelter: furnaceIcon,
+  Sawmill: workbenchIcon,
+  Cooker: stoveIcon,
+  Greenhouse: farmingIcon,
+  Refinery: refineryIcon,
+  Bakery: breadItemIcon,
+  'Stone Quarry': stoneItemIcon,
+  'Stick Finder': twigItemIcon,
+  'Coal Miner': coalItemIcon,
+  Fabrication: itemGridIcon,
 }
 
 export const toolIcons: Record<string, string> = {

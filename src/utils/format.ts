@@ -61,21 +61,27 @@ export function methodKindLabel(kind: PlannerMethodKind): string {
   if (kind === 'buy') return 'Buy'
   if (kind === 'cycle') return 'Cycle'
   if (kind === 'stocked') return 'In Stock'
+  if (kind === 'machine') return 'Machine'
+  if (kind === 'fabrication') return 'Fabrication'
   return 'Unknown'
 }
 
 export function methodKindClasses(kind: PlannerMethodKind): string {
   if (kind === 'craft') return 'border-primary/35 bg-primary/12 text-primary'
   if (kind === 'gather')
-    return 'border-emerald-600/35 bg-emerald-100 text-emerald-800 dark:border-emerald-400/35 dark:bg-emerald-400/12 dark:text-emerald-300'
+    return 'border-emerald-600/35 bg-emerald-100 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/20 dark:text-emerald-200'
   if (kind === 'garden')
-    return 'border-lime-600/35 bg-lime-100 text-lime-800 dark:border-lime-400/35 dark:bg-lime-400/10 dark:text-lime-200'
+    return 'border-lime-600/35 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/20 dark:text-lime-100'
   if (kind === 'container')
-    return 'border-yellow-600/35 bg-yellow-100 text-yellow-800 dark:border-yellow-400/35 dark:bg-yellow-400/10 dark:text-yellow-200'
+    return 'border-yellow-600/35 bg-yellow-100 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-400/20 dark:text-yellow-100'
   if (kind === 'expedition')
-    return 'border-sky-600/35 bg-sky-100 text-sky-800 dark:border-sky-400/35 dark:bg-sky-400/10 dark:text-sky-200'
+    return 'border-sky-600/35 bg-sky-100 text-sky-800 dark:border-sky-400/40 dark:bg-sky-400/20 dark:text-sky-100'
   if (kind === 'buy')
-    return 'border-fuchsia-600/35 bg-fuchsia-100 text-fuchsia-800 dark:border-fuchsia-400/35 dark:bg-fuchsia-400/10 dark:text-fuchsia-200'
+    return 'border-fuchsia-600/35 bg-fuchsia-100 text-fuchsia-800 dark:border-fuchsia-400/40 dark:bg-fuchsia-400/20 dark:text-fuchsia-100'
+  if (kind === 'machine')
+    return 'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100'
+  if (kind === 'fabrication')
+    return 'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100'
   return 'border-destructive/40 bg-destructive/10 text-destructive-foreground'
 }
 
@@ -88,6 +94,8 @@ export function methodKindColor(kind: PlannerMethodKind): string {
   if (kind === 'buy') return 'rgb(232, 121, 249)'
   if (kind === 'cycle') return 'hsl(var(--destructive))'
   if (kind === 'stocked') return 'rgb(52, 211, 153)'
+  if (kind === 'machine') return 'rgb(251, 146, 60)'
+  if (kind === 'fabrication') return 'rgb(167, 139, 250)'
   return 'hsl(var(--muted-foreground))'
 }
 
