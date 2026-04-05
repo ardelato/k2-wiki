@@ -653,11 +653,10 @@ export function planPartyLevelingPath(
         if (remainingNeeded <= remainingGroups) pushPartial(partial)
 
         for (const candidate of group.candidates) {
-          const seedCreatureId = candidate.levelerIds[0]
-          if (!seedCreatureId || partial.usedCreatureIds.has(seedCreatureId)) continue
+          if (candidate.memberIds.some((id) => partial.usedCreatureIds.has(id))) continue
 
           const usedCreatureIds = new Set(partial.usedCreatureIds)
-          usedCreatureIds.add(seedCreatureId)
+          for (const id of candidate.memberIds) usedCreatureIds.add(id)
           const selected = [...partial.selected, candidate]
           const key = selected.map((item) => candidateKey(item)).join('|')
 
@@ -697,7 +696,7 @@ export function planPartyLevelingPath(
           score: matchingSeeds.reduce((sum, c) => sum + c.priorityScore, 0),
           coverageCount: matchingSeeds.length,
           selected: matchingSeeds,
-          usedCreatureIds: new Set(matchingSeeds.map((c) => c.levelerIds[0]).filter(Boolean)),
+          usedCreatureIds: new Set(matchingSeeds.flatMap((c) => c.memberIds)),
         })
       }
     }
@@ -741,14 +740,17 @@ export function planPartyLevelingPath(
       .toSorted((a, b) => b.bestScore - a.bestScore)
 
     const usedExpeditions = new Set<number>()
+    const usedCreatures = new Set<string>()
     const selected: RunCandidate[] = []
 
     for (const { id } of creatureList) {
       const options = creatureOptions.get(id)!
       for (const { groupIdx, candidate } of options) {
         if (usedExpeditions.has(groupIdx)) continue
+        if (candidate.memberIds.some((mid) => usedCreatures.has(mid))) continue
         selected.push(candidate)
         usedExpeditions.add(groupIdx)
+        for (const mid of candidate.memberIds) usedCreatures.add(mid)
         break
       }
     }
@@ -843,10 +845,8 @@ export function planPartyLevelingPath(
     bestCompleteState: SearchState | null,
   ): RunCandidate[] {
     const parties = new Map(seeds.map((seed) => [seed.expeditionId, seed]))
-    const assignedLevelers = new Set(seeds.flatMap((seed) => seed.levelerIds))
-    const remainingLevelers = unfinishedIds.filter(
-      (creatureId) => !assignedLevelers.has(creatureId),
-    )
+    const assignedMembers = new Set(seeds.flatMap((seed) => seed.memberIds))
+    const remainingLevelers = unfinishedIds.filter((creatureId) => !assignedMembers.has(creatureId))
 
     function fillCreatures(remaining: string[]) {
       while (remaining.length > 0) {
