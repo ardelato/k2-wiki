@@ -2,6 +2,7 @@ import { computed, type Ref } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
+import { useGameConfig } from '@/composables/useGameConfig'
 import { xpForLevel, maxLevelForState, PRE_AWAKEN_MAX } from '@/utils/formulas'
 import { planLevelingPath, type LevelingPlan } from '@/utils/levelPlanner'
 
@@ -12,6 +13,7 @@ export function useLevelPlanner(
 ) {
   const { creatures } = useCreatures()
   const { getLevel, isAwakened } = useCreatureCollection()
+  const { expeditionToolXpBonus } = useGameConfig()
 
   const creature = computed(() => creatures.value.find((c) => c.id === creatureId.value) ?? null)
 
@@ -46,6 +48,7 @@ export function useLevelPlanner(
       startLevel: startLevel.value,
       targetLevel: targetLevel.value,
       isAwakened: awakened.value,
+      swordXpMultiplier: expeditionToolXpBonus.value,
       expeditionMaxTiers: expeditionMaxTiers?.value,
     })
   })

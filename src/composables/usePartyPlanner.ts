@@ -28,7 +28,7 @@ export function usePartyPlanner(
 ) {
   const { creatures } = useCreatures()
   const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
-  const { excludedCreatureIds } = useGameConfig()
+  const { excludedCreatureIds, expeditionToolXpBonus } = useGameConfig()
   const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
   const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
   const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
@@ -137,7 +137,7 @@ export function usePartyPlanner(
       .toSorted(([a], [b]) => a.localeCompare(b))
       .map(([id, t]) => `${id}:${t}`)
       .join(',')
-    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${maxTiersKey}`
+    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${expeditionToolXpBonus.value}||${maxTiersKey}`
   }
 
   // Load cached plan immediately if available (all inputs are localStorage-backed so fingerprint is stable on init)
@@ -154,6 +154,7 @@ export function usePartyPlanner(
       creatures: partyCreatures.value,
       strategy: strategy.value,
       timeBudget: timeBudget.value,
+      swordXpMultiplier: expeditionToolXpBonus.value,
       expeditionMaxTiers: Object.keys(maxTiers).length > 0 ? maxTiers : undefined,
       expeditions: Object.fromEntries(
         Object.keys({

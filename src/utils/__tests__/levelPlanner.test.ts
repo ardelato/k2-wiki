@@ -6,8 +6,97 @@ import { planLevelingPath } from '@/utils/levelPlanner'
 const creatures = creaturesData as Creature[]
 const expeditions = expeditionsData as Expedition[]
 
-// Use a real creature that exists in the data
 const creature = creatures[0]
+
+describe('planLevelingPath', () => {
+  test('returns a plan with steps for level 1 to 10', () => {
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+    })
+    expect(plan.steps.length).toBeGreaterThan(0)
+    expect(plan.totalTimeSeconds).toBeGreaterThan(0)
+    expect(plan.totalRuns).toBeGreaterThan(0)
+  })
+
+  test('omitting swordXpMultiplier defaults to 1', () => {
+    const withDefault = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+    })
+    const withExplicit = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+      swordXpMultiplier: 1,
+    })
+    expect(withDefault.totalTimeSeconds).toBe(withExplicit.totalTimeSeconds)
+    expect(withDefault.totalRuns).toBe(withExplicit.totalRuns)
+  })
+
+  test('swordXpMultiplier > 1 reduces total runs', () => {
+    const base = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+      swordXpMultiplier: 1,
+    })
+    const boosted = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+      swordXpMultiplier: 1.5,
+    })
+    expect(boosted.totalRuns).toBeLessThan(base.totalRuns)
+  })
+
+  test('swordXpMultiplier > 1 reduces total time', () => {
+    const base = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+      swordXpMultiplier: 1,
+    })
+    const boosted = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 10,
+      isAwakened: false,
+      swordXpMultiplier: 1.5,
+    })
+    expect(boosted.totalTimeSeconds).toBeLessThan(base.totalTimeSeconds)
+  })
+
+  test('xpPerRun reflects the multiplier', () => {
+    const base = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 5,
+      isAwakened: false,
+      swordXpMultiplier: 1,
+    })
+    const boosted = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 5,
+      isAwakened: false,
+      swordXpMultiplier: 2,
+    })
+    // First step's xpPerRun should be roughly double (floored)
+    const baseXp = base.steps[0].xpPerRun
+    const boostedXp = boosted.steps[0].xpPerRun
+    expect(boostedXp).toBeGreaterThan(baseXp)
+    expect(boostedXp).toBe(Math.floor(baseXp * 2))
+  })
+})
 
 describe('planLevelingPath — expeditionMaxTiers filtering', () => {
   test('plan without expeditionMaxTiers produces steps', () => {
