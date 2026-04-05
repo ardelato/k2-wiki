@@ -1,6 +1,7 @@
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, type Ref } from 'vue'
 
+import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import {
   itemById,
@@ -25,6 +26,7 @@ import type {
   ScheduledTask,
 } from '@/types'
 import { formatChance, formatDuration, methodKindLabel, toTitleCase } from '@/utils/format'
+import { computeGoldPerMinute, goldToSeconds } from '@/utils/goldIncome'
 
 export type { GardenFlowerEntry, AwakenGatherUpgrade }
 
@@ -33,6 +35,7 @@ export interface PlannerModifiers {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number> // per workstation, 0–4
   jobTiers: Record<string, number>
+  goldPerMinute: number
   machineLevels: Record<string, number>
   fabricationAllocations: Record<string, number>
 }
@@ -160,6 +163,7 @@ function buildPlannerGraph(
   targetQuantity: number,
   inventory: Record<string, number>,
   modifiers: PlannerModifiers,
+  deductRootInventory = false,
 ): PlannerGraph {
   const nodesById = new Map<string, PlannerNode>()
   const methodsById = new Map<string, PlannerMethod>()
@@ -182,9 +186,11 @@ function buildPlannerGraph(
     const item = itemById.get(itemId)
     const nodeId = path
 
-    // Skip inventory deduction for the root target — we want to build
-    // *additional* items, not just ensure we own the requested quantity.
-    const effectiveAmount = depth === 0 ? requiredAmount : claimStock(itemId, requiredAmount)
+    // Skip inventory deduction for the root target in craft planner (we want to build
+    // *additional* items). Summoning planner passes deductRootInventory=true since
+    // you just need to *have* the materials.
+    const effectiveAmount =
+      depth === 0 && !deductRootInventory ? requiredAmount : claimStock(itemId, requiredAmount)
 
     if (effectiveAmount <= 0) {
       const fulfilledNode: PlannerNode = {
@@ -766,6 +772,14 @@ function buildPlannerGraph(
 
     if (item.buyValue != null) {
       const cost = requiredAmount * item.buyValue
+      const currentGold = inventory['gold'] ?? 0
+      const remainingCost = Math.max(0, cost - currentGold)
+      const goldTime =
+        modifiers.goldPerMinute > 0 && remainingCost > 0
+          ? goldToSeconds(remainingCost, modifiers.goldPerMinute)
+          : remainingCost <= 0
+            ? 0
+            : null
       const method: PlannerMethod = {
         id: `${nodeId}#buy`,
         nodeId,
@@ -773,15 +787,42 @@ function buildPlannerGraph(
         title: 'Merchant',
         subtitle: `Buy ${formatAmount(requiredAmount)} directly`,
         requiredAmount,
-        localTimeSeconds: 0,
-        totalTimeSeconds: 0,
+        localTimeSeconds: goldTime ?? 0,
+        totalTimeSeconds: goldTime ?? 0,
         cost,
         detailRows: [
           { label: 'Unit price', value: `${item.buyValue.toLocaleString()} gold` },
           { label: 'Total cost', value: `${Math.round(cost).toLocaleString()} gold` },
-          { label: 'Total time', value: '0m' },
+          ...(currentGold > 0
+            ? [
+                { label: 'On hand', value: `${Math.round(currentGold).toLocaleString()} gold` },
+                {
+                  label: 'Still need',
+                  value: `${Math.round(remainingCost).toLocaleString()} gold`,
+                },
+              ]
+            : []),
+          ...(goldTime != null && goldTime > 0
+            ? [
+                { label: 'Gold rate', value: `${modifiers.goldPerMinute.toFixed(0)} gold/min` },
+                {
+                  label: 'Gold time',
+                  value: `~${formatDuration(goldTime)} to earn`,
+                  estimated: true,
+                },
+              ]
+            : remainingCost <= 0
+              ? [{ label: 'Gold time', value: 'Affordable now' }]
+              : [{ label: 'Gold rate', value: 'Not configured' }]),
         ],
-        notes: ['Buying is treated as immediate and excluded from craft/gather time.'],
+        notes:
+          remainingCost <= 0
+            ? ['You have enough gold on hand to buy this now.']
+            : goldTime != null && goldTime > 0
+              ? [
+                  `Time estimated from passive gold income (${modifiers.goldPerMinute.toFixed(0)} gold/min).`,
+                ]
+              : ['Configure gold income in Settings for time estimates.'],
         children: [],
       }
 
@@ -891,9 +932,13 @@ function computeSchedule(
 
     // Recurse children first — bottom-up
     let depsReady = 0
+    const depNodeIds: string[] = []
     for (const child of method.children) {
       const childNode = nodesById[child.nodeId]
-      if (childNode) depsReady = Math.max(depsReady, schedule(childNode))
+      if (childNode) {
+        depsReady = Math.max(depsReady, schedule(childNode))
+        depNodeIds.push(childNode.id)
+      }
     }
 
     // Determine resource and start time
@@ -918,8 +963,11 @@ function computeSchedule(
     } else if (method.kind === 'fabrication') {
       resource = `Fabrication: ${node.itemName}`
       startTime = 0
+    } else if (method.kind === 'buy' && method.localTimeSeconds > 0) {
+      resource = `Buy: ${node.itemName}`
+      startTime = Math.max(depsReady, resourceNextFree[resource] ?? 0)
     } else {
-      // buy, container, stocked, etc. — negligible time
+      // container, stocked, instant buy, etc. — negligible time
       completionTime.set(node.id, depsReady)
       return depsReady
     }
@@ -937,6 +985,7 @@ function computeSchedule(
       endTime,
       localTime: method.localTimeSeconds,
       depth: node.depth,
+      dependencies: depNodeIds.length > 0 ? depNodeIds : undefined,
     })
 
     completionTime.set(node.id, endTime)
@@ -993,7 +1042,7 @@ function computeSchedule(
         tasks.push({
           nodeId: `passive:machine:${source.machineId}:${itemId}`,
           itemId,
-          itemName: `${itemName} ×${produced}`,
+          itemName,
           resource,
           kind: 'machine',
           startTime: 0,
@@ -1024,7 +1073,7 @@ function computeSchedule(
             tasks.push({
               nodeId: `passive:fabrication:${itemId}`,
               itemId,
-              itemName: `${itemName} ×${produced}`,
+              itemName,
               resource,
               kind: 'fabrication',
               startTime: 0,
@@ -1056,9 +1105,15 @@ function computeSchedule(
   }
 }
 
+export interface CraftPlannerOptions {
+  /** When true, inventory deduction applies to the root node too (used by summoning planner) */
+  deductRootInventory?: boolean
+}
+
 export function useCraftPlanner(
   targetItemId: Readonly<Ref<string>>,
   targetQuantity: Readonly<Ref<number>>,
+  options: CraftPlannerOptions = {},
 ) {
   const pinnedMethodIds = ref<Record<string, string>>({})
 
@@ -1070,7 +1125,10 @@ export function useCraftPlanner(
     jobTiers: baseJobTiers,
     machineLevels: baseMachineLevels,
     fabricationAllocations: baseFabricationAllocations,
+    awakenGoldLevel,
   } = useGameConfig()
+
+  const { ownedCreatureIds, isAwakened: isCreatureAwakened } = useCreatureCollection()
 
   // Fabrication simulated allocations (from Fabrication page, separate from save baseline)
   const fabricationSimulated = useLocalStorage<Record<string, number>>('fabrication-simulated', {})
@@ -1098,11 +1156,28 @@ export function useCraftPlanner(
       },
   )
 
+  const awakenedCount = computed(() => {
+    let count = 0
+    for (const id of ownedCreatureIds.value) {
+      if (isCreatureAwakened(id)) count++
+    }
+    return count
+  })
+
+  const goldPerMinute = computed(() =>
+    computeGoldPerMinute(
+      awakenedCount.value,
+      awakenGoldLevel.value,
+      gardenFlowers.value['gold-flower'] ?? [],
+    ),
+  )
+
   const modifiers = computed<PlannerModifiers>(() => ({
     gardenFlowers: gardenFlowers.value,
     awakenGatherUpgrades: awakenGatherUpgrades.value,
     awakenSpeedTiers: awakenSpeedTiers.value,
     jobTiers: jobTiers.value,
+    goldPerMinute: goldPerMinute.value,
     machineLevels: machineLevels.value,
     fabricationAllocations: fabricationAllocations.value,
   }))
@@ -1113,6 +1188,7 @@ export function useCraftPlanner(
       targetQuantity.value,
       inventoryAmounts.value,
       modifiers.value,
+      options.deductRootInventory,
     ),
   )
 
@@ -1254,16 +1330,23 @@ export function useCraftPlanner(
       branchPointCount,
       missingTimeNodeCount,
       leafItems: [...leafAmounts.entries()]
-        .map(
-          ([itemId, value]): PlannerSummaryLeaf => ({
+        .map(([itemId, value]): PlannerSummaryLeaf => {
+          const inv = inventoryAmounts.value[itemId] ?? 0
+          // When deductRootInventory is true, value.amount is already net (after inventory claimed).
+          // Recover total: original = deducted + inventory claimed at root.
+          const total = options.deductRootInventory ? value.amount + inv : value.amount
+          const needed = options.deductRootInventory
+            ? value.amount
+            : Math.max(0, value.amount - inv)
+          return {
             itemId,
             itemName: value.itemName,
-            amount: value.amount,
-            stillNeeded: value.amount,
+            amount: total,
+            stillNeeded: needed,
             acquisitionKind: value.acquisitionKind,
-            inventoryAmount: inventoryAmounts.value[itemId] ?? 0,
-          }),
-        )
+            inventoryAmount: inv,
+          }
+        })
         .toSorted((a, b) => b.amount - a.amount),
     }
   })

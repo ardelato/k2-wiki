@@ -219,6 +219,8 @@ export interface ScheduledTask {
   endTime: number
   localTime: number
   depth: number
+  /** nodeIds of tasks that must complete before this task can start */
+  dependencies?: string[]
   passive?: {
     kind: 'machine' | 'fabrication'
     machineName?: string
