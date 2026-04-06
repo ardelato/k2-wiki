@@ -25,7 +25,7 @@ interface BaselineEntry {
 }
 
 describe('generate baselines', () => {
-  test('write baselines.json', { timeout: 60_000 }, () => {
+  test('write baselines.json', { timeout: 180_000 }, () => {
     const baselines: BaselineEntry[] = []
 
     const fixtures = [

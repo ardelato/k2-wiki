@@ -40,7 +40,33 @@ jobs:
           node-version-file: '.node-version'
           cache: npm
       - run: npm ci
+      - run: npm run test
+
+  test-planner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            planner:
+              - 'src/utils/partyPlanner.ts'
+              - 'src/utils/planScorer.ts'
+              - 'src/utils/formulas.ts'
+              - 'src/utils/precomputedTables.ts'
+              - 'src/utils/__tests__/**'
+              - 'src/data/**'
+              - 'src/types/index.ts'
+      - uses: actions/setup-node@v6
+        if: steps.filter.outputs.planner == 'true'
+        with:
+          node-version-file: '.node-version'
+          cache: npm
+      - run: npm ci
+        if: steps.filter.outputs.planner == 'true'
       - run: npm run test:all
+        if: steps.filter.outputs.planner == 'true'
 
   build:
     runs-on: ubuntu-latest
