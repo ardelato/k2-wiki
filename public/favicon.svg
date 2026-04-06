@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    rect { fill: #f5f6f8; }
+    text { fill: #151c2e; }
+    @media (prefers-color-scheme: dark) {
+      rect { fill: #0b0f19; }
+      text { fill: #e4e8ef; }
+    }
+  </style>
+  <rect width="32" height="32" rx="6"/>
+  <text x="16" y="22.5" text-anchor="middle" font-family="Manrope,system-ui,sans-serif" font-weight="800" font-size="18">K2</text>
+</svg>
