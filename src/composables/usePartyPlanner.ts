@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
-import { useExpeditionMaxTiers } from '@/composables/useExpeditionMaxTiers'
+import { useExpeditionTierSelections } from '@/composables/useExpeditionTierSelections'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type {
   PartyPlanCreature,
@@ -32,7 +32,7 @@ export function usePartyPlanner(
   const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
   const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
   const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
-  const { effectiveExpeditionMaxTiers } = useExpeditionMaxTiers()
+  const { effectiveExpeditionTierSelections } = useExpeditionTierSelections()
 
   function cachePrefix(): string {
     return `party-planner-cache-${strategy.value}-${timeBudget.value}`
@@ -133,11 +133,11 @@ export function usePartyPlanner(
         return `${id}:${party}:${tier}:${loops}`
       })
       .join('|')
-    const maxTiersKey = Object.entries(effectiveExpeditionMaxTiers.value)
+    const tierSelectionsKey = Object.entries(effectiveExpeditionTierSelections.value)
       .toSorted(([a], [b]) => a.localeCompare(b))
-      .map(([id, t]) => `${id}:${t}`)
+      .map(([id, tiers]) => `${id}:${tiers.join('+')}`)
       .join(',')
-    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${expeditionToolXpBonus.value}||${maxTiersKey}`
+    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${expeditionToolXpBonus.value}||${tierSelectionsKey}`
   }
 
   // Load cached plan immediately if available (all inputs are localStorage-backed so fingerprint is stable on init)
@@ -149,13 +149,13 @@ export function usePartyPlanner(
   }
 
   function buildPlannerInput(): PartyPlannerInput {
-    const maxTiers = effectiveExpeditionMaxTiers.value
+    const selections = effectiveExpeditionTierSelections.value
     return {
       creatures: partyCreatures.value,
       strategy: strategy.value,
       timeBudget: timeBudget.value,
       swordXpMultiplier: expeditionToolXpBonus.value,
-      expeditionMaxTiers: Object.keys(maxTiers).length > 0 ? maxTiers : undefined,
+      expeditionTierSelections: Object.keys(selections).length > 0 ? selections : undefined,
       expeditions: Object.fromEntries(
         Object.keys({
           ...expeditionParties.value,
@@ -225,8 +225,8 @@ export function usePartyPlanner(
     plan.value = cached && currentKey === cached.key ? cached.plan : null
   })
 
-  // Terminate in-flight workers when expedition max tier restrictions change
-  watch(effectiveExpeditionMaxTiers, () => {
+  // Terminate in-flight workers when expedition tier selections change
+  watch(effectiveExpeditionTierSelections, () => {
     cleanupWorker()
     isComputing.value = false
     progress.value = null
@@ -315,6 +315,6 @@ export function usePartyPlanner(
     progress,
     calculate,
     recalculate,
-    effectiveExpeditionMaxTiers,
+    effectiveExpeditionTierSelections,
   }
 }
