@@ -9,7 +9,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'e2e/**'
+              - 'index.html'
+              - 'vite.config.ts'
+              - 'tsconfig*.json'
+              - 'tailwind.config.ts'
+              - 'postcss.config.cjs'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'playwright.config.ts'
+              - '.github/workflows/**'
+
   lint:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -21,6 +46,8 @@ jobs:
       - run: npm run lint
 
   format:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -32,6 +59,8 @@ jobs:
       - run: npm run format:check
 
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -56,7 +85,13 @@ jobs:
               - 'src/utils/formulas.ts'
               - 'src/utils/precomputedTables.ts'
               - 'src/utils/__tests__/**'
-              - 'src/data/**'
+              - 'src/data/biomes.json'
+              - 'src/data/creatures.json'
+              - 'src/data/expeditions.json'
+              - 'src/data/defaults.ts'
+              - 'src/data/indexes.ts'
+              - 'src/data/precomputed/**'
+              - 'src/data/__tests__/**'
               - 'src/types/index.ts'
       - uses: actions/setup-node@v6
         if: steps.filter.outputs.planner == 'true'
@@ -69,6 +104,8 @@ jobs:
         if: steps.filter.outputs.planner == 'true'
 
   build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
