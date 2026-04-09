@@ -33,6 +33,9 @@ export function mergeSchedules(
         nodeId: `tree${i}/${task.nodeId}`,
         treeIndex: i,
         mergedDeps: (task.dependencies ?? []).map((dep) => `tree${i}/${dep}`),
+        ...(task.passive?.linkedNodeId && {
+          passive: { ...task.passive, linkedNodeId: `tree${i}/${task.passive.linkedNodeId}` },
+        }),
       })
     }
   }

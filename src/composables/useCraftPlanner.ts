@@ -1059,6 +1059,7 @@ function computeSchedule(
             outputAmount: source.outputAmount,
             produced,
             ratePerMin: (source.outputAmount / interval) * 60,
+            linkedNodeId: firstNodeIdByItem.get(itemId),
           },
         })
       }
@@ -1085,6 +1086,7 @@ function computeSchedule(
                 fabricationPoints: points,
                 produced,
                 ratePerMin: (points / 180) * 60,
+                linkedNodeId: firstNodeIdByItem.get(itemId),
               },
             })
           }

@@ -74,7 +74,7 @@ export function computePriorityWaves(
 
     for (const task of raw.tasks) {
       const dedupeKey = `${task.resource}:${task.itemName}`
-      const node = nodesById?.[task.nodeId]
+      const node = nodesById?.[task.passive?.linkedNodeId ?? task.nodeId]
       const taskAmount = node?.requiredAmount ?? task.passive?.produced ?? 0
 
       const existing = cardMap.get(dedupeKey)
