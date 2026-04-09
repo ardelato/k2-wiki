@@ -7,6 +7,7 @@ const tools = toolsData.tools as Tool[]
 const upgradeCosts = toolsData.upgradeCosts as ToolUpgradeCost[]
 const maxLevel = toolsData.maxLevel
 const xpBonusPerLevel = toolsData.xpBonusPerLevel
+const speedBonusPerLevel = (toolsData as any).speedBonusPerLevel ?? 2
 
 const toolById = new Map<string, Tool>()
 const toolBySkillId = new Map<string, Tool>()
@@ -36,6 +37,10 @@ export function useTools() {
     return level * xpBonusPerLevel
   }
 
+  function getSpeedBonus(level: number): number {
+    return level * speedBonusPerLevel
+  }
+
   return {
     tools,
     gatheringTools,
@@ -43,10 +48,12 @@ export function useTools() {
     otherTools,
     maxLevel,
     xpBonusPerLevel,
+    speedBonusPerLevel,
     upgradeCosts,
     getToolById,
     getToolBySkillId,
     getUpgradeCost,
     getXpBonus,
+    getSpeedBonus,
   }
 }

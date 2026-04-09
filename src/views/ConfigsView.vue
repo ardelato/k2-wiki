@@ -69,6 +69,7 @@ const {
   machineLevels,
   fabricationAllocations,
   setToolLevels,
+  setToolSpeedModes,
   resetToolLevels,
   setMachineLevels,
   setMachineRecipes,
@@ -649,6 +650,7 @@ function applyTools() {
   if (!saveConfig.value) return
   setExpeditionToolXpBonus(((saveConfig.value?.tools?.sword || 0) * 5) / 100 + 1)
   setToolLevels({ ...saveConfig.value.toolLevels })
+  setToolSpeedModes({ ...saveConfig.value.toolSpeedModes })
   appliedSections.value = { ...appliedSections.value, tools: true }
   sectionsCollapsed.value = { ...sectionsCollapsed.value, tools: true }
 }

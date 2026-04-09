@@ -121,5 +121,6 @@
     }
   ],
   "maxLevel": 10,
-  "xpBonusPerLevel": 5
+  "xpBonusPerLevel": 5,
+  "speedBonusPerLevel": 2
 }
