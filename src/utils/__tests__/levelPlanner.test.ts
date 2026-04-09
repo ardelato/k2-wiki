@@ -98,8 +98,8 @@ describe('planLevelingPath', () => {
   })
 })
 
-describe('planLevelingPath — expeditionMaxTiers filtering', () => {
-  test('plan without expeditionMaxTiers produces steps', () => {
+describe('planLevelingPath — expeditionTierSelections filtering', () => {
+  test('plan without expeditionTierSelections produces steps', () => {
     const plan = planLevelingPath({
       creature,
       startLevel: 1,
@@ -110,7 +110,7 @@ describe('planLevelingPath — expeditionMaxTiers filtering', () => {
     expect(plan.totalRuns).toBeGreaterThan(0)
   })
 
-  test('plan with empty expeditionMaxTiers applies no restrictions', () => {
+  test('plan with empty expeditionTierSelections applies no restrictions', () => {
     const unrestricted = planLevelingPath({
       creature,
       startLevel: 1,
@@ -122,23 +122,22 @@ describe('planLevelingPath — expeditionMaxTiers filtering', () => {
       startLevel: 1,
       targetLevel: 20,
       isAwakened: false,
-      expeditionMaxTiers: {},
+      expeditionTierSelections: {},
     })
     expect(withEmpty.steps.length).toBe(unrestricted.steps.length)
     expect(withEmpty.totalRuns).toBe(unrestricted.totalRuns)
   })
 
-  test('plan with expedition at max tier 0 excludes that expedition', () => {
+  test('plan with expedition at empty tiers excludes that expedition', () => {
     const excludedId = expeditions[0].id
-    const maxTiers: Record<string, number> = { [excludedId]: 0 }
-    // Leave all other expeditions unrestricted (default 5)
+    const tierSelections: Record<string, number[]> = { [excludedId]: [] }
 
     const plan = planLevelingPath({
       creature,
       startLevel: 1,
       targetLevel: 20,
       isAwakened: false,
-      expeditionMaxTiers: maxTiers,
+      expeditionTierSelections: tierSelections,
     })
 
     for (const step of plan.steps) {
@@ -146,11 +145,10 @@ describe('planLevelingPath — expeditionMaxTiers filtering', () => {
     }
   })
 
-  test('plan with max tier cap produces no steps exceeding that tier', () => {
-    // Cap all expeditions to tier 2
-    const maxTiers: Record<string, number> = {}
+  test('plan with tier selections [1, 2] produces no steps exceeding tier 2', () => {
+    const tierSelections: Record<string, number[]> = {}
     for (const exp of expeditions) {
-      maxTiers[exp.id] = 2
+      tierSelections[exp.id] = [1, 2]
     }
 
     const plan = planLevelingPath({
@@ -158,7 +156,7 @@ describe('planLevelingPath — expeditionMaxTiers filtering', () => {
       startLevel: 1,
       targetLevel: 20,
       isAwakened: false,
-      expeditionMaxTiers: maxTiers,
+      expeditionTierSelections: tierSelections,
     })
 
     expect(plan.steps.length).toBeGreaterThan(0)
@@ -167,10 +165,10 @@ describe('planLevelingPath — expeditionMaxTiers filtering', () => {
     }
   })
 
-  test('plan with all expeditions at tier 0 produces empty steps', () => {
-    const maxTiers: Record<string, number> = {}
+  test('plan with all expeditions at empty tiers produces empty steps', () => {
+    const tierSelections: Record<string, number[]> = {}
     for (const exp of expeditions) {
-      maxTiers[exp.id] = 0
+      tierSelections[exp.id] = []
     }
 
     const plan = planLevelingPath({
@@ -178,10 +176,56 @@ describe('planLevelingPath — expeditionMaxTiers filtering', () => {
       startLevel: 1,
       targetLevel: 20,
       isAwakened: false,
-      expeditionMaxTiers: maxTiers,
+      expeditionTierSelections: tierSelections,
     })
 
     expect(plan.steps).toHaveLength(0)
     expect(plan.totalRuns).toBe(0)
+  })
+
+  test('plan with only higher tiers [3, 4, 5] excludes lower tiers', () => {
+    const tierSelections: Record<string, number[]> = {}
+    for (const exp of expeditions) {
+      tierSelections[exp.id] = [3, 4, 5]
+    }
+
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 20,
+      isAwakened: false,
+      expeditionTierSelections: tierSelections,
+    })
+
+    expect(plan.steps.length).toBeGreaterThan(0)
+    for (const step of plan.steps) {
+      expect(step.tier).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  test('plan with mixed tier selections respects per-expedition choices', () => {
+    const firstExp = expeditions[0]
+    const secondExp = expeditions[1]
+    const tierSelections: Record<string, number[]> = {
+      [firstExp.id]: [1, 2],
+      [secondExp.id]: [4, 5],
+    }
+
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 20,
+      isAwakened: false,
+      expeditionTierSelections: tierSelections,
+    })
+
+    for (const step of plan.steps) {
+      if (step.expedition.id === firstExp.id) {
+        expect(step.tier).toBeLessThanOrEqual(2)
+      }
+      if (step.expedition.id === secondExp.id) {
+        expect(step.tier).toBeGreaterThanOrEqual(4)
+      }
+    }
   })
 })

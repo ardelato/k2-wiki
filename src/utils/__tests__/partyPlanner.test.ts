@@ -107,32 +107,26 @@ describe('edge cases', () => {
   })
 })
 
-// ── Expedition max tier filtering ──────────────────────────────────────
-describe('expedition max tier filtering', () => {
-  test(
-    'expeditionMaxTiers with tier 0 excludes expedition from plan steps',
-    { timeout: 120_000 },
-    () => {
-      const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
-      // Exclude the first expedition used in the fixture
-      const firstExpId = Object.keys(input.expeditions)[0]
-      input.expeditionMaxTiers = { [firstExpId]: 0 }
-
-      const plan = planPartyLevelingPath(input)
-      for (const step of plan.steps) {
-        expect(step.expedition.id).not.toBe(firstExpId)
-      }
-    },
-  )
-
-  test('expeditionMaxTiers caps tier in plan steps', { timeout: 120_000 }, () => {
+// ── Expedition tier selection filtering ──────────────────────────────────────
+describe('expedition tier selection filtering', () => {
+  test('empty tier selection excludes expedition from plan steps', { timeout: 120_000 }, () => {
     const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
-    // Cap all expeditions to tier 2
-    const maxTiers: Record<string, number> = {}
-    for (const exp of allExpeditions) {
-      maxTiers[exp.id] = 2
+    const firstExpId = Object.keys(input.expeditions)[0]
+    input.expeditionTierSelections = { [firstExpId]: [] }
+
+    const plan = planPartyLevelingPath(input)
+    for (const step of plan.steps) {
+      expect(step.expedition.id).not.toBe(firstExpId)
     }
-    input.expeditionMaxTiers = maxTiers
+  })
+
+  test('tier selections [1, 2] caps tier in plan steps', { timeout: 120_000 }, () => {
+    const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
+    const tierSelections: Record<string, number[]> = {}
+    for (const exp of allExpeditions) {
+      tierSelections[exp.id] = [1, 2]
+    }
+    input.expeditionTierSelections = tierSelections
 
     const plan = planPartyLevelingPath(input)
     for (const step of plan.steps) {
@@ -140,12 +134,26 @@ describe('expedition max tier filtering', () => {
     }
   })
 
-  test('empty expeditionMaxTiers applies no restrictions', { timeout: 120_000 }, () => {
+  test('empty expeditionTierSelections applies no restrictions', { timeout: 120_000 }, () => {
     const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
-    input.expeditionMaxTiers = {}
+    input.expeditionTierSelections = {}
 
     const plan = planPartyLevelingPath(input)
     expect(plan.steps.length).toBeGreaterThan(0)
+  })
+
+  test('only higher tiers [3, 4, 5] excludes lower tiers', { timeout: 120_000 }, () => {
+    const input = buildPlannerInput(collectionSmall, { strategy: 'optimal', timeBudget: 'quick' })
+    const tierSelections: Record<string, number[]> = {}
+    for (const exp of allExpeditions) {
+      tierSelections[exp.id] = [3, 4, 5]
+    }
+    input.expeditionTierSelections = tierSelections
+
+    const plan = planPartyLevelingPath(input)
+    for (const step of plan.steps) {
+      expect(step.tier).toBeGreaterThanOrEqual(3)
+    }
   })
 })
 
