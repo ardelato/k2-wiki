@@ -9,7 +9,7 @@ import { planLevelingPath, type LevelingPlan } from '@/utils/levelPlanner'
 export function useLevelPlanner(
   creatureId: Ref<string>,
   targetLevel: Ref<number>,
-  expeditionMaxTiers?: { value: Record<string, number> },
+  expeditionTierSelections?: { value: Record<string, number[]> },
 ) {
   const { creatures } = useCreatures()
   const { getLevel, isAwakened } = useCreatureCollection()
@@ -49,7 +49,7 @@ export function useLevelPlanner(
       targetLevel: targetLevel.value,
       isAwakened: awakened.value,
       swordXpMultiplier: expeditionToolXpBonus.value,
-      expeditionMaxTiers: expeditionMaxTiers?.value,
+      expeditionTierSelections: expeditionTierSelections?.value,
     })
   })
 

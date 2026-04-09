@@ -8,14 +8,14 @@ import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
   expeditions: Expedition[]
-  effectiveMaxTiers: Record<string, number>
-  overrides: Record<string, number>
+  effectiveTierSelections: Record<string, number[]>
+  overrides: Record<string, number[]>
   includeAll: boolean
 }>()
 
 
 const emit = defineEmits<{
-  'set-max-tier': [expeditionId: string, maxTier: number]
+  'toggle-tier': [expeditionId: string, tier: number]
   'remove-override': [expeditionId: string]
   'update:includeAll': [value: boolean]
   reset: []
@@ -35,37 +35,45 @@ const sorted = computed(() =>
 
 
 const includedCount = computed(
-  () => sorted.value.filter((e) => (props.effectiveMaxTiers[e.id] ?? 5) > 0).length,
+  () =>
+    sorted.value.filter((e) => (props.effectiveTierSelections[e.id] ?? [1, 2, 3, 4, 5]).length > 0)
+      .length,
 )
 
 
 const hasOverrides = computed(() => Object.keys(props.overrides).length > 0 || props.includeAll)
 
 
-function getMaxTier(expeditionId: string): number {
-  return props.effectiveMaxTiers[expeditionId] ?? 5
+function getSelectedTiers(expeditionId: string): number[] {
+  return props.effectiveTierSelections[expeditionId] ?? [1, 2, 3, 4, 5]
+}
+
+
+function isTierSelected(expeditionId: string, tier: number): boolean {
+  return getSelectedTiers(expeditionId).includes(tier)
+}
+
+
+function isExpeditionIncluded(expeditionId: string): boolean {
+  return getSelectedTiers(expeditionId).length > 0
 }
 
 
 function handleTierClick(expeditionId: string, tier: number) {
-  const currentMax = getMaxTier(expeditionId)
-  if (tier === currentMax) {
-    // Clicking the current max tier reduces it by 1 (0 = fully excluded)
-    emit('set-max-tier', expeditionId, tier - 1)
-  } else {
-    emit('set-max-tier', expeditionId, tier)
-  }
+  emit('toggle-tier', expeditionId, tier)
 }
 
 
 function handleRowClick(expeditionId: string) {
-  const currentMax = getMaxTier(expeditionId)
-  if (currentMax === 0) {
+  if (isExpeditionIncluded(expeditionId)) {
+    // Exclude entirely: toggle off all currently selected tiers
+    const selected = getSelectedTiers(expeditionId)
+    for (const tier of selected) {
+      emit('toggle-tier', expeditionId, tier)
+    }
+  } else {
     // Re-include: remove override to revert to default
     emit('remove-override', expeditionId)
-  } else {
-    // Exclude entirely
-    emit('set-max-tier', expeditionId, 0)
   }
 }
 </script>
@@ -138,12 +146,12 @@ function handleRowClick(expeditionId: string) {
           v-for="exp in sorted"
           :key="exp.id"
           class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-          :class="getMaxTier(exp.id) > 0 ? '' : 'opacity-50'"
+          :class="isExpeditionIncluded(exp.id) ? '' : 'opacity-50'"
         >
           <button
             class="focus-ring flex items-center gap-2 rounded text-left transition hover:opacity-80"
             :title="
-              getMaxTier(exp.id) > 0
+              isExpeditionIncluded(exp.id)
                 ? `${exp.name} — click to exclude`
                 : `${exp.name} — click to include`
             "
@@ -166,8 +174,8 @@ function handleRowClick(expeditionId: string) {
               v-for="t in 5"
               :key="t"
               class="focus-ring rounded-md px-1.5 py-1 transition hover:ring-1 hover:ring-foreground/20"
-              :class="t <= getMaxTier(exp.id) ? 'bg-emerald-500/15' : 'opacity-40 grayscale'"
-              :title="`Set max tier to T${t}`"
+              :class="isTierSelected(exp.id, t) ? 'bg-emerald-500/15' : 'opacity-40 grayscale'"
+              :title="`Toggle tier ${t}`"
               @click="handleTierClick(exp.id, t)"
             >
               <img
