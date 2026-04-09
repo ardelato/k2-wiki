@@ -32,11 +32,13 @@ describe('mergeSchedules', () => {
     expect(result.totalTime).toBe(0)
   })
 
-  test('returns single schedule unchanged', () => {
+  test('prefixes nodeIds for single schedule', () => {
     const task = makeTask({ nodeId: 'n1', resource: 'Mining' })
     const schedule = makeSchedule([task])
     const result = mergeSchedules([{ itemName: 'Iron', schedule }])
-    expect(result).toBe(schedule)
+    expect(result.tasks).toHaveLength(1)
+    expect(result.tasks[0].nodeId).toBe('tree0/n1')
+    expect(result.totalTime).toBe(schedule.totalTime)
   })
 
   test('queues shared resource tasks serially', () => {

@@ -23,10 +23,6 @@ export function mergeSchedules(
     return { tasks: [], resourceOrder: [], totalTime: 0, completionTimeByNode: {} }
   }
 
-  if (treeSchedules.length === 1) {
-    return treeSchedules[0].schedule
-  }
-
   // Collect all tasks, prefixing nodeIds with tree index to avoid collisions
   const allTasks: MergeTask[] = []
   for (let i = 0; i < treeSchedules.length; i++) {
