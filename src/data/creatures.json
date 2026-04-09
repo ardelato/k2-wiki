@@ -3482,7 +3482,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "poison-vial",
@@ -3533,7 +3533,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "coral",
@@ -3584,7 +3584,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -3635,7 +3635,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -3686,7 +3686,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "poison-vial",
@@ -3737,7 +3737,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "coral",
@@ -3788,7 +3788,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -3839,7 +3839,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "poison-vial",
@@ -3890,7 +3890,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "coral",
@@ -3941,7 +3941,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -3992,7 +3992,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -4043,7 +4043,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "poison-vial",
@@ -4094,7 +4094,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "coral",
@@ -4145,7 +4145,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -4196,7 +4196,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "poison-vial",
@@ -4247,7 +4247,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "coral",
@@ -4298,7 +4298,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -4349,7 +4349,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "poison-vial",
@@ -4400,7 +4400,7 @@
       },
       {
         "id": "cheeseburger",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "coral",
@@ -4451,7 +4451,7 @@
       },
       {
         "id": "carrot-cake",
-        "amount": 1400
+        "amount": 1300
       },
       {
         "id": "night-feather",
@@ -4502,7 +4502,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "artifact",
@@ -4553,7 +4553,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "skull",
@@ -4604,7 +4604,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -4655,7 +4655,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "artifact",
@@ -4706,7 +4706,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "skull",
@@ -4757,7 +4757,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -4808,7 +4808,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -4859,7 +4859,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "artifact",
@@ -4910,7 +4910,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "skull",
@@ -4961,7 +4961,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -5012,7 +5012,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "artifact",
@@ -5063,7 +5063,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "skull",
@@ -5114,7 +5114,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -5165,7 +5165,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "artifact",
@@ -5216,7 +5216,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "skull",
@@ -5267,7 +5267,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -5318,7 +5318,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "artifact",
@@ -5369,7 +5369,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "skull",
@@ -5420,7 +5420,7 @@
       },
       {
         "id": "meat-stew",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",
@@ -5471,7 +5471,7 @@
       },
       {
         "id": "fish-dinner",
-        "amount": 1800
+        "amount": 1500
       },
       {
         "id": "blood-vial",

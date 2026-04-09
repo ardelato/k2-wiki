@@ -67,6 +67,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
       <p class="mt-1 text-sm text-muted-foreground">
         Machines passively generate or process items when a creature is assigned. Upgrade them to
         increase speed.
+        <span class="font-semibold">Assigned creatures gain 0.5 XP/second passively.</span>
       </p>
     </div>
 

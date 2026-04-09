@@ -281,7 +281,7 @@ function buildPlannerGraph(
         }
       })
 
-      const speedReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.1
+      const speedReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.15
       const effectiveCraftTime = Math.max(
         recipe.craftTime * 0.01,
         recipe.craftTime * (1 - speedReduction),
@@ -326,7 +326,7 @@ function buildPlannerGraph(
             ? [
                 {
                   label: 'Speed Tier',
-                  value: `+${modifiers.awakenSpeedTiers[recipe.workstation] * 10}%`,
+                  value: `+${modifiers.awakenSpeedTiers[recipe.workstation] * 15}%`,
                 },
               ]
             : []),
