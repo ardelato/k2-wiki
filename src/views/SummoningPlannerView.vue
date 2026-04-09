@@ -10,7 +10,7 @@ import {
   GanttChart,
   GitBranch,
 } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoldRateBadge from '@/components/planner/GoldRateBadge.vue'
@@ -202,6 +202,12 @@ const groupedCosts = computed(() => {
 
 // --- Tree refs & inspector ---
 const treeRefs = ref<InstanceType<typeof SummoningMaterialTree>[]>([])
+watch(
+  () => sortedCosts.value.length,
+  (len) => {
+    treeRefs.value.splice(len)
+  },
+)
 const activeTreeIndex = ref<number | null>(null)
 
 
@@ -246,7 +252,8 @@ function handleOpenItemPlanner(itemId: string, quantity: number) {
 // --- Merged leaf items (shopping list) ---
 const mergedLeafItems = computed(() => {
   const merged = new Map<string, PlannerSummaryLeaf>()
-  for (const tree of treeRefs.value) {
+  for (let i = 0; i < sortedCosts.value.length; i++) {
+    const tree = treeRefs.value[i]
     if (!tree?.summary) continue
     for (const leaf of tree.summary.leafItems) {
       const existing = merged.get(leaf.itemId)
@@ -278,7 +285,8 @@ function formatAmount(value: number): string {
 // --- Aggregate summary ---
 const aggregateSummary = computed(() => {
   let totalCost = 0
-  for (const tree of treeRefs.value) {
+  for (let i = 0; i < sortedCosts.value.length; i++) {
+    const tree = treeRefs.value[i]
     if (!tree?.summary) continue
     totalCost += tree.summary.totalCost
   }
@@ -683,7 +691,8 @@ const conflictedCreatureIds = computed(() => {
 // --- Timeline tab computeds ---
 const mergedSchedule = computed(() => {
   const schedules: { itemName: string; schedule: import('@/types').PlannerSchedule }[] = []
-  for (const tree of treeRefs.value) {
+  for (let i = 0; i < sortedCosts.value.length; i++) {
+    const tree = treeRefs.value[i]
     if (!tree?.schedule || !tree?.rootNode) continue
     schedules.push({ itemName: tree.rootNode.itemName, schedule: tree.schedule })
   }
@@ -693,7 +702,7 @@ const mergedSchedule = computed(() => {
 
 const mergedNodesById = computed(() => {
   const merged: Record<string, PlannerNode> = {}
-  for (let i = 0; i < treeRefs.value.length; i++) {
+  for (let i = 0; i < sortedCosts.value.length; i++) {
     const tree = treeRefs.value[i]
     if (!tree?.nodesById) continue
     for (const [nodeId, node] of Object.entries(tree.nodesById)) {

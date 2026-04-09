@@ -57,6 +57,30 @@ test.describe('creature selection', () => {
   })
 })
 
+// ── Cost accuracy after toggling tiers ───────────────────────────────
+
+test.describe('cost accuracy', () => {
+  test('material count returns to original after toggling a second tier', async ({ page }) => {
+    // 1. Select tier 1 and capture the material count
+    await selectFirstTier(page)
+    await page.getByRole('button', { name: 'Summary' }).waitFor()
+    const materialsLabel = page.getByText(/\d+ materials/)
+    await expect(materialsLabel).toBeVisible()
+    const originalText = await materialsLabel.textContent()
+
+    // 2. Select tier 2 — material count may change
+    const selectButtons = page.getByRole('button', { name: 'Select all' })
+    await selectButtons.nth(1).click()
+    // Wait for the count to potentially update
+    await expect(materialsLabel).toBeVisible()
+
+    // 3. Deselect tier 2 — material count must return to the original
+    const deselectButtons = page.getByRole('button', { name: 'Deselect all' })
+    await deselectButtons.nth(1).click()
+    await expect(materialsLabel).toHaveText(originalText!)
+  })
+})
+
 // ── Sub-tab switching ───────────────────────────────────────────────
 
 test.describe('sub-tabs', () => {
