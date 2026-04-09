@@ -1,5 +1,5 @@
 import { useLocalStorage } from '@vueuse/core'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
@@ -297,6 +297,10 @@ export function usePartyPlanner(
       startWorker(inputKey)
     }, DEBOUNCE_MS)
   }
+
+  onBeforeUnmount(() => {
+    cleanupWorker()
+  })
 
   const summaries = computed(() => plan.value?.summaries ?? [])
   const totalTimeSeconds = computed(() => plan.value?.totalTimeSeconds ?? 0)
