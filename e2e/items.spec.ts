@@ -23,14 +23,14 @@ test.describe('search and filtering', () => {
     await expect(itemCards(page)).toHaveCount(1)
 
     await page.getByPlaceholder('Search items').fill('')
-    await expect(itemCards(page)).toHaveCount(197)
+    await expect(itemCards(page)).toHaveCount(192)
   })
 
   test('type filter narrows results', async ({ page }) => {
     await page.getByRole('radio', { name: 'Gathered' }).click()
 
     const count = await itemCards(page).count()
-    expect(count).toBe(122)
+    expect(count).toBe(118)
   })
 
   test('source category filter narrows results', async ({ page }) => {
@@ -38,7 +38,7 @@ test.describe('search and filtering', () => {
 
     const count = await itemCards(page).count()
     expect(count).toBeGreaterThan(0)
-    expect(count).toBeLessThan(197)
+    expect(count).toBeLessThan(192)
   })
 
   test('combined type + source narrows further', async ({ page }) => {
@@ -54,10 +54,10 @@ test.describe('search and filtering', () => {
   test('resetting type filter to All restores results', async ({ page }) => {
     await page.getByRole('radio', { name: 'Gathered' }).click()
     const filteredCount = await itemCards(page).count()
-    expect(filteredCount).toBeLessThan(197)
+    expect(filteredCount).toBeLessThan(192)
 
     await page.getByRole('radio', { name: 'Gathered' }).click()
-    await expect(itemCards(page)).toHaveCount(197)
+    await expect(itemCards(page)).toHaveCount(192)
   })
 })
 
@@ -65,12 +65,12 @@ test.describe('search and filtering', () => {
 
 test.describe('grid and table views', () => {
   test('default grid view renders item cards', async ({ page }) => {
-    await expect(itemCards(page)).toHaveCount(197)
+    await expect(itemCards(page)).toHaveCount(192)
   })
 
   test('switch to table renders rows', async ({ page }) => {
     await page.getByRole('radio', { name: 'Table' }).click()
-    await expect(page.locator('tbody tr')).toHaveCount(197)
+    await expect(page.locator('tbody tr')).toHaveCount(192)
   })
 
   test('default sort is name ascending', async ({ page }) => {

@@ -4,46 +4,45 @@
       "id": "stone-quarry",
       "name": "Stone Quarry",
       "description": "Passively generates stone over time.",
-      "image": "stone.webp",
       "cost": 100000,
       "machineType": "generator",
       "outputItemId": "stone",
       "baseInterval": 60,
       "requiresCreature": true,
       "creatureTypeRequired": null,
-      "recipes": []
+      "recipes": [],
+      "image": "stone.webp"
     },
     {
       "id": "stick-finder",
       "name": "Stick Finder",
       "description": "Passively generates twigs over time.",
-      "image": "twig.webp",
       "cost": 100000,
       "machineType": "generator",
       "outputItemId": "twig",
       "baseInterval": 60,
       "requiresCreature": true,
       "creatureTypeRequired": null,
-      "recipes": []
+      "recipes": [],
+      "image": "twig.webp"
     },
     {
       "id": "coal-miner",
       "name": "Coal Miner",
       "description": "Passively generates coal over time.",
-      "image": "coal.webp",
       "cost": 200000,
       "machineType": "generator",
       "outputItemId": "coal",
       "baseInterval": 60,
       "requiresCreature": true,
       "creatureTypeRequired": null,
-      "recipes": []
+      "recipes": [],
+      "image": "coal.webp"
     },
     {
       "id": "smelter",
       "name": "Smelter",
       "description": "Smelts ore without coal or hammers.",
-      "image": "furnace.webp",
       "cost": 400000,
       "machineType": "processor",
       "outputItemId": null,
@@ -111,13 +110,13 @@
           "outputItemId": "arcanum-bar",
           "outputAmount": 1
         }
-      ]
+      ],
+      "image": "furnace.webp"
     },
     {
       "id": "sawmill",
       "name": "Sawmill",
       "description": "Cuts logs into planks without a saw.",
-      "image": "workbench.webp",
       "cost": 400000,
       "machineType": "processor",
       "outputItemId": null,
@@ -137,7 +136,12 @@
           "outputItemId": "planks",
           "outputAmount": 1
         },
-        { "inputItemId": "oak-log", "inputAmount": 4, "outputItemId": "planks", "outputAmount": 1 },
+        {
+          "inputItemId": "oak-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
         {
           "inputItemId": "maple-log",
           "inputAmount": 4,
@@ -150,7 +154,12 @@
           "outputItemId": "planks",
           "outputAmount": 1
         },
-        { "inputItemId": "ash-log", "inputAmount": 4, "outputItemId": "planks", "outputAmount": 1 },
+        {
+          "inputItemId": "ash-log",
+          "inputAmount": 4,
+          "outputItemId": "planks",
+          "outputAmount": 1
+        },
         {
           "inputItemId": "spruce-log",
           "inputAmount": 4,
@@ -181,13 +190,13 @@
           "outputItemId": "planks",
           "outputAmount": 1
         }
-      ]
+      ],
+      "image": "workbench.webp"
     },
     {
       "id": "cooker",
       "name": "Cooker",
       "description": "Cooks meat without knives or charcoal.",
-      "image": "stove.webp",
       "cost": 400000,
       "machineType": "processor",
       "outputItemId": null,
@@ -200,14 +209,80 @@
           "inputAmount": 1,
           "outputItemId": "cooked-meat",
           "outputAmount": 1
+        },
+        {
+          "inputItemId": "minnow",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "trout",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "bass",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "walleye",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "salmon",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "carp",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "magical-carp",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "redfish",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "rainbow-fish",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "emberfish",
+          "inputAmount": 1,
+          "outputItemId": "cooked-fish",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "crab",
+          "inputAmount": 1,
+          "outputItemId": "cooked-crab",
+          "outputAmount": 1
         }
-      ]
+      ],
+      "image": "stove.webp"
     },
     {
       "id": "greenhouse",
       "name": "Greenhouse",
       "description": "Grows herbs and crops passively.",
-      "image": "farming.webp",
       "cost": 200000,
       "machineType": "processor",
       "outputItemId": null,
@@ -215,48 +290,103 @@
       "requiresCreature": true,
       "creatureTypeRequired": ["Earth"],
       "recipes": [
-        { "inputItemId": "basil", "inputAmount": 0, "outputItemId": "basil", "outputAmount": 1 },
+        {
+          "inputItemId": "basil",
+          "inputAmount": 0,
+          "outputItemId": "basil",
+          "outputAmount": 1
+        },
         {
           "inputItemId": "rosemary",
           "inputAmount": 0,
           "outputItemId": "rosemary",
           "outputAmount": 1
         },
-        { "inputItemId": "thyme", "inputAmount": 0, "outputItemId": "thyme", "outputAmount": 1 },
-        { "inputItemId": "grass", "inputAmount": 0, "outputItemId": "grass", "outputAmount": 1 },
-        { "inputItemId": "wheat", "inputAmount": 0, "outputItemId": "wheat", "outputAmount": 1 },
-        { "inputItemId": "carrot", "inputAmount": 0, "outputItemId": "carrot", "outputAmount": 1 },
-        { "inputItemId": "tomato", "inputAmount": 0, "outputItemId": "tomato", "outputAmount": 1 },
+        {
+          "inputItemId": "thyme",
+          "inputAmount": 0,
+          "outputItemId": "thyme",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "grass",
+          "inputAmount": 0,
+          "outputItemId": "grass",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "wheat",
+          "inputAmount": 0,
+          "outputItemId": "wheat",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "carrot",
+          "inputAmount": 0,
+          "outputItemId": "carrot",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "tomato",
+          "inputAmount": 0,
+          "outputItemId": "tomato",
+          "outputAmount": 1
+        },
         {
           "inputItemId": "lettuce",
           "inputAmount": 0,
           "outputItemId": "lettuce",
           "outputAmount": 1
         },
-        { "inputItemId": "potato", "inputAmount": 0, "outputItemId": "potato", "outputAmount": 1 },
-        { "inputItemId": "corn", "inputAmount": 0, "outputItemId": "corn", "outputAmount": 1 },
+        {
+          "inputItemId": "potato",
+          "inputAmount": 0,
+          "outputItemId": "potato",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "corn",
+          "inputAmount": 0,
+          "outputItemId": "corn",
+          "outputAmount": 1
+        },
         {
           "inputItemId": "eggplant",
           "inputAmount": 0,
           "outputItemId": "eggplant",
           "outputAmount": 1
         },
-        { "inputItemId": "onion", "inputAmount": 0, "outputItemId": "onion", "outputAmount": 1 },
-        { "inputItemId": "pepper", "inputAmount": 0, "outputItemId": "pepper", "outputAmount": 1 },
+        {
+          "inputItemId": "onion",
+          "inputAmount": 0,
+          "outputItemId": "onion",
+          "outputAmount": 1
+        },
+        {
+          "inputItemId": "pepper",
+          "inputAmount": 0,
+          "outputItemId": "pepper",
+          "outputAmount": 1
+        },
         {
           "inputItemId": "pineapple",
           "inputAmount": 0,
           "outputItemId": "pineapple",
           "outputAmount": 1
         },
-        { "inputItemId": "mango", "inputAmount": 0, "outputItemId": "mango", "outputAmount": 1 }
-      ]
+        {
+          "inputItemId": "mango",
+          "inputAmount": 0,
+          "outputItemId": "mango",
+          "outputAmount": 1
+        }
+      ],
+      "image": "farming.webp"
     },
     {
       "id": "bakery",
       "name": "Bakery",
       "description": "Bakes bread from flour and eggs.",
-      "image": "bread.webp",
       "cost": 600000,
       "machineType": "processor",
       "outputItemId": null,
@@ -265,6 +395,14 @@
       "creatureTypeRequired": ["Water"],
       "recipes": [
         {
+          "inputItemId": "wheat",
+          "inputAmount": 4,
+          "secondaryInputItemId": "leather",
+          "secondaryInputAmount": 1,
+          "outputItemId": "flour",
+          "outputAmount": 1
+        },
+        {
           "inputItemId": "flour",
           "inputAmount": 2,
           "secondaryInputItemId": "egg",
@@ -272,13 +410,13 @@
           "outputItemId": "bread",
           "outputAmount": 1
         }
-      ]
+      ],
+      "image": "bread.webp"
     },
     {
       "id": "refinery",
       "name": "Refinery",
       "description": "Refines essences quicker in all forms.",
-      "image": "refinery.webp",
       "cost": 800000,
       "machineType": "processor",
       "outputItemId": null,
@@ -342,21 +480,62 @@
           "outputItemId": "wind-stone",
           "outputAmount": 1
         }
-      ]
+      ],
+      "image": "refinery.webp"
     }
   ],
   "upgradeCosts": [
-    { "barId": "copper-bar", "barAmount": 100, "planksAmount": 100 },
-    { "barId": "tin-bar", "barAmount": 200, "planksAmount": 200 },
-    { "barId": "iron-bar", "barAmount": 300, "planksAmount": 300 },
-    { "barId": "silver-bar", "barAmount": 400, "planksAmount": 400 },
-    { "barId": "gold-bar", "barAmount": 500, "planksAmount": 500 },
-    { "barId": "platinum-bar", "barAmount": 600, "planksAmount": 600 },
-    { "barId": "adamantite-bar", "barAmount": 700, "planksAmount": 700 },
-    { "barId": "runic-bar", "barAmount": 800, "planksAmount": 800 },
-    { "barId": "solarite-bar", "barAmount": 900, "planksAmount": 900 },
-    { "barId": "arcanum-bar", "barAmount": 1000, "planksAmount": 1000 }
+    {
+      "barId": "copper-bar",
+      "barAmount": 100,
+      "planksAmount": 100
+    },
+    {
+      "barId": "tin-bar",
+      "barAmount": 200,
+      "planksAmount": 200
+    },
+    {
+      "barId": "iron-bar",
+      "barAmount": 300,
+      "planksAmount": 300
+    },
+    {
+      "barId": "silver-bar",
+      "barAmount": 400,
+      "planksAmount": 400
+    },
+    {
+      "barId": "gold-bar",
+      "barAmount": 500,
+      "planksAmount": 500
+    },
+    {
+      "barId": "platinum-bar",
+      "barAmount": 600,
+      "planksAmount": 600
+    },
+    {
+      "barId": "adamantite-bar",
+      "barAmount": 700,
+      "planksAmount": 700
+    },
+    {
+      "barId": "runic-bar",
+      "barAmount": 800,
+      "planksAmount": 800
+    },
+    {
+      "barId": "solarite-bar",
+      "barAmount": 900,
+      "planksAmount": 900
+    },
+    {
+      "barId": "arcanum-bar",
+      "barAmount": 1000,
+      "planksAmount": 1000
+    }
   ],
-  "speedMultipliers": [1.0, 0.9, 0.8, 0.72, 0.64, 0.56, 0.5, 0.44, 0.38, 0.33, 0.28],
+  "speedMultipliers": [1, 0.9, 0.8, 0.72, 0.64, 0.56, 0.5, 0.44, 0.38, 0.33, 0.28],
   "maxLevel": 10
 }

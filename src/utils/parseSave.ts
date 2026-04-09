@@ -48,6 +48,7 @@ export interface SaveConfig {
   creatures: SaveCreature[]
   tools?: { sword?: number }
   toolLevels: Record<string, number>
+  toolSpeedModes: Record<string, boolean>
   machineLevels: Record<string, number>
   machineRecipes: Record<string, string | null>
   fabricationAllocations: Record<string, number>
@@ -94,6 +95,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
 
   const tools = save.tools || {}
   const toolLevels = parseToolLevels(save)
+  const toolSpeedModes = parseToolSpeedModes(save)
   const expeditionCompletions = parseExpeditionCompletions(save)
   const { machineLevels, machineRecipes } = parseMachineDetails(save)
   const fabricationAllocations = parseFabricationAllocations(save)
@@ -113,6 +115,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     creatures,
     tools,
     toolLevels,
+    toolSpeedModes,
     machineLevels,
     machineRecipes,
     fabricationAllocations,
@@ -323,6 +326,17 @@ function parseToolLevels(save: Record<string, unknown>): Record<string, number> 
   for (const [toolId, level] of Object.entries(tools as Record<string, unknown>)) {
     if (typeof level === 'number' && level > 0) {
       result[toolId] = level
+    }
+  }
+  return result
+}
+
+function parseToolSpeedModes(save: Record<string, unknown>): Record<string, boolean> {
+  const result: Record<string, boolean> = {}
+  for (const ws of ['furnace', 'stove', 'workbench']) {
+    const wsState = save[ws]
+    if (wsState && typeof wsState === 'object' && 'speedMode' in wsState) {
+      result[ws.charAt(0).toUpperCase() + ws.slice(1)] = !!(wsState as any).speedMode
     }
   }
   return result

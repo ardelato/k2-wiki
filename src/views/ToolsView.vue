@@ -14,12 +14,14 @@ const {
   otherTools,
   maxLevel,
   xpBonusPerLevel,
+  speedBonusPerLevel,
   upgradeCosts,
   getXpBonus,
+  getSpeedBonus,
 } = useTools()
 
 
-const { toolLevels } = useGameConfig()
+const { toolLevels, toolSpeedModes } = useGameConfig()
 
 
 function getToolLevel(toolId: string): number {
@@ -45,6 +47,11 @@ const toolGroups = computed(() => [
         Tools provide an XP bonus to their associated skill. Each level grants +{{
           xpBonusPerLevel
         }}% XP (up to +{{ maxLevel * xpBonusPerLevel }}% at level {{ maxLevel }}).
+        <span class="font-semibold"
+          >Workstation tools can be toggled to Speed mode, granting +{{ speedBonusPerLevel }}%
+          crafting speed per level instead (up to +{{ maxLevel * speedBonusPerLevel }}% at level
+          {{ maxLevel }}).</span
+        >
       </p>
     </div>
 
@@ -98,6 +105,23 @@ const toolGroups = computed(() => [
                   +{{ getXpBonus(getToolLevel(tool.id)) }}%
                 </span>
               </div>
+              <template v-if="tool.category === 'workstation'">
+                <div class="flex items-center justify-between">
+                  <span class="text-muted-foreground">Speed Mode</span>
+                  <span
+                    class="font-semibold"
+                    :class="
+                      toolSpeedModes[tool.skillId] ? 'text-emerald-400' : 'text-muted-foreground'
+                    "
+                  >
+                    {{
+                      toolSpeedModes[tool.skillId]
+                        ? `+${getSpeedBonus(getToolLevel(tool.id))}%`
+                        : 'Off'
+                    }}
+                  </span>
+                </div>
+              </template>
               <!-- Progress bar -->
               <div class="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
@@ -122,6 +146,12 @@ const toolGroups = computed(() => [
               <th class="px-4 py-2.5 text-left font-semibold">Bar Required</th>
               <th class="px-4 py-2.5 text-right font-semibold">Amount</th>
               <th class="px-4 py-2.5 text-right font-semibold">XP Bonus</th>
+              <th class="px-4 py-2.5 text-right font-semibold">
+                Speed Bonus
+                <span class="block text-xs font-normal text-muted-foreground"
+                  >Workstation only</span
+                >
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -145,6 +175,7 @@ const toolGroups = computed(() => [
               </td>
               <td class="px-4 py-2 text-right">{{ cost.amount }}</td>
               <td class="px-4 py-2 text-right">+{{ getXpBonus(index + 1) }}%</td>
+              <td class="px-4 py-2 text-right">+{{ getSpeedBonus(index + 1) }}%</td>
             </tr>
           </tbody>
         </table>

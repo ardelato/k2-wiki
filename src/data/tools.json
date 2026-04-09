@@ -4,7 +4,6 @@
       "id": "axe",
       "name": "Axe",
       "description": "Increases Chopping experience gained.",
-      "image": "icons/axe.png",
       "skillId": "Chopping",
       "category": "gathering"
     },
@@ -12,7 +11,6 @@
       "id": "pickaxe",
       "name": "Pickaxe",
       "description": "Increases Mining experience gained.",
-      "image": "icons/pickaxe.png",
       "skillId": "Mining",
       "category": "gathering"
     },
@@ -20,7 +18,6 @@
       "id": "machete",
       "name": "Machete",
       "description": "Increases Exploring experience gained.",
-      "image": "icons/machete.png",
       "skillId": "Exploring",
       "category": "gathering"
     },
@@ -28,7 +25,6 @@
       "id": "shovel",
       "name": "Shovel",
       "description": "Increases Digging experience gained.",
-      "image": "icons/shovel.png",
       "skillId": "Digging",
       "category": "gathering"
     },
@@ -36,7 +32,6 @@
       "id": "fishing-pole",
       "name": "Pole",
       "description": "Increases Fishing experience gained.",
-      "image": "icons/fishing-pole.png",
       "skillId": "Fishing",
       "category": "gathering"
     },
@@ -44,7 +39,6 @@
       "id": "pitchfork",
       "name": "Pitchfork",
       "description": "Increases Farming experience gained.",
-      "image": "icons/farmin.png",
       "skillId": "Farming",
       "category": "gathering"
     },
@@ -52,7 +46,6 @@
       "id": "sword",
       "name": "Sword",
       "description": "Increases Expedition experience gained.",
-      "image": "icons/expedition.png",
       "skillId": "Expeditions",
       "category": "other"
     },
@@ -60,7 +53,6 @@
       "id": "staff",
       "name": "Staff",
       "description": "Increases Helper experience gained.",
-      "image": "icons/staff.png",
       "skillId": "Helpers",
       "category": "other"
     },
@@ -68,7 +60,6 @@
       "id": "hammer",
       "name": "Hammer",
       "description": "Increases Furnace experience gained.",
-      "image": "items/hammer.png",
       "skillId": "Furnace",
       "category": "workstation"
     },
@@ -76,7 +67,6 @@
       "id": "saw",
       "name": "Saw",
       "description": "Increases Workbench experience gained.",
-      "image": "items/saw.png",
       "skillId": "Workbench",
       "category": "workstation"
     },
@@ -84,23 +74,53 @@
       "id": "knife",
       "name": "Knife",
       "description": "Increases Stove experience gained.",
-      "image": "items/knife.png",
       "skillId": "Stove",
       "category": "workstation"
     }
   ],
   "upgradeCosts": [
-    { "barId": "copper-bar", "amount": 50 },
-    { "barId": "tin-bar", "amount": 100 },
-    { "barId": "iron-bar", "amount": 150 },
-    { "barId": "silver-bar", "amount": 200 },
-    { "barId": "gold-bar", "amount": 250 },
-    { "barId": "platinum-bar", "amount": 300 },
-    { "barId": "adamantite-bar", "amount": 350 },
-    { "barId": "runic-bar", "amount": 400 },
-    { "barId": "solarite-bar", "amount": 450 },
-    { "barId": "arcanum-bar", "amount": 500 }
+    {
+      "barId": "copper-bar",
+      "amount": 50
+    },
+    {
+      "barId": "tin-bar",
+      "amount": 100
+    },
+    {
+      "barId": "iron-bar",
+      "amount": 150
+    },
+    {
+      "barId": "silver-bar",
+      "amount": 200
+    },
+    {
+      "barId": "gold-bar",
+      "amount": 250
+    },
+    {
+      "barId": "platinum-bar",
+      "amount": 300
+    },
+    {
+      "barId": "adamantite-bar",
+      "amount": 350
+    },
+    {
+      "barId": "runic-bar",
+      "amount": 400
+    },
+    {
+      "barId": "solarite-bar",
+      "amount": 450
+    },
+    {
+      "barId": "arcanum-bar",
+      "amount": 500
+    }
   ],
   "maxLevel": 10,
-  "xpBonusPerLevel": 5
+  "xpBonusPerLevel": 5,
+  "speedBonusPerLevel": 2
 }

@@ -73,7 +73,8 @@
     "type": "Gathered",
     "sources": ["chopping"],
     "description": "A small twig, left behind by a tree. Found while Chopping.",
-    "recipes": []
+    "recipes": [],
+    "buyValue": 150
   },
   {
     "id": "pine-log",
@@ -213,7 +214,8 @@
     "type": "Gathered",
     "sources": ["digging", "mining"],
     "description": "Found while Mining.",
-    "recipes": []
+    "recipes": [],
+    "buyValue": 150
   },
   {
     "id": "copper-ore",
@@ -1003,7 +1005,8 @@
     "type": "Gathered",
     "sources": ["farming"],
     "description": "Found while Farming.",
-    "recipes": []
+    "recipes": [],
+    "buyValue": 150
   },
   {
     "id": "carrot",
@@ -1142,7 +1145,7 @@
     "name": "Cooked Meat",
     "type": "Refined",
     "sources": ["backpack", "crafting_stove"],
-    "description": "Cooked meat from raw meat.",
+    "description": "Meat that has been cooked.",
     "recipes": [
       {
         "workstation": "Stove",
@@ -1173,7 +1176,7 @@
     "name": "Cooked Fish",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "description": "Cooked fish from raw fish.",
+    "description": "Fish that has been cooked.",
     "recipes": [
       {
         "workstation": "Stove",
@@ -1432,7 +1435,7 @@
     "name": "Cooked Meat Chunks",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "description": "Cut up meat into chunks",
+    "description": "Cut up pieces of cooked meat.",
     "recipes": [
       {
         "workstation": "Stove",
@@ -1448,8 +1451,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 32,
-        "experience": 32
+        "craftTime": 24,
+        "experience": 24
       }
     ],
     "sellValue": 10
@@ -1479,8 +1482,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 64,
-        "experience": 80
+        "craftTime": 48,
+        "experience": 60
       }
     ],
     "sellValue": 125
@@ -1490,7 +1493,7 @@
     "name": "Meat Stew",
     "type": "Refined",
     "sources": ["crafting_stove"],
-    "description": "Cooked meat from raw meat stew.",
+    "description": "Stew made with meat and veggies. Smells delicious.",
     "recipes": [
       {
         "workstation": "Stove",
@@ -1502,7 +1505,7 @@
           },
           {
             "id": "veggie-mix",
-            "amount": 2
+            "amount": 1
           },
           {
             "id": "spices",
@@ -1518,8 +1521,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 256,
-        "experience": 1536
+        "craftTime": 96,
+        "experience": 576
       }
     ],
     "sellValue": 235,
@@ -1558,8 +1561,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 256,
-        "experience": 1536
+        "craftTime": 96,
+        "experience": 576
       }
     ],
     "sellValue": 235
@@ -1589,8 +1592,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 32,
-        "experience": 40
+        "craftTime": 24,
+        "experience": 30
       }
     ],
     "sellValue": 25
@@ -1726,8 +1729,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 64,
-        "experience": 128
+        "craftTime": 48,
+        "experience": 96
       }
     ],
     "sellValue": 125
@@ -1765,8 +1768,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 512
+        "craftTime": 48,
+        "experience": 192
       }
     ],
     "sellValue": 380
@@ -2060,8 +2063,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 256,
-        "experience": 896
+        "craftTime": 64,
+        "experience": 224
       }
     ],
     "sellValue": 600,
@@ -2740,12 +2743,12 @@
         "ingredients": [
           {
             "id": "hide",
-            "amount": 2
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 64,
-        "experience": 80
+        "craftTime": 32,
+        "experience": 40
       }
     ]
   },
@@ -2841,12 +2844,12 @@
     "id": "helmet",
     "name": "Helmet",
     "type": "Refined",
-    "sources": ["armor-crate", "crafting_workbench"],
+    "sources": ["armor-crate", "crafting_furnace", "crafting_workbench"],
     "description": "Metal helmet to protect your noggin",
     "recipes": [
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2854,16 +2857,16 @@
           },
           {
             "id": "copper-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 96
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2871,16 +2874,16 @@
           },
           {
             "id": "tin-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 105.6
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2888,16 +2891,16 @@
           },
           {
             "id": "iron-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 115.2
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2905,16 +2908,16 @@
           },
           {
             "id": "silver-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 124.8
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2922,16 +2925,16 @@
           },
           {
             "id": "gold-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 134.4
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2939,16 +2942,16 @@
           },
           {
             "id": "platinum-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 144
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2956,16 +2959,16 @@
           },
           {
             "id": "adamantite-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 153.6
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2973,16 +2976,16 @@
           },
           {
             "id": "runic-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 163.2
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -2990,16 +2993,16 @@
           },
           {
             "id": "solarite-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 172.8
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3007,12 +3010,182 @@
           },
           {
             "id": "arcanum-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 128,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 182.4
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "copper-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 96
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "tin-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 105.6
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "iron-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 115.2
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "silver-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 124.8
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "gold-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 134.4
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "platinum-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 144
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "adamantite-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 153.6
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "runic-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 163.2
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "solarite-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 172.8
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "arcanum-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 182.4
       }
     ]
   },
@@ -3020,12 +3193,12 @@
     "id": "chestplate",
     "name": "Chestplate",
     "type": "Refined",
-    "sources": ["armor-crate", "crafting_workbench"],
+    "sources": ["armor-crate", "crafting_furnace", "crafting_workbench"],
     "description": "Metal chestplate to protect your body",
     "recipes": [
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3033,16 +3206,16 @@
           },
           {
             "id": "copper-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 96
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3050,16 +3223,16 @@
           },
           {
             "id": "tin-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 105.6
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3067,16 +3240,16 @@
           },
           {
             "id": "iron-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 115.2
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3084,16 +3257,16 @@
           },
           {
             "id": "silver-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 124.8
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3101,16 +3274,16 @@
           },
           {
             "id": "gold-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 134.4
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3118,16 +3291,16 @@
           },
           {
             "id": "platinum-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 144
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3135,16 +3308,16 @@
           },
           {
             "id": "adamantite-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 153.6
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3152,16 +3325,16 @@
           },
           {
             "id": "runic-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 163.2
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3169,16 +3342,16 @@
           },
           {
             "id": "solarite-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 172.8
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3186,12 +3359,182 @@
           },
           {
             "id": "arcanum-bar",
-            "amount": 32
+            "amount": 2
           }
         ],
         "outputAmount": 1,
-        "craftTime": 160,
-        "experience": 480
+        "craftTime": 32,
+        "experience": 182.4
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "copper-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 96
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "tin-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 105.6
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "iron-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 115.2
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "silver-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 124.8
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "gold-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 134.4
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "platinum-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 144
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "adamantite-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 153.6
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "runic-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 163.2
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "solarite-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 172.8
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "arcanum-bar",
+            "amount": 2
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 182.4
       }
     ]
   },
@@ -3199,12 +3542,12 @@
     "id": "boots",
     "name": "Boots",
     "type": "Refined",
-    "sources": ["armor-crate", "crafting_workbench"],
+    "sources": ["armor-crate", "crafting_furnace", "crafting_workbench"],
     "description": "Metal boots to protect your toes from stubbing",
     "recipes": [
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3212,16 +3555,16 @@
           },
           {
             "id": "copper-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 96
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3229,16 +3572,16 @@
           },
           {
             "id": "tin-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 105.6
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3246,16 +3589,16 @@
           },
           {
             "id": "iron-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 115.2
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3263,16 +3606,16 @@
           },
           {
             "id": "silver-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 124.8
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3280,16 +3623,16 @@
           },
           {
             "id": "gold-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 134.4
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3297,16 +3640,16 @@
           },
           {
             "id": "platinum-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 144
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3314,16 +3657,16 @@
           },
           {
             "id": "adamantite-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 153.6
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3331,16 +3674,16 @@
           },
           {
             "id": "runic-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 163.2
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3348,16 +3691,16 @@
           },
           {
             "id": "solarite-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 172.8
       },
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "hammer",
@@ -3365,12 +3708,182 @@
           },
           {
             "id": "arcanum-bar",
-            "amount": 16
+            "amount": 1
           }
         ],
         "outputAmount": 1,
-        "craftTime": 120,
-        "experience": 384
+        "craftTime": 32,
+        "experience": 182.4
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "copper-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 96
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "tin-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 105.6
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "iron-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 115.2
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "silver-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 124.8
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "gold-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 134.4
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "platinum-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 144
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "adamantite-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 153.6
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "runic-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 163.2
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "solarite-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 172.8
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "hammer",
+            "amount": 1
+          },
+          {
+            "id": "arcanum-bar",
+            "amount": 1
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 182.4
       }
     ]
   },
@@ -3378,12 +3891,12 @@
     "id": "armor-set",
     "name": "Armor Set",
     "type": "Refined",
-    "sources": ["armor-crate", "crafting_workbench"],
+    "sources": ["armor-crate", "crafting_furnace", "crafting_workbench"],
     "description": "Everything you could need for a dungeon",
     "recipes": [
       {
-        "workstation": "Workbench",
-        "levelRequirement": 50,
+        "workstation": "Furnace",
+        "levelRequirement": 10,
         "ingredients": [
           {
             "id": "helmet",
@@ -3399,11 +3912,32 @@
           },
           {
             "id": "planks",
-            "amount": 16
+            "amount": 4
+          }
+        ],
+        "outputAmount": 1,
+        "craftTime": 32,
+        "experience": 64
+      },
+      {
+        "workstation": "Workbench",
+        "levelRequirement": 10,
+        "ingredients": [
+          {
+            "id": "helmet",
+            "amount": 1
           },
           {
-            "id": "hammer",
+            "id": "chestplate",
             "amount": 1
+          },
+          {
+            "id": "boots",
+            "amount": 1
+          },
+          {
+            "id": "planks",
+            "amount": 4
           }
         ],
         "outputAmount": 1,
@@ -3488,14 +4022,6 @@
       }
     ],
     "buyValue": 7500
-  },
-  {
-    "id": "dungeon-key",
-    "name": "Dungeon Key",
-    "type": "Refined",
-    "sources": [],
-    "description": "A key used to unlock a dungeon.",
-    "recipes": []
   },
   {
     "id": "earth-stone",
@@ -3634,26 +4160,16 @@
     "type": "Currency",
     "sources": [],
     "description": "Description to be written...",
-    "recipes": [],
-    "image": "awaken-points.png"
+    "recipes": []
   },
   {
     "id": "prestige-points",
-    "name": "Awaken Points",
+    "name": "Prestige Points",
     "type": "Currency",
     "sources": [],
     "description": "Description to be written...",
     "recipes": [],
-    "image": "prestige-points.png"
-  },
-  {
-    "id": "Dirt Credits",
-    "name": "Dirt Credits",
-    "type": "Currency",
-    "sources": [],
-    "description": "Description to be written...",
-    "recipes": [],
-    "image": "dirt-credits.png"
+    "sellValue": 10000
   },
   {
     "id": "fire-flower",
@@ -3764,6 +4280,16 @@
     "recipes": [],
     "buyValue": 250000,
     "image": "awaken-potion.png"
+  },
+  {
+    "id": "offline-progress-potion",
+    "name": "One Hour Offline Potion",
+    "type": "Consumable",
+    "sources": [],
+    "description": "A potion that simulates 1 hour of offline progress instantly. Can be bought at the Merchant.",
+    "recipes": [],
+    "buyValue": 100000,
+    "image": "offline-potion.png"
   },
   {
     "id": "knowledge-orb",
@@ -3993,38 +4519,6 @@
         "experience": 256
       }
     ]
-  },
-  {
-    "id": "water-rune",
-    "name": "Water Rune",
-    "type": "Gathered",
-    "sources": [],
-    "description": "A powerful rune extracted from the depths of dungeons.",
-    "recipes": []
-  },
-  {
-    "id": "earth-rune",
-    "name": "Earth Rune",
-    "type": "Gathered",
-    "sources": [],
-    "description": "A powerful rune extracted from the depths of dungeons.",
-    "recipes": []
-  },
-  {
-    "id": "fire-rune",
-    "name": "Fire Rune",
-    "type": "Gathered",
-    "sources": [],
-    "description": "A powerful rune extracted from the depths of dungeons.",
-    "recipes": []
-  },
-  {
-    "id": "wind-rune",
-    "name": "Wind Rune",
-    "type": "Gathered",
-    "sources": [],
-    "description": "A powerful rune extracted from the depths of dungeons.",
-    "recipes": []
   },
   {
     "id": "infinity-stone",

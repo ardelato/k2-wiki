@@ -32,6 +32,7 @@ const expeditionCompletions = useLocalStorage<Record<string, Record<number, numb
   {},
 )
 const toolLevels = useLocalStorage<Record<string, number>>('config-tool-levels', {})
+const toolSpeedModes = useLocalStorage<Record<string, boolean>>('config-tool-speed-modes', {})
 const machineLevels = useLocalStorage<Record<string, number>>('config-machine-levels', {})
 const machineRecipes = useLocalStorage<Record<string, string | null>>('config-machine-recipes', {})
 const fabricationAllocations = useLocalStorage<Record<string, number>>(
@@ -129,6 +130,11 @@ export function useGameConfig() {
 
   function resetToolLevels() {
     toolLevels.value = {}
+    toolSpeedModes.value = {}
+  }
+
+  function setToolSpeedModes(modes: Record<string, boolean>) {
+    toolSpeedModes.value = modes
   }
 
   function setMachineLevels(levels: Record<string, number>) {
@@ -183,6 +189,7 @@ export function useGameConfig() {
     awakenSpeedTiers,
     expeditionCompletions,
     toolLevels,
+    toolSpeedModes,
     machineLevels,
     machineRecipes,
     fabricationAllocations,
@@ -199,6 +206,7 @@ export function useGameConfig() {
     setAwakenSpeedTier,
     resetAwaken,
     setToolLevels,
+    setToolSpeedModes,
     resetToolLevels,
     setMachineLevels,
     setMachineRecipes,
