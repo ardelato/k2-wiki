@@ -702,12 +702,15 @@ const mergedSchedule = computed(() => {
 
 const mergedNodesById = computed(() => {
   const merged: Record<string, PlannerNode> = {}
-  for (let i = 0; i < sortedCosts.value.length; i++) {
-    const tree = treeRefs.value[i]
-    if (!tree?.nodesById) continue
-    for (const [nodeId, node] of Object.entries(tree.nodesById)) {
-      merged[`tree${i}/${nodeId}`] = node
+  let treeIndex = 0
+  for (const tree of treeRefs.value) {
+    if (!tree?.schedule || !tree?.rootNode) continue
+    if (tree.nodesById) {
+      for (const [nodeId, node] of Object.entries(tree.nodesById)) {
+        merged[`tree${treeIndex}/${nodeId}`] = node
+      }
     }
+    treeIndex++
   }
   return merged
 })

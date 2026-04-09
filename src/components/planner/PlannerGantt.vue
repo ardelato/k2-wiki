@@ -128,7 +128,8 @@ function closePopover() {
 
 const activeTaskNode = computed(() => {
   if (!activeTask.value) return null
-  return props.nodesById[activeTask.value.nodeId] ?? null
+  const task = activeTask.value
+  return props.nodesById[task.passive?.linkedNodeId ?? task.nodeId] ?? null
 })
 </script>
 
@@ -243,11 +244,19 @@ const activeTaskNode = computed(() => {
             />
             <span class="truncate">{{ task.itemName }}</span>
             <span
-              v-if="(nodesById[task.nodeId]?.requiredAmount ?? task.passive?.produced ?? 0) > 0"
+              v-if="
+                (nodesById[task.passive?.linkedNodeId ?? task.nodeId]?.requiredAmount ??
+                  task.passive?.produced ??
+                  0) > 0
+              "
               class="shrink-0 font-mono text-[10px] opacity-70"
               >×{{
                 humanAmount(
-                  Math.round(nodesById[task.nodeId]?.requiredAmount ?? task.passive?.produced ?? 0),
+                  Math.round(
+                    nodesById[task.passive?.linkedNodeId ?? task.nodeId]?.requiredAmount ??
+                      task.passive?.produced ??
+                      0,
+                  ),
                 )
               }}</span
             >

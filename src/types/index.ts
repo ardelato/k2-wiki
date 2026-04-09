@@ -232,6 +232,8 @@ export interface ScheduledTask {
     produced: number
     ratePerMin: number
     fabricationPoints?: number
+    /** nodeId of the tree node this passive task supplements */
+    linkedNodeId?: string
   }
 }
 

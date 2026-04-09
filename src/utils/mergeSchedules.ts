@@ -23,10 +23,6 @@ export function mergeSchedules(
     return { tasks: [], resourceOrder: [], totalTime: 0, completionTimeByNode: {} }
   }
 
-  if (treeSchedules.length === 1) {
-    return treeSchedules[0].schedule
-  }
-
   // Collect all tasks, prefixing nodeIds with tree index to avoid collisions
   const allTasks: MergeTask[] = []
   for (let i = 0; i < treeSchedules.length; i++) {
@@ -37,6 +33,9 @@ export function mergeSchedules(
         nodeId: `tree${i}/${task.nodeId}`,
         treeIndex: i,
         mergedDeps: (task.dependencies ?? []).map((dep) => `tree${i}/${dep}`),
+        ...(task.passive?.linkedNodeId && {
+          passive: { ...task.passive, linkedNodeId: `tree${i}/${task.passive.linkedNodeId}` },
+        }),
       })
     }
   }
