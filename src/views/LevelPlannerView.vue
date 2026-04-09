@@ -15,7 +15,7 @@ import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
 import PlannerToolbar from '@/components/planner/PlannerToolbar.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
-import { useExpeditionMaxTiers } from '@/composables/useExpeditionMaxTiers'
+import { useExpeditionTierSelections } from '@/composables/useExpeditionTierSelections'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useLevelPlanner } from '@/composables/useLevelPlanner'
 import { usePartyPlanner } from '@/composables/usePartyPlanner'
@@ -30,11 +30,11 @@ const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
 const { excludedCreatureIds, expeditionToolXpBonus } = useGameConfig()
 const {
-  expeditionMaxTierOverrides,
+  expeditionTierOverrides,
   includeAllExpeditions,
-  defaultExpeditionMaxTiers,
-  effectiveExpeditionMaxTiers,
-} = useExpeditionMaxTiers()
+  defaultExpeditionTierSelections,
+  effectiveExpeditionTierSelections,
+} = useExpeditionTierSelections()
 
 
 // Mode: single or party
@@ -57,7 +57,7 @@ const singleTargetPresets = [70, 120]
 const { creature, startLevel, plan, needsAwaken, totalXpNeeded, isMaxLevel } = useLevelPlanner(
   creatureId,
   targetLevel,
-  effectiveExpeditionMaxTiers,
+  effectiveExpeditionTierSelections,
 )
 
 
@@ -145,29 +145,51 @@ function resetCreatureOverrides() {
 
 
 // Expedition filter handlers
-function setExpeditionMaxTier(expeditionId: string, maxTier: number) {
-  const defaultTier = defaultExpeditionMaxTiers.value[expeditionId] ?? 0
-  if (maxTier === defaultTier) {
-    // Matches default — remove override instead of storing it
+function toggleExpeditionTier(expeditionId: string, tier: number) {
+  const defaults = defaultExpeditionTierSelections.value[expeditionId] ?? []
+  const current = expeditionTierOverrides.value[expeditionId]
+  // Start from override if present, otherwise from effective selections
+  const selected = current
+    ? [...current]
+    : [...(effectiveExpeditionTierSelections.value[expeditionId] ?? [1, 2, 3, 4, 5])]
+
+
+  const idx = selected.indexOf(tier)
+  if (idx >= 0) {
+    selected.splice(idx, 1)
+  } else {
+    selected.push(tier)
+    selected.sort((a, b) => a - b)
+  }
+
+
+  // If result matches default, remove override
+  const defaultsSorted = [...defaults].toSorted((a, b) => a - b)
+  if (
+    selected.length === defaultsSorted.length &&
+    selected.every((v, i) => v === defaultsSorted[i])
+  ) {
     removeExpeditionOverride(expeditionId)
     return
   }
-  expeditionMaxTierOverrides.value = {
-    ...expeditionMaxTierOverrides.value,
-    [expeditionId]: maxTier,
+
+
+  expeditionTierOverrides.value = {
+    ...expeditionTierOverrides.value,
+    [expeditionId]: selected,
   }
 }
 
 
 function removeExpeditionOverride(expeditionId: string) {
-  const updated = { ...expeditionMaxTierOverrides.value }
+  const updated = { ...expeditionTierOverrides.value }
   delete updated[expeditionId]
-  expeditionMaxTierOverrides.value = updated
+  expeditionTierOverrides.value = updated
 }
 
 
 function resetExpeditionOverrides() {
-  expeditionMaxTierOverrides.value = {}
+  expeditionTierOverrides.value = {}
   includeAllExpeditions.value = false
 }
 
@@ -419,10 +441,10 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
 
       <PartyExpeditionFilter
         :expeditions="allExpeditions"
-        :effective-max-tiers="effectiveExpeditionMaxTiers"
-        :overrides="expeditionMaxTierOverrides"
+        :effective-tier-selections="effectiveExpeditionTierSelections"
+        :overrides="expeditionTierOverrides"
         :include-all="includeAllExpeditions"
-        @set-max-tier="setExpeditionMaxTier"
+        @toggle-tier="toggleExpeditionTier"
         @remove-override="removeExpeditionOverride"
         @reset="resetExpeditionOverrides"
         @update:include-all="includeAllExpeditions = $event"
@@ -472,10 +494,10 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
 
       <PartyExpeditionFilter
         :expeditions="allExpeditions"
-        :effective-max-tiers="effectiveExpeditionMaxTiers"
-        :overrides="expeditionMaxTierOverrides"
+        :effective-tier-selections="effectiveExpeditionTierSelections"
+        :overrides="expeditionTierOverrides"
         :include-all="includeAllExpeditions"
-        @set-max-tier="setExpeditionMaxTier"
+        @toggle-tier="toggleExpeditionTier"
         @remove-override="removeExpeditionOverride"
         @reset="resetExpeditionOverrides"
         @update:include-all="includeAllExpeditions = $event"
