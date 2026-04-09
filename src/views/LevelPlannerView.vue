@@ -146,6 +146,7 @@ function resetCreatureOverrides() {
 
 // Expedition filter handlers
 function toggleExpeditionTier(expeditionId: string, tier: number) {
+  if (includeAllExpeditions.value) includeAllExpeditions.value = false
   const defaults = defaultExpeditionTierSelections.value[expeditionId] ?? []
   const current = expeditionTierOverrides.value[expeditionId]
   // Start from override if present, otherwise from effective selections
