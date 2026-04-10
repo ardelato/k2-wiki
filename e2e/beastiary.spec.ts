@@ -388,10 +388,10 @@ test.describe('table view', () => {
     const nameTh = page.locator('th', { has: page.getByRole('button', { name: /Name/ }) })
     await expect(nameTh).toHaveAttribute('aria-sort', 'ascending')
 
-    const firstCell = page.locator('tbody tr:first-child td:first-child')
-    const secondCell = page.locator('tbody tr:nth-child(2) td:first-child')
-    const first = await firstCell.textContent()
-    const second = await secondCell.textContent()
+    const firstName = page.locator('tbody tr:first-child td:first-child .font-semibold')
+    const secondName = page.locator('tbody tr:nth-child(2) td:first-child .font-semibold')
+    const first = await firstName.textContent()
+    const second = await secondName.textContent()
     expect(first!.localeCompare(second!)).toBeLessThanOrEqual(0)
   })
 
@@ -435,14 +435,15 @@ test.describe('table view', () => {
     await expect(totalButtons).toHaveCount(2)
 
     // Click the first Total (stat total) to sort
-    await totalButtons.first().click()
-    const totalTh = page.locator('th', { has: totalButtons.first() })
-    await expect(totalTh).toHaveAttribute('aria-sort', 'ascending')
+    const statTotalBtn = totalButtons.nth(0)
+    await statTotalBtn.click()
+    const statTotalTh = statTotalBtn.locator('..')
+    await expect(statTotalTh).toHaveAttribute('aria-sort', 'ascending')
   })
 
   test('tier badge is shown on creature images', async ({ page }) => {
-    // Tier badges should be visible in the name column (no separate Tier column)
-    const tierBadges = page.locator('tbody td:first-child span', { hasText: /^T\d$/ })
+    // Tier badges are absolute-positioned spans inside the creature image container
+    const tierBadges = page.locator('tbody td:first-child span.absolute', { hasText: /T\d/ })
     const count = await tierBadges.count()
     expect(count).toBe(120)
   })
