@@ -450,7 +450,7 @@ test.describe('table view', () => {
 
   test('trait column shows abbreviated names', async ({ page }) => {
     // Search for a creature with a long trait to verify abbreviation
-    await page.getByPlaceholder('Search').fill('Cinder')
+    await page.getByPlaceholder('Search').fill('Sunny')
     const traitCell = page.locator('tbody tr .trait-chip')
     const traitText = await traitCell.first().textContent()
     // "heat-resistance" should be abbreviated to "Heat Res"
