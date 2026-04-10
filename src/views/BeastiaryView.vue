@@ -14,6 +14,7 @@ import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
 import {
   jobColors,
   jobLabels,
+  statAbbreviations,
   statLabels,
   getBestExpeditionsForCreature,
   maxLevelForState,
@@ -265,7 +266,15 @@ function removeFilter(key: string) {
 const selectedCreature = ref<Creature | null>(null)
 
 
-type SortKey = 'name' | 'tier' | 'type' | 'trait' | 'jobTotal' | keyof Jobs
+type SortKey =
+  | 'name'
+  | 'tier'
+  | 'type'
+  | 'trait'
+  | 'statTotal'
+  | 'jobTotal'
+  | keyof CreatureStats
+  | keyof Jobs
 const tableSortKey = ref<SortKey>('tier')
 const tableSortDirection = ref<'asc' | 'desc'>('asc')
 
@@ -292,13 +301,21 @@ const sortedCreatures = computed(() => {
     else if (key === 'tier') result = a.tier - b.tier
     else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
     else if (key === 'trait') result = a.trait.localeCompare(b.trait)
+    else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
     else if (key === 'jobTotal') result = totalJobs(a) - totalJobs(b)
-    else result = a.jobs[key] - b.jobs[key]
+    else if (key in statLabels)
+      result = a.stats[key as keyof CreatureStats] - b.stats[key as keyof CreatureStats]
+    else result = a.jobs[key as keyof Jobs] - b.jobs[key as keyof Jobs]
 
     return tableSortDirection.value === 'asc' ? result : -result
   })
   return list
 })
+
+
+function totalStats(creature: Creature): number {
+  return Object.values(creature.stats).reduce((sum, value) => sum + value, 0)
+}
 
 
 function totalJobs(creature: Creature): number {
@@ -814,6 +831,48 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
+                  v-for="[statKey] in statEntries"
+                  :key="statKey"
+                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :aria-sort="
+                    tableSortKey === statKey
+                      ? tableSortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  "
+                >
+                  <button
+                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                    @click="sortBy(statKey)"
+                  >
+                    {{ statAbbreviations[statKey] }}
+                    <span :class="tableSortKey === statKey ? 'text-primary' : 'opacity-0'">{{
+                      tableSortDirection === 'asc' ? '▲' : '▼'
+                    }}</span>
+                  </button>
+                </th>
+                <th
+                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :aria-sort="
+                    tableSortKey === 'statTotal'
+                      ? tableSortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  "
+                >
+                  <button
+                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                    @click="sortBy('statTotal')"
+                  >
+                    Total
+                    <span :class="tableSortKey === 'statTotal' ? 'text-primary' : 'opacity-0'">{{
+                      tableSortDirection === 'asc' ? '▲' : '▼'
+                    }}</span>
+                  </button>
+                </th>
+                <th
                   v-for="[jobKey, jobName] in jobEntries"
                   :key="jobKey"
                   class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
@@ -943,6 +1002,16 @@ const maxJobLevel = 10
                 </td>
                 <td class="px-2 py-2.5">
                   <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
+                </td>
+                <td
+                  v-for="[statKey] in statEntries"
+                  :key="statKey"
+                  class="px-2 py-2.5 font-mono text-xs text-muted-foreground"
+                >
+                  {{ creature.stats[statKey] }}
+                </td>
+                <td class="px-2 py-2.5 font-mono text-xs font-semibold text-foreground">
+                  {{ totalStats(creature) }}
                 </td>
                 <td v-for="[jobKey] in jobEntries" :key="jobKey" class="px-2 py-2.5">
                   <div class="flex items-center gap-2">
