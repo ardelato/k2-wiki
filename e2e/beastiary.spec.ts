@@ -404,6 +404,58 @@ test.describe('table view', () => {
     await expect(nameTh).toHaveAttribute('aria-sort', 'descending')
   })
 
+  test('clicking same header three times clears sort', async ({ page }) => {
+    const nameBtn = page.getByRole('button', { name: /Name/ })
+    await nameBtn.click()
+    await nameBtn.click()
+    await nameBtn.click()
+
+    const nameTh = page.locator('th', { has: page.getByRole('button', { name: /Name/ }) })
+    await expect(nameTh).toHaveAttribute('aria-sort', 'none')
+  })
+
+  test('stat columns are visible and sortable', async ({ page }) => {
+    // Verify stat column headers exist
+    await expect(page.getByRole('button', { name: /POW/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /GRT/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /AGI/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /SMT/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /LOT/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /LCK/ })).toBeVisible()
+
+    // Click POW to sort ascending
+    await page.getByRole('button', { name: /POW/ }).click()
+    const powTh = page.locator('th', { has: page.getByRole('button', { name: /POW/ }) })
+    await expect(powTh).toHaveAttribute('aria-sort', 'ascending')
+  })
+
+  test('stat total column is visible and sortable', async ({ page }) => {
+    // There are two "Total" buttons (stat total and job total)
+    const totalButtons = page.getByRole('button', { name: /^Total/ })
+    await expect(totalButtons).toHaveCount(2)
+
+    // Click the first Total (stat total) to sort
+    await totalButtons.first().click()
+    const totalTh = page.locator('th', { has: totalButtons.first() })
+    await expect(totalTh).toHaveAttribute('aria-sort', 'ascending')
+  })
+
+  test('tier badge is shown on creature images', async ({ page }) => {
+    // Tier badges should be visible in the name column (no separate Tier column)
+    const tierBadges = page.locator('tbody td:first-child span', { hasText: /^T\d$/ })
+    const count = await tierBadges.count()
+    expect(count).toBe(120)
+  })
+
+  test('trait column shows abbreviated names', async ({ page }) => {
+    // Search for a creature with a long trait to verify abbreviation
+    await page.getByPlaceholder('Search').fill('Cinder')
+    const traitCell = page.locator('tbody tr .trait-chip')
+    const traitText = await traitCell.first().textContent()
+    // "heat-resistance" should be abbreviated to "Heat Res"
+    expect(traitText!.trim()).toBe('Heat Res')
+  })
+
   test('search filters table rows', async ({ page }) => {
     await page.getByPlaceholder('Search').fill('Moss')
     const rows = page.locator('tbody tr')
