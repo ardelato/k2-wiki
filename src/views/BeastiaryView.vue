@@ -275,7 +275,7 @@ type SortKey =
   | 'jobTotal'
   | keyof CreatureStats
   | keyof Jobs
-const tableSortKey = ref<SortKey>('name')
+const tableSortKey = ref<SortKey | null>(null)
 const tableSortDirection = ref<'asc' | 'desc'>('asc')
 
 
@@ -292,11 +292,12 @@ const statEntries = computed(() => Object.entries(statLabels) as [keyof Creature
 
 
 const sortedCreatures = computed(() => {
+  const key = tableSortKey.value
+  if (key === null) return displayCreatures.value
+
   const list = [...displayCreatures.value]
   list.sort((a, b) => {
     let result = 0
-
-    const key = tableSortKey.value
     if (key === 'name') result = a.name.localeCompare(b.name)
     else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
     else if (key === 'trait') result = a.trait.localeCompare(b.trait)
@@ -324,7 +325,12 @@ function totalJobs(creature: Creature): number {
 
 function sortBy(key: SortKey) {
   if (tableSortKey.value === key) {
-    tableSortDirection.value = tableSortDirection.value === 'asc' ? 'desc' : 'asc'
+    if (tableSortDirection.value === 'asc') {
+      tableSortDirection.value = 'desc'
+    } else {
+      tableSortKey.value = null
+      tableSortDirection.value = 'asc'
+    }
     return
   }
   tableSortKey.value = key
