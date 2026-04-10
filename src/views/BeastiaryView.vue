@@ -14,7 +14,9 @@ import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
 import {
   jobColors,
   jobLabels,
+  statAbbreviations,
   statLabels,
+  traitAbbreviations,
   getBestExpeditionsForCreature,
   maxLevelForState,
 } from '@/utils/formulas'
@@ -265,8 +267,15 @@ function removeFilter(key: string) {
 const selectedCreature = ref<Creature | null>(null)
 
 
-type SortKey = 'name' | 'tier' | 'type' | 'trait' | 'jobTotal' | keyof Jobs
-const tableSortKey = ref<SortKey>('tier')
+type SortKey =
+  | 'name'
+  | 'type'
+  | 'trait'
+  | 'statTotal'
+  | 'jobTotal'
+  | keyof CreatureStats
+  | keyof Jobs
+const tableSortKey = ref<SortKey | null>(null)
 const tableSortDirection = ref<'asc' | 'desc'>('asc')
 
 
@@ -283,22 +292,30 @@ const statEntries = computed(() => Object.entries(statLabels) as [keyof Creature
 
 
 const sortedCreatures = computed(() => {
+  const key = tableSortKey.value
+  if (key === null) return displayCreatures.value
+
   const list = [...displayCreatures.value]
   list.sort((a, b) => {
     let result = 0
-
-    const key = tableSortKey.value
     if (key === 'name') result = a.name.localeCompare(b.name)
-    else if (key === 'tier') result = a.tier - b.tier
     else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
     else if (key === 'trait') result = a.trait.localeCompare(b.trait)
+    else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
     else if (key === 'jobTotal') result = totalJobs(a) - totalJobs(b)
-    else result = a.jobs[key] - b.jobs[key]
+    else if (key in statLabels)
+      result = a.stats[key as keyof CreatureStats] - b.stats[key as keyof CreatureStats]
+    else result = a.jobs[key as keyof Jobs] - b.jobs[key as keyof Jobs]
 
     return tableSortDirection.value === 'asc' ? result : -result
   })
   return list
 })
+
+
+function totalStats(creature: Creature): number {
+  return Object.values(creature.stats).reduce((sum, value) => sum + value, 0)
+}
 
 
 function totalJobs(creature: Creature): number {
@@ -308,7 +325,12 @@ function totalJobs(creature: Creature): number {
 
 function sortBy(key: SortKey) {
   if (tableSortKey.value === key) {
-    tableSortDirection.value = tableSortDirection.value === 'asc' ? 'desc' : 'asc'
+    if (tableSortDirection.value === 'asc') {
+      tableSortDirection.value = 'desc'
+    } else {
+      tableSortKey.value = null
+      tableSortDirection.value = 'asc'
+    }
     return
   }
   tableSortKey.value = key
@@ -756,26 +778,6 @@ const maxJobLevel = 10
                 <th
                   class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   :aria-sort="
-                    tableSortKey === 'tier'
-                      ? tableSortDirection === 'asc'
-                        ? 'ascending'
-                        : 'descending'
-                      : 'none'
-                  "
-                >
-                  <button
-                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                    @click="sortBy('tier')"
-                  >
-                    Tier
-                    <span :class="tableSortKey === 'tier' ? 'text-primary' : 'opacity-0'">{{
-                      tableSortDirection === 'asc' ? '▲' : '▼'
-                    }}</span>
-                  </button>
-                </th>
-                <th
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                  :aria-sort="
                     tableSortKey === 'type'
                       ? tableSortDirection === 'asc'
                         ? 'ascending'
@@ -814,9 +816,53 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
-                  v-for="[jobKey, jobName] in jobEntries"
+                  v-for="([statKey], index) in statEntries"
+                  :key="statKey"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :class="{ 'border-l border-border/40': index === 0 }"
+                  :aria-sort="
+                    tableSortKey === statKey
+                      ? tableSortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  "
+                >
+                  <button
+                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                    @click="sortBy(statKey)"
+                  >
+                    {{ statAbbreviations[statKey] }}
+                    <span :class="tableSortKey === statKey ? 'text-primary' : 'opacity-0'">{{
+                      tableSortDirection === 'asc' ? '▲' : '▼'
+                    }}</span>
+                  </button>
+                </th>
+                <th
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :aria-sort="
+                    tableSortKey === 'statTotal'
+                      ? tableSortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  "
+                >
+                  <button
+                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                    @click="sortBy('statTotal')"
+                  >
+                    Total
+                    <span :class="tableSortKey === 'statTotal' ? 'text-primary' : 'opacity-0'">{{
+                      tableSortDirection === 'asc' ? '▲' : '▼'
+                    }}</span>
+                  </button>
+                </th>
+                <th
+                  v-for="([jobKey, jobName], index) in jobEntries"
                   :key="jobKey"
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :class="{ 'border-l border-border/40': index === 0 }"
                   :aria-sort="
                     tableSortKey === jobKey
                       ? tableSortDirection === 'asc'
@@ -848,7 +894,7 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   :aria-sort="
                     tableSortKey === 'jobTotal'
                       ? tableSortDirection === 'asc'
@@ -892,7 +938,7 @@ const maxJobLevel = 10
                 >
                   <div class="flex items-center gap-3">
                     <div
-                      class="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border text-xs font-bold text-muted-foreground"
+                      class="relative inline-flex size-10 shrink-0 items-center justify-center overflow-visible rounded-lg border border-border text-xs font-bold text-muted-foreground"
                       :style="{
                         backgroundColor: 'hsl(' + typeColorVar(creature.types[0]) + ' / 0.1)',
                       }"
@@ -905,6 +951,11 @@ const maxJobLevel = 10
                         loading="lazy"
                       />
                       <span v-else>{{ creature.name.charAt(0) }}</span>
+                      <span
+                        class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
+                      >
+                        T{{ creature.tier + 1 }}
+                      </span>
                     </div>
                     <span
                       class="font-semibold"
@@ -923,9 +974,6 @@ const maxJobLevel = 10
                     >
                   </div>
                 </td>
-                <td class="px-2 py-2.5 font-mono text-xs text-muted-foreground">
-                  T{{ creature.tier + 1 }}
-                </td>
                 <td class="px-2 py-2.5">
                   <div class="flex flex-wrap gap-1">
                     <span
@@ -941,10 +989,30 @@ const maxJobLevel = 10
                     </span>
                   </div>
                 </td>
-                <td class="px-2 py-2.5">
-                  <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
+                <td class="whitespace-nowrap px-2 py-2.5">
+                  <span class="trait-chip">{{
+                    traitAbbreviations[creature.trait] ?? toTitleCase(creature.trait)
+                  }}</span>
                 </td>
-                <td v-for="[jobKey] in jobEntries" :key="jobKey" class="px-2 py-2.5">
+                <td
+                  v-for="([statKey], index) in statEntries"
+                  :key="statKey"
+                  class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+                  :class="{ 'border-l border-border/40': index === 0 }"
+                >
+                  {{ creature.stats[statKey] }}
+                </td>
+                <td
+                  class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
+                >
+                  {{ totalStats(creature) }}
+                </td>
+                <td
+                  v-for="([jobKey], index) in jobEntries"
+                  :key="jobKey"
+                  class="px-2 py-2.5"
+                  :class="{ 'border-l border-border/40': index === 0 }"
+                >
                   <div class="flex items-center gap-2">
                     <div class="relative h-2 w-10 overflow-hidden rounded-full bg-muted/60">
                       <div
@@ -956,12 +1024,14 @@ const maxJobLevel = 10
                       />
                     </div>
                     <span
-                      class="w-4 text-right font-mono text-xs font-semibold text-muted-foreground"
+                      class="w-4 text-right font-mono text-xs font-semibold text-muted-foreground [font-variant-numeric:tabular-nums]"
                       >{{ creature.jobs[jobKey] }}</span
                     >
                   </div>
                 </td>
-                <td class="px-2 py-2.5 font-mono text-xs font-semibold text-foreground">
+                <td
+                  class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
+                >
                   {{ totalJobs(creature) }}
                 </td>
               </tr>

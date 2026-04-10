@@ -11,6 +11,7 @@ import {
   getLoopXpBonus,
   getRecommendedCreatures,
   levelFromXp,
+  traitAbbreviations,
   xpForLevel,
 } from '@/utils/formulas'
 
@@ -632,5 +633,27 @@ describe('creature fit affects expedition performance', () => {
     const badXpRate = xpPerCreature / badDuration
 
     expect(goodXpRate).toBeGreaterThan(badXpRate)
+  })
+})
+
+// ── Trait abbreviations ─────────────────────────────────────────────
+
+describe('traitAbbreviations', () => {
+  test('covers every trait in creatures data', () => {
+    const allTraits = new Set(creatures.map((c) => c.trait))
+    for (const trait of allTraits) {
+      expect(traitAbbreviations).toHaveProperty(trait)
+    }
+  })
+
+  test('all abbreviations are shorter than or equal to their full trait name', () => {
+    for (const [trait, abbrev] of Object.entries(traitAbbreviations)) {
+      expect(abbrev.length).toBeLessThanOrEqual(trait.length)
+    }
+  })
+
+  test('no duplicate abbreviations', () => {
+    const values = Object.values(traitAbbreviations)
+    expect(new Set(values).size).toBe(values.length)
   })
 })

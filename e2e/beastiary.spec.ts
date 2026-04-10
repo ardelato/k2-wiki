@@ -388,10 +388,10 @@ test.describe('table view', () => {
     const nameTh = page.locator('th', { has: page.getByRole('button', { name: /Name/ }) })
     await expect(nameTh).toHaveAttribute('aria-sort', 'ascending')
 
-    const firstCell = page.locator('tbody tr:first-child td:first-child')
-    const secondCell = page.locator('tbody tr:nth-child(2) td:first-child')
-    const first = await firstCell.textContent()
-    const second = await secondCell.textContent()
+    const firstName = page.locator('tbody tr:first-child td:first-child .font-semibold')
+    const secondName = page.locator('tbody tr:nth-child(2) td:first-child .font-semibold')
+    const first = await firstName.textContent()
+    const second = await secondName.textContent()
     expect(first!.localeCompare(second!)).toBeLessThanOrEqual(0)
   })
 
@@ -402,6 +402,59 @@ test.describe('table view', () => {
 
     const nameTh = page.locator('th', { has: page.getByRole('button', { name: /Name/ }) })
     await expect(nameTh).toHaveAttribute('aria-sort', 'descending')
+  })
+
+  test('clicking same header three times clears sort', async ({ page }) => {
+    const nameBtn = page.getByRole('button', { name: /Name/ })
+    await nameBtn.click()
+    await nameBtn.click()
+    await nameBtn.click()
+
+    const nameTh = page.locator('th', { has: page.getByRole('button', { name: /Name/ }) })
+    await expect(nameTh).toHaveAttribute('aria-sort', 'none')
+  })
+
+  test('stat columns are visible and sortable', async ({ page }) => {
+    // Verify stat column headers exist
+    await expect(page.getByRole('button', { name: /POW/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /GRT/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /AGI/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /SMT/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /LOT/ })).toBeVisible()
+    await expect(page.getByRole('button', { name: /LCK/ })).toBeVisible()
+
+    // Click POW to sort ascending
+    await page.getByRole('button', { name: /POW/ }).click()
+    const powTh = page.locator('th', { has: page.getByRole('button', { name: /POW/ }) })
+    await expect(powTh).toHaveAttribute('aria-sort', 'ascending')
+  })
+
+  test('stat total column is visible and sortable', async ({ page }) => {
+    // There are two "Total" buttons (stat total and job total)
+    const totalButtons = page.getByRole('button', { name: /^Total/ })
+    await expect(totalButtons).toHaveCount(2)
+
+    // Click the first Total (stat total) to sort
+    const statTotalBtn = totalButtons.nth(0)
+    await statTotalBtn.click()
+    const statTotalTh = statTotalBtn.locator('..')
+    await expect(statTotalTh).toHaveAttribute('aria-sort', 'ascending')
+  })
+
+  test('tier badge is shown on creature images', async ({ page }) => {
+    // Tier badges are absolute-positioned spans inside the creature image container
+    const tierBadges = page.locator('tbody td:first-child span.absolute', { hasText: /T\d/ })
+    const count = await tierBadges.count()
+    expect(count).toBe(120)
+  })
+
+  test('trait column shows abbreviated names', async ({ page }) => {
+    // Search for a creature with a long trait to verify abbreviation
+    await page.getByPlaceholder('Search').fill('Sunny')
+    const traitCell = page.locator('tbody tr .trait-chip')
+    const traitText = await traitCell.first().textContent()
+    // "heat-resistance" should be abbreviated to "Heat Res"
+    expect(traitText!.trim()).toBe('Heat Res')
   })
 
   test('search filters table rows', async ({ page }) => {
