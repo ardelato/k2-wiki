@@ -16,6 +16,7 @@ import {
   jobLabels,
   statAbbreviations,
   statLabels,
+  traitAbbreviations,
   getBestExpeditionsForCreature,
   maxLevelForState,
 } from '@/utils/formulas'
@@ -1000,8 +1001,10 @@ const maxJobLevel = 10
                     </span>
                   </div>
                 </td>
-                <td class="px-2 py-2.5">
-                  <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
+                <td class="whitespace-nowrap px-2 py-2.5">
+                  <span class="trait-chip">{{
+                    traitAbbreviations[creature.trait] ?? toTitleCase(creature.trait)
+                  }}</span>
                 </td>
                 <td
                   v-for="[statKey] in statEntries"

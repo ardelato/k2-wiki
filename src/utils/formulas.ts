@@ -21,6 +21,22 @@ export const statAbbreviations: Record<keyof CreatureStats, string> = {
   luck: 'LCK',
 }
 
+export const traitAbbreviations: Record<string, string> = {
+  'cold-resistance': 'Cold Res',
+  'heat-resistance': 'Heat Res',
+  'poison-resistance': 'Poison Res',
+  'water-breathing': 'Water Brt',
+  'hard-shell': 'Hard Shell',
+  'night-vision': 'Night Vis',
+  camouflage: 'Camo',
+  gatherer: 'Gatherer',
+  learner: 'Learner',
+  lucky: 'Lucky',
+  regeneration: 'Regen',
+  scouting: 'Scouting',
+  tracking: 'Tracking',
+}
+
 export const jobLabels: Record<keyof Creature['jobs'], string> = {
   chopping: 'Chopping',
   mining: 'Mining',
