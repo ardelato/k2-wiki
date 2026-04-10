@@ -832,9 +832,10 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
-                  v-for="[statKey] in statEntries"
+                  v-for="([statKey], index) in statEntries"
                   :key="statKey"
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :class="{ 'border-l border-border/40': index === 0 }"
                   :aria-sort="
                     tableSortKey === statKey
                       ? tableSortDirection === 'asc'
@@ -854,7 +855,7 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   :aria-sort="
                     tableSortKey === 'statTotal'
                       ? tableSortDirection === 'asc'
@@ -874,9 +875,10 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
-                  v-for="[jobKey, jobName] in jobEntries"
+                  v-for="([jobKey, jobName], index) in jobEntries"
                   :key="jobKey"
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :class="{ 'border-l border-border/40': index === 0 }"
                   :aria-sort="
                     tableSortKey === jobKey
                       ? tableSortDirection === 'asc'
@@ -908,7 +910,7 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   :aria-sort="
                     tableSortKey === 'jobTotal'
                       ? tableSortDirection === 'asc'
@@ -1007,16 +1009,24 @@ const maxJobLevel = 10
                   }}</span>
                 </td>
                 <td
-                  v-for="[statKey] in statEntries"
+                  v-for="([statKey], index) in statEntries"
                   :key="statKey"
-                  class="px-2 py-2.5 font-mono text-xs text-muted-foreground"
+                  class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+                  :class="{ 'border-l border-border/40': index === 0 }"
                 >
                   {{ creature.stats[statKey] }}
                 </td>
-                <td class="px-2 py-2.5 font-mono text-xs font-semibold text-foreground">
+                <td
+                  class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
+                >
                   {{ totalStats(creature) }}
                 </td>
-                <td v-for="[jobKey] in jobEntries" :key="jobKey" class="px-2 py-2.5">
+                <td
+                  v-for="([jobKey], index) in jobEntries"
+                  :key="jobKey"
+                  class="px-2 py-2.5"
+                  :class="{ 'border-l border-border/40': index === 0 }"
+                >
                   <div class="flex items-center gap-2">
                     <div class="relative h-2 w-10 overflow-hidden rounded-full bg-muted/60">
                       <div
@@ -1028,12 +1038,14 @@ const maxJobLevel = 10
                       />
                     </div>
                     <span
-                      class="w-4 text-right font-mono text-xs font-semibold text-muted-foreground"
+                      class="w-4 text-right font-mono text-xs font-semibold text-muted-foreground [font-variant-numeric:tabular-nums]"
                       >{{ creature.jobs[jobKey] }}</span
                     >
                   </div>
                 </td>
-                <td class="px-2 py-2.5 font-mono text-xs font-semibold text-foreground">
+                <td
+                  class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
+                >
                   {{ totalJobs(creature) }}
                 </td>
               </tr>
