@@ -269,14 +269,13 @@ const selectedCreature = ref<Creature | null>(null)
 
 type SortKey =
   | 'name'
-  | 'tier'
   | 'type'
   | 'trait'
   | 'statTotal'
   | 'jobTotal'
   | keyof CreatureStats
   | keyof Jobs
-const tableSortKey = ref<SortKey>('tier')
+const tableSortKey = ref<SortKey>('name')
 const tableSortDirection = ref<'asc' | 'desc'>('asc')
 
 
@@ -299,7 +298,6 @@ const sortedCreatures = computed(() => {
 
     const key = tableSortKey.value
     if (key === 'name') result = a.name.localeCompare(b.name)
-    else if (key === 'tier') result = a.tier - b.tier
     else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
     else if (key === 'trait') result = a.trait.localeCompare(b.trait)
     else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
@@ -774,26 +772,6 @@ const maxJobLevel = 10
                 <th
                   class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   :aria-sort="
-                    tableSortKey === 'tier'
-                      ? tableSortDirection === 'asc'
-                        ? 'ascending'
-                        : 'descending'
-                      : 'none'
-                  "
-                >
-                  <button
-                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                    @click="sortBy('tier')"
-                  >
-                    Tier
-                    <span :class="tableSortKey === 'tier' ? 'text-primary' : 'opacity-0'">{{
-                      tableSortDirection === 'asc' ? '▲' : '▼'
-                    }}</span>
-                  </button>
-                </th>
-                <th
-                  class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                  :aria-sort="
                     tableSortKey === 'type'
                       ? tableSortDirection === 'asc'
                         ? 'ascending'
@@ -954,7 +932,7 @@ const maxJobLevel = 10
                 >
                   <div class="flex items-center gap-3">
                     <div
-                      class="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border text-xs font-bold text-muted-foreground"
+                      class="relative inline-flex size-10 shrink-0 items-center justify-center overflow-visible rounded-lg border border-border text-xs font-bold text-muted-foreground"
                       :style="{
                         backgroundColor: 'hsl(' + typeColorVar(creature.types[0]) + ' / 0.1)',
                       }"
@@ -967,6 +945,11 @@ const maxJobLevel = 10
                         loading="lazy"
                       />
                       <span v-else>{{ creature.name.charAt(0) }}</span>
+                      <span
+                        class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
+                      >
+                        T{{ creature.tier + 1 }}
+                      </span>
                     </div>
                     <span
                       class="font-semibold"
@@ -984,9 +967,6 @@ const maxJobLevel = 10
                       >★</span
                     >
                   </div>
-                </td>
-                <td class="px-2 py-2.5 font-mono text-xs text-muted-foreground">
-                  T{{ creature.tier + 1 }}
                 </td>
                 <td class="px-2 py-2.5">
                   <div class="flex flex-wrap gap-1">
