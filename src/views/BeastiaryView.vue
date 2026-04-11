@@ -271,6 +271,7 @@ type SortKey =
   | 'name'
   | 'type'
   | 'trait'
+  | 'level'
   | 'statTotal'
   | 'jobTotal'
   | keyof CreatureStats
@@ -301,7 +302,10 @@ const sortedCreatures = computed(() => {
     if (key === 'name') result = a.name.localeCompare(b.name)
     else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
     else if (key === 'trait') result = a.trait.localeCompare(b.trait)
-    else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
+    else if (key === 'level') {
+      if (isOwned(a.id) !== isOwned(b.id)) return isOwned(a.id) ? -1 : 1
+      result = getLevel(a.id) - getLevel(b.id)
+    } else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
     else if (key === 'jobTotal') result = totalJobs(a) - totalJobs(b)
     else if (key in statLabels)
       result = a.stats[key as keyof CreatureStats] - b.stats[key as keyof CreatureStats]
@@ -816,6 +820,26 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :aria-sort="
+                    tableSortKey === 'level'
+                      ? tableSortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  "
+                >
+                  <button
+                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                    @click="sortBy('level')"
+                  >
+                    Lvl
+                    <span :class="tableSortKey === 'level' ? 'text-primary' : 'opacity-0'">{{
+                      tableSortDirection === 'asc' ? '▲' : '▼'
+                    }}</span>
+                  </button>
+                </th>
+                <th
                   v-for="([statKey], index) in statEntries"
                   :key="statKey"
                   class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
@@ -925,10 +949,10 @@ const maxJobLevel = 10
                     ? 'bg-muted/40'
                     : 'bg-card/50 hover:bg-muted/30'
                 "
-                @click="selectCreature(creature)"
+                @click="editing ? toggleSelected(creature.id) : selectCreature(creature)"
               >
                 <td
-                  class="border-l-2 px-2 py-2.5"
+                  class="border-l-2 py-2.5 pl-2 pr-0"
                   :style="{
                     borderColor:
                       selectedCreature?.id === creature.id
@@ -937,6 +961,14 @@ const maxJobLevel = 10
                   }"
                 >
                   <div class="flex items-center gap-3">
+                    <!-- Selection checkbox in edit mode -->
+                    <input
+                      v-if="editing"
+                      type="checkbox"
+                      :checked="selectedIds.has(creature.id)"
+                      class="size-4 shrink-0 rounded border-border accent-primary"
+                      @click.stop="toggleSelected(creature.id)"
+                    />
                     <div
                       class="relative inline-flex size-10 shrink-0 items-center justify-center overflow-visible rounded-lg border border-border text-xs font-bold text-muted-foreground"
                       :style="{
@@ -957,21 +989,23 @@ const maxJobLevel = 10
                         T{{ creature.tier + 1 }}
                       </span>
                     </div>
-                    <span
-                      class="font-semibold"
-                      :class="
-                        isAwakened(creature.id)
-                          ? 'text-pink-600 dark:text-pink-400'
-                          : 'text-foreground/80'
-                      "
-                      >{{ creature.name }}</span
-                    >
-                    <span
-                      v-if="isOwned(creature.id)"
-                      class="ml-1 text-xs"
-                      :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
-                      >★</span
-                    >
+                    <div class="flex items-center gap-0.5">
+                      <span
+                        class="font-semibold"
+                        :class="
+                          isAwakened(creature.id)
+                            ? 'text-pink-600 dark:text-pink-400'
+                            : 'text-foreground/80'
+                        "
+                        >{{ creature.name }}</span
+                      >
+                      <span
+                        v-if="isOwned(creature.id)"
+                        class="text-xs"
+                        :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
+                        >★</span
+                      >
+                    </div>
                   </div>
                 </td>
                 <td class="px-2 py-2.5">
@@ -995,39 +1029,51 @@ const maxJobLevel = 10
                   }}</span>
                 </td>
                 <td
+                  class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+                >
+                  <template v-if="isOwned(creature.id)">
+                    {{ getLevel(creature.id) }}
+                  </template>
+                  <template v-else>
+                    <span class="text-muted-foreground/40">—</span>
+                  </template>
+                </td>
+                <td
                   v-for="([statKey], index) in statEntries"
                   :key="statKey"
                   class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
                   :class="{ 'border-l border-border/40': index === 0 }"
                 >
-                  {{ creature.stats[statKey] }}
+                  <template v-if="getLevel(creature.id) > 1">
+                    <p>{{ creature.stats[statKey] * getLevel(creature.id) }}</p>
+                    <p class="text-[10px] text-muted-foreground/60">
+                      {{ creature.stats[statKey] }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    {{ creature.stats[statKey] }}
+                  </template>
                 </td>
                 <td
                   class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
                 >
-                  {{ totalStats(creature) }}
+                  <template v-if="getLevel(creature.id) > 1">
+                    <p>{{ totalStats(creature) * getLevel(creature.id) }}</p>
+                    <p class="text-[10px] font-normal text-muted-foreground/60">
+                      {{ totalStats(creature) }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    {{ totalStats(creature) }}
+                  </template>
                 </td>
                 <td
                   v-for="([jobKey], index) in jobEntries"
                   :key="jobKey"
-                  class="px-2 py-2.5"
+                  class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
                   :class="{ 'border-l border-border/40': index === 0 }"
                 >
-                  <div class="flex items-center gap-2">
-                    <div class="relative h-2 w-10 overflow-hidden rounded-full bg-muted/60">
-                      <div
-                        class="absolute inset-y-0 left-0 rounded-full"
-                        :style="{
-                          width: (creature.jobs[jobKey] / maxJobLevel) * 100 + '%',
-                          backgroundColor: jobColors[jobKey],
-                        }"
-                      />
-                    </div>
-                    <span
-                      class="w-4 text-right font-mono text-xs font-semibold text-muted-foreground [font-variant-numeric:tabular-nums]"
-                      >{{ creature.jobs[jobKey] }}</span
-                    >
-                  </div>
+                  {{ creature.jobs[jobKey] }}
                 </td>
                 <td
                   class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
