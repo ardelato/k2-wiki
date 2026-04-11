@@ -949,10 +949,10 @@ const maxJobLevel = 10
                     ? 'bg-muted/40'
                     : 'bg-card/50 hover:bg-muted/30'
                 "
-                @click="selectCreature(creature)"
+                @click="editing ? toggleSelected(creature.id) : selectCreature(creature)"
               >
                 <td
-                  class="border-l-2 px-2 py-2.5"
+                  class="border-l-2 py-2.5 pl-2 pr-0"
                   :style="{
                     borderColor:
                       selectedCreature?.id === creature.id
@@ -961,6 +961,14 @@ const maxJobLevel = 10
                   }"
                 >
                   <div class="flex items-center gap-3">
+                    <!-- Selection checkbox in edit mode -->
+                    <input
+                      v-if="editing"
+                      type="checkbox"
+                      :checked="selectedIds.has(creature.id)"
+                      class="size-4 shrink-0 rounded border-border accent-primary"
+                      @click.stop="toggleSelected(creature.id)"
+                    />
                     <div
                       class="relative inline-flex size-10 shrink-0 items-center justify-center overflow-visible rounded-lg border border-border text-xs font-bold text-muted-foreground"
                       :style="{
@@ -981,21 +989,23 @@ const maxJobLevel = 10
                         T{{ creature.tier + 1 }}
                       </span>
                     </div>
-                    <span
-                      class="font-semibold"
-                      :class="
-                        isAwakened(creature.id)
-                          ? 'text-pink-600 dark:text-pink-400'
-                          : 'text-foreground/80'
-                      "
-                      >{{ creature.name }}</span
-                    >
-                    <span
-                      v-if="isOwned(creature.id)"
-                      class="ml-1 text-xs"
-                      :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
-                      >★</span
-                    >
+                    <div class="flex items-center gap-0.5">
+                      <span
+                        class="font-semibold"
+                        :class="
+                          isAwakened(creature.id)
+                            ? 'text-pink-600 dark:text-pink-400'
+                            : 'text-foreground/80'
+                        "
+                        >{{ creature.name }}</span
+                      >
+                      <span
+                        v-if="isOwned(creature.id)"
+                        class="text-xs"
+                        :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
+                        >★</span
+                      >
+                    </div>
                   </div>
                 </td>
                 <td class="px-2 py-2.5">
