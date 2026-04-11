@@ -1070,24 +1070,10 @@ const maxJobLevel = 10
                 <td
                   v-for="([jobKey], index) in jobEntries"
                   :key="jobKey"
-                  class="px-2 py-2.5"
+                  class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
                   :class="{ 'border-l border-border/40': index === 0 }"
                 >
-                  <div class="flex items-center gap-2">
-                    <div class="relative h-2 w-10 overflow-hidden rounded-full bg-muted/60">
-                      <div
-                        class="absolute inset-y-0 left-0 rounded-full"
-                        :style="{
-                          width: (creature.jobs[jobKey] / maxJobLevel) * 100 + '%',
-                          backgroundColor: jobColors[jobKey],
-                        }"
-                      />
-                    </div>
-                    <span
-                      class="w-4 text-right font-mono text-xs font-semibold text-muted-foreground [font-variant-numeric:tabular-nums]"
-                      >{{ creature.jobs[jobKey] }}</span
-                    >
-                  </div>
+                  {{ creature.jobs[jobKey] }}
                 </td>
                 <td
                   class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
