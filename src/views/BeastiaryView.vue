@@ -271,6 +271,7 @@ type SortKey =
   | 'name'
   | 'type'
   | 'trait'
+  | 'level'
   | 'statTotal'
   | 'jobTotal'
   | keyof CreatureStats
@@ -301,7 +302,10 @@ const sortedCreatures = computed(() => {
     if (key === 'name') result = a.name.localeCompare(b.name)
     else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
     else if (key === 'trait') result = a.trait.localeCompare(b.trait)
-    else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
+    else if (key === 'level') {
+      if (isOwned(a.id) !== isOwned(b.id)) return isOwned(a.id) ? -1 : 1
+      result = getLevel(a.id) - getLevel(b.id)
+    } else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
     else if (key === 'jobTotal') result = totalJobs(a) - totalJobs(b)
     else if (key in statLabels)
       result = a.stats[key as keyof CreatureStats] - b.stats[key as keyof CreatureStats]
@@ -816,6 +820,26 @@ const maxJobLevel = 10
                   </button>
                 </th>
                 <th
+                  class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+                  :aria-sort="
+                    tableSortKey === 'level'
+                      ? tableSortDirection === 'asc'
+                        ? 'ascending'
+                        : 'descending'
+                      : 'none'
+                  "
+                >
+                  <button
+                    class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                    @click="sortBy('level')"
+                  >
+                    Lvl
+                    <span :class="tableSortKey === 'level' ? 'text-primary' : 'opacity-0'">{{
+                      tableSortDirection === 'asc' ? '▲' : '▼'
+                    }}</span>
+                  </button>
+                </th>
+                <th
                   v-for="([statKey], index) in statEntries"
                   :key="statKey"
                   class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
@@ -993,6 +1017,16 @@ const maxJobLevel = 10
                   <span class="trait-chip">{{
                     traitAbbreviations[creature.trait] ?? toTitleCase(creature.trait)
                   }}</span>
+                </td>
+                <td
+                  class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+                >
+                  <template v-if="isOwned(creature.id)">
+                    {{ getLevel(creature.id) }}
+                  </template>
+                  <template v-else>
+                    <span class="text-muted-foreground/40">—</span>
+                  </template>
                 </td>
                 <td
                   v-for="([statKey], index) in statEntries"
