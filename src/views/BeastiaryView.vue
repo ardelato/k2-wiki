@@ -1000,12 +1000,28 @@ const maxJobLevel = 10
                   class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
                   :class="{ 'border-l border-border/40': index === 0 }"
                 >
-                  {{ creature.stats[statKey] }}
+                  <template v-if="getLevel(creature.id) > 1">
+                    <p>{{ creature.stats[statKey] * getLevel(creature.id) }}</p>
+                    <p class="text-[10px] text-muted-foreground/60">
+                      {{ creature.stats[statKey] }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    {{ creature.stats[statKey] }}
+                  </template>
                 </td>
                 <td
                   class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
                 >
-                  {{ totalStats(creature) }}
+                  <template v-if="getLevel(creature.id) > 1">
+                    <p>{{ totalStats(creature) * getLevel(creature.id) }}</p>
+                    <p class="text-[10px] font-normal text-muted-foreground/60">
+                      {{ totalStats(creature) }}
+                    </p>
+                  </template>
+                  <template v-else>
+                    {{ totalStats(creature) }}
+                  </template>
                 </td>
                 <td
                   v-for="([jobKey], index) in jobEntries"
