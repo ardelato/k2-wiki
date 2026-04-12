@@ -1,0 +1,547 @@
+{
+  "duration": 900,
+  "maxPartySize": 3,
+  "requiresItem": "armor-set",
+  "tierLevelRequirements": {
+    "combat": {
+      "1": 0,
+      "2": 20,
+      "3": 40,
+      "4": 60,
+      "5": 80
+    },
+    "gathering": {
+      "1": 0,
+      "2": 15,
+      "3": 40,
+      "4": 60,
+      "5": 80
+    }
+  },
+  "tiers": [
+    {
+      "tier": 1,
+      "baseRating": 2000,
+      "xpReward": 450
+    },
+    {
+      "tier": 2,
+      "baseRating": 4000,
+      "xpReward": 900
+    },
+    {
+      "tier": 3,
+      "baseRating": 6000,
+      "xpReward": 1350
+    },
+    {
+      "tier": 4,
+      "baseRating": 8000,
+      "xpReward": 1800
+    },
+    {
+      "tier": 5,
+      "baseRating": 10000,
+      "xpReward": 2250
+    }
+  ],
+  "grades": [
+    {
+      "grade": "S",
+      "minRatio": 2,
+      "multiplier": 2
+    },
+    {
+      "grade": "A",
+      "minRatio": 1,
+      "multiplier": 1.5
+    },
+    {
+      "grade": "B",
+      "minRatio": 0.6,
+      "multiplier": 1
+    },
+    {
+      "grade": "C",
+      "minRatio": 0.3,
+      "multiplier": 0.5
+    },
+    {
+      "grade": "F",
+      "minRatio": 0,
+      "multiplier": 0.25
+    }
+  ],
+  "statWeights": {
+    "combat": {
+      "power": 0.25,
+      "grit": 0.25,
+      "agility": 0.25,
+      "smarts": 0.25,
+      "looting": 0,
+      "luck": 0
+    },
+    "gathering": {
+      "power": 0,
+      "grit": 0,
+      "agility": 0,
+      "smarts": 0.33,
+      "looting": 0.33,
+      "luck": 0.34
+    }
+  },
+  "combatRewards": {
+    "1": [
+      {
+        "itemId": "dungeon-rune",
+        "amount": 2
+      },
+      {
+        "itemId": "hide",
+        "amount": 5
+      },
+      {
+        "itemId": "meat",
+        "amount": 10
+      },
+      {
+        "itemId": "egg",
+        "amount": 5
+      }
+    ],
+    "2": [
+      {
+        "itemId": "dungeon-rune",
+        "amount": 4
+      },
+      {
+        "itemId": "hide",
+        "amount": 10
+      },
+      {
+        "itemId": "meat",
+        "amount": 20
+      },
+      {
+        "itemId": "egg",
+        "amount": 4
+      }
+    ],
+    "3": [
+      {
+        "itemId": "dungeon-rune",
+        "amount": 6
+      },
+      {
+        "itemId": "hide",
+        "amount": 20
+      },
+      {
+        "itemId": "meat",
+        "amount": 30
+      },
+      {
+        "itemId": "egg",
+        "amount": 6
+      }
+    ],
+    "4": [
+      {
+        "itemId": "dungeon-rune",
+        "amount": 8
+      },
+      {
+        "itemId": "hide",
+        "amount": 40
+      },
+      {
+        "itemId": "meat",
+        "amount": 40
+      },
+      {
+        "itemId": "egg",
+        "amount": 10
+      }
+    ],
+    "5": [
+      {
+        "itemId": "dungeon-rune",
+        "amount": 12
+      },
+      {
+        "itemId": "hide",
+        "amount": 60
+      },
+      {
+        "itemId": "meat",
+        "amount": 50
+      },
+      {
+        "itemId": "egg",
+        "amount": 15
+      }
+    ]
+  },
+  "gatheringRewards": {
+    "Chopping": {
+      "1": [
+        {
+          "itemId": "twig",
+          "amount": 100
+        },
+        {
+          "itemId": "pine-log",
+          "amount": 95
+        },
+        {
+          "itemId": "birch-log",
+          "amount": 90
+        }
+      ],
+      "2": [
+        {
+          "itemId": "oak-log",
+          "amount": 85
+        },
+        {
+          "itemId": "maple-log",
+          "amount": 80
+        },
+        {
+          "itemId": "cedar-log",
+          "amount": 75
+        }
+      ],
+      "3": [
+        {
+          "itemId": "ash-log",
+          "amount": 70
+        },
+        {
+          "itemId": "spruce-log",
+          "amount": 65
+        }
+      ],
+      "4": [
+        {
+          "itemId": "willow-log",
+          "amount": 60
+        },
+        {
+          "itemId": "runic-log",
+          "amount": 55
+        }
+      ],
+      "5": [
+        {
+          "itemId": "elder-log",
+          "amount": 50
+        },
+        {
+          "itemId": "arcanum-log",
+          "amount": 45
+        }
+      ]
+    },
+    "Mining": {
+      "1": [
+        {
+          "itemId": "stone",
+          "amount": 70
+        },
+        {
+          "itemId": "copper-ore",
+          "amount": 65
+        },
+        {
+          "itemId": "tin-ore",
+          "amount": 60
+        }
+      ],
+      "2": [
+        {
+          "itemId": "coal",
+          "amount": 55
+        },
+        {
+          "itemId": "iron-ore",
+          "amount": 50
+        },
+        {
+          "itemId": "silver-ore",
+          "amount": 45
+        }
+      ],
+      "3": [
+        {
+          "itemId": "gold-ore",
+          "amount": 40
+        },
+        {
+          "itemId": "platinum-ore",
+          "amount": 35
+        }
+      ],
+      "4": [
+        {
+          "itemId": "adamantite-ore",
+          "amount": 30
+        },
+        {
+          "itemId": "runic-ore",
+          "amount": 25
+        }
+      ],
+      "5": [
+        {
+          "itemId": "solarite-ore",
+          "amount": 20
+        },
+        {
+          "itemId": "arcanum-ore",
+          "amount": 15
+        }
+      ]
+    },
+    "Digging": {
+      "1": [
+        {
+          "itemId": "stone",
+          "amount": 100
+        },
+        {
+          "itemId": "clay",
+          "amount": 95
+        },
+        {
+          "itemId": "sand",
+          "amount": 90
+        }
+      ],
+      "2": [
+        {
+          "itemId": "mud",
+          "amount": 85
+        },
+        {
+          "itemId": "ice",
+          "amount": 80
+        },
+        {
+          "itemId": "obsidian",
+          "amount": 75
+        }
+      ],
+      "3": [
+        {
+          "itemId": "gravel",
+          "amount": 70
+        },
+        {
+          "itemId": "fossil",
+          "amount": 65
+        }
+      ],
+      "4": [
+        {
+          "itemId": "dungeon-dust",
+          "amount": 60
+        },
+        {
+          "itemId": "runestone",
+          "amount": 55
+        }
+      ],
+      "5": [
+        {
+          "itemId": "volcanic-rock",
+          "amount": 50
+        },
+        {
+          "itemId": "key-fragment",
+          "amount": 45
+        }
+      ]
+    },
+    "Farming": {
+      "1": [
+        {
+          "itemId": "grass",
+          "amount": 100
+        },
+        {
+          "itemId": "wheat",
+          "amount": 95
+        },
+        {
+          "itemId": "carrot",
+          "amount": 90
+        }
+      ],
+      "2": [
+        {
+          "itemId": "tomato",
+          "amount": 85
+        },
+        {
+          "itemId": "lettuce",
+          "amount": 80
+        },
+        {
+          "itemId": "potato",
+          "amount": 75
+        }
+      ],
+      "3": [
+        {
+          "itemId": "corn",
+          "amount": 70
+        },
+        {
+          "itemId": "eggplant",
+          "amount": 65
+        }
+      ],
+      "4": [
+        {
+          "itemId": "onion",
+          "amount": 60
+        },
+        {
+          "itemId": "pepper",
+          "amount": 55
+        }
+      ],
+      "5": [
+        {
+          "itemId": "pineapple",
+          "amount": 50
+        },
+        {
+          "itemId": "mango",
+          "amount": 45
+        }
+      ]
+    },
+    "Fishing": {
+      "1": [
+        {
+          "itemId": "minnow",
+          "amount": 100
+        },
+        {
+          "itemId": "trout",
+          "amount": 95
+        },
+        {
+          "itemId": "bass",
+          "amount": 90
+        }
+      ],
+      "2": [
+        {
+          "itemId": "walleye",
+          "amount": 85
+        },
+        {
+          "itemId": "salmon",
+          "amount": 80
+        },
+        {
+          "itemId": "snail",
+          "amount": 75
+        }
+      ],
+      "3": [
+        {
+          "itemId": "carp",
+          "amount": 70
+        },
+        {
+          "itemId": "magical-carp",
+          "amount": 65
+        }
+      ],
+      "4": [
+        {
+          "itemId": "crab",
+          "amount": 60
+        },
+        {
+          "itemId": "redfish",
+          "amount": 55
+        }
+      ],
+      "5": [
+        {
+          "itemId": "rainbow-fish",
+          "amount": 50
+        },
+        {
+          "itemId": "emberfish",
+          "amount": 45
+        }
+      ]
+    },
+    "Exploring": {
+      "1": [
+        {
+          "itemId": "berry",
+          "amount": 100
+        },
+        {
+          "itemId": "butterfly",
+          "amount": 95
+        },
+        {
+          "itemId": "shell",
+          "amount": 90
+        }
+      ],
+      "2": [
+        {
+          "itemId": "horn",
+          "amount": 85
+        },
+        {
+          "itemId": "reed",
+          "amount": 80
+        },
+        {
+          "itemId": "lichen",
+          "amount": 75
+        }
+      ],
+      "3": [
+        {
+          "itemId": "mushroom",
+          "amount": 70
+        },
+        {
+          "itemId": "memory-orb",
+          "amount": 65
+        }
+      ],
+      "4": [
+        {
+          "itemId": "vine",
+          "amount": 60
+        },
+        {
+          "itemId": "geode",
+          "amount": 55
+        }
+      ],
+      "5": [
+        {
+          "itemId": "snow",
+          "amount": 50
+        },
+        {
+          "itemId": "legacy-fragment",
+          "amount": 45
+        }
+      ]
+    }
+  }
+}
