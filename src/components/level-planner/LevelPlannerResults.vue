@@ -9,6 +9,16 @@ import LevelPlannerTimelineStep from './LevelPlannerTimelineStep.vue'
 const props = defineProps<{
   plan: LevelingPlan
   creatureName: string
+  creatureImage?: string
+  overriddenFromLevels?: Set<number>
+  hasRouteOverrides?: boolean
+}>()
+
+
+const emit = defineEmits<{
+  selectAlternative: [fromLevel: number, toLevel: number, expeditionId: string, tier: number]
+  resetOverride: [fromLevel: number]
+  resetAllOverrides: []
 }>()
 
 
@@ -35,7 +45,15 @@ const timePercents = computed(() =>
 
 <template>
   <div class="space-y-4">
-    <LevelPlannerSummary :plan="plan" :from-level="fromLevel" :to-level="toLevel" />
+    <LevelPlannerSummary
+      :plan="plan"
+      :from-level="fromLevel"
+      :to-level="toLevel"
+      :creature-name="creatureName"
+      :creature-image="creatureImage"
+      :has-route-overrides="hasRouteOverrides"
+      @reset-all-overrides="emit('resetAllOverrides')"
+    />
 
     <div>
       <LevelPlannerTimelineStep
@@ -48,7 +66,10 @@ const timePercents = computed(() =>
         :is-last="index === plan.steps.length - 1"
         :expanded="expandedIndex === index"
         :time-percent="timePercents[index]"
+        :has-override="overriddenFromLevels?.has(step.fromLevel)"
         @toggle="toggleExpand(index)"
+        @select-alternative="(...args) => emit('selectAlternative', ...args)"
+        @reset-override="(...args) => emit('resetOverride', ...args)"
       />
     </div>
   </div>

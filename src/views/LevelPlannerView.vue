@@ -4,7 +4,6 @@ import { Clock3, Play, RefreshCw, Users, User, Zap } from 'lucide-vue-next'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import LevelPlannerCreaturePicker from '@/components/level-planner/LevelPlannerCreaturePicker.vue'
 import LevelPlannerResults from '@/components/level-planner/LevelPlannerResults.vue'
 import PartyCreatureFilter from '@/components/level-planner/PartyCreatureFilter.vue'
 import PartyExpeditionFilter from '@/components/level-planner/PartyExpeditionFilter.vue'
@@ -20,6 +19,7 @@ import { useGameConfig } from '@/composables/useGameConfig'
 import { useLevelPlanner } from '@/composables/useLevelPlanner'
 import { usePartyPlanner } from '@/composables/usePartyPlanner'
 import type { PlannerStrategy, PlannerTimeBudget } from '@/types'
+import { getCreatureImage } from '@/utils/creatureImages'
 import { maxLevelForState } from '@/utils/formulas'
 import { toolIcons } from '@/utils/icons'
 import { expeditions as allExpeditions } from '@/utils/precomputedTables'
@@ -54,11 +54,19 @@ const singleCreatureMax = computed(() =>
 const singleTargetPresets = [70, 120]
 
 
-const { creature, startLevel, plan, needsAwaken, totalXpNeeded, isMaxLevel } = useLevelPlanner(
-  creatureId,
-  targetLevel,
-  effectiveExpeditionTierSelections,
-)
+const {
+  creature,
+  startLevel,
+  plan,
+  needsAwaken,
+  totalXpNeeded,
+  isMaxLevel,
+  selectAlternative,
+  resetOverride,
+  resetAllOverrides: resetRouteOverrides,
+  hasOverrides: hasRouteOverrides,
+  overriddenFromLevels,
+} = useLevelPlanner(creatureId, targetLevel, effectiveExpeditionTierSelections)
 
 
 // Party mode state — auto-computed from owned creatures
@@ -379,11 +387,16 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
 
     <!-- ===== SINGLE MODE ===== -->
     <template v-if="mode === 'single'">
-      <PlannerToolbar picker-label="Creature">
-        <template #picker>
-          <LevelPlannerCreaturePicker v-model="creatureId" :party-mode="false" />
-        </template>
+      <PartyCreatureFilter
+        :creatures="overrideableCreatures"
+        :get-level="getLevel"
+        :is-awakened="isAwakened"
+        :select-mode="true"
+        :selected-id="creatureId"
+        @select="creatureId = $event"
+      />
 
+      <PlannerToolbar>
         <template #controls>
           <div class="flex items-center gap-2">
             <label class="text-xs font-semibold text-muted-foreground">Target</label>
@@ -474,6 +487,12 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
         v-else-if="plan && plan.steps.length > 0"
         :plan="plan"
         :creature-name="creature?.name ?? ''"
+        :creature-image="creature ? getCreatureImage(creature) : undefined"
+        :overridden-from-levels="overriddenFromLevels"
+        :has-route-overrides="hasRouteOverrides"
+        @select-alternative="selectAlternative"
+        @reset-override="resetOverride"
+        @reset-all-overrides="resetRouteOverrides()"
       />
     </template>
 
