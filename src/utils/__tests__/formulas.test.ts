@@ -14,9 +14,13 @@ import {
   getDungeonGrade,
   getDungeonScaledRewards,
   getLoopXpBonus,
+  getPlayerLevel,
+  getPlayerLevelXpBonus,
   getRecommendedCreatures,
   getRecommendedDungeonCreatures,
+  getSkillLevel,
   levelFromXp,
+  SKILLING_IDS,
   traitAbbreviations,
   xpForLevel,
 } from '@/utils/formulas'
@@ -994,5 +998,74 @@ describe('dungeons.json data integrity', () => {
 
   test('requires armor-set', () => {
     expect(dungeonConfig.requiresItem).toBe('armor-set')
+  })
+})
+
+// ── Skilling / Player Level ───────────────────────────────────────────
+
+describe('getSkillLevel', () => {
+  test('returns 1 for 0 XP', () => {
+    expect(getSkillLevel(0)).toBe(1)
+  })
+
+  test('returns 1 for negative XP', () => {
+    expect(getSkillLevel(-100)).toBe(1)
+  })
+
+  test('returns 2 at first threshold (83 XP)', () => {
+    expect(getSkillLevel(83)).toBe(2)
+    expect(getSkillLevel(82)).toBe(1)
+  })
+
+  test('returns known levels from XP table comments', () => {
+    expect(getSkillLevel(388)).toBe(5)
+    expect(getSkillLevel(1154)).toBe(10)
+    expect(getSkillLevel(4470)).toBe(20)
+    expect(getSkillLevel(101333)).toBe(50)
+    expect(getSkillLevel(737627)).toBe(70)
+    expect(getSkillLevel(13034431)).toBe(99)
+  })
+
+  test('caps at 99', () => {
+    expect(getSkillLevel(999_999_999)).toBe(99)
+  })
+})
+
+describe('getPlayerLevel', () => {
+  test('returns 1 when all skills are missing (default to 1)', () => {
+    expect(getPlayerLevel({})).toBe(1)
+  })
+
+  test('returns floor of average', () => {
+    const levels: Record<string, number> = {}
+    for (const id of SKILLING_IDS) levels[id] = 10
+    expect(getPlayerLevel(levels)).toBe(10)
+  })
+
+  test('floors the average', () => {
+    const levels: Record<string, number> = {}
+    for (const id of SKILLING_IDS) levels[id] = 10
+    levels['Chopping'] = 11
+    expect(getPlayerLevel(levels)).toBe(10)
+  })
+
+  test('missing skills default to 1', () => {
+    expect(getPlayerLevel({ Chopping: 99 })).toBe(11)
+  })
+
+  test('caps at 99', () => {
+    const levels: Record<string, number> = {}
+    for (const id of SKILLING_IDS) levels[id] = 99
+    expect(getPlayerLevel(levels)).toBe(99)
+  })
+})
+
+describe('getPlayerLevelXpBonus', () => {
+  test('level 1 gives 0.50', () => {
+    expect(getPlayerLevelXpBonus(1)).toBeCloseTo(0.5)
+  })
+
+  test('level 99 gives 25.00', () => {
+    expect(getPlayerLevelXpBonus(99)).toBeCloseTo(25.0)
   })
 })
