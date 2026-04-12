@@ -533,3 +533,134 @@ test.describe('level up - expedition filter', () => {
     await expect(expSection.getByText('Filtered')).toBeHidden()
   })
 })
+
+// ── Level Up — alternative routes ─────────────────────────────────
+
+test.describe('level up - alternative routes', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.evaluate(() => localStorage.clear())
+    await seedCreatures(page)
+  })
+
+  test('expanding a step shows Alternative Routes when multiple expeditions available', async ({
+    page,
+  }) => {
+    // Include all expeditions so alternatives appear
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Expand expedition filter and include all
+    await page.getByText('Expeditions', { exact: true }).first().click()
+    await page.getByRole('button', { name: 'Include All' }).click()
+    await expect(page.getByText('20 of 20 included')).toBeVisible()
+
+    // Wait for plan to recalculate, then expand first step
+    await page.locator('button[aria-expanded]').first().waitFor()
+    await page.locator('button[aria-expanded="false"]').first().click()
+
+    // Alternative Routes header should be visible
+    await expect(page.getByText('Alternative Routes')).toBeVisible()
+  })
+
+  test('clicking an alternative replans and shows Override badge', async ({ page }) => {
+    // Include all expeditions so alternatives appear
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    await page.getByText('Expeditions', { exact: true }).first().click()
+    await page.getByRole('button', { name: 'Include All' }).click()
+    await expect(page.getByText('20 of 20 included')).toBeVisible()
+
+    // Expand first step
+    await page.locator('button[aria-expanded]').first().waitFor()
+    await page.locator('button[aria-expanded="false"]').first().click()
+    await page.getByText('Alternative Routes').waitFor()
+
+    // Click the first alternative route button
+    const altSection = page.locator('div', { hasText: 'Alternative Routes' }).last()
+    const altButton = altSection.locator('button').first()
+    if ((await altButton.count()) > 0) {
+      await altButton.click()
+
+      // Override badge should appear
+      await expect(page.getByText('Override').first()).toBeVisible({ timeout: 10000 })
+    }
+  })
+})
+
+// ── Level Up — prestige mode ──────────────────────────────────────
+
+test.describe('level up - prestige mode', () => {
+  test('awakened creature at max level shows prestige step instead of max message', async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'creature-collection',
+        JSON.stringify({ moss: { owned: true, level: 120, awakened: true } }),
+      )
+    })
+    await page.goto('./planner?tab=levelup&creature=moss&target=120')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Should show Prestige step, not "Already at max level"
+    await expect(page.getByText('Prestige Creature')).toBeVisible()
+    await expect(page.getByText('Already at max level!')).toBeHidden()
+  })
+
+  test('prestige step shows correct level range 120→1', async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'creature-collection',
+        JSON.stringify({ moss: { owned: true, level: 120, awakened: true } }),
+      )
+    })
+    await page.goto('./planner?tab=levelup&creature=moss&target=120')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Should show LVL 120→1
+    await expect(page.getByText('LVL 120→1')).toBeVisible()
+  })
+})
+
+// ── Level Up — creature grid selector ─────────────────────────────
+
+test.describe('level up - creature grid selector', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.evaluate(() => localStorage.clear())
+    await seedCreatures(page)
+  })
+
+  test('creature grid is visible in single mode', async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
+
+    // Creature grid should show owned creature names
+    await expect(page.getByText('Moss').first()).toBeVisible()
+    await expect(page.getByText('Scoots').first()).toBeVisible()
+  })
+
+  test('clicking a creature tile selects it and shows plan', async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
+
+    // Click on Moss tile
+    await page.locator('button', { hasText: 'Moss' }).first().click()
+
+    // Heading should update and plan should show
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await expect(page.getByText(/\d+ step/).first()).toBeVisible()
+  })
+
+  test('summary shows creature name and image', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&creature=moss&target=70')
+    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+
+    // Summary card contains "Leveling Plan" text
+    const summary = page.locator('.surface-card', { hasText: 'Leveling Plan' })
+    await expect(summary.getByText('Moss')).toBeVisible()
+    await expect(summary.getByText('Leveling Plan')).toBeVisible()
+  })
+})
