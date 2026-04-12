@@ -5,6 +5,7 @@ import {
   ChevronsRight,
   Cog,
   Compass,
+  Swords,
   FileCog,
   GitBranch,
   Github,
@@ -52,6 +53,7 @@ const navGroups = [
     items: [
       { label: 'Beastiary', to: '/', icon: BookOpen },
       { label: 'Items', to: '/items', icon: Package },
+      { label: 'Dungeons', to: '/dungeons', icon: Swords },
       { label: 'Expeditions', to: '/expeditions', icon: Compass },
     ],
   },
