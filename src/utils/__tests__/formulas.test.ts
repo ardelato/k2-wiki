@@ -939,3 +939,60 @@ describe('dungeon grade and reward relationships', () => {
     }
   })
 })
+
+describe('dungeons.json data integrity', () => {
+  test('has 5 tiers', () => {
+    expect(dungeonConfig.tiers).toHaveLength(5)
+  })
+
+  test('has 5 grades (S/A/B/C/F)', () => {
+    expect(dungeonConfig.grades).toHaveLength(5)
+    expect(dungeonConfig.grades.map((g) => g.grade)).toEqual(['S', 'A', 'B', 'C', 'F'])
+  })
+
+  test('grades are sorted by minRatio descending', () => {
+    for (let i = 1; i < dungeonConfig.grades.length; i++) {
+      expect(dungeonConfig.grades[i - 1].minRatio).toBeGreaterThan(dungeonConfig.grades[i].minRatio)
+    }
+  })
+
+  test('combat stat weights sum to 1', () => {
+    const sum = Object.values(dungeonConfig.statWeights.combat).reduce((a, b) => a + b, 0)
+    expect(sum).toBeCloseTo(1.0)
+  })
+
+  test('gathering stat weights sum to 1', () => {
+    const sum = Object.values(dungeonConfig.statWeights.gathering).reduce((a, b) => a + b, 0)
+    expect(sum).toBeCloseTo(1.0)
+  })
+
+  test('combat rewards exist for all 5 tiers', () => {
+    for (let t = 1; t <= 5; t++) {
+      expect(dungeonConfig.combatRewards[String(t)]).toBeDefined()
+      expect(dungeonConfig.combatRewards[String(t)].length).toBeGreaterThan(0)
+    }
+  })
+
+  test('gathering rewards exist for all 6 sub-focuses and 5 tiers', () => {
+    const subFocuses = ['Chopping', 'Mining', 'Digging', 'Farming', 'Fishing', 'Exploring'] as const
+    for (const sub of subFocuses) {
+      expect(dungeonConfig.gatheringRewards[sub]).toBeDefined()
+      for (let t = 1; t <= 5; t++) {
+        expect(dungeonConfig.gatheringRewards[sub][String(t)]).toBeDefined()
+        expect(dungeonConfig.gatheringRewards[sub][String(t)].length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  test('duration is 900 seconds', () => {
+    expect(dungeonConfig.duration).toBe(900)
+  })
+
+  test('max party size is 3', () => {
+    expect(dungeonConfig.maxPartySize).toBe(3)
+  })
+
+  test('requires armor-set', () => {
+    expect(dungeonConfig.requiresItem).toBe('armor-set')
+  })
+})
