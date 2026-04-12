@@ -1,6 +1,6 @@
 import creaturesData from '@/data/creatures.json'
 import dungeonData from '@/data/dungeons.json'
-import type { Biome, Creature, DungeonConfig, Expedition } from '@/types'
+import type { Biome, Creature, DungeonConfig, DungeonGrade, Expedition } from '@/types'
 import {
   biomeMultiplier,
   calculateCreatureRating,
@@ -11,6 +11,8 @@ import {
   calculatePartyScore,
   getBestExpeditionsForCreature,
   getBestExpeditionsForLeveling,
+  getDungeonGrade,
+  getDungeonScaledRewards,
   getLoopXpBonus,
   getRecommendedCreatures,
   getRecommendedDungeonCreatures,
@@ -809,5 +811,131 @@ describe('getRecommendedDungeonCreatures', () => {
       gatheringWeights,
     )
     expect(results[0].creature.id).toBe('smart')
+  })
+})
+
+describe('getDungeonGrade', () => {
+  const grades = dungeonConfig.grades
+
+  test('returns S for ratio >= 2.0', () => {
+    expect(getDungeonGrade(4000, 2000, grades).grade).toBe('S')
+    expect(getDungeonGrade(5000, 2000, grades).grade).toBe('S')
+  })
+
+  test('returns A for ratio >= 1.0 but < 2.0', () => {
+    expect(getDungeonGrade(2000, 2000, grades).grade).toBe('A')
+    expect(getDungeonGrade(3999, 2000, grades).grade).toBe('A')
+  })
+
+  test('returns B for ratio >= 0.6 but < 1.0', () => {
+    expect(getDungeonGrade(1200, 2000, grades).grade).toBe('B')
+    expect(getDungeonGrade(1999, 2000, grades).grade).toBe('B')
+  })
+
+  test('returns C for ratio >= 0.3 but < 0.6', () => {
+    expect(getDungeonGrade(600, 2000, grades).grade).toBe('C')
+    expect(getDungeonGrade(1199, 2000, grades).grade).toBe('C')
+  })
+
+  test('returns F for ratio < 0.3', () => {
+    expect(getDungeonGrade(0, 2000, grades).grade).toBe('F')
+    expect(getDungeonGrade(599, 2000, grades).grade).toBe('F')
+  })
+
+  test('returns correct multiplier for each grade', () => {
+    expect(getDungeonGrade(4000, 2000, grades).multiplier).toBe(2.0)
+    expect(getDungeonGrade(2000, 2000, grades).multiplier).toBe(1.5)
+    expect(getDungeonGrade(1200, 2000, grades).multiplier).toBe(1.0)
+    expect(getDungeonGrade(600, 2000, grades).multiplier).toBe(0.5)
+    expect(getDungeonGrade(0, 2000, grades).multiplier).toBe(0.25)
+  })
+
+  test('returns F when baseRating is 0', () => {
+    expect(getDungeonGrade(100, 0, grades).grade).toBe('F')
+  })
+
+  test('works across all tiers', () => {
+    for (const tier of dungeonConfig.tiers) {
+      const sGrade = getDungeonGrade(tier.baseRating * 2, tier.baseRating, grades)
+      expect(sGrade.grade).toBe('S')
+      const fGrade = getDungeonGrade(0, tier.baseRating, grades)
+      expect(fGrade.grade).toBe('F')
+    }
+  })
+})
+
+describe('getDungeonScaledRewards', () => {
+  const baseRewards = [
+    { itemId: 'dungeon-rune', amount: 2 },
+    { itemId: 'hide', amount: 5 },
+  ]
+
+  test('scales amounts by multiplier', () => {
+    const scaled = getDungeonScaledRewards(baseRewards, 2.0)
+    expect(scaled[0].amount).toBe(4)
+    expect(scaled[1].amount).toBe(10)
+  })
+
+  test('floors scaled amounts', () => {
+    const scaled = getDungeonScaledRewards(baseRewards, 0.5)
+    expect(scaled[0].amount).toBe(1)
+    expect(scaled[1].amount).toBe(2)
+  })
+
+  test('enforces minimum of 1', () => {
+    const scaled = getDungeonScaledRewards(baseRewards, 0.25)
+    expect(scaled[0].amount).toBeGreaterThanOrEqual(1)
+    expect(scaled[1].amount).toBeGreaterThanOrEqual(1)
+  })
+
+  test('preserves item IDs', () => {
+    const scaled = getDungeonScaledRewards(baseRewards, 1.0)
+    expect(scaled[0].itemId).toBe('dungeon-rune')
+    expect(scaled[1].itemId).toBe('hide')
+  })
+
+  test('returns empty array for empty input', () => {
+    expect(getDungeonScaledRewards([], 2.0)).toEqual([])
+  })
+})
+
+describe('dungeon grade and reward relationships', () => {
+  const grades = dungeonConfig.grades
+
+  test('higher party score produces better grade', () => {
+    const gradeF = getDungeonGrade(0, 2000, grades)
+    const gradeC = getDungeonGrade(600, 2000, grades)
+    const gradeB = getDungeonGrade(1200, 2000, grades)
+    const gradeA = getDungeonGrade(2000, 2000, grades)
+    const gradeS = getDungeonGrade(4000, 2000, grades)
+
+    expect(gradeF.multiplier).toBeLessThan(gradeC.multiplier)
+    expect(gradeC.multiplier).toBeLessThan(gradeB.multiplier)
+    expect(gradeB.multiplier).toBeLessThan(gradeA.multiplier)
+    expect(gradeA.multiplier).toBeLessThan(gradeS.multiplier)
+  })
+
+  test('higher grade gives more rewards', () => {
+    const baseRewards = dungeonConfig.combatRewards['1']
+    const rewardsB = getDungeonScaledRewards(baseRewards, 1.0)
+    const rewardsS = getDungeonScaledRewards(baseRewards, 2.0)
+
+    for (let i = 0; i < baseRewards.length; i++) {
+      expect(rewardsS[i].amount).toBeGreaterThanOrEqual(rewardsB[i].amount)
+    }
+  })
+
+  test('XP reward scales with tier', () => {
+    const tiers = dungeonConfig.tiers
+    for (let i = 1; i < tiers.length; i++) {
+      expect(tiers[i].xpReward).toBeGreaterThan(tiers[i - 1].xpReward)
+    }
+  })
+
+  test('base rating scales with tier', () => {
+    const tiers = dungeonConfig.tiers
+    for (let i = 1; i < tiers.length; i++) {
+      expect(tiers[i].baseRating).toBeGreaterThan(tiers[i - 1].baseRating)
+    }
   })
 })
