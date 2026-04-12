@@ -15,8 +15,30 @@ export interface LevelPlannerInput {
   startLevel: number
   targetLevel: number
   isAwakened: boolean
+  /** Prestige mode: creature is at max level and re-awakening from level 1 */
+  isPrestige?: boolean
   swordXpMultiplier?: number
   expeditionTierSelections?: Record<string, number[]>
+  /** Force specific expedition+tier for a level range (keyed by fromLevel of merged step) */
+  stepOverrides?: Map<number, { expeditionId: string; tier: number; toLevel: number }>
+}
+
+export interface AlternativeRoute {
+  expedition: Expedition
+  tier: number
+  biomeName: string
+  traitMatch: boolean
+  biomeStatus: 'advantage' | 'disadvantage' | 'neutral'
+  /** XP/min at loop count 0 for the level range of this merged step */
+  xpPerMinute: number
+  /** Total runs across the level range */
+  runs: number
+  /** Total time in seconds across the level range */
+  timeSeconds: number
+  /** Relative time difference vs the chosen step (positive = slower) */
+  timeDeltaPercent: number
+  /** Relative XP/min difference vs the chosen step (negative = worse) */
+  xpPerMinuteDeltaPercent: number
 }
 
 export interface PlanStep {
@@ -36,6 +58,7 @@ export interface PlanStep {
   biomeStatus: 'advantage' | 'disadvantage' | 'neutral'
   partyTip?: string
   isAwakeningStep?: boolean
+  alternatives?: AlternativeRoute[]
 }
 
 export interface LevelingPlan {
@@ -47,6 +70,9 @@ export interface LevelingPlan {
 
 /** Minimum improvement required to justify switching expedition+tier (accounts for loop bonus loss) */
 const SWITCH_THRESHOLD = 0.15
+
+/** Maximum number of alternative routes to surface per step */
+const MAX_ALTERNATIVES = 5
 
 function getBiomeStatus(
   creature: Creature,
@@ -83,6 +109,34 @@ interface EvalResult {
   timeForLevel: number
 }
 
+type EvaluateComboFn = (
+  expedition: Expedition,
+  biome: Biome | undefined,
+  tier: number,
+  level: number,
+  loopCount: number,
+) => EvalResult | null
+
+function makeAwakeningStep(fromLevel: number): PlanStep {
+  return {
+    expedition: {} as Expedition,
+    tier: 0,
+    fromLevel,
+    toLevel: 1,
+    runs: 0,
+    timeSeconds: 0,
+    xpPerRun: 0,
+    durationPerRun: 0,
+    xpPerMinute: 0,
+    startXpPerMinute: 0,
+    endXpPerMinute: 0,
+    biomeName: '',
+    traitMatch: false,
+    biomeStatus: 'neutral',
+    isAwakeningStep: true,
+  }
+}
+
 /**
  * Build an optimal leveling plan. At each level:
  * 1. Evaluate continuing the current expedition+tier (with accumulated loop bonus)
@@ -99,6 +153,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const tierSelections = expeditionTierSelections ?? {}
   const hasTierRestrictions = Object.keys(tierSelections).length > 0
   const allTiers = [1, 2, 3, 4, 5]
+  const stepOverrides = settings.stepOverrides
 
   const candidates: ExpeditionWithBiome[] = expeditions
     .filter((exp) => !hasTierRestrictions || (tierSelections[exp.id] ?? allTiers).length > 0)
@@ -137,6 +192,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   /**
    * Plan optimal steps for a contiguous level range.
    * Mutates rawSteps in place and returns the final combo/loop state.
+   * Also populates levelAlternatives with per-level alternative EvalResults.
    */
   function planLevelRange(
     from: number,
@@ -144,11 +200,21 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     rawSteps: PlanStep[],
     initialCombo: ComboKey | null,
     initialLoopCount: number,
+    levelAlternatives: Map<number, EvalResult[]>,
   ): { currentCombo: ComboKey | null; loopCount: number } {
     let currentCombo = initialCombo
     let loopCount = initialLoopCount
+    let activeOverride: { expeditionId: string; tier: number; toLevel: number } | null = null
 
     for (let level = from; level < to; level++) {
+      // Check for new user override at this level, or deactivate expired one
+      const newOverride = stepOverrides?.get(level)
+      if (newOverride) {
+        activeOverride = newOverride
+      } else if (activeOverride && level >= activeOverride.toLevel) {
+        activeOverride = null
+      }
+
       // Evaluate current combo with accumulated loop bonus
       let currentResult: EvalResult | null = null
       if (currentCombo) {
@@ -164,18 +230,24 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
         }
       }
 
+      // Collect all fresh results for alternatives tracking
+      const allFreshResults: EvalResult[] = []
+
       // Find the absolute best option (all combos at loop count 0)
       let bestFresh: EvalResult | null = null
       for (const { expedition, biome } of candidates) {
         const tiers = tierSelections[expedition.id] ?? allTiers
         for (const tier of tiers) {
           const result = evaluateCombo(expedition, biome, tier, level, 0)
+          if (!result) continue
+
+          allFreshResults.push(result)
+
           if (
-            result &&
-            (!bestFresh ||
-              result.timeForLevel < bestFresh.timeForLevel ||
-              (result.timeForLevel === bestFresh.timeForLevel &&
-                result.xpPerMinute > bestFresh.xpPerMinute))
+            !bestFresh ||
+            result.timeForLevel < bestFresh.timeForLevel ||
+            (result.timeForLevel === bestFresh.timeForLevel &&
+              result.xpPerMinute > bestFresh.xpPerMinute)
           ) {
             bestFresh = result
           }
@@ -195,7 +267,24 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
 
       // Decide: stick with current or switch?
       let chosen: EvalResult | null
-      if (!currentResult) {
+
+      if (activeOverride) {
+        // User override active: use the overridden combo with accumulated loop bonus
+        if (
+          currentCombo &&
+          currentCombo.expeditionId === activeOverride.expeditionId &&
+          currentCombo.tier === activeOverride.tier
+        ) {
+          // Already running the override combo — keep it with loop bonus
+          chosen = currentResult
+        } else {
+          // First level of override — start fresh at loop count 0
+          const cand = candidates.find((c) => c.expedition.id === activeOverride!.expeditionId)
+          chosen = cand
+            ? evaluateCombo(cand.expedition, cand.biome, activeOverride!.tier, level, 0)
+            : (bestFresh ?? currentResult)
+        }
+      } else if (!currentResult) {
         // No current combo — pick the best fresh option
         chosen = bestFresh
       } else if (!bestFresh) {
@@ -218,6 +307,23 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       }
 
       if (!chosen) break
+
+      // Store alternatives for this level (excluding chosen expedition, best tier per expedition)
+      const sortedFresh = allFreshResults
+        .filter((r) => r.expedition.id !== chosen.expedition.id)
+        .toSorted((a, b) => a.timeForLevel - b.timeForLevel || b.xpPerMinute - a.xpPerMinute)
+      // Keep only the best tier per expedition
+      const seenExpeditions = new Set<string>()
+      const alternatives: EvalResult[] = []
+      for (const r of sortedFresh) {
+        if (seenExpeditions.has(r.expedition.id)) continue
+        seenExpeditions.add(r.expedition.id)
+        alternatives.push(r)
+        if (alternatives.length >= MAX_ALTERNATIVES) break
+      }
+      if (alternatives.length > 0) {
+        levelAlternatives.set(level, alternatives)
+      }
 
       // Track combo switches
       const chosenCombo: ComboKey = { expeditionId: chosen.expedition.id, tier: chosen.tier }
@@ -254,37 +360,28 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   }
 
   const rawSteps: PlanStep[] = []
+  const levelAlternatives = new Map<number, EvalResult[]>()
+
+  // Prestige: creature is at max level, re-awakening from level 1
+  if (settings.isPrestige) {
+    rawSteps.push(makeAwakeningStep(120))
+  }
+
   // Effective cap: unawakened creatures must awaken at 70 before continuing
   const effectiveTarget = !isAwakened ? Math.min(targetLevel, PRE_AWAKEN_MAX) : targetLevel
 
-  planLevelRange(startLevel, effectiveTarget, rawSteps, null, 0)
+  planLevelRange(startLevel, effectiveTarget, rawSteps, null, 0, levelAlternatives)
 
   // Insert awakening step and plan remaining levels if needed
   if (!isAwakened && targetLevel > PRE_AWAKEN_MAX && startLevel <= PRE_AWAKEN_MAX) {
-    rawSteps.push({
-      expedition: {} as Expedition,
-      tier: 0,
-      fromLevel: PRE_AWAKEN_MAX,
-      toLevel: 1,
-      runs: 0,
-      timeSeconds: 0,
-      xpPerRun: 0,
-      durationPerRun: 0,
-      xpPerMinute: 0,
-      startXpPerMinute: 0,
-      endXpPerMinute: 0,
-      biomeName: '',
-      traitMatch: false,
-      biomeStatus: 'neutral',
-      isAwakeningStep: true,
-    })
+    rawSteps.push(makeAwakeningStep(PRE_AWAKEN_MAX))
 
     // Plan from 1 → target after awakening (level resets to 1 on awaken)
-    planLevelRange(1, targetLevel, rawSteps, null, 0)
+    planLevelRange(1, targetLevel, rawSteps, null, 0, levelAlternatives)
   }
 
-  // Merge consecutive steps using the same expedition+tier
-  const steps = mergeSteps(rawSteps)
+  // Merge consecutive steps using the same expedition+tier, aggregating alternatives
+  const steps = mergeStepsWithAlternatives(rawSteps, levelAlternatives, evaluateCombo, creature)
 
   // Add party tips to merged steps
   for (const step of steps) {
@@ -320,20 +417,32 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   return { steps, totalTimeSeconds: totalTime, totalRuns, xpPerMinute }
 }
 
-function mergeSteps(steps: PlanStep[]): PlanStep[] {
+/**
+ * Merge consecutive raw steps using the same expedition+tier,
+ * and aggregate per-level alternatives into step-level alternatives.
+ */
+function mergeStepsWithAlternatives(
+  steps: PlanStep[],
+  levelAlternatives: Map<number, EvalResult[]>,
+  evaluateCombo: EvaluateComboFn,
+  creature: Creature,
+): PlanStep[] {
   if (steps.length === 0) return []
 
   const merged: PlanStep[] = []
   let current = { ...steps[0] }
   let currentXpEarned = current.runs * current.xpPerRun
+  let currentLevelRange = [current.fromLevel]
 
   for (let i = 1; i < steps.length; i++) {
     const step = steps[i]
     // Never merge awakening steps with adjacent steps
     if (step.isAwakeningStep || current.isAwakeningStep) {
+      attachAlternatives(current, currentLevelRange, levelAlternatives, evaluateCombo, creature)
       merged.push(current)
       current = { ...step }
       currentXpEarned = current.runs * current.xpPerRun
+      currentLevelRange = [current.fromLevel]
     } else if (step.expedition.id === current.expedition.id && step.tier === current.tier) {
       current.toLevel = step.toLevel
       current.runs += step.runs
@@ -342,12 +451,102 @@ function mergeSteps(steps: PlanStep[]): PlanStep[] {
       current.xpPerMinute =
         current.timeSeconds > 0 ? (currentXpEarned / current.timeSeconds) * 60 : 0
       current.endXpPerMinute = step.xpPerMinute
+      currentLevelRange.push(step.fromLevel)
     } else {
+      attachAlternatives(current, currentLevelRange, levelAlternatives, evaluateCombo, creature)
       merged.push(current)
       current = { ...step }
       currentXpEarned = current.runs * current.xpPerRun
+      currentLevelRange = [current.fromLevel]
     }
   }
+  attachAlternatives(current, currentLevelRange, levelAlternatives, evaluateCombo, creature)
   merged.push(current)
   return merged
+}
+
+/**
+ * Aggregate per-level alternatives into a merged step's alternatives.
+ * Re-evaluates each unique alternative combo across the full level range.
+ */
+function attachAlternatives(
+  step: PlanStep,
+  levelRange: number[],
+  levelAlternatives: Map<number, EvalResult[]>,
+  evaluateCombo: EvaluateComboFn,
+  creature: Creature,
+): void {
+  if (step.isAwakeningStep) return
+
+  // Collect unique alternative expeditions (best tier per expedition) across the range
+  const altCombos = new Map<
+    string,
+    { expedition: Expedition; biome: Biome | undefined; tier: number }
+  >()
+  for (const level of levelRange) {
+    const alts = levelAlternatives.get(level)
+    if (!alts) continue
+    for (const alt of alts) {
+      // Key by expedition ID — first seen is the best tier (alternatives are pre-sorted)
+      if (!altCombos.has(alt.expedition.id)) {
+        altCombos.set(alt.expedition.id, {
+          expedition: alt.expedition,
+          biome: alt.biome,
+          tier: alt.tier,
+        })
+      }
+    }
+  }
+
+  if (altCombos.size === 0) return
+
+  // Re-evaluate each alternative across the full level range, simulating loop bonus
+  const alternatives: AlternativeRoute[] = []
+  for (const [, combo] of altCombos) {
+    let totalTime = 0
+    let totalRuns = 0
+    let totalXpEarned = 0
+    let loopCount = 0
+    let valid = true
+
+    for (let level = step.fromLevel; level < step.toLevel; level++) {
+      const result = evaluateCombo(combo.expedition, combo.biome, combo.tier, level, loopCount)
+      if (!result) {
+        valid = false
+        break
+      }
+      totalTime += result.timeForLevel
+      totalRuns += result.runsForLevel
+      totalXpEarned += result.xpPerRun * result.runsForLevel
+      loopCount += result.runsForLevel
+    }
+
+    if (!valid || totalTime <= 0) continue
+
+    const xpPerMinute = (totalXpEarned / totalTime) * 60
+    const timeDeltaPercent = step.timeSeconds > 0 ? totalTime / step.timeSeconds - 1 : 0
+    const xpPerMinuteDeltaPercent = step.xpPerMinute > 0 ? xpPerMinute / step.xpPerMinute - 1 : 0
+
+    const biomeStatus = combo.biome ? getBiomeStatus(creature, combo.biome) : ('neutral' as const)
+
+    alternatives.push({
+      expedition: combo.expedition,
+      tier: combo.tier,
+      biomeName: combo.biome?.name ?? combo.expedition.biome,
+      traitMatch: creature.trait === combo.expedition.trait,
+      biomeStatus,
+      xpPerMinute,
+      runs: totalRuns,
+      timeSeconds: totalTime,
+      timeDeltaPercent,
+      xpPerMinuteDeltaPercent,
+    })
+  }
+
+  if (alternatives.length > 0) {
+    // Sort by total time (fastest first), keep top N
+    step.alternatives = alternatives
+      .toSorted((a, b) => a.timeSeconds - b.timeSeconds || b.xpPerMinute - a.xpPerMinute)
+      .slice(0, MAX_ALTERNATIVES)
+  }
 }
