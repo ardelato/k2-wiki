@@ -2,7 +2,7 @@
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 
-type ChipState = 'included' | 'excluded' | 'force-included'
+type ChipState = 'included' | 'excluded' | 'force-included' | 'selected'
 
 
 const props = defineProps<{
@@ -21,6 +21,7 @@ defineEmits<{
 
 function tileBorderClass(): string {
   if (props.chipState === 'excluded') return 'border-border/40 opacity-40 grayscale'
+  if (props.chipState === 'selected') return 'border-primary/60 ring-2 ring-primary/40'
   if (props.chipState === 'force-included') return 'border-primary/60 ring-1 ring-primary/30'
   if (props.awakened) return 'border-pink-500/40 ring-1 ring-pink-500/20 hover:border-pink-500/60'
   return 'border-border bg-card/50 hover:border-primary/50'
@@ -29,6 +30,7 @@ function tileBorderClass(): string {
 
 function nameClass(): string {
   if (props.chipState === 'excluded') return 'text-white/60 line-through'
+  if (props.chipState === 'selected') return 'text-primary'
   if (props.chipState === 'force-included') return 'text-primary'
   if (props.awakened) return 'text-pink-400'
   return 'text-white'
@@ -37,6 +39,7 @@ function nameClass(): string {
 
 function levelBadgeClass(): string {
   if (props.chipState === 'excluded') return 'text-muted-foreground'
+  if (props.chipState === 'selected') return 'text-primary'
   if (props.chipState === 'force-included') return 'text-primary'
   if (props.awakened) return 'text-pink-400'
   return 'text-foreground'
