@@ -148,3 +148,48 @@ describe('parseSave — fabricationAllocations', () => {
     expect(config.fabricationAllocations).toEqual({})
   })
 })
+
+describe('parseSave — skillLevels', () => {
+  test('parses skill XP into levels', () => {
+    const save = baseSave()
+    save.skills = [
+      { id: 'Chopping', xp: 388 }, // level 5
+      { id: 'Mining', xp: 1154 }, // level 10
+    ]
+
+    const config = extractSaveConfig(save)
+    expect(config.skillLevels).toEqual({ Chopping: 5, Mining: 10 })
+  })
+
+  test('includes level 1 skills (0 XP)', () => {
+    const save = baseSave()
+    save.skills = [{ id: 'Chopping', xp: 0 }]
+
+    const config = extractSaveConfig(save)
+    expect(config.skillLevels).toEqual({ Chopping: 1 })
+  })
+
+  test('returns empty object when skills is missing', () => {
+    const save = baseSave()
+    delete save.skills
+
+    const config = extractSaveConfig(save)
+    expect(config.skillLevels).toEqual({})
+  })
+
+  test('returns empty object when skills is not an array', () => {
+    const save = baseSave()
+    save.skills = 'invalid'
+
+    const config = extractSaveConfig(save)
+    expect(config.skillLevels).toEqual({})
+  })
+
+  test('skips entries with missing id or xp', () => {
+    const save = baseSave()
+    save.skills = [{ id: 'Chopping', xp: 388 }, { xp: 500 }, { id: 'Mining' }, {}]
+
+    const config = extractSaveConfig(save)
+    expect(config.skillLevels).toEqual({ Chopping: 5 })
+  })
+})

@@ -2,7 +2,7 @@ import creaturesData from '@/data/creatures.json'
 import { defaultAwakenGatherUpgrades, defaultAwakenSpeedTiers } from '@/data/defaults'
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 
-import { levelFromXp } from './formulas'
+import { levelFromXp, getSkillLevel } from './formulas'
 
 interface SaveInventoryItem {
   id: string
@@ -53,6 +53,7 @@ export interface SaveConfig {
   machineRecipes: Record<string, string | null>
   fabricationAllocations: Record<string, number>
   awakenGoldLevel: number
+  skillLevels: Record<string, number>
   currentExpedition: ExpeditionData
 }
 
@@ -99,6 +100,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const expeditionCompletions = parseExpeditionCompletions(save)
   const { machineLevels, machineRecipes } = parseMachineDetails(save)
   const fabricationAllocations = parseFabricationAllocations(save)
+  const skillLevels = parseSkillLevels(save)
 
   const currentExpedition = buildExpeditionData(save, creatures)
 
@@ -120,6 +122,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     machineRecipes,
     fabricationAllocations,
     awakenGoldLevel,
+    skillLevels,
     currentExpedition,
   }
 }
@@ -381,6 +384,18 @@ function parseFabricationAllocations(save: Record<string, unknown>): Record<stri
   for (const [itemId, amount] of Object.entries(fabrication.allocations)) {
     if (typeof amount === 'number' && amount > 0) {
       result[itemId] = amount
+    }
+  }
+  return result
+}
+
+function parseSkillLevels(save: Record<string, unknown>): Record<string, number> {
+  const skills = save.skills
+  if (!Array.isArray(skills)) return {}
+  const result: Record<string, number> = {}
+  for (const skill of skills as Array<{ id?: string; xp?: number }>) {
+    if (typeof skill.id === 'string' && typeof skill.xp === 'number') {
+      result[skill.id] = getSkillLevel(skill.xp)
     }
   }
   return result

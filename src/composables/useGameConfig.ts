@@ -7,6 +7,7 @@ import {
   defaultGardenFlowers,
 } from '@/data/defaults'
 import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
+import { getPlayerLevel } from '@/utils/formulas'
 import { calculateJobTiersFromSanctuary } from '@/utils/parseSave'
 
 const sanctuaryCreatureIds = useLocalStorage<string[]>('config-sanctuary-creatures', [])
@@ -40,8 +41,10 @@ const fabricationAllocations = useLocalStorage<Record<string, number>>(
   {},
 )
 const awakenGoldLevel = useLocalStorage<number>('config-awaken-gold-level', 0)
+const skillLevels = useLocalStorage<Record<string, number>>('config-skill-levels', {})
 
 export function useGameConfig() {
+  const playerLevel = computed(() => getPlayerLevel(skillLevels.value))
   const excludedCreatureIds = computed(() => {
     const set = new Set<string>()
     for (const id of sanctuaryCreatureIds.value) set.add(id)
@@ -162,6 +165,14 @@ export function useGameConfig() {
     awakenGoldLevel.value = Math.max(0, Math.min(5, level))
   }
 
+  function setSkillLevels(levels: Record<string, number>) {
+    skillLevels.value = levels
+  }
+
+  function resetSkillLevels() {
+    skillLevels.value = {}
+  }
+
   function resetGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
@@ -175,6 +186,7 @@ export function useGameConfig() {
     resetMachines()
     resetFabrication()
     awakenGoldLevel.value = 0
+    resetSkillLevels()
   }
 
   return {
@@ -218,5 +230,9 @@ export function useGameConfig() {
     expeditionToolXpBonus,
     awakenGoldLevel,
     setAwakenGoldLevel,
+    skillLevels,
+    playerLevel,
+    setSkillLevels,
+    resetSkillLevels,
   }
 }

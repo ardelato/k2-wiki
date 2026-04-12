@@ -27,7 +27,7 @@ import {
   TIER_UNLOCK_REQUIREMENTS,
 } from '@/utils/expeditionUnlocks'
 import { toTitleCase } from '@/utils/format'
-import { levelFromXp } from '@/utils/formulas'
+import { levelFromXp, getPlayerLevel, getPlayerLevelXpBonus, SKILLING_IDS } from '@/utils/formulas'
 import {
   sourceIcons,
   sanctuaryIcon,
@@ -35,6 +35,7 @@ import {
   machinesIcon,
   upgradesIcon,
   toolIcons,
+  jobIcons,
   expeditionTierIcons,
 } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -78,6 +79,10 @@ const {
   resetFabrication,
   awakenGoldLevel,
   setAwakenGoldLevel,
+  skillLevels,
+  playerLevel,
+  setSkillLevels,
+  resetSkillLevels,
 } = useGameConfig()
 
 
@@ -398,6 +403,49 @@ const machineLevelsHasDiff = computed(() => {
 })
 
 
+const skillLevelsHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  return JSON.stringify(skillLevels.value) !== JSON.stringify(saveConfig.value.skillLevels)
+})
+
+
+function displaySkillLevel(skillId: string): number {
+  if (saveConfig.value?.skillLevels) {
+    return saveConfig.value.skillLevels[skillId] || 1
+  }
+  return skillLevels.value[skillId] || 1
+}
+
+
+const displayPlayerLevel = computed(() => {
+  if (saveConfig.value?.skillLevels) {
+    return getPlayerLevel(saveConfig.value.skillLevels)
+  }
+  return playerLevel.value
+})
+
+
+const WORKSTATION_IDS = new Set(['Furnace', 'Stove', 'Workbench'])
+
+
+const skillGroups = [
+  {
+    label: 'Gathering',
+    skills: SKILLING_IDS.filter((id) => !WORKSTATION_IDS.has(id)).map((id) => ({
+      id,
+      icon: jobIcons[id.toLowerCase()],
+    })),
+  },
+  {
+    label: 'Workstation',
+    skills: SKILLING_IDS.filter((id) => WORKSTATION_IDS.has(id)).map((id) => ({
+      id,
+      icon: sourceIcons[`crafting_${id.toLowerCase()}`],
+    })),
+  },
+]
+
+
 const fabricationHasDiff = computed(() => {
   if (!saveConfig.value) return false
   return (
@@ -591,6 +639,7 @@ watch(saveConfig, () => {
     if (!jobTiersHasDiff.value) sectionsCollapsed.value.jobTiers = true
     if (!expeditionCompletionsHasDiff.value) sectionsCollapsed.value.expeditions = true
     if (!toolLevelsHasDiff.value) sectionsCollapsed.value.tools = true
+    if (!skillLevelsHasDiff.value) sectionsCollapsed.value.skills = true
     if (!machineLevelsHasDiff.value) sectionsCollapsed.value.machineDetails = true
     if (!fabricationHasDiff.value) sectionsCollapsed.value.fabrication = true
   })
@@ -656,6 +705,14 @@ function applyTools() {
 }
 
 
+function applySkillLevels() {
+  if (!saveConfig.value) return
+  setSkillLevels({ ...saveConfig.value.skillLevels })
+  appliedSections.value = { ...appliedSections.value, skills: true }
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, skills: true }
+}
+
+
 function applyMachineDetails() {
   if (!saveConfig.value) return
   setMachineLevels({ ...saveConfig.value.machineLevels })
@@ -706,6 +763,7 @@ function applyAll() {
   applyGarden()
   applyAwaken()
   applyTools()
+  applySkillLevels()
   applyMachineDetails()
   applyFabrication()
   applyExpeditionCompletions()
@@ -829,6 +887,7 @@ function resetAll() {
   resetMachines()
   resetFabrication()
   resetExpeditions()
+  resetSkillLevels()
   resetCollection()
 }
 
@@ -2461,6 +2520,122 @@ function jobTierLabel(tier: number): string {
             class="py-2 text-center text-xs text-muted-foreground"
           >
             No tool data available
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill Levels & Player Level -->
+      <div class="rounded-xl border border-border bg-card/50 p-4">
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-2" @click="toggleSection('skills')">
+            <component
+              :is="sectionsCollapsed.skills ? ChevronDown : ChevronUp"
+              class="size-4 text-muted-foreground"
+            />
+            <h3 class="text-sm font-bold">Skill Levels</h3>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
+              Player Lvl {{ displayPlayerLevel }}
+            </span>
+            <span
+              class="rounded-md bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-400"
+            >
+              +{{ getPlayerLevelXpBonus(displayPlayerLevel).toFixed(2) }}% XP
+            </span>
+            <button
+              class="focus-ring rounded-lg border border-border px-2 py-1.5 text-muted-foreground transition hover:text-foreground"
+              title="Reset Skill Levels"
+              @click="resetSkillLevels"
+            >
+              <RotateCcw class="size-3.5" />
+            </button>
+            <template v-if="saveConfig">
+              <button
+                v-if="!appliedSections.skills && skillLevelsHasDiff"
+                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                @click="applySkillLevels"
+              >
+                Apply
+              </button>
+              <span
+                v-else-if="!appliedSections.skills && !skillLevelsHasDiff"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Matches Save
+              </span>
+              <span
+                v-else-if="appliedSections.skills"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Applied
+              </span>
+            </template>
+          </div>
+        </div>
+
+        <div v-if="!sectionsCollapsed.skills" class="mt-3 space-y-3">
+          <div v-for="group in skillGroups" :key="group.label" class="space-y-1">
+            <h4 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {{ group.label }}
+            </h4>
+            <div
+              v-for="skill in group.skills"
+              :key="skill.id"
+              class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
+            >
+              <span class="flex items-center gap-2 font-medium">
+                <img v-if="skill.icon" :src="skill.icon" alt="" class="size-5" loading="lazy" />
+                {{ skill.id }}
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs tabular-nums text-muted-foreground"> Level </span>
+                <div
+                  class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
+                >
+                  <button
+                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="displaySkillLevel(skill.id) <= 1"
+                    @click="
+                      setSkillLevels({
+                        ...skillLevels,
+                        [skill.id]: Math.max(1, displaySkillLevel(skill.id) - 1),
+                      })
+                    "
+                  >
+                    <Minus class="size-3" />
+                  </button>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
+                    :value="displaySkillLevel(skill.id)"
+                    @blur="
+                      (e) => {
+                        const v = Math.max(
+                          1,
+                          Math.min(99, parseInt((e.target as HTMLInputElement).value) || 1),
+                        )
+                        setSkillLevels({ ...skillLevels, [skill.id]: v })
+                      }
+                    "
+                  />
+                  <button
+                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    :disabled="displaySkillLevel(skill.id) >= 99"
+                    @click="
+                      setSkillLevels({
+                        ...skillLevels,
+                        [skill.id]: Math.min(99, displaySkillLevel(skill.id) + 1),
+                      })
+                    "
+                  >
+                    <Plus class="size-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
