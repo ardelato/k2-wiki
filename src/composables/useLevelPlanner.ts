@@ -1,4 +1,4 @@
-import { computed, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
@@ -23,15 +23,27 @@ export function useLevelPlanner(
 
   const startLevel = computed(() => (creature.value ? getLevel(creature.value.id) : 1))
 
+  /** True when awakened creature is at max level — treated as prestige (re-awaken from level 1) */
+  const isPrestige = computed(() => awakened.value && startLevel.value >= creatureMaxLevel.value)
+
   const isMaxLevel = computed(
-    () => startLevel.value >= creatureMaxLevel.value && targetLevel.value <= startLevel.value,
+    () =>
+      !isPrestige.value &&
+      startLevel.value >= creatureMaxLevel.value &&
+      targetLevel.value <= startLevel.value,
   )
 
   /** True when the target exceeds the creature's current cap (needs awaken mid-plan) */
   const needsAwaken = computed(() => !awakened.value && targetLevel.value > PRE_AWAKEN_MAX)
 
+  /** The effective start level used for planning (1 for prestige creatures) */
+  const effectiveStartLevel = computed(() => (isPrestige.value ? 1 : startLevel.value))
+
   const totalXpNeeded = computed(() => {
     if (!creature.value) return 0
+    if (isPrestige.value) {
+      return Math.max(0, xpForLevel(targetLevel.value) - xpForLevel(1))
+    }
     if (needsAwaken.value) {
       // XP to reach 70 + XP from 1 to target (post-awaken resets to level 1)
       const preXp = Math.max(0, xpForLevel(PRE_AWAKEN_MAX) - xpForLevel(startLevel.value))
@@ -41,17 +53,54 @@ export function useLevelPlanner(
     return Math.max(0, xpForLevel(targetLevel.value) - xpForLevel(startLevel.value))
   })
 
+  // Step overrides for alternative route selection (keyed by fromLevel)
+  const stepOverrides = ref(
+    new Map<number, { expeditionId: string; tier: number; toLevel: number }>(),
+  )
+
+  const hasOverrides = computed(() => stepOverrides.value.size > 0)
+
+  function selectAlternative(
+    fromLevel: number,
+    toLevel: number,
+    expeditionId: string,
+    tier: number,
+  ) {
+    const next = new Map(stepOverrides.value)
+    next.set(fromLevel, { expeditionId, tier, toLevel })
+    stepOverrides.value = next
+  }
+
+  function resetOverride(fromLevel: number) {
+    const next = new Map(stepOverrides.value)
+    next.delete(fromLevel)
+    stepOverrides.value = next
+  }
+
+  function resetAllOverrides() {
+    stepOverrides.value = new Map()
+  }
+
+  // Clear overrides when inputs change
+  watch([creatureId, targetLevel], () => {
+    if (hasOverrides.value) resetAllOverrides()
+  })
+
   const plan = computed<LevelingPlan | null>(() => {
     if (!creature.value || isMaxLevel.value) return null
     return planLevelingPath({
       creature: creature.value,
-      startLevel: startLevel.value,
+      startLevel: effectiveStartLevel.value,
       targetLevel: targetLevel.value,
       isAwakened: awakened.value,
+      isPrestige: isPrestige.value,
       swordXpMultiplier: expeditionToolXpBonus.value,
       expeditionTierSelections: expeditionTierSelections?.value,
+      stepOverrides: stepOverrides.value.size > 0 ? stepOverrides.value : undefined,
     })
   })
+
+  const overriddenFromLevels = computed(() => new Set(stepOverrides.value.keys()))
 
   return {
     creature,
@@ -62,5 +111,10 @@ export function useLevelPlanner(
     totalXpNeeded,
     isMaxLevel,
     creatureMaxLevel,
+    selectAlternative,
+    resetOverride,
+    resetAllOverrides,
+    hasOverrides,
+    overriddenFromLevels,
   }
 }

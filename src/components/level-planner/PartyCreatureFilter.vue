@@ -11,21 +11,34 @@ import { computed, ref } from 'vue'
 import PartyCreatureTile from '@/components/level-planner/PartyCreatureTile.vue'
 import type { Creature } from '@/types'
 
-const props = defineProps<{
-  creatures: Creature[]
-  globalExcludedIds: Set<string>
-  plannerExcluded: Set<string>
-  plannerIncluded: Set<string>
-  getLevel: (id: string) => number
-  isAwakened: (id: string) => boolean
-  hasOverrides: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    creatures: Creature[]
+    globalExcludedIds?: Set<string>
+    plannerExcluded?: Set<string>
+    plannerIncluded?: Set<string>
+    getLevel: (id: string) => number
+    isAwakened: (id: string) => boolean
+    hasOverrides?: boolean
+    /** Single-select mode: clicking a tile selects instead of toggling include/exclude */
+    selectMode?: boolean
+    /** Currently selected creature ID (only used in selectMode) */
+    selectedId?: string
+  }>(),
+  {
+    globalExcludedIds: () => new Set<string>(),
+    plannerExcluded: () => new Set<string>(),
+    plannerIncluded: () => new Set<string>(),
+    hasOverrides: false,
+  },
+)
 
 
 const emit = defineEmits<{
   toggle: [id: string]
   'toggle-tier': [ids: string[], include: boolean]
   reset: []
+  select: [id: string]
 }>()
 
 
@@ -66,14 +79,24 @@ function isAllIncluded(creatures: Creature[]): boolean {
 }
 
 
-type ChipState = 'included' | 'excluded' | 'force-included'
+type ChipState = 'included' | 'excluded' | 'force-included' | 'selected'
 
 
 function chipState(id: string): ChipState {
+  if (props.selectMode) return id === props.selectedId ? 'selected' : 'included'
   if (props.plannerExcluded.has(id)) return 'excluded'
   if (props.plannerIncluded.has(id)) return 'force-included'
   if (props.globalExcludedIds.has(id)) return 'excluded'
   return 'included'
+}
+
+
+function handleTileClick(id: string) {
+  if (props.selectMode) {
+    emit('select', id)
+  } else {
+    emit('toggle', id)
+  }
 }
 
 
@@ -83,7 +106,9 @@ const includedCount = computed(
 
 
 const normalCreatures = computed(() =>
-  props.creatures.filter((c) => !props.globalExcludedIds.has(c.id)),
+  props.selectMode
+    ? props.creatures
+    : props.creatures.filter((c) => !props.globalExcludedIds.has(c.id)),
 )
 
 
@@ -131,17 +156,20 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
         class="pointer-events-none text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
         >Creatures</label
       >
-      <span class="text-xs text-muted-foreground">
-        {{ includedCount }} of {{ creatures.length }} included
-      </span>
-      <span
-        v-if="hasOverrides"
-        class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
-      >
-        Filtered
-      </span>
+      <template v-if="!selectMode">
+        <span class="text-xs text-muted-foreground">
+          {{ includedCount }} of {{ creatures.length }} included
+        </span>
+        <span
+          v-if="hasOverrides"
+          class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
+        >
+          Filtered
+        </span>
+      </template>
       <div class="ml-auto flex items-center gap-2">
         <button
+          v-if="!selectMode"
           class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold transition"
           :class="
             hasOverrides
@@ -230,6 +258,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
                 Tier {{ group.tier + 1 }}
               </p>
               <button
+                v-if="!selectMode"
                 class="focus-ring inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold transition"
                 :class="
                   isAllIncluded(group.creatures)
@@ -255,7 +284,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
                 :chip-state="chipState(c.id)"
                 :level="getLevel(c.id)"
                 :awakened="isAwakened(c.id)"
-                @toggle="emit('toggle', c.id)"
+                @toggle="handleTileClick(c.id)"
               />
             </div>
           </div>
@@ -270,12 +299,12 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             :chip-state="chipState(c.id)"
             :level="getLevel(c.id)"
             :awakened="isAwakened(c.id)"
-            @toggle="emit('toggle', c.id)"
+            @toggle="handleTileClick(c.id)"
           />
         </div>
 
         <!-- Global excluded separator + creatures -->
-        <template v-if="filteredExcluded.length > 0">
+        <template v-if="filteredExcluded.length > 0 && !selectMode">
           <div class="my-3 flex items-center gap-2">
             <div class="h-px flex-1 bg-border/40" />
             <span
@@ -293,7 +322,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
               :level="getLevel(c.id)"
               :awakened="isAwakened(c.id)"
               title-suffix=" (config excluded)"
-              @toggle="emit('toggle', c.id)"
+              @toggle="handleTileClick(c.id)"
             />
           </div>
         </template>

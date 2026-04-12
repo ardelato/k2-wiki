@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { Clock3, Zap, Users, ChevronRight, Repeat, ExternalLink } from 'lucide-vue-next'
+import {
+  Clock3,
+  Zap,
+  Users,
+  ChevronRight,
+  Repeat,
+  ExternalLink,
+  ArrowRightLeft,
+  RotateCcw,
+} from 'lucide-vue-next'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration } from '@/utils/format'
-import { getLoopXpBonus } from '@/utils/formulas'
 import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import type { PlanStep } from '@/utils/levelPlanner'
@@ -33,12 +41,15 @@ defineProps<{
   hideGutter?: boolean
   scoreRatioMet?: boolean
   highlightCreatureId?: string
+  hasOverride?: boolean
 }>()
 
 
 defineEmits<{
   toggle: []
   viewInExpeditions: []
+  selectAlternative: [fromLevel: number, toLevel: number, expeditionId: string, tier: number]
+  resetOverride: [fromLevel: number]
 }>()
 
 
@@ -46,6 +57,14 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
   if (status === 'advantage') return 'var(--color-green)'
   if (status === 'disadvantage') return 'var(--color-destructive)'
   return 'hsl(var(--primary))'
+}
+
+
+function formatDelta(value: number): string {
+  const percent = Math.round(value * 100)
+  if (percent > 0) return `+${percent}%`
+  if (percent < 0) return `${percent}%`
+  return '0%'
 }
 </script>
 
@@ -106,16 +125,22 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                   class="size-5 shrink-0 object-contain"
                   loading="lazy"
                 />
-                <p class="text-sm font-semibold text-pink-400">Awaken Creature</p>
+                <p class="text-sm font-semibold text-pink-400">
+                  {{ step.fromLevel > 70 ? 'Prestige Creature' : 'Awaken Creature' }}
+                </p>
               </div>
               <span
                 class="shrink-0 rounded-full bg-pink-500/15 px-2 py-0.5 text-xs font-semibold text-pink-400"
               >
-                LVL 70&rarr;1
+                LVL {{ step.fromLevel }}&rarr;{{ step.toLevel }}
               </span>
             </div>
             <p class="mt-1.5 text-xs text-muted-foreground">
-              Awaken {{ creatureName }} to continue past level 70
+              {{
+                step.fromLevel > 70
+                  ? `Prestige ${creatureName} to restart from level 1`
+                  : `Awaken ${creatureName} to continue past level 70`
+              }}
             </p>
           </div>
         </div>
@@ -124,7 +149,10 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
 
     <!-- Step card -->
     <div v-else class="mb-2 min-w-0 flex-1 pb-1">
-      <div class="surface-card overflow-hidden">
+      <div
+        class="surface-card overflow-hidden"
+        :class="hasOverride ? 'ring-1 ring-primary/40' : ''"
+      >
         <button
           class="focus-ring w-full text-left transition hover:bg-muted/20"
           :aria-expanded="expanded"
@@ -160,6 +188,9 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
                   class="shrink-0 text-[10px] font-semibold text-primary"
                 >
                   Trait Match
+                </span>
+                <span v-if="hasOverride" class="shrink-0 text-[10px] font-semibold text-primary">
+                  Override
                 </span>
               </div>
 
@@ -343,24 +374,99 @@ function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
 
         <!-- Expanded details -->
         <div v-if="expanded" class="border-t border-border/40 px-3 py-2.5 sm:px-4">
-          <div class="grid grid-cols-2 gap-4 text-xs sm:grid-cols-3">
+          <!-- Alternative Routes -->
+          <template v-if="step.alternatives && step.alternatives.length > 0">
             <div>
-              <p class="font-semibold text-muted-foreground">Duration per run</p>
-              <p class="mt-0.5 font-mono text-foreground">
-                {{ formatDuration(step.durationPerRun) }}
-              </p>
+              <div class="mb-2 flex items-center justify-between">
+                <p class="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <ArrowRightLeft class="size-3" />
+                  Alternative Routes
+                </p>
+                <button
+                  v-if="hasOverride"
+                  class="focus-ring flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
+                  @click.stop="$emit('resetOverride', step.fromLevel)"
+                >
+                  <RotateCcw class="size-3" />
+                  Reset to optimal
+                </button>
+              </div>
+
+              <div class="space-y-1.5">
+                <button
+                  v-for="alt in step.alternatives"
+                  :key="`${alt.expedition.id}-${alt.tier}`"
+                  class="focus-ring flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm transition hover:bg-muted/20"
+                  @click.stop="
+                    $emit(
+                      'selectAlternative',
+                      step.fromLevel,
+                      step.toLevel,
+                      alt.expedition.id,
+                      alt.tier,
+                    )
+                  "
+                >
+                  <!-- Left: reward icon + name + tier -->
+                  <img
+                    v-if="
+                      alt.expedition.rewards.length > 0 &&
+                      getItemImage({ id: alt.expedition.rewards[0].itemId })
+                    "
+                    :src="getItemImage({ id: alt.expedition.rewards[0].itemId })"
+                    :alt="alt.expedition.rewards[0].itemId"
+                    loading="lazy"
+                    class="size-4 shrink-0 object-contain"
+                  />
+                  <span class="min-w-0 truncate font-semibold text-foreground">
+                    {{ alt.expedition.name }}
+                  </span>
+                  <img
+                    v-if="alt.tier > 0"
+                    :src="expeditionTierIcons[alt.tier]"
+                    :alt="`Tier ${alt.tier}`"
+                    class="size-4 shrink-0 object-contain"
+                    loading="lazy"
+                  />
+
+                  <!-- Right: time chip · xp/s chip -->
+                  <div class="ml-auto flex shrink-0 items-center gap-1.5">
+                    <span
+                      class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/35 px-2 py-0.5 font-mono text-xs font-semibold"
+                      :style="{
+                        color:
+                          alt.timeDeltaPercent <= 0
+                            ? 'var(--color-green)'
+                            : 'var(--color-destructive)',
+                      }"
+                    >
+                      <Clock3 class="size-3" />
+                      {{ formatDuration(alt.timeSeconds) }}
+                      <span class="opacity-60">{{ formatDelta(alt.timeDeltaPercent) }}</span>
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/35 px-2 py-0.5 font-mono text-xs font-semibold"
+                      :style="{
+                        color:
+                          alt.xpPerMinuteDeltaPercent >= 0
+                            ? 'var(--color-green)'
+                            : 'var(--color-destructive)',
+                      }"
+                    >
+                      <Zap class="size-3" />
+                      {{
+                        (alt.xpPerMinute / 60).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                      }}
+                      <span class="opacity-60">{{ formatDelta(alt.xpPerMinuteDeltaPercent) }}</span>
+                    </span>
+                  </div>
+                </button>
+              </div>
             </div>
-            <div>
-              <p class="font-semibold text-muted-foreground">Levels</p>
-              <p class="mt-0.5 font-mono text-foreground">{{ step.toLevel - step.fromLevel }}</p>
-            </div>
-            <div>
-              <p class="font-semibold text-muted-foreground">Loop bonus</p>
-              <p class="mt-0.5 font-mono text-foreground">
-                +{{ Math.round(getLoopXpBonus(step.runs) * 100) }}%
-              </p>
-            </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>

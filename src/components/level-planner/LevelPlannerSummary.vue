@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Clock3, Zap, Repeat, Layers, Flag } from 'lucide-vue-next'
+import { Clock3, Zap, Repeat, Layers, Flag, RotateCcw } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { formatDuration } from '@/utils/format'
@@ -9,6 +9,14 @@ const props = defineProps<{
   plan: LevelingPlan
   fromLevel: number
   toLevel: number
+  creatureName?: string
+  creatureImage?: string
+  hasRouteOverrides?: boolean
+}>()
+
+
+defineEmits<{
+  resetAllOverrides: []
 }>()
 
 
@@ -33,6 +41,29 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
 
 <template>
   <div class="surface-card space-y-3 px-4 py-3">
+    <!-- Creature title -->
+    <div v-if="creatureName" class="flex items-center gap-3">
+      <img
+        v-if="creatureImage"
+        :src="creatureImage"
+        :alt="creatureName"
+        class="size-14 rounded-xl border border-border object-cover sm:size-16"
+        loading="lazy"
+      />
+      <div>
+        <p class="text-sm font-bold text-foreground">{{ creatureName }}</p>
+        <p class="text-xs text-muted-foreground">Leveling Plan</p>
+      </div>
+      <button
+        v-if="hasRouteOverrides"
+        class="focus-ring ml-auto flex shrink-0 items-center gap-1.5 rounded-lg border border-border/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+        @click="$emit('resetAllOverrides')"
+      >
+        <RotateCcw class="size-3" />
+        Reset Routes
+      </button>
+    </div>
+
     <!-- Stats row -->
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm font-semibold">
       <span class="inline-flex items-center gap-1.5" style="color: var(--color-green)">
