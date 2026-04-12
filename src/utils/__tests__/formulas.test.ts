@@ -1,8 +1,11 @@
 import creaturesData from '@/data/creatures.json'
-import type { Biome, Creature, Expedition } from '@/types'
+import dungeonData from '@/data/dungeons.json'
+import type { Biome, Creature, DungeonConfig, Expedition } from '@/types'
 import {
   biomeMultiplier,
   calculateCreatureRating,
+  calculateDungeonCreatureScore,
+  calculateDungeonPartyScore,
   calculateDuration,
   calculateExpeditionXp,
   calculatePartyScore,
@@ -10,6 +13,7 @@ import {
   getBestExpeditionsForLeveling,
   getLoopXpBonus,
   getRecommendedCreatures,
+  getRecommendedDungeonCreatures,
   levelFromXp,
   traitAbbreviations,
   xpForLevel,
@@ -655,5 +659,155 @@ describe('traitAbbreviations', () => {
   test('no duplicate abbreviations', () => {
     const values = Object.values(traitAbbreviations)
     expect(new Set(values).size).toBe(values.length)
+  })
+})
+
+// ── Dungeon formulas ──────────────────────────────────────────────────
+
+const dungeonConfig = dungeonData as DungeonConfig
+const combatWeights = dungeonConfig.statWeights.combat
+const gatheringWeights = dungeonConfig.statWeights.gathering
+
+describe('calculateDungeonCreatureScore', () => {
+  test('weights stats correctly at level 1', () => {
+    const creature = makeCreature({
+      stats: { power: 10, grit: 10, agility: 10, smarts: 10, looting: 0, luck: 0 },
+    })
+    // combat: 10*0.25 + 10*0.25 + 10*0.25 + 10*0.25 = 10
+    expect(calculateDungeonCreatureScore(creature, combatWeights)).toBe(10)
+  })
+
+  test('scales linearly with level', () => {
+    const creature = makeCreature({
+      stats: { power: 10, grit: 10, agility: 10, smarts: 10, looting: 0, luck: 0 },
+    })
+    expect(calculateDungeonCreatureScore(creature, combatWeights, 5)).toBe(50)
+  })
+
+  test('uses gathering weights (smarts/looting/luck only)', () => {
+    const creature = makeCreature({
+      stats: { power: 100, grit: 100, agility: 100, smarts: 10, looting: 10, luck: 10 },
+    })
+    // gathering: 10*0.33 + 10*0.33 + 10*0.34 = 10
+    expect(calculateDungeonCreatureScore(creature, gatheringWeights)).toBe(10)
+  })
+
+  test('does not apply biome or trait bonuses', () => {
+    const creature = makeCreature({
+      stats: { power: 10, grit: 10, agility: 10, smarts: 10, looting: 0, luck: 0 },
+      types: ['Fire'],
+      trait: 'learner',
+    })
+    expect(calculateDungeonCreatureScore(creature, combatWeights)).toBe(10)
+  })
+
+  test('zero-weight stats are excluded', () => {
+    const creature = makeCreature({
+      stats: { power: 0, grit: 0, agility: 0, smarts: 0, looting: 100, luck: 100 },
+    })
+    expect(calculateDungeonCreatureScore(creature, combatWeights)).toBe(0)
+  })
+
+  test('defaults to level 1', () => {
+    const creature = makeCreature({
+      stats: { power: 20, grit: 20, agility: 20, smarts: 20, looting: 0, luck: 0 },
+    })
+    expect(calculateDungeonCreatureScore(creature, combatWeights)).toBe(20)
+  })
+})
+
+describe('calculateDungeonPartyScore', () => {
+  test('sums scores of all creatures', () => {
+    const c1 = makeCreature({
+      id: 'a',
+      stats: { ...zeroStats, power: 10, grit: 10, agility: 10, smarts: 10 },
+    })
+    const c2 = makeCreature({
+      id: 'b',
+      stats: { ...zeroStats, power: 20, grit: 20, agility: 20, smarts: 20 },
+    })
+    expect(calculateDungeonPartyScore([c1, c2], combatWeights, {})).toBe(30)
+  })
+
+  test('skips null slots', () => {
+    const c1 = makeCreature({
+      id: 'a',
+      stats: { ...zeroStats, power: 10, grit: 10, agility: 10, smarts: 10 },
+    })
+    expect(calculateDungeonPartyScore([c1, null, null], combatWeights, {})).toBe(10)
+  })
+
+  test('applies per-creature level from levels map', () => {
+    const c1 = makeCreature({
+      id: 'a',
+      stats: { ...zeroStats, power: 10, grit: 10, agility: 10, smarts: 10 },
+    })
+    expect(calculateDungeonPartyScore([c1], combatWeights, { a: 3 })).toBe(30)
+  })
+
+  test('defaults to level 1 when creature not in levels map', () => {
+    const c1 = makeCreature({
+      id: 'a',
+      stats: { ...zeroStats, power: 10, grit: 10, agility: 10, smarts: 10 },
+    })
+    expect(calculateDungeonPartyScore([c1], combatWeights, {})).toBe(10)
+  })
+
+  test('returns 0 for all-null party', () => {
+    expect(calculateDungeonPartyScore([null, null, null], combatWeights, {})).toBe(0)
+  })
+})
+
+describe('getRecommendedDungeonCreatures', () => {
+  test('returns an entry for each creature', () => {
+    const subset = creatures.slice(0, 3)
+    const results = getRecommendedDungeonCreatures(subset, combatWeights)
+    expect(results.length).toBe(3)
+  })
+
+  test('results are sorted by score descending', () => {
+    const results = getRecommendedDungeonCreatures(creatures, combatWeights)
+    for (let i = 1; i < results.length; i++) {
+      expect(results[i - 1].score).toBeGreaterThanOrEqual(results[i].score)
+    }
+  })
+
+  test('each entry has creature, score, and level', () => {
+    const results = getRecommendedDungeonCreatures(creatures.slice(0, 1), combatWeights)
+    expect(results[0]).toHaveProperty('creature')
+    expect(results[0]).toHaveProperty('score')
+    expect(results[0]).toHaveProperty('level')
+  })
+
+  test('uses provided levels map', () => {
+    const c = creatures[0]
+    const results = getRecommendedDungeonCreatures([c], combatWeights, { [c.id]: 10 })
+    expect(results[0].level).toBe(10)
+  })
+
+  test('defaults to level 1 when not in levels map', () => {
+    const c = creatures[0]
+    const results = getRecommendedDungeonCreatures([c], combatWeights, {})
+    expect(results[0].level).toBe(1)
+  })
+
+  test('returns empty array for empty creature list', () => {
+    expect(getRecommendedDungeonCreatures([], combatWeights)).toEqual([])
+  })
+
+  test('gathering weights rank smarts/looting/luck creatures higher', () => {
+    const smartCreature = makeCreature({
+      id: 'smart',
+      stats: { ...zeroStats, smarts: 50, looting: 50, luck: 50 },
+    })
+    const strongCreature = makeCreature({
+      id: 'strong',
+      stats: { ...zeroStats, power: 50, grit: 50, agility: 50 },
+    })
+    const results = getRecommendedDungeonCreatures(
+      [smartCreature, strongCreature],
+      gatheringWeights,
+    )
+    expect(results[0].creature.id).toBe('smart')
   })
 })
