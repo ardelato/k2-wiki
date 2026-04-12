@@ -57,6 +57,46 @@ export interface Expedition {
   rewards: { itemId: string; amount: number }[]
 }
 
+// Dungeon types
+export type DungeonFocus = 'combat' | 'gathering'
+export type DungeonGradeLetter = 'S' | 'A' | 'B' | 'C' | 'F'
+export type GatheringSubFocus =
+  | 'Chopping'
+  | 'Mining'
+  | 'Digging'
+  | 'Farming'
+  | 'Fishing'
+  | 'Exploring'
+
+export interface DungeonTier {
+  tier: number
+  baseRating: number
+  xpReward: number
+}
+
+export interface DungeonGrade {
+  grade: DungeonGradeLetter
+  minRatio: number
+  multiplier: number
+}
+
+export interface DungeonReward {
+  itemId: string
+  amount: number
+}
+
+export interface DungeonConfig {
+  duration: number
+  maxPartySize: number
+  requiresItem: string
+  tierLevelRequirements: Record<DungeonFocus, Record<string, number>>
+  tiers: DungeonTier[]
+  grades: DungeonGrade[]
+  statWeights: Record<DungeonFocus, ExpeditionStatWeights>
+  combatRewards: Record<string, DungeonReward[]>
+  gatheringRewards: Record<GatheringSubFocus, Record<string, DungeonReward[]>>
+}
+
 export interface Biome {
   id: string
   name: string

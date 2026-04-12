@@ -1,6 +1,15 @@
 import biomesData from '@/data/biomes.json'
 import expeditionsData from '@/data/expeditions.json'
-import type { Creature, Expedition, Biome, CreatureStats, ExpeditionStatKey } from '@/types'
+import type {
+  Creature,
+  Expedition,
+  Biome,
+  CreatureStats,
+  ExpeditionStatKey,
+  ExpeditionStatWeights,
+  DungeonGrade,
+  DungeonReward,
+} from '@/types'
 
 // Consolidated stat labels & abbreviations (creature and expedition stats share the same keys)
 export const statLabels: Record<keyof CreatureStats, string> = {
@@ -346,4 +355,76 @@ export function getRecommendedCreatures(
       }
     })
     .toSorted((a, b) => b.rating - a.rating)
+}
+
+// ── Dungeon formulas ──────────────────────────────────────────────────
+
+export function calculateDungeonCreatureScore(
+  creature: Creature,
+  statWeights: ExpeditionStatWeights,
+  level: number = 1,
+): number {
+  let weightedStatSum = 0
+  for (const [stat, weight] of Object.entries(statWeights) as [ExpeditionStatKey, number][]) {
+    if (weight > 0) {
+      weightedStatSum += creature.stats[stat] * weight
+    }
+  }
+  return Math.floor(weightedStatSum * level)
+}
+
+export function calculateDungeonPartyScore(
+  creatures: (Creature | null)[],
+  statWeights: ExpeditionStatWeights,
+  levels: Record<string, number>,
+): number {
+  let total = 0
+  for (const creature of creatures) {
+    if (creature) {
+      const level = levels[creature.id] || 1
+      total += calculateDungeonCreatureScore(creature, statWeights, level)
+    }
+  }
+  return total
+}
+
+export function getDungeonGrade(
+  partyScore: number,
+  baseRating: number,
+  grades: DungeonGrade[],
+): DungeonGrade {
+  const ratio = baseRating > 0 ? partyScore / baseRating : 0
+  for (const grade of grades) {
+    if (ratio >= grade.minRatio) {
+      return grade
+    }
+  }
+  return grades[grades.length - 1]
+}
+
+export function getDungeonScaledRewards(
+  baseRewards: DungeonReward[],
+  multiplier: number,
+): DungeonReward[] {
+  return baseRewards.map((reward) => ({
+    itemId: reward.itemId,
+    amount: Math.max(1, Math.floor(reward.amount * multiplier)),
+  }))
+}
+
+export function getRecommendedDungeonCreatures(
+  creatures: Creature[],
+  statWeights: ExpeditionStatWeights,
+  levels: Record<string, number> = {},
+): { creature: Creature; score: number; level: number }[] {
+  return creatures
+    .map((creature) => {
+      const level = levels[creature.id] || 1
+      return {
+        creature,
+        score: calculateDungeonCreatureScore(creature, statWeights, level),
+        level,
+      }
+    })
+    .toSorted((a, b) => b.score - a.score)
 }
