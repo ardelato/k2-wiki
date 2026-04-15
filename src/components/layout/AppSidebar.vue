@@ -20,6 +20,7 @@ import { computed } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 
 import SteamIcon from '@/components/icons/SteamIcon.vue'
+import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { useTheme } from '@/composables/useTheme'
 import meta from '@/data/meta.json'
 
@@ -45,6 +46,13 @@ function isActive(path: string) {
   if (path === '/') return activePath.value === '/'
   return activePath.value.startsWith(path)
 }
+
+
+const themeLabel = computed(() => {
+  if (preference.value === 'system') return 'Theme: System'
+  if (preference.value === 'light') return 'Theme: Light'
+  return 'Theme: Dark'
+})
 
 
 const navGroups = [
@@ -136,23 +144,28 @@ const navGroups = [
         </h3>
         <div v-else class="mb-1 border-t border-border/40" />
         <div class="space-y-0.5">
-          <RouterLink
+          <AppTooltip
             v-for="item in group.items"
             :key="item.to"
-            :to="item.to"
-            :title="props.collapsed ? item.label : undefined"
-            class="focus-ring flex items-center rounded-lg text-sm font-medium transition"
-            :class="[
-              props.collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-2.5 py-2',
-              isActive(item.to)
-                ? 'bg-primary text-primary-foreground shadow-glow'
-                : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
-            ]"
-            @click="emit('navigate')"
+            :text="item.label"
+            position="right"
+            :disabled="!props.collapsed"
           >
-            <component :is="item.icon" class="size-4 shrink-0" />
-            <span v-if="!props.collapsed">{{ item.label }}</span>
-          </RouterLink>
+            <RouterLink
+              :to="item.to"
+              class="focus-ring flex items-center rounded-lg text-sm font-medium transition"
+              :class="[
+                props.collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-2.5 py-2',
+                isActive(item.to)
+                  ? 'bg-primary text-primary-foreground shadow-glow'
+                  : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+              ]"
+              @click="emit('navigate')"
+            >
+              <component :is="item.icon" class="size-4 shrink-0" />
+              <span v-if="!props.collapsed">{{ item.label }}</span>
+            </RouterLink>
+          </AppTooltip>
         </div>
       </div>
     </nav>
@@ -164,45 +177,56 @@ const navGroups = [
         :class="props.collapsed ? 'flex-col gap-0.5' : 'justify-between'"
       >
         <div class="flex items-center" :class="props.collapsed ? 'flex-col gap-0.5' : 'gap-0.5'">
-          <a
-            href="https://github.com/ardelato/k2-wiki"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="GitHub repository"
-            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
-          >
-            <Github class="size-4" />
-          </a>
-          <a
-            href="https://store.steampowered.com/app/2834700/Koltera_2/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Koltera 2 on Steam"
-            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
-          >
-            <SteamIcon class="size-4" />
-          </a>
+          <AppTooltip text="GitHub" :position="props.collapsed ? 'right' : 'top'">
+            <a
+              href="https://github.com/ardelato/k2-wiki"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="GitHub repository"
+              class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+            >
+              <Github class="size-4" />
+            </a>
+          </AppTooltip>
+          <AppTooltip text="Steam" :position="props.collapsed ? 'right' : 'top'">
+            <a
+              href="https://store.steampowered.com/app/2834700/Koltera_2/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Koltera 2 on Steam"
+              class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+            >
+              <SteamIcon class="size-4" />
+            </a>
+          </AppTooltip>
         </div>
-        <button
-          aria-label="Toggle theme"
-          class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
-          @click="cycle"
-        >
-          <SunMoon v-if="preference === 'system'" class="size-4" />
-          <Sun v-else-if="preference === 'light'" class="size-4" />
-          <Moon v-else class="size-4" />
-        </button>
+        <AppTooltip :text="themeLabel" :position="props.collapsed ? 'right' : 'top'">
+          <button
+            aria-label="Toggle theme"
+            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+            @click="cycle"
+          >
+            <SunMoon v-if="preference === 'system'" class="size-4" />
+            <Sun v-else-if="preference === 'light'" class="size-4" />
+            <Moon v-else class="size-4" />
+          </button>
+        </AppTooltip>
       </div>
 
       <!-- Collapse toggle -->
-      <button
-        aria-label="Toggle sidebar"
-        class="focus-ring mt-1 flex w-full items-center justify-center rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted/80 hover:text-foreground"
-        @click="emit('toggle-collapse')"
+      <AppTooltip
+        :text="props.collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        :position="props.collapsed ? 'right' : 'top'"
       >
-        <ChevronsLeft v-if="!props.collapsed" class="size-4" />
-        <ChevronsRight v-else class="size-4" />
-      </button>
+        <button
+          aria-label="Toggle sidebar"
+          class="focus-ring mt-1 flex w-full items-center justify-center rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted/80 hover:text-foreground"
+          @click="emit('toggle-collapse')"
+        >
+          <ChevronsLeft v-if="!props.collapsed" class="size-4" />
+          <ChevronsRight v-else class="size-4" />
+        </button>
+      </AppTooltip>
     </div>
   </div>
 </template>
