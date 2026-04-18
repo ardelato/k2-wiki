@@ -36,7 +36,6 @@ const {
   recommendedCreatures,
   showExcludedCreatures,
   ownedOnly,
-  maxAchievableTiers,
   setActiveSlot,
   assignCreatureToSlot,
   removeCreatureFromSlot,
@@ -69,25 +68,6 @@ const mobileSection = computed<MobileSection>({
     router.replace({ query: { ...route.query, section: value } })
   },
 })
-
-
-// ── Unreachable tier tooltip ──
-const tierTooltip = ref<{ x: number; y: number } | null>(null)
-
-
-function showTierTooltip(event: MouseEvent) {
-  const el = event.currentTarget as HTMLElement
-  const rect = el.getBoundingClientRect()
-  tierTooltip.value = {
-    x: rect.left + rect.width / 2,
-    y: rect.top,
-  }
-}
-
-
-function hideTierTooltip() {
-  tierTooltip.value = null
-}
 
 
 // ── Creature filters ──
@@ -601,38 +581,28 @@ function chooseCreature(creature: Creature) {
 
                 <!-- Target selector -->
                 <div class="mt-1.5 flex gap-[3px]">
-                  <div
+                  <button
                     v-for="t in [1, 2, 3, 4, 5]"
                     :key="t"
-                    class="flex-1"
-                    @mouseenter="
-                      t > (maxAchievableTiers[jp.job] ?? 0) && jp.tier < t
-                        ? showTierTooltip($event)
-                        : undefined
+                    class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded px-0.5 py-1 text-[10px] font-semibold transition"
+                    :class="
+                      (targetTiers[jp.job] ?? 0) === t
+                        ? 'bg-primary text-primary-foreground'
+                        : jp.tier >= t
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                          : 'bg-muted/50 text-muted-foreground hover:text-foreground'
                     "
-                    @mouseleave="hideTierTooltip"
+                    :title="`Tier ${t}: ${jobTierLabel(t)}`"
+                    @click="setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t ? 0 : t)"
                   >
-                    <button
-                      class="focus-ring inline-flex w-full items-center justify-center gap-0.5 rounded px-0.5 py-1 text-[10px] font-semibold transition"
-                      :class="
-                        (targetTiers[jp.job] ?? 0) === t
-                          ? 'bg-primary text-primary-foreground'
-                          : jp.tier >= t
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
-                            : 'bg-muted/50 text-muted-foreground hover:text-foreground'
-                      "
-                      :title="`Tier ${t}: ${jobTierLabel(t)}`"
-                      @click="setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t ? 0 : t)"
-                    >
-                      <template v-if="jp.tier >= t">✓</template>
-                      <template v-else>
-                        <Zap v-if="tierBenefitType(t) === 'xp'" class="size-2.5" />
-                        <Clock3 v-else-if="tierBenefitType(t) === 'duration'" class="size-2.5" />
-                        <Layers v-else class="size-2.5" />
-                        <span class="hidden sm:inline">{{ tierIncrementalLabel(t) }}</span>
-                      </template>
-                    </button>
-                  </div>
+                    <template v-if="jp.tier >= t">✓</template>
+                    <template v-else>
+                      <Zap v-if="tierBenefitType(t) === 'xp'" class="size-2.5" />
+                      <Clock3 v-else-if="tierBenefitType(t) === 'duration'" class="size-2.5" />
+                      <Layers v-else class="size-2.5" />
+                      <span class="hidden sm:inline">{{ tierIncrementalLabel(t) }}</span>
+                    </template>
+                  </button>
                 </div>
               </div>
             </div>
@@ -865,35 +835,4 @@ function chooseCreature(creature: Creature) {
       </section>
     </div>
   </div>
-
-  <!-- Teleported tooltip for unreachable tiers -->
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 translate-y-1"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-1"
-    >
-      <div
-        v-if="tierTooltip"
-        class="pointer-events-none fixed z-50 -translate-x-1/2 whitespace-nowrap rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-card-foreground shadow-lg"
-        :style="{
-          left: `${tierTooltip.x}px`,
-          top: `${tierTooltip.y - 8}px`,
-          transform: 'translate(-50%, -100%)',
-        }"
-      >
-        Unreachable with current creatures
-        <div
-          class="absolute left-1/2 top-full -translate-x-1/2 border-[5px] border-transparent border-t-border"
-        />
-        <div
-          class="absolute left-1/2 top-full -translate-x-1/2 border-[4px] border-transparent border-t-card"
-          style="margin-top: -1px"
-        />
-      </div>
-    </Transition>
-  </Teleport>
 </template>
