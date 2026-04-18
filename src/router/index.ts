@@ -43,6 +43,12 @@ export const router = createRouter({
       meta: { title: 'Expeditions' },
     },
     {
+      path: '/sanctuary',
+      name: 'sanctuary',
+      component: () => import('../views/SanctuaryView.vue'),
+      meta: { title: 'Sanctuary' },
+    },
+    {
       path: '/machines',
       name: 'machines',
       component: () => import('../views/MachinesView.vue'),

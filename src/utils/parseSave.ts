@@ -231,8 +231,7 @@ export function parseAwakenUpgrades(upgrades: string[]): {
   return { awakenGatherUpgrades, awakenSpeedTiers, awakenGoldLevel }
 }
 
-const SCORE_DIVISOR = 60
-const TIER_THRESHOLDS = [0.1, 0.3, 0.5, 0.7, 0.9]
+import { SCORE_DIVISOR, TIER_THRESHOLDS } from './sanctuaryConstants'
 
 const creatureJobScoresMap: Record<string, Record<string, number>> = Object.fromEntries(
   (creaturesData as { id: string; jobs: Record<string, number> }[]).map((c) => [c.id, c.jobs]),
