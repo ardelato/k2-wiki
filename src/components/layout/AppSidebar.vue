@@ -6,6 +6,7 @@ import {
   Cog,
   Compass,
   Swords,
+  Fence,
   FileCog,
   GitBranch,
   Github,
@@ -63,6 +64,7 @@ const navGroups = [
       { label: 'Items', to: '/items', icon: Package },
       { label: 'Dungeons', to: '/dungeons', icon: Swords },
       { label: 'Expeditions', to: '/expeditions', icon: Compass },
+      { label: 'Sanctuary', to: '/sanctuary', icon: Fence },
     ],
   },
   {
