@@ -167,25 +167,9 @@ const jobs = ['Chopping', 'Mining', 'Digging', 'Exploring', 'Fishing', 'Farming'
 const jobTiersOpen = ref(false)
 
 
-const JOB_TIER_BENEFITS = [
-  { xpBonus: 0, durationReduction: 0, yieldBonus: 0 },
-  { xpBonus: 20, durationReduction: 0, yieldBonus: 0 },
-  { xpBonus: 20, durationReduction: 10, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 10, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 20, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 20, yieldBonus: 1 },
-]
+import { JOB_TIER_BENEFITS, jobTierLabel as _jobTierLabel } from '@/utils/sanctuaryConstants'
 
-
-function jobTierLabel(tier: number): string {
-  const b = JOB_TIER_BENEFITS[tier] ?? JOB_TIER_BENEFITS[0]
-  if (tier === 0) return 'No bonuses'
-  const parts: string[] = []
-  if (b.xpBonus > 0) parts.push(`+${b.xpBonus}% XP`)
-  if (b.durationReduction > 0) parts.push(`-${b.durationReduction}% Dur`)
-  if (b.yieldBonus > 0) parts.push(`+${b.yieldBonus} Yield`)
-  return parts.join(', ')
-}
+const jobTierLabel = (tier: number) => _jobTierLabel(tier, true)
 
 
 const hasJobChanges = computed(() => Object.values(props.jobTiers).some((t) => t > 0))

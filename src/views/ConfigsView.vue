@@ -40,6 +40,7 @@ import {
 } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractSaveConfig, type SaveConfig } from '@/utils/parseSave'
+import { jobTierLabel } from '@/utils/sanctuaryConstants'
 
 const allExpeditions = (expeditionsData as Expedition[]).toSorted((a, b) => {
   const diff = a.requiredExpeditionCompletions - b.requiredExpeditionCompletions
@@ -1123,27 +1124,6 @@ function updateAwakenSpeed(ws: string, delta: number) {
     ...awakenSpeedTiers.value,
     [ws]: Math.max(0, Math.min(4, (awakenSpeedTiers.value[ws] ?? 0) + delta)),
   }
-}
-
-
-const JOB_TIER_BENEFITS = [
-  { xpBonus: 0, durationReduction: 0, yieldBonus: 0 },
-  { xpBonus: 20, durationReduction: 0, yieldBonus: 0 },
-  { xpBonus: 20, durationReduction: 10, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 10, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 20, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 20, yieldBonus: 1 },
-]
-
-
-function jobTierLabel(tier: number): string {
-  const b = JOB_TIER_BENEFITS[tier] ?? JOB_TIER_BENEFITS[0]
-  if (tier === 0) return 'No bonuses'
-  const parts: string[] = []
-  if (b.xpBonus > 0) parts.push(`+${b.xpBonus}% XP`)
-  if (b.durationReduction > 0) parts.push(`-${b.durationReduction}% Duration`)
-  if (b.yieldBonus > 0) parts.push(`+${b.yieldBonus} Yield`)
-  return parts.join(', ')
 }
 </script>
 
