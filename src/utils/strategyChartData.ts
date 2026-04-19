@@ -5,7 +5,7 @@ export interface ChartPoint {
   value: number
 }
 
-export interface StrategyTimeSeries {
+interface StrategyTimeSeries {
   xpRate: ChartPoint[] // XP/sec
   swapRate: ChartPoint[] // swaps/hr
   levelingProgress: ChartPoint[]

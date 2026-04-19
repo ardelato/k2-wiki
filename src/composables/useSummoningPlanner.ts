@@ -26,7 +26,7 @@ function saveSelection(ids: Set<string>) {
   }
 }
 
-export interface AggregatedCost {
+interface AggregatedCost {
   itemId: string
   itemName: string
   amount: number

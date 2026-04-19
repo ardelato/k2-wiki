@@ -1,15 +1,13 @@
 import biomesData from '@/data/biomes.json'
-import creaturesData from '@/data/creatures.json'
 import expeditionsData from '@/data/expeditions.json'
 import creatureRatingsData from '@/data/precomputed/creature-ratings.json'
 import levelTransitionsData from '@/data/precomputed/level-transitions.json'
 import soloRatesData from '@/data/precomputed/solo-rates.json'
 import topExpeditionsData from '@/data/precomputed/top-expeditions.json'
-import type { Biome, Creature, Expedition } from '@/types'
+import type { Biome, Expedition } from '@/types'
 
 export const expeditions = expeditionsData as Expedition[]
-export const biomes = biomesData as Biome[]
-export const creatures = creaturesData as Creature[]
+const biomes = biomesData as Biome[]
 
 export const expeditionMap = new Map(expeditions.map((e) => [e.id, e]))
 export const biomeMap = new Map(biomes.map((b) => [b.id, b]))

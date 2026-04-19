@@ -156,7 +156,7 @@ function buildExpeditionData(save: Record<string, any>, creatureMap: SaveCreatur
   return result
 }
 
-export function parseInventory(inventory: SaveInventoryItem[]): Record<string, number> {
+function parseInventory(inventory: SaveInventoryItem[]): Record<string, number> {
   const result: Record<string, number> = {}
   for (const item of inventory) {
     if (item.amount > 0) {
@@ -166,7 +166,7 @@ export function parseInventory(inventory: SaveInventoryItem[]): Record<string, n
   return result
 }
 
-export function aggregateGardenFlowers(flowers: SaveFlower[]): Record<string, GardenFlowerEntry[]> {
+function aggregateGardenFlowers(flowers: SaveFlower[]): Record<string, GardenFlowerEntry[]> {
   const result: Record<string, GardenFlowerEntry[]> = {
     'fire-flower': [],
     'wind-flower': [],
@@ -192,7 +192,7 @@ export function aggregateGardenFlowers(flowers: SaveFlower[]): Record<string, Ga
   return result
 }
 
-export function parseAwakenUpgrades(upgrades: string[]): {
+function parseAwakenUpgrades(upgrades: string[]): {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
   awakenGoldLevel: number

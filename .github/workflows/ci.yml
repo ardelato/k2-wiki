@@ -30,7 +30,21 @@ jobs:
               - 'package.json'
               - 'package-lock.json'
               - 'playwright.config.ts'
+              - 'knip.json'
               - '.github/workflows/**'
+
+  knip:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: '.node-version'
+          cache: npm
+      - run: npm ci
+      - run: npm run knip
 
   lint:
     needs: changes

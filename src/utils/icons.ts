@@ -20,7 +20,6 @@ import sanctuaryIcon from '@/assets/icons/sanctuary.webp'
 import shovelIcon from '@/assets/icons/shovel.webp'
 import staffIcon from '@/assets/icons/staff.webp'
 import stoveIcon from '@/assets/icons/stove.webp'
-import toolsIcon from '@/assets/icons/tools.webp'
 import upgradesIcon from '@/assets/icons/upgrades.webp'
 import workbenchIcon from '@/assets/icons/workbench.webp'
 import breadItemIcon from '@/assets/items/bread.webp'
@@ -31,7 +30,7 @@ import sawItemIcon from '@/assets/items/saw.webp'
 import stoneItemIcon from '@/assets/items/stone.webp'
 import twigItemIcon from '@/assets/items/twig.webp'
 
-export { helpersIcon, itemGridIcon, machinesIcon, sanctuaryIcon, toolsIcon, upgradesIcon }
+export { helpersIcon, itemGridIcon, machinesIcon, sanctuaryIcon, upgradesIcon }
 
 export const jobIcons: Record<string, string> = {
   chopping: choppingIcon,

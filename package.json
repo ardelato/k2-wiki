@@ -19,14 +19,13 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "generate-tables": "npx tsx --tsconfig tsconfig.app.json scripts/generate-tables.ts",
+    "knip": "knip",
+    "knip:fix": "knip --fix",
     "prepare": "lefthook install"
   },
   "dependencies": {
     "@vueuse/core": "^14.2.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "lucide-vue-next": "^0.577.0",
-    "tailwind-merge": "^3.5.0",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
@@ -38,6 +37,7 @@
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.27",
     "happy-dom": "^20.8.9",
+    "knip": "^6.4.1",
     "lefthook": "^2.1.4",
     "oxfmt": "^0.41.0",
     "oxlint": "^1.56.0",

@@ -22,7 +22,7 @@ export interface ExpeditionPlan {
   partyScore: number
 }
 
-export interface ExpeditionPlanResult {
+interface ExpeditionPlanResult {
   best: ExpeditionPlan | null
   all: { expedition: Expedition; plan: ExpeditionPlan }[]
 }
