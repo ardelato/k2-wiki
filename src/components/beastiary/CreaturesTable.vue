@@ -1,250 +1,431 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { Creature, CreatureStats, Jobs } from '@/types'
-import { statLabels, jobLabels } from '@/utils/formulas'
+import { getCreatureImage } from '@/utils/creatureImages'
+import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
+import {
+  jobColors,
+  jobLabels,
+  statAbbreviations,
+  statLabels,
+  traitAbbreviations,
+} from '@/utils/formulas'
+import { jobIcons } from '@/utils/icons'
 
 const props = defineProps<{
   creatures: Creature[]
-  selectedIds: string[]
+  editing: boolean
+  selectedIds: Set<string>
+  selectedCreatureId: string | null
 }>()
 
 
 const emit = defineEmits<{
-  creatureClick: [creature: Creature]
-  toggleSelect: [id: string]
+  select: [creature: Creature]
+  'toggle-selected': [id: string]
 }>()
+
+
+const { isOwned, isAwakened, getLevel } = useCreatureCollection()
 
 
 type SortKey =
   | 'name'
-  | 'tier'
   | 'type'
+  | 'trait'
+  | 'level'
+  | 'statTotal'
+  | 'jobTotal'
   | keyof CreatureStats
   | keyof Jobs
-  | 'totalStats'
-  | 'totalJobs'
 
 
-const sortKey = ref<SortKey>('tier')
-const sortDir = ref<'asc' | 'desc'>('asc')
+const tableSortKey = ref<SortKey | null>(null)
+const tableSortDirection = ref<'asc' | 'desc'>('asc')
 
 
-function handleSort(key: SortKey) {
-  if (sortKey.value === key) {
-    sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortKey.value = key
-    sortDir.value = 'desc'
+const jobEntries = computed(() => Object.entries(jobLabels) as [keyof Jobs, string][])
+const statEntries = computed(() => Object.entries(statLabels) as [keyof CreatureStats, string][])
+
+
+function totalStats(creature: Creature): number {
+  return Object.values(creature.stats).reduce((sum, value) => sum + value, 0)
+}
+
+
+function totalJobs(creature: Creature): number {
+  return Object.values(creature.jobs).reduce((sum, value) => sum + value, 0)
+}
+
+
+function sortBy(key: SortKey) {
+  if (tableSortKey.value === key) {
+    if (tableSortDirection.value === 'asc') {
+      tableSortDirection.value = 'desc'
+    } else {
+      tableSortKey.value = null
+      tableSortDirection.value = 'asc'
+    }
+    return
   }
+  tableSortKey.value = key
+  tableSortDirection.value = 'asc'
 }
 
 
 const sortedCreatures = computed(() => {
-  return [...props.creatures].toSorted((a, b) => {
-    let aVal: number | string, bVal: number | string
-    if (sortKey.value === 'name') {
-      aVal = a.name
-      bVal = b.name
-    } else if (sortKey.value === 'type') {
-      aVal = a.types[0] || ''
-      bVal = b.types[0] || ''
-    } else if (sortKey.value === 'tier') {
-      aVal = a.tier
-      bVal = b.tier
-    } else if (sortKey.value === 'totalStats') {
-      aVal = Object.values(a.stats).reduce((s, v) => s + v, 0)
-      bVal = Object.values(b.stats).reduce((s, v) => s + v, 0)
-    } else if (sortKey.value === 'totalJobs') {
-      aVal = Object.values(a.jobs).reduce((s, v) => s + v, 0)
-      bVal = Object.values(b.jobs).reduce((s, v) => s + v, 0)
-    } else if (sortKey.value in a.stats) {
-      aVal = a.stats[sortKey.value as keyof CreatureStats]
-      bVal = b.stats[sortKey.value as keyof CreatureStats]
-    } else {
-      aVal = a.jobs[sortKey.value as keyof Jobs]
-      bVal = b.jobs[sortKey.value as keyof Jobs]
-    }
-    if (typeof aVal === 'string')
-      return sortDir.value === 'asc'
-        ? aVal.localeCompare(bVal as string)
-        : (bVal as string).localeCompare(aVal)
-    return sortDir.value === 'asc'
-      ? (aVal as number) - (bVal as number)
-      : (bVal as number) - (aVal as number)
+  const key = tableSortKey.value
+  if (key === null) return props.creatures
+
+  const list = [...props.creatures]
+  list.sort((a, b) => {
+    let result = 0
+    if (key === 'name') result = a.name.localeCompare(b.name)
+    else if (key === 'type') result = (a.types[0] ?? '').localeCompare(b.types[0] ?? '')
+    else if (key === 'trait') result = a.trait.localeCompare(b.trait)
+    else if (key === 'level') {
+      if (isOwned(a.id) !== isOwned(b.id)) return isOwned(a.id) ? -1 : 1
+      result = getLevel(a.id) - getLevel(b.id)
+    } else if (key === 'statTotal') result = totalStats(a) - totalStats(b)
+    else if (key === 'jobTotal') result = totalJobs(a) - totalJobs(b)
+    else if (key in statLabels)
+      result = a.stats[key as keyof CreatureStats] - b.stats[key as keyof CreatureStats]
+    else result = a.jobs[key as keyof Jobs] - b.jobs[key as keyof Jobs]
+
+    return tableSortDirection.value === 'asc' ? result : -result
   })
+  return list
 })
-
-
-const typeColorMap: Record<string, string> = {
-  Fire: 'var(--color-fire)',
-  Water: 'var(--color-water)',
-  Wind: 'var(--color-wind)',
-  Earth: 'var(--color-earth)',
-}
 </script>
 
 <template>
-  <div class="table-wrapper">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th class="col-check"></th>
-          <th class="col-sort" @click="handleSort('name')">
-            Name
-            <span v-if="sortKey === 'name'" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-          <th class="col-sort" @click="handleSort('tier')">
-            Tier
-            <span v-if="sortKey === 'tier'" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-          <th class="col-sort" @click="handleSort('type')">
-            Type
-            <span v-if="sortKey === 'type'" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-          <th
-            v-for="(label, key) in statLabels"
-            :key="key"
-            class="col-sort col-stat"
-            @click="handleSort(key as SortKey)"
+  <div class="surface-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm" role="grid">
+        <thead class="bg-muted/50">
+          <tr>
+            <th
+              class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :aria-sort="
+                tableSortKey === 'name'
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy('name')"
+              >
+                Name
+                <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :aria-sort="
+                tableSortKey === 'type'
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy('type')"
+              >
+                Type
+                <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :aria-sort="
+                tableSortKey === 'trait'
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy('trait')"
+              >
+                Trait
+                <span :class="tableSortKey === 'trait' ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :aria-sort="
+                tableSortKey === 'level'
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy('level')"
+              >
+                Lvl
+                <span :class="tableSortKey === 'level' ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              v-for="([statKey], index) in statEntries"
+              :key="statKey"
+              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :class="{ 'border-l border-border/40': index === 0 }"
+              :aria-sort="
+                tableSortKey === statKey
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy(statKey)"
+              >
+                {{ statAbbreviations[statKey] }}
+                <span :class="tableSortKey === statKey ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :aria-sort="
+                tableSortKey === 'statTotal'
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy('statTotal')"
+              >
+                Total
+                <span :class="tableSortKey === 'statTotal' ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              v-for="([jobKey, jobName], index) in jobEntries"
+              :key="jobKey"
+              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :class="{ 'border-l border-border/40': index === 0 }"
+              :aria-sort="
+                tableSortKey === jobKey
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy(jobKey)"
+              >
+                <img
+                  v-if="jobIcons[jobKey]"
+                  :src="jobIcons[jobKey]"
+                  alt=""
+                  class="size-3.5"
+                  loading="lazy"
+                />
+                <span
+                  v-else
+                  class="inline-block size-1.5 rounded-full"
+                  :style="{ backgroundColor: jobColors[jobKey] }"
+                ></span>
+                {{ jobName.slice(0, 3) }}
+                <span :class="tableSortKey === jobKey ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+            <th
+              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
+              :aria-sort="
+                tableSortKey === 'jobTotal'
+                  ? tableSortDirection === 'asc'
+                    ? 'ascending'
+                    : 'descending'
+                  : 'none'
+              "
+            >
+              <button
+                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
+                @click="sortBy('jobTotal')"
+              >
+                Total
+                <span :class="tableSortKey === 'jobTotal' ? 'text-primary' : 'opacity-0'">{{
+                  tableSortDirection === 'asc' ? '▲' : '▼'
+                }}</span>
+              </button>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border/60">
+          <tr
+            v-for="creature in sortedCreatures"
+            :key="creature.id"
+            class="cursor-pointer transition-colors duration-150"
+            :class="
+              selectedCreatureId === creature.id ? 'bg-muted/40' : 'bg-card/50 hover:bg-muted/30'
+            "
+            @click="editing ? emit('toggle-selected', creature.id) : emit('select', creature)"
           >
-            {{ label }}
-            <span v-if="sortKey === key" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-          <th class="col-sort col-total" @click="handleSort('totalStats')">
-            Total
-            <span v-if="sortKey === 'totalStats'" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-          <th
-            v-for="(label, key) in jobLabels"
-            :key="key"
-            class="col-sort col-stat"
-            @click="handleSort(key as SortKey)"
-          >
-            {{ label }}
-            <span v-if="sortKey === key" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-          <th class="col-sort col-total" @click="handleSort('totalJobs')">
-            Total
-            <span v-if="sortKey === 'totalJobs'" class="sort-arrow">{{
-              sortDir === 'asc' ? '↑' : '↓'
-            }}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="c in sortedCreatures"
-          :key="c.id"
-          :class="['data-row', selectedIds.includes(c.id) && 'selected']"
-          @click="emit('creatureClick', c)"
-        >
-          <td class="col-check">
-            <input
-              type="checkbox"
-              :checked="selectedIds.includes(c.id)"
-              @click.stop
-              @change.stop="emit('toggleSelect', c.id)"
-            />
-          </td>
-          <td class="col-name">{{ c.name }}</td>
-          <td class="font-mono">T{{ c.tier + 1 }}</td>
-          <td>
-            <span v-for="t in c.types" :key="t" :style="{ color: typeColorMap[t] }">{{ t }} </span>
-          </td>
-          <td v-for="(val, key) in c.stats" :key="key" class="col-stat font-mono">{{ val }}</td>
-          <td class="col-total font-mono">
-            {{ Object.values(c.stats).reduce((a, b) => a + b, 0) }}
-          </td>
-          <td
-            v-for="(val, key) in c.jobs"
-            :key="key"
-            :class="['col-stat', 'font-mono', val === 0 && 'zero']"
-          >
-            {{ val }}
-          </td>
-          <td class="col-total font-mono">
-            {{ Object.values(c.jobs).reduce((a, b) => a + b, 0) }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <td
+              class="border-l-2 py-2.5 pl-2 pr-0"
+              :style="{
+                borderColor:
+                  selectedCreatureId === creature.id ? typeColor(creature.types[0]) : 'transparent',
+              }"
+            >
+              <div class="flex items-center gap-3">
+                <!-- Selection checkbox in edit mode -->
+                <input
+                  v-if="editing"
+                  type="checkbox"
+                  :checked="selectedIds.has(creature.id)"
+                  class="size-4 shrink-0 rounded border-border accent-primary"
+                  @click.stop="emit('toggle-selected', creature.id)"
+                />
+                <div
+                  class="relative inline-flex size-10 shrink-0 items-center justify-center overflow-visible rounded-lg border border-border text-xs font-bold text-muted-foreground"
+                  :style="{
+                    backgroundColor: 'hsl(' + typeColorVar(creature.types[0]) + ' / 0.1)',
+                  }"
+                >
+                  <img
+                    v-if="getCreatureImage(creature)"
+                    :src="getCreatureImage(creature)"
+                    :alt="`${creature.name} artwork`"
+                    class="size-10 rounded-lg border border-border object-cover"
+                    loading="lazy"
+                  />
+                  <span v-else>{{ creature.name.charAt(0) }}</span>
+                  <span
+                    class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
+                  >
+                    T{{ creature.tier + 1 }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-0.5">
+                  <span
+                    class="font-semibold"
+                    :class="
+                      isAwakened(creature.id)
+                        ? 'text-pink-600 dark:text-pink-400'
+                        : 'text-foreground/80'
+                    "
+                    >{{ creature.name }}</span
+                  >
+                  <span
+                    v-if="isOwned(creature.id)"
+                    class="text-xs"
+                    :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
+                    >★</span
+                  >
+                </div>
+              </div>
+            </td>
+            <td class="px-2 py-2.5">
+              <div class="flex flex-wrap gap-1">
+                <span
+                  v-for="type in creature.types"
+                  :key="type"
+                  class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                  :style="{
+                    color: typeColor(type),
+                    backgroundColor: 'hsl(' + typeColorVar(type) + ' / 0.12)',
+                  }"
+                >
+                  {{ type }}
+                </span>
+              </div>
+            </td>
+            <td class="whitespace-nowrap px-2 py-2.5">
+              <span class="trait-chip">{{
+                traitAbbreviations[creature.trait] ?? toTitleCase(creature.trait)
+              }}</span>
+            </td>
+            <td
+              class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+            >
+              <template v-if="isOwned(creature.id)">
+                {{ getLevel(creature.id) }}
+              </template>
+              <template v-else>
+                <span class="text-muted-foreground/40">—</span>
+              </template>
+            </td>
+            <td
+              v-for="([statKey], index) in statEntries"
+              :key="statKey"
+              class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+              :class="{ 'border-l border-border/40': index === 0 }"
+            >
+              <template v-if="getLevel(creature.id) > 1">
+                <p>{{ creature.stats[statKey] * getLevel(creature.id) }}</p>
+                <p class="text-[10px] text-muted-foreground/60">
+                  {{ creature.stats[statKey] }}
+                </p>
+              </template>
+              <template v-else>
+                {{ creature.stats[statKey] }}
+              </template>
+            </td>
+            <td
+              class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
+            >
+              <template v-if="getLevel(creature.id) > 1">
+                <p>{{ totalStats(creature) * getLevel(creature.id) }}</p>
+                <p class="text-[10px] font-normal text-muted-foreground/60">
+                  {{ totalStats(creature) }}
+                </p>
+              </template>
+              <template v-else>
+                {{ totalStats(creature) }}
+              </template>
+            </td>
+            <td
+              v-for="([jobKey], index) in jobEntries"
+              :key="jobKey"
+              class="px-2 py-2.5 text-center font-mono text-xs text-muted-foreground [font-variant-numeric:tabular-nums]"
+              :class="{ 'border-l border-border/40': index === 0 }"
+            >
+              {{ creature.jobs[jobKey] }}
+            </td>
+            <td
+              class="px-2 py-2.5 text-center font-mono text-xs font-semibold text-foreground [font-variant-numeric:tabular-nums]"
+            >
+              {{ totalJobs(creature) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.table-wrapper {
-  overflow-x: auto;
-}
-.data-table {
-  width: 100%;
-  font-size: 13px;
-  border-collapse: collapse;
-}
-.data-table th {
-  padding: 8px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-  transition: color 0.15s;
-}
-.data-table th:hover {
-  color: var(--color-text);
-}
-.sort-arrow {
-  margin-left: 2px;
-}
-.col-check {
-  width: 32px;
-  text-align: center;
-}
-.col-stat {
-  text-align: center;
-}
-.col-total {
-  text-align: center;
-  font-weight: 700;
-  background: oklch(0.22 0.03 285 / 0.2);
-}
-.col-name {
-  font-weight: 500;
-  color: var(--color-text);
-}
-.data-row {
-  border-bottom: 1px solid oklch(0.28 0.04 285 / 0.5);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.data-row:hover {
-  background: oklch(0.22 0.03 285 / 0.3);
-}
-.data-row.selected {
-  background: oklch(0.65 0.18 285 / 0.1);
-}
-.data-row td {
-  padding: 8px;
-}
-.font-mono {
-  font-family: 'Geist Mono', monospace;
-}
-.zero {
-  color: oklch(0.6 0.04 285 / 0.5);
-}
-</style>
