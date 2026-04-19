@@ -296,20 +296,18 @@ function chooseCreature(creature: Creature) {
 }
 
 
+function clampLevel(level: number): number {
+  if (Number.isNaN(level)) return 1
+  return Math.max(1, Math.min(120, Math.round(level)))
+}
+
+
 function stepCreatureLevel(creatureId: string, currentLevel: number, delta: number) {
-  function clampLevel(level: number): number {
-    if (Number.isNaN(level)) return 1
-    return Math.max(1, Math.min(120, Math.round(level)))
-  }
   updateCreatureLevel(creatureId, clampLevel(currentLevel + delta))
 }
 
 
 function normalizeLevelOnBlur(creatureId: string, currentLevel: number, event: FocusEvent) {
-  function clampLevel(level: number): number {
-    if (Number.isNaN(level)) return 1
-    return Math.max(1, Math.min(120, Math.round(level)))
-  }
   const target = event.target as HTMLInputElement
   if (!target.value.trim()) {
     updateCreatureLevel(creatureId, currentLevel)
