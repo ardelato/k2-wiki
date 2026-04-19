@@ -1,34 +1,35 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
 import {
-  ArrowDownWideNarrow,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
   ChevronsDownUp,
   ChevronsUpDown,
   ClipboardList,
   Clock3,
   GanttChart,
-  GitBranch,
+  Network,
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
-import GoldRateBadge from '@/components/planner/GoldRateBadge.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
-import PlannerInspector from '@/components/planner/PlannerInspector.vue'
-import PlannerShoppingList from '@/components/planner/PlannerShoppingList.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
 import SummoningCreatureFilter from '@/components/summoning-planner/SummoningCreatureFilter.vue'
 import SummoningMaterialTree from '@/components/summoning-planner/SummoningMaterialTree.vue'
+import SummoningObjectiveCard from '@/components/summoning-planner/SummoningObjectiveCard.vue'
 import SummoningTimeline from '@/components/summoning-planner/SummoningTimeline.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
+import { useGameConfig } from '@/composables/useGameConfig'
+import { useGoldIncome } from '@/composables/useGoldIncome'
 import { useSummoningPlanner } from '@/composables/useSummoningPlanner'
 import biomesData from '@/data/biomes.json'
 import expeditionsData from '@/data/expeditions.json'
 import { expeditionSourceIndex, itemById, jobActivityIndex } from '@/data/indexes'
-import type { PlannerNode, PlannerSummaryLeaf } from '@/types'
-import type { Expedition } from '@/types'
+import type { Expedition, PlannerNode } from '@/types'
+import { applyByProductCreditsToSchedule, computeByProductCredits } from '@/utils/byProductCredits'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration, toTitleCase } from '@/utils/format'
 import {
@@ -37,15 +38,23 @@ import {
   getLootAmount,
   getRecommendedCreatures,
 } from '@/utils/formulas'
-import { expeditionTierIcons } from '@/utils/icons'
+import {
+  expeditionTierIcons,
+  itemGridIcon,
+  machinesIcon,
+  sanctuaryIcon,
+  sourceIcons,
+  upgradesIcon,
+} from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { mergeSchedules } from '@/utils/mergeSchedules'
 import { computePriorityWaves } from '@/utils/prioritySteps'
 
-const router = useRouter()
-const isDesktop = useMediaQuery('(min-width: 1280px)')
+const isDesktop = useMediaQuery('(min-width: 1024px)')
 const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened, collectionLevels } = useCreatureCollection()
+const gameConfig = useGameConfig()
+const { goldPerMinute, breakdown: goldBreakdown } = useGoldIncome()
 
 
 const expeditions = expeditionsData as Expedition[]
@@ -67,9 +76,30 @@ const {
 } = useSummoningPlanner()
 
 
-// --- Tab state ---
-type SubTab = 'summary' | 'trees' | 'timeline'
-const activeSubTab = ref<SubTab>('summary')
+// --- View mode ---
+const viewMode = ref<'list' | 'tree' | 'timeline'>('list')
+
+
+const viewTabs = [
+  {
+    id: 'list' as const,
+    label: 'List',
+    icon: ClipboardList,
+    description: 'Everything you need to farm and craft, sorted by where you get it.',
+  },
+  {
+    id: 'tree' as const,
+    label: 'Tree',
+    icon: Network,
+    description: 'Full crafting chains — see every step from raw mats to the final item.',
+  },
+  {
+    id: 'timeline' as const,
+    label: 'Timeline',
+    icon: GanttChart,
+    description: "The optimal route — what to farm first and how long it'll take.",
+  },
+]
 
 
 // --- Group collapse state ---
@@ -84,9 +114,50 @@ function toggleGroup(group: SourceGroup) {
 }
 
 
+function collapseAllGroups() {
+  collapsedGroups.value = new Set(sourceGroupOrder)
+}
+
+
+function expandAllGroups() {
+  collapsedGroups.value = new Set()
+}
+
+
 // --- Material sort ---
-type MaterialSort = 'quantity' | 'name'
-const materialSort = ref<MaterialSort>('quantity')
+type SortField = 'name' | 'progress' | 'complexity'
+type SortDirection = 'asc' | 'desc' | null
+
+
+interface SortState {
+  field: SortField
+  direction: SortDirection
+}
+
+
+const sortState = ref<SortState>({ field: 'name', direction: null })
+
+
+function toggleSort(field: SortField) {
+  if (sortState.value.field !== field) {
+    sortState.value = { field, direction: 'asc' }
+  } else {
+    const next: SortDirection =
+      sortState.value.direction === null
+        ? 'asc'
+        : sortState.value.direction === 'asc'
+          ? 'desc'
+          : null
+    sortState.value = { field, direction: next }
+  }
+}
+
+
+// materialSort drives sortedCosts (the backing trees order)
+const materialSort = computed(() => {
+  if (sortState.value.field === 'name' && sortState.value.direction) return 'name'
+  return 'quantity'
+})
 
 
 const sortedCosts = computed(() => {
@@ -99,7 +170,14 @@ const sortedCosts = computed(() => {
 
 
 // --- Grouped costs by source type ---
-type SourceGroup = 'Refined' | 'Gathered' | 'Expedition' | 'Garden' | 'Currency' | 'Other'
+type SourceGroup =
+  | 'Refined'
+  | 'Gathered'
+  | 'Expedition'
+  | 'Garden'
+  | 'Merchant'
+  | 'Currency'
+  | 'Other'
 
 
 const sourceGroupOrder: SourceGroup[] = [
@@ -107,6 +185,7 @@ const sourceGroupOrder: SourceGroup[] = [
   'Gathered',
   'Expedition',
   'Garden',
+  'Merchant',
   'Currency',
   'Other',
 ]
@@ -117,12 +196,14 @@ const sourceGroupLabels: Record<SourceGroup, string> = {
   Gathered: 'Gathered Resources',
   Expedition: 'Expedition Rewards',
   Garden: 'Garden Flowers',
+  Merchant: 'Merchant',
   Currency: 'Currency',
   Other: 'Other',
 }
 
 
-function getSourceGroup(itemId: string): SourceGroup {
+function getSourceGroup(itemId: string, activeMethodKind?: string): SourceGroup {
+  if (activeMethodKind === 'buy') return 'Merchant'
   const item = itemById.get(itemId)
   if (!item) return 'Other'
   if (item.type === 'Refined') return 'Refined'
@@ -164,11 +245,41 @@ interface CostSubGroup {
 }
 
 
+function sortTreeEntries(entries: GroupedCostEntry[]): GroupedCostEntry[] {
+  const { field, direction } = sortState.value
+  if (!direction) return entries
+  const dir = direction === 'asc' ? 1 : -1
+  return entries.toSorted((a, b) => {
+    switch (field) {
+      case 'name':
+        return dir * a.itemName.localeCompare(b.itemName)
+      case 'progress': {
+        const invA = gameConfig.inventoryAmounts.value[a.itemId] ?? 0
+        const invB = gameConfig.inventoryAmounts.value[b.itemId] ?? 0
+        const pctA = a.amount > 0 ? invA / a.amount : 1
+        const pctB = b.amount > 0 ? invB / b.amount : 1
+        return dir * (pctA - pctB) || a.itemName.localeCompare(b.itemName)
+      }
+      case 'complexity': {
+        const stepsA = treeRefs.value[a.sortedIndex]?.summary?.craftStepCount ?? 0
+        const stepsB = treeRefs.value[b.sortedIndex]?.summary?.craftStepCount ?? 0
+        return dir * (stepsA - stepsB) || a.itemName.localeCompare(b.itemName)
+      }
+      default:
+        return 0
+    }
+  })
+}
+
+
 const groupedCosts = computed(() => {
   const groups = new Map<SourceGroup, GroupedCostEntry[]>()
   for (let i = 0; i < sortedCosts.value.length; i++) {
     const cost = sortedCosts.value[i]
-    const group = getSourceGroup(cost.itemId)
+    const tree = treeRefs.value[i]
+    const rootId = tree?.rootNode?.id
+    const activeMethodKind = rootId ? tree?.getActiveMethod(rootId)?.kind : undefined
+    const group = getSourceGroup(cost.itemId, activeMethodKind)
     const entry: GroupedCostEntry = { ...cost, sortedIndex: i }
     const list = groups.get(group)
     if (list) list.push(entry)
@@ -177,7 +288,7 @@ const groupedCosts = computed(() => {
   return sourceGroupOrder
     .filter((g) => groups.has(g))
     .map((g) => {
-      const costs = groups.get(g)!
+      const costs = sortTreeEntries(groups.get(g)!)
       let subGroups: CostSubGroup[] | null = null
 
       // Sub-group gathered items by job
@@ -209,97 +320,6 @@ watch(
   },
 )
 const activeTreeIndex = ref<number | null>(null)
-
-
-const activeTree = computed(() => {
-  if (activeTreeIndex.value == null) return null
-  return treeRefs.value[activeTreeIndex.value] ?? null
-})
-
-
-const inspectorNode = computed(() => activeTree.value?.selectedNode ?? null)
-const inspectorMethod = computed(() => activeTree.value?.selectedMethodObj ?? null)
-const inspectorActiveMethod = computed(() => activeTree.value?.activeMethodForSelectedNode ?? null)
-const inspectorNodesById = computed(() => activeTree.value?.nodesById ?? {})
-const inspectorSchedule = computed(() => activeTree.value?.schedule ?? null)
-
-
-function inspectorGetActiveMethod(nodeId: string) {
-  return activeTree.value?.getActiveMethod(nodeId) ?? null
-}
-
-
-function handlePinMethod(nodeId: string, methodId: string) {
-  activeTree.value?.setPinnedMethod(nodeId, methodId)
-}
-
-
-function handleSelectMethod(methodId: string) {
-  activeTree.value?.selectMethod(methodId)
-}
-
-
-function handleSelectNode(nodeId: string) {
-  activeTree.value?.selectNode(nodeId)
-}
-
-
-function handleOpenItemPlanner(itemId: string, quantity: number) {
-  router.push({ name: 'planner', params: { id: itemId }, query: { qty: String(quantity) } })
-}
-
-
-// --- Merged leaf items (shopping list) ---
-const mergedLeafItems = computed(() => {
-  const merged = new Map<string, PlannerSummaryLeaf>()
-  for (let i = 0; i < sortedCosts.value.length; i++) {
-    const tree = treeRefs.value[i]
-    if (!tree?.summary) continue
-    for (const leaf of tree.summary.leafItems) {
-      const existing = merged.get(leaf.itemId)
-      if (existing) {
-        existing.amount += leaf.amount
-        existing.stillNeeded += leaf.stillNeeded
-        existing.inventoryAmount = Math.max(existing.inventoryAmount, leaf.inventoryAmount)
-      } else {
-        merged.set(leaf.itemId, { ...leaf })
-      }
-    }
-  }
-  return [...merged.values()].toSorted((a, b) => a.itemName.localeCompare(b.itemName))
-})
-
-
-const mergedShoppingListText = computed(() => {
-  if (!mergedLeafItems.value.length) return ''
-  const lines = mergedLeafItems.value.map((l) => `${l.amount}x ${l.itemName}`)
-  return `Summoning Materials\n${lines.join('\n')}`
-})
-
-
-function formatAmount(value: number): string {
-  return value.toLocaleString()
-}
-
-
-// --- Aggregate summary ---
-const aggregateSummary = computed(() => {
-  let totalCost = 0
-  for (let i = 0; i < sortedCosts.value.length; i++) {
-    const tree = treeRefs.value[i]
-    if (!tree?.summary) continue
-    totalCost += tree.summary.totalCost
-  }
-  // Use the merged schedule's total time for a realistic estimate that
-  // accounts for shared resource contention across all material trees.
-  const merged = mergedSchedule.value
-  const totalTime = merged.totalTime > 0 ? merged.totalTime : null
-  return {
-    totalTime,
-    totalCost,
-    materialCount: aggregatedCosts.value.length,
-  }
-})
 
 
 // --- Tree controls ---
@@ -671,46 +691,124 @@ function getDisplayedAlternatives(
 
 
 // Detect creatures used in multiple active parties
-const conflictedCreatureIds = computed(() => {
-  const creatureCounts = new Map<string, number>()
+interface CreatureExpeditionEntry {
+  name: string
+  rewardItemId: string
+}
+
+
+const creatureExpeditionMap = computed(() => {
+  const map = new Map<string, CreatureExpeditionEntry[]>()
   for (const [sortedIndex] of expeditionAllocations.value) {
     const active = getActiveExpeditionParty(sortedIndex)
     if (!active) continue
+    const entry: CreatureExpeditionEntry = {
+      name: active.expeditionName,
+      rewardItemId: active.rewardItemId,
+    }
     for (const member of active.activeVariant.party) {
-      creatureCounts.set(member.creature.id, (creatureCounts.get(member.creature.id) ?? 0) + 1)
+      const list = map.get(member.creature.id)
+      if (list) list.push(entry)
+      else map.set(member.creature.id, [entry])
     }
   }
+  return map
+})
+
+
+const conflictedCreatureIds = computed(() => {
   const conflicts = new Set<string>()
-  for (const [id, count] of creatureCounts) {
-    if (count > 1) conflicts.add(id)
+  for (const [id, entries] of creatureExpeditionMap.value) {
+    if (entries.length > 1) conflicts.add(id)
   }
   return conflicts
 })
 
 
+// Conflict popover state
+const conflictPopover = ref<{
+  creatureId: string
+  otherExpeditions: CreatureExpeditionEntry[]
+  style: Record<string, string>
+} | null>(null)
+
+
+function onConflictEnter(creatureId: string, currentExpedition: string, event: MouseEvent) {
+  if (!conflictedCreatureIds.value.has(creatureId)) return
+  const target = event.currentTarget as HTMLElement
+  if (!target) return
+  const rect = target.getBoundingClientRect()
+  const GAP = 8
+  const POPOVER_WIDTH = 288
+  const viewportWidth = document.documentElement.clientWidth
+  let left = rect.left + rect.width / 2 - POPOVER_WIDTH / 2
+  left = Math.max(GAP, Math.min(left, viewportWidth - POPOVER_WIDTH - GAP))
+  const allExpeditions = creatureExpeditionMap.value.get(creatureId) ?? []
+  const otherExpeditions = allExpeditions.filter((e) => e.name !== currentExpedition)
+  conflictPopover.value = {
+    creatureId,
+    otherExpeditions,
+    style: { position: 'fixed', top: `${rect.top - GAP}px`, left: `${left}px` },
+  }
+}
+
+
+function onConflictLeave() {
+  conflictPopover.value = null
+}
+
+
 // --- Timeline tab computeds ---
-const mergedSchedule = computed(() => {
-  const schedules: { itemName: string; schedule: import('@/types').PlannerSchedule }[] = []
+
+
+/** Trees that have valid schedule data, collected once to ensure consistent indexing */
+const validTrees = computed(() => {
+  const result: InstanceType<typeof SummoningMaterialTree>[] = []
   for (let i = 0; i < sortedCosts.value.length; i++) {
     const tree = treeRefs.value[i]
-    if (!tree?.schedule || !tree?.rootNode) continue
-    schedules.push({ itemName: tree.rootNode.itemName, schedule: tree.schedule })
+    if (!tree?.schedule || !tree?.rootNode || !tree?.nodesById) continue
+    result.push(tree)
   }
-  return mergeSchedules(schedules)
+  // Sort by root item name so mergeSchedules receives a stable input order
+  // regardless of the UI sort state (prevents treeIndex tie-breaker drift)
+  return result.toSorted((a, b) => a.rootNode!.itemName.localeCompare(b.rootNode!.itemName))
+})
+
+
+const byProductCredits = computed(() => {
+  const treeData: {
+    nodesById: Record<string, import('@/types').PlannerNode>
+    activeMethodIdByNode: Record<string, string | null>
+  }[] = []
+  for (const tree of validTrees.value) {
+    treeData.push({
+      nodesById: tree.nodesById,
+      activeMethodIdByNode: tree.activeMethodIdByNode,
+    })
+  }
+  return computeByProductCredits(treeData)
+})
+
+
+const mergedSchedule = computed(() => {
+  const schedules: { itemName: string; schedule: import('@/types').PlannerSchedule }[] = []
+  for (const tree of validTrees.value) {
+    schedules.push({ itemName: tree.rootNode!.itemName, schedule: tree.schedule! })
+  }
+  const merged = mergeSchedules(schedules)
+  return applyByProductCreditsToSchedule(merged, byProductCredits.value)
 })
 
 
 const mergedNodesById = computed(() => {
   const merged: Record<string, PlannerNode> = {}
-  let treeIndex = 0
-  for (const tree of treeRefs.value) {
-    if (!tree?.schedule || !tree?.rootNode) continue
+  for (let treeIndex = 0; treeIndex < validTrees.value.length; treeIndex++) {
+    const tree = validTrees.value[treeIndex]
     if (tree.nodesById) {
       for (const [nodeId, node] of Object.entries(tree.nodesById)) {
         merged[`tree${treeIndex}/${nodeId}`] = node
       }
     }
-    treeIndex++
   }
   return merged
 })
@@ -738,6 +836,348 @@ const expeditionPartiesByItemId = computed(() => {
   }
   return map
 })
+
+
+// --- Parallel estimate (moved from SummoningTimeline) ---
+const parallelEstimate = computed(() => {
+  const { tasks } = mergedSchedule.value
+  if (tasks.length === 0) return null
+
+  let maxPassive = 0
+  let maxActive = 0
+
+  for (const task of tasks) {
+    if (task.kind === 'expedition' || task.kind === 'garden') {
+      maxPassive = Math.max(maxPassive, task.endTime)
+    } else {
+      maxActive = Math.max(maxActive, task.endTime)
+    }
+  }
+
+  if (maxPassive > 0 && maxActive > 0) {
+    return Math.max(maxPassive, maxActive)
+  }
+
+  return null
+})
+
+
+// --- Readiness (top-level aggregated costs vs inventory) ---
+const readiness = computed(() => {
+  const costs = aggregatedCosts.value
+  if (costs.length === 0) return { percent: 0, fulfilled: 0, total: 0 }
+
+  let fulfilled = 0
+  for (const cost of costs) {
+    const owned = gameConfig.inventoryAmounts.value[cost.itemId] ?? 0
+    if (owned >= cost.amount) fulfilled++
+  }
+  const percent = Math.round((fulfilled / costs.length) * 100)
+  return { percent, fulfilled, total: costs.length }
+})
+
+
+// --- Source label for objective cards ---
+function getNodeSource(
+  node: PlannerNode,
+  treeIndex: number,
+): { label: string; icon: string | null } {
+  const tree = treeRefs.value[treeIndex]
+  if (!tree) return { label: '', icon: null }
+  const methodId = tree.activeMethodIdByNode[node.id]
+  const method = methodId
+    ? node.methods.find((m: import('@/types').PlannerMethod) => m.id === methodId)
+    : null
+  if (method?.title && method.kind !== 'container' && method.kind !== 'buy') {
+    return { label: method.title, icon: sourceIcons[method.title] ?? null }
+  }
+  // Fallback: check if any method is a garden method (for raw essences)
+  const gardenMethod = node.methods.find(
+    (m: import('@/types').PlannerMethod) => m.kind === 'garden',
+  )
+  if (gardenMethod?.title) {
+    const flowerId = gardenMethod.title.toLowerCase().replace(/ /g, '-')
+    return { label: gardenMethod.title, icon: getItemImage({ id: flowerId }) ?? null }
+  }
+  // Static fallback for raw essences → garden flower source
+  const essenceFlowerMap: Record<string, string> = {
+    'raw-fire-essence': 'fire-flower',
+    'raw-wind-essence': 'wind-flower',
+    'raw-earth-essence': 'earth-flower',
+    'raw-water-essence': 'water-flower',
+  }
+  const flowerId = essenceFlowerMap[node.itemId]
+  if (flowerId) {
+    const flowerName = itemById.get(flowerId)?.name ?? flowerId
+    return { label: flowerName, icon: getItemImage({ id: flowerId }) ?? null }
+  }
+  return { label: '', icon: null }
+}
+
+
+// --- Total gold needed across all trees ---
+const totalGold = computed(() => {
+  let total = 0
+  for (const tree of treeRefs.value) {
+    if (tree?.summary?.totalCost) total += tree.summary.totalCost
+  }
+  return Math.round(total)
+})
+
+
+const goldInventory = computed(() => gameConfig.inventoryAmounts.value['gold'] ?? 0)
+const hasCurrencyGroup = computed(() => groupedCosts.value.some((g) => g.group === 'Currency'))
+
+
+const goldModifiers = computed<ModifierChipData[]>(() => {
+  if (goldPerMinute.value <= 0) return []
+  return [
+    {
+      label: 'Gold Income',
+      value: `${goldPerMinute.value.toFixed(0)} gold/min`,
+      icon: getItemImage({ id: 'gold' }) ?? undefined,
+      color:
+        'border-yellow-600/35 bg-yellow-100 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-400/20 dark:text-yellow-100',
+      accentColor: 'bg-yellow-500',
+      subtitle: 'Passive gold generation',
+      stats: [
+        ...(goldBreakdown.value.creatureGoldPerMin > 0
+          ? [`+${goldBreakdown.value.creatureGoldPerMin} gold/min from creatures`]
+          : []),
+        ...(goldBreakdown.value.flowerGoldPerMin > 0
+          ? [`+${goldBreakdown.value.flowerGoldPerMin} gold/min from flowers`]
+          : []),
+      ],
+    },
+  ]
+})
+
+
+// --- Flattened list of all nodes across all trees ---
+interface ModifierChipData {
+  label: string
+  value: string
+  icon?: string
+  color: string
+  accentColor: string
+  subtitle: string
+  stats: string[]
+}
+
+
+function parseModifierStats(value: string): string[] {
+  const inner = value.match(/\(([^)]+)\)/)
+  const raw = inner ? inner[1] : value
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+
+function extractModifierChips(detailRows: { label: string; value: string }[]): ModifierChipData[] {
+  const chips: ModifierChipData[] = []
+  for (const row of detailRows) {
+    if (row.label === 'Awaken Tree') {
+      chips.push({
+        label: row.label,
+        value: row.value,
+        icon: upgradesIcon,
+        color:
+          'border-cyan-600/35 bg-cyan-100 text-cyan-800 dark:border-cyan-400/40 dark:bg-cyan-400/20 dark:text-cyan-100',
+        accentColor: 'bg-cyan-500',
+        subtitle: 'Skill tree bonuses',
+        stats: parseModifierStats(row.value),
+      })
+    } else if (row.label === 'Sanctuary') {
+      const tierMatch = row.value.match(/^T(\d+)/)
+      chips.push({
+        label: row.label,
+        value: row.value,
+        icon: sanctuaryIcon,
+        color:
+          'border-amber-600/35 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/20 dark:text-amber-100',
+        accentColor: 'bg-amber-500',
+        subtitle: tierMatch ? `Tier ${tierMatch[1]} job bonus` : 'Job tier bonus',
+        stats: parseModifierStats(row.value),
+      })
+    } else if (row.label.startsWith('Machine')) {
+      const machineName = row.label.replace('Machine — ', '')
+      chips.push({
+        label: machineName,
+        value: row.value,
+        icon: sourceIcons[machineName] ?? machinesIcon,
+        color:
+          'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100',
+        accentColor: 'bg-orange-500',
+        subtitle: 'Passive machine production',
+        stats: [row.value],
+      })
+    } else if (row.label.startsWith('Fabrication')) {
+      chips.push({
+        label: 'Fabrication',
+        value: row.value,
+        icon: itemGridIcon,
+        color:
+          'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100',
+        accentColor: 'bg-violet-500',
+        subtitle: 'Passive fabrication output',
+        stats: [row.value],
+      })
+    }
+  }
+  return chips
+}
+
+
+interface FlatListEntry {
+  itemId: string
+  itemName: string
+  itemType: import('@/types').ItemType
+  totalNeeded: number
+  inventoryAmount: number
+  sourceLabel: string
+  sourceIcon: string | null
+  sourceGroup: SourceGroup
+  gatherJob: string | null
+  modifiers: ModifierChipData[]
+  maxDepth: number
+}
+
+
+const flatListEntries = computed(() => {
+  // Walk each tree's active method path recursively (matching what the tree view shows).
+  // Deduplicate by itemId across all trees, summing amounts.
+  const merged = new Map<string, FlatListEntry>()
+
+  function walkNode(
+    node: PlannerNode,
+    treeIndex: number,
+    treeRef: InstanceType<typeof SummoningMaterialTree>,
+  ) {
+    const inv = gameConfig.inventoryAmounts.value[node.itemId] ?? 0
+    const existing = merged.get(node.itemId)
+
+    if (existing) {
+      existing.totalNeeded += node.requiredAmount
+      existing.maxDepth = Math.max(existing.maxDepth, node.depth)
+    } else {
+      const source = getNodeSource(node, treeIndex)
+      const methodId = treeRef.activeMethodIdByNode[node.id]
+      const activeMethod = methodId
+        ? node.methods.find((m: import('@/types').PlannerMethod) => m.id === methodId)
+        : null
+      const group = getSourceGroup(node.itemId, activeMethod?.kind)
+      const gatherInfo = getGatherInfo(node.itemId)
+      merged.set(node.itemId, {
+        itemId: node.itemId,
+        itemName: node.itemName,
+        itemType: node.itemType,
+        totalNeeded: node.requiredAmount + inv,
+        inventoryAmount: inv,
+        sourceLabel: source.label,
+        sourceIcon: source.icon,
+        sourceGroup: group,
+        gatherJob: gatherInfo?.jobId ?? null,
+        modifiers: activeMethod ? extractModifierChips(activeMethod.detailRows) : [],
+        maxDepth: node.depth,
+      })
+    }
+
+    // Recurse into active method's children only
+    if (!node.fulfilled) {
+      const methodId = treeRef.activeMethodIdByNode[node.id]
+      const method = methodId
+        ? node.methods.find((m: import('@/types').PlannerMethod) => m.id === methodId)
+        : null
+      if (method) {
+        for (const child of method.children) {
+          const childNode = treeRef.nodesById[child.nodeId]
+          if (childNode) walkNode(childNode, treeIndex, treeRef)
+        }
+      }
+    }
+  }
+
+  for (let i = 0; i < sortedCosts.value.length; i++) {
+    const tree = treeRefs.value[i]
+    if (!tree?.rootNode || !tree?.nodesById) continue
+    walkNode(tree.rootNode, i, tree)
+  }
+
+  // Add aggregate gold entry from all tree summaries
+  if (totalGold.value > 0) {
+    merged.set('gold', {
+      itemId: 'gold',
+      itemName: 'Gold',
+      itemType: 'Currency',
+      totalNeeded: totalGold.value,
+      inventoryAmount: goldInventory.value,
+      sourceLabel: '',
+      sourceIcon: getItemImage({ id: 'gold' }) ?? null,
+      sourceGroup: 'Currency',
+      gatherJob: null,
+      modifiers: goldModifiers.value,
+      maxDepth: 0,
+    })
+  }
+
+  return [...merged.values()]
+})
+
+
+function sortFlatEntries(entries: FlatListEntry[]): FlatListEntry[] {
+  const { field, direction } = sortState.value
+  if (!direction) return entries
+  const dir = direction === 'asc' ? 1 : -1
+  return entries.toSorted((a, b) => {
+    switch (field) {
+      case 'name':
+        return dir * a.itemName.localeCompare(b.itemName)
+      case 'progress': {
+        const pctA = a.totalNeeded > 0 ? a.inventoryAmount / a.totalNeeded : 1
+        const pctB = b.totalNeeded > 0 ? b.inventoryAmount / b.totalNeeded : 1
+        return dir * (pctA - pctB) || a.itemName.localeCompare(b.itemName)
+      }
+      case 'complexity':
+        return dir * (a.maxDepth - b.maxDepth) || a.itemName.localeCompare(b.itemName)
+      default:
+        return 0
+    }
+  })
+}
+
+
+const flatGroupedCosts = computed(() => {
+  const groups = new Map<SourceGroup, FlatListEntry[]>()
+  for (const entry of flatListEntries.value) {
+    const list = groups.get(entry.sourceGroup)
+    if (list) list.push(entry)
+    else groups.set(entry.sourceGroup, [entry])
+  }
+
+  return sourceGroupOrder
+    .filter((g) => groups.has(g))
+    .map((g) => {
+      const costs = sortFlatEntries(groups.get(g)!)
+      let subGroups: { label: string; costs: FlatListEntry[] }[] | null = null
+
+      if (g === 'Gathered') {
+        const byJob = new Map<string, FlatListEntry[]>()
+        for (const cost of costs) {
+          const jobId = cost.gatherJob ?? 'other'
+          const list = byJob.get(jobId)
+          if (list) list.push(cost)
+          else byJob.set(jobId, [cost])
+        }
+        subGroups = [...byJob.entries()]
+          .toSorted(([a], [b]) => a.localeCompare(b))
+          .map(([jobId, items]) => ({ label: toTitleCase(jobId), costs: items }))
+      }
+
+      return { group: g, label: sourceGroupLabels[g], costs, subGroups }
+    })
+})
 </script>
 
 <template>
@@ -752,7 +1192,6 @@ const expeditionPartiesByItemId = computed(() => {
       <p class="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
         Select unsummoned creatures to see the full crafting breakdown for all required materials.
       </p>
-      <GoldRateBadge />
     </div>
 
     <SummoningCreatureFilter
@@ -760,6 +1199,11 @@ const expeditionPartiesByItemId = computed(() => {
       :selected-ids="selectedIds"
       :get-level="getLevel"
       :is-awakened="isAwakened"
+      :readiness-percent="readiness.percent"
+      :objectives-fulfilled="readiness.fulfilled"
+      :objectives-total="readiness.total"
+      :total-time="mergedSchedule.totalTime"
+      :parallel-estimate="parallelEstimate"
       @toggle="toggleCreature"
       @toggle-tier="toggleTier"
       @reset="clearSelection"
@@ -772,303 +1216,418 @@ const expeditionPartiesByItemId = computed(() => {
       subtitle="Select creatures above to see the full material breakdown with crafting trees."
     />
 
-    <!-- Tab content -->
-    <template v-if="aggregatedCosts.length > 0">
-      <!-- Sub-tab buttons -->
-      <div class="flex justify-center">
-        <div class="inline-flex rounded-xl border border-border/60 bg-card/60 p-1">
+    <PlannerEmptyState
+      v-else-if="!isDesktop"
+      title="Planner is desktop-first for now."
+      subtitle="Open this page on a wider screen to browse the full dependency tree and inspector."
+    />
+
+    <!-- Main content -->
+    <div v-else-if="aggregatedCosts.length > 0" class="space-y-6">
+      <div class="flex items-center gap-2">
+        <div class="flex rounded-lg border border-border/60 p-0.5">
           <button
-            class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
+            v-for="tab in viewTabs"
+            :key="tab.id"
+            class="inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-semibold transition"
             :class="
-              activeSubTab === 'summary'
-                ? 'bg-primary/15 text-primary shadow-sm'
-                : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
+              viewMode === tab.id
+                ? 'bg-primary/15 text-primary'
+                : 'text-muted-foreground hover:text-foreground'
             "
-            @click="activeSubTab = 'summary'"
+            :title="tab.description"
+            @click="viewMode = tab.id"
           >
-            <ClipboardList class="size-4" />
-            Summary
-          </button>
-          <button
-            class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
-            :class="
-              activeSubTab === 'trees'
-                ? 'bg-primary/15 text-primary shadow-sm'
-                : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
-            "
-            @click="activeSubTab = 'trees'"
-          >
-            <GitBranch class="size-4" />
-            Craft Trees
-          </button>
-          <button
-            class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
-            :class="
-              activeSubTab === 'timeline'
-                ? 'bg-primary/15 text-primary shadow-sm'
-                : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
-            "
-            @click="activeSubTab = 'timeline'"
-          >
-            <GanttChart class="size-4" />
-            Timeline
+            <component :is="tab.icon" class="size-4" />
+            {{ tab.label }}
           </button>
         </div>
-      </div>
 
-      <!-- ═══ Summary Tab ═══ -->
-      <div v-if="activeSubTab === 'summary'" class="space-y-6">
-        <!-- Totals bar -->
+        <template v-if="viewMode === 'list' || viewMode === 'tree'">
+          <div class="h-5 w-px bg-border/40" />
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] font-medium text-muted-foreground/60">Groups</span>
+            <div class="flex rounded-lg border border-border/60 p-0.5">
+              <button
+                class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+                @click="collapseAllGroups()"
+              >
+                <ChevronsDownUp class="size-3.5" />
+                Collapse
+              </button>
+              <button
+                class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+                @click="expandAllGroups()"
+              >
+                <ChevronsUpDown class="size-3.5" />
+                Expand
+              </button>
+            </div>
+          </div>
+        </template>
+        <template v-if="viewMode === 'tree'">
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] font-medium text-muted-foreground/60">Nodes</span>
+            <div class="flex rounded-lg border border-border/60 p-0.5">
+              <button
+                class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+                @click="collapseAllTrees()"
+              >
+                <ChevronsDownUp class="size-3.5" />
+                Collapse
+              </button>
+              <button
+                class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+                @click="expandAllTrees()"
+              >
+                <ChevronsUpDown class="size-3.5" />
+                Expand
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <!-- Sort controls -->
         <div
-          v-if="aggregateSummary.totalTime != null || aggregateSummary.totalCost > 0"
-          class="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg border border-border/50 bg-card/60 px-4 py-2.5 text-sm"
+          v-if="viewMode === 'list' || viewMode === 'tree'"
+          class="ml-auto flex items-center gap-1.5"
         >
-          <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-            Total
-          </span>
-          <span
-            v-if="aggregateSummary.totalTime != null"
-            class="inline-flex items-center gap-1.5 font-semibold text-foreground"
-          >
-            <Clock3 class="size-3.5 text-emerald-600 dark:text-emerald-400" />
-            {{ formatDuration(aggregateSummary.totalTime) }}
-          </span>
-          <span
-            v-if="aggregateSummary.totalCost > 0"
-            class="inline-flex items-center gap-1.5 font-semibold text-foreground"
-          >
-            <img
-              v-if="getItemImage({ id: 'gold' })"
-              :src="getItemImage({ id: 'gold' })"
-              alt="Gold"
-              class="size-3.5 object-contain"
-            />
-            {{ Math.round(aggregateSummary.totalCost).toLocaleString() }}
-          </span>
-          <span class="text-xs text-muted-foreground">
-            {{ aggregateSummary.materialCount }} materials
-          </span>
-        </div>
-
-        <!-- Shopping list -->
-        <PlannerShoppingList
-          v-if="mergedLeafItems.length > 0"
-          :leaf-items="mergedLeafItems"
-          :format-amount="formatAmount"
-          :shopping-list-text="mergedShoppingListText"
-        />
-      </div>
-
-      <!-- ═══ Craft Trees Tab ═══ -->
-      <div v-else-if="activeSubTab === 'trees'" class="space-y-4">
-        <!-- Controls -->
-        <div class="flex flex-wrap items-center gap-2">
-          <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-            Materials ({{ aggregatedCosts.length }})
-          </p>
-          <div
-            class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
-          >
+          <span class="text-[11px] font-medium text-muted-foreground/60">Sort</span>
+          <div class="flex rounded-lg border border-border/60 p-0.5">
             <button
-              class="focus-ring flex h-7 items-center gap-1 px-2.5 text-[11px] font-semibold transition"
+              v-for="opt in [
+                { value: 'name', label: 'Name' },
+                { value: 'progress', label: 'Progress' },
+                { value: 'complexity', label: 'Steps' },
+              ] as const"
+              :key="opt.value"
+              class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold transition"
               :class="
-                materialSort === 'quantity'
+                sortState.field === opt.value && sortState.direction
                   ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               "
-              @click="materialSort = 'quantity'"
+              @click="toggleSort(opt.value)"
             >
-              <ArrowDownWideNarrow class="size-3" />
-              Quantity
-            </button>
-            <button
-              class="focus-ring flex h-7 items-center px-2.5 text-[11px] font-semibold transition"
-              :class="
-                materialSort === 'name'
-                  ? 'bg-primary/15 text-primary'
-                  : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
-              "
-              @click="materialSort = 'name'"
-            >
-              Name
+              {{ opt.label }}
+              <template v-if="sortState.field === opt.value && sortState.direction">
+                <ArrowUp v-if="sortState.direction === 'asc'" class="size-3" />
+                <ArrowDown v-else class="size-3" />
+              </template>
+              <ArrowUpDown v-else class="size-3 opacity-30" />
             </button>
           </div>
-          <button
-            class="focus-ring inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/65 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
-            @click="collapseAllTrees"
-          >
-            <ChevronsDownUp class="size-3.5" />
-            Collapse to Leaves
-          </button>
-          <button
-            class="focus-ring inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/65 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
-            @click="expandAllTrees"
-          >
-            <ChevronsUpDown class="size-3.5" />
-            Expand All
-          </button>
         </div>
+      </div>
 
-        <!-- Trees + Inspector grid -->
-        <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div class="space-y-6">
-            <div v-for="section in groupedCosts" :key="section.group" class="space-y-3">
-              <button
-                class="flex items-center gap-2 text-left transition hover:opacity-80"
-                @click="toggleGroup(section.group)"
-              >
-                <ChevronDown
-                  class="size-3.5 text-muted-foreground/50 transition-transform"
-                  :class="{ '-rotate-90': collapsedGroups.has(section.group) }"
-                />
-                <span
-                  class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60"
+      <!-- List view (flat objective cards from all tree nodes) -->
+      <div v-if="viewMode === 'list'" class="space-y-6">
+        <div v-for="section in flatGroupedCosts" :key="section.group" class="space-y-3">
+          <button
+            class="flex w-full items-center gap-2 border-l-2 border-primary/30 pl-2 text-left transition hover:opacity-80"
+            @click="toggleGroup(section.group)"
+          >
+            <ChevronDown
+              class="size-3.5 text-muted-foreground transition-transform"
+              :class="{ '-rotate-90': collapsedGroups.has(section.group) }"
+            />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              {{ section.label }}
+            </span>
+            <span class="text-[10px] text-muted-foreground/40"> ({{ section.costs.length }}) </span>
+            <span class="h-px flex-1 bg-border/40" />
+          </button>
+          <div v-if="!collapsedGroups.has(section.group)">
+            <!-- With sub-groups (e.g., Gathered -> Fishing, Mining, etc.) -->
+            <template v-if="section.subGroups">
+              <div v-for="sub in section.subGroups" :key="sub.label" class="mb-4 space-y-2">
+                <p
+                  class="pl-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/45"
                 >
-                  {{ section.label }}
-                </span>
-                <span class="text-[10px] text-muted-foreground/40">
-                  ({{ section.costs.length }})
-                </span>
-              </button>
-              <div v-if="!collapsedGroups.has(section.group)" class="space-y-3">
-                <!-- With sub-groups (e.g., Gathered → Fishing, Mining, etc.) -->
-                <template v-if="section.subGroups">
-                  <div v-for="sub in section.subGroups" :key="sub.label" class="space-y-2">
-                    <p
-                      class="pl-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/45"
-                    >
-                      {{ sub.label }}
-                    </p>
-                    <template v-for="cost in sub.costs" :key="cost.itemId">
-                      <PlannerTreeNode
-                        v-if="treeRefs[cost.sortedIndex]?.rootNode"
-                        :node="treeRefs[cost.sortedIndex].rootNode!"
-                        :nodes-by-id="treeRefs[cost.sortedIndex].nodesById"
-                        :active-method-id-by-node="treeRefs[cost.sortedIndex].activeMethodIdByNode"
-                        :selected-node-id="treeRefs[cost.sortedIndex].selectedNodeId"
-                        :selected-method-id="treeRefs[cost.sortedIndex].selectedMethodId"
-                        :collapsed-node-ids="treeRefs[cost.sortedIndex].collapsedNodeIds"
-                        :inventory-amounts="treeRefs[cost.sortedIndex].inventoryAmounts"
-                        :completion-time-by-node="
-                          treeRefs[cost.sortedIndex].schedule?.completionTimeByNode ?? {}
-                        "
-                        :node-annotations="buildNodeAnnotations(cost.sortedIndex)"
-                        :subtree-cost-by-node="buildSubtreeCosts(cost.sortedIndex)"
-                        @select-node="treeSelectNode(cost.sortedIndex, $event)"
-                        @select-method="treeSelectMethod(cost.sortedIndex, $event)"
-                        @pin-method="
-                          (nodeId: string, methodId: string) =>
-                            treePinMethod(cost.sortedIndex, nodeId, methodId)
-                        "
-                        @toggle-collapse="treeToggleCollapse(cost.sortedIndex, $event)"
-                      />
-                    </template>
-                  </div>
+                  {{ sub.label }}
+                </p>
+                <div class="grid grid-cols-2 gap-3 xl:grid-cols-3">
+                  <SummoningObjectiveCard
+                    v-for="entry in sub.costs"
+                    :key="entry.itemId"
+                    :item-id="entry.itemId"
+                    :item-name="entry.itemName"
+                    :item-type="entry.itemType"
+                    :total-needed="entry.totalNeeded"
+                    :inventory-amount="entry.inventoryAmount"
+                    :source-label="entry.sourceLabel"
+                    :source-icon="entry.sourceIcon"
+                    :modifiers="entry.modifiers"
+                  />
+                </div>
+              </div>
+            </template>
+
+            <!-- Flat list (no sub-groups) -->
+            <template v-else>
+              <div class="grid grid-cols-2 gap-3 xl:grid-cols-3">
+                <SummoningObjectiveCard
+                  v-for="entry in section.costs"
+                  :key="entry.itemId"
+                  :item-id="entry.itemId"
+                  :item-name="entry.itemName"
+                  :item-type="entry.itemType"
+                  :total-needed="entry.totalNeeded"
+                  :inventory-amount="entry.inventoryAmount"
+                  :source-label="entry.sourceLabel"
+                  :source-icon="entry.sourceIcon"
+                  :modifiers="entry.modifiers"
+                />
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline view -->
+      <SummoningTimeline
+        v-else-if="viewMode === 'timeline'"
+        :schedule="mergedSchedule"
+        :nodes-by-id="mergedNodesById"
+        :waves="priorityWaves"
+        :expedition-parties="expeditionPartiesByItemId"
+      />
+
+      <!-- Tree view -->
+      <div v-else-if="viewMode === 'tree'" class="space-y-6">
+        <div v-for="section in groupedCosts" :key="section.group" class="space-y-3">
+          <button
+            class="flex w-full items-center gap-2 border-l-2 border-primary/30 pl-2 text-left transition hover:opacity-80"
+            @click="toggleGroup(section.group)"
+          >
+            <ChevronDown
+              class="size-3.5 text-muted-foreground transition-transform"
+              :class="{ '-rotate-90': collapsedGroups.has(section.group) }"
+            />
+            <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              {{ section.label }}
+            </span>
+            <span class="text-[10px] text-muted-foreground/40"> ({{ section.costs.length }}) </span>
+            <span class="h-px flex-1 bg-border/40" />
+          </button>
+          <div v-if="!collapsedGroups.has(section.group)" class="space-y-3">
+            <!-- With sub-groups (e.g., Gathered -> Fishing, Mining, etc.) -->
+            <template v-if="section.subGroups">
+              <div v-for="sub in section.subGroups" :key="sub.label" class="space-y-2">
+                <p
+                  class="pl-1 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/45"
+                >
+                  {{ sub.label }}
+                </p>
+                <template v-for="cost in sub.costs" :key="cost.itemId">
+                  <PlannerTreeNode
+                    v-if="treeRefs[cost.sortedIndex]?.rootNode"
+                    :node="treeRefs[cost.sortedIndex].rootNode!"
+                    :nodes-by-id="treeRefs[cost.sortedIndex].nodesById"
+                    :active-method-id-by-node="treeRefs[cost.sortedIndex].activeMethodIdByNode"
+                    :selected-node-id="treeRefs[cost.sortedIndex].selectedNodeId"
+                    :selected-method-id="treeRefs[cost.sortedIndex].selectedMethodId"
+                    :collapsed-node-ids="treeRefs[cost.sortedIndex].collapsedNodeIds"
+                    :inventory-amounts="treeRefs[cost.sortedIndex].inventoryAmounts"
+                    :completion-time-by-node="
+                      treeRefs[cost.sortedIndex].schedule?.completionTimeByNode ?? {}
+                    "
+                    :node-annotations="buildNodeAnnotations(cost.sortedIndex)"
+                    :subtree-cost-by-node="buildSubtreeCosts(cost.sortedIndex)"
+                    @select-node="treeSelectNode(cost.sortedIndex, $event)"
+                    @select-method="treeSelectMethod(cost.sortedIndex, $event)"
+                    @pin-method="
+                      (nodeId: string, methodId: string) =>
+                        treePinMethod(cost.sortedIndex, nodeId, methodId)
+                    "
+                    @toggle-collapse="treeToggleCollapse(cost.sortedIndex, $event)"
+                  />
                 </template>
+              </div>
+            </template>
 
-                <!-- Flat list (no sub-groups) — used by Expedition, Garden, Currency, Other -->
-                <template v-else>
-                  <template v-for="cost in section.costs" :key="cost.itemId">
-                    <div v-if="treeRefs[cost.sortedIndex]?.rootNode" class="space-y-1.5">
-                      <PlannerTreeNode
-                        :node="treeRefs[cost.sortedIndex].rootNode!"
-                        :nodes-by-id="treeRefs[cost.sortedIndex].nodesById"
-                        :active-method-id-by-node="treeRefs[cost.sortedIndex].activeMethodIdByNode"
-                        :selected-node-id="treeRefs[cost.sortedIndex].selectedNodeId"
-                        :selected-method-id="treeRefs[cost.sortedIndex].selectedMethodId"
-                        :collapsed-node-ids="treeRefs[cost.sortedIndex].collapsedNodeIds"
-                        :inventory-amounts="treeRefs[cost.sortedIndex].inventoryAmounts"
-                        :completion-time-by-node="
-                          treeRefs[cost.sortedIndex].schedule?.completionTimeByNode ?? {}
-                        "
-                        :node-annotations="buildNodeAnnotations(cost.sortedIndex)"
-                        :subtree-cost-by-node="buildSubtreeCosts(cost.sortedIndex)"
-                        :force-collapsible="
-                          section.group === 'Expedition' &&
-                          !!getActiveExpeditionParty(cost.sortedIndex)
-                        "
-                        @select-node="treeSelectNode(cost.sortedIndex, $event)"
-                        @select-method="treeSelectMethod(cost.sortedIndex, $event)"
-                        @pin-method="
-                          (nodeId: string, methodId: string) =>
-                            treePinMethod(cost.sortedIndex, nodeId, methodId)
-                        "
-                        @toggle-collapse="treeToggleCollapse(cost.sortedIndex, $event)"
-                      />
-                      <!-- Expedition child card -->
-                      <div
-                        v-if="
-                          section.group === 'Expedition' &&
-                          getActiveExpeditionParty(cost.sortedIndex) &&
-                          !treeRefs[cost.sortedIndex].collapsedNodeIds.has(
-                            treeRefs[cost.sortedIndex].rootNode!.id,
-                          )
-                        "
-                        class="ml-4 border-l-2 border-border/25 pl-4 pt-2"
-                      >
-                        <div class="rounded-lg border border-border/40 bg-card/50 px-3 py-2.5">
-                          <!-- Row 1: Reward icon + Expedition name | Duration + Tier -->
-                          <div class="flex items-center gap-2">
-                            <div class="flex min-w-0 flex-1 items-center gap-1.5">
+            <!-- Flat list (no sub-groups) — used by Expedition, Garden, Currency, Other -->
+            <template v-else>
+              <!-- Gold total card (Currency group only) -->
+              <div
+                v-if="section.group === 'Currency' && totalGold > 0"
+                class="flex min-w-0 items-start gap-1"
+              >
+                <span class="mt-4 w-5 shrink-0" />
+                <div class="min-w-0 flex-1">
+                  <SummoningObjectiveCard
+                    item-id="gold"
+                    item-name="Gold"
+                    item-type="Currency"
+                    :total-needed="totalGold"
+                    :inventory-amount="goldInventory"
+                    source-label=""
+                    :source-icon="getItemImage({ id: 'gold' })"
+                    :modifiers="goldModifiers"
+                    compact
+                  />
+                </div>
+              </div>
+              <template v-for="cost in section.costs" :key="cost.itemId">
+                <div v-if="treeRefs[cost.sortedIndex]?.rootNode" class="space-y-1.5">
+                  <PlannerTreeNode
+                    :node="treeRefs[cost.sortedIndex].rootNode!"
+                    :nodes-by-id="treeRefs[cost.sortedIndex].nodesById"
+                    :active-method-id-by-node="treeRefs[cost.sortedIndex].activeMethodIdByNode"
+                    :selected-node-id="treeRefs[cost.sortedIndex].selectedNodeId"
+                    :selected-method-id="treeRefs[cost.sortedIndex].selectedMethodId"
+                    :collapsed-node-ids="treeRefs[cost.sortedIndex].collapsedNodeIds"
+                    :inventory-amounts="treeRefs[cost.sortedIndex].inventoryAmounts"
+                    :completion-time-by-node="
+                      treeRefs[cost.sortedIndex].schedule?.completionTimeByNode ?? {}
+                    "
+                    :node-annotations="buildNodeAnnotations(cost.sortedIndex)"
+                    :subtree-cost-by-node="buildSubtreeCosts(cost.sortedIndex)"
+                    :force-collapsible="
+                      section.group === 'Expedition' && !!getActiveExpeditionParty(cost.sortedIndex)
+                    "
+                    @select-node="treeSelectNode(cost.sortedIndex, $event)"
+                    @select-method="treeSelectMethod(cost.sortedIndex, $event)"
+                    @pin-method="
+                      (nodeId: string, methodId: string) =>
+                        treePinMethod(cost.sortedIndex, nodeId, methodId)
+                    "
+                    @toggle-collapse="treeToggleCollapse(cost.sortedIndex, $event)"
+                  />
+                  <!-- Expedition child card -->
+                  <div
+                    v-if="
+                      section.group === 'Expedition' &&
+                      getActiveExpeditionParty(cost.sortedIndex) &&
+                      !treeRefs[cost.sortedIndex].collapsedNodeIds.has(
+                        treeRefs[cost.sortedIndex].rootNode!.id,
+                      )
+                    "
+                    class="ml-4 border-l-2 border-border/25 pl-4 pt-2"
+                  >
+                    <div class="rounded-lg border border-border/40 bg-card/50 px-3 py-2.5">
+                      <!-- Row 1: Reward icon + Expedition name | Duration + Tier -->
+                      <div class="flex items-center gap-2">
+                        <div class="flex min-w-0 flex-1 items-center gap-1.5">
+                          <img
+                            v-if="
+                              getItemImage({
+                                id: getActiveExpeditionParty(cost.sortedIndex)!.rewardItemId,
+                              })
+                            "
+                            :src="
+                              getItemImage({
+                                id: getActiveExpeditionParty(cost.sortedIndex)!.rewardItemId,
+                              })
+                            "
+                            :alt="getActiveExpeditionParty(cost.sortedIndex)!.expeditionName"
+                            class="size-5 shrink-0 object-contain"
+                          />
+                          <p class="truncate text-sm font-semibold text-foreground">
+                            {{ getActiveExpeditionParty(cost.sortedIndex)!.expeditionName }}
+                          </p>
+                        </div>
+                        <div class="flex shrink-0 items-center gap-1.5">
+                          <span
+                            class="text-xs font-semibold text-emerald-700 dark:text-emerald-400"
+                          >
+                            {{
+                              formatDuration(
+                                getActiveExpeditionParty(cost.sortedIndex)!.activeVariant
+                                  .durationPerRun,
+                              )
+                            }}
+                          </span>
+                          <img
+                            :src="
+                              expeditionTierIcons[getActiveExpeditionParty(cost.sortedIndex)!.tier]
+                            "
+                            :alt="`Tier ${getActiveExpeditionParty(cost.sortedIndex)!.tier}`"
+                            class="size-4 object-contain"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Divider -->
+                      <div class="my-2 border-t border-border/40" />
+
+                      <!-- Active party -->
+                      <div class="flex items-center gap-1.5">
+                        <div class="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                          <div
+                            v-for="member in getActiveExpeditionParty(cost.sortedIndex)!
+                              .activeVariant.party"
+                            :key="member.creature.id"
+                            class="inline-flex items-center gap-1.5 rounded-lg border py-0.5 pl-0.5 pr-2"
+                            :class="
+                              conflictedCreatureIds.has(member.creature.id)
+                                ? 'cursor-default border-amber-500/50 bg-amber-500/10'
+                                : 'border-border bg-muted/35'
+                            "
+                            @mouseenter="
+                              onConflictEnter(
+                                member.creature.id,
+                                getActiveExpeditionParty(cost.sortedIndex)!.expeditionName,
+                                $event,
+                              )
+                            "
+                            @mouseleave="onConflictLeave"
+                          >
+                            <div class="size-5 overflow-hidden rounded-md bg-card">
                               <img
-                                v-if="
-                                  getItemImage({
-                                    id: getActiveExpeditionParty(cost.sortedIndex)!.rewardItemId,
-                                  })
-                                "
-                                :src="
-                                  getItemImage({
-                                    id: getActiveExpeditionParty(cost.sortedIndex)!.rewardItemId,
-                                  })
-                                "
-                                :alt="getActiveExpeditionParty(cost.sortedIndex)!.expeditionName"
-                                class="size-5 shrink-0 object-contain"
-                              />
-                              <p class="truncate text-sm font-semibold text-foreground">
-                                {{ getActiveExpeditionParty(cost.sortedIndex)!.expeditionName }}
-                              </p>
-                            </div>
-                            <div class="flex shrink-0 items-center gap-1.5">
-                              <span
-                                class="text-xs font-semibold text-emerald-700 dark:text-emerald-400"
-                              >
-                                {{
-                                  formatDuration(
-                                    getActiveExpeditionParty(cost.sortedIndex)!.activeVariant
-                                      .durationPerRun,
-                                  )
-                                }}
-                              </span>
-                              <img
-                                :src="
-                                  expeditionTierIcons[
-                                    getActiveExpeditionParty(cost.sortedIndex)!.tier
-                                  ]
-                                "
-                                :alt="`Tier ${getActiveExpeditionParty(cost.sortedIndex)!.tier}`"
-                                class="size-4 object-contain"
+                                v-if="getCreatureImage(member.creature)"
+                                :src="getCreatureImage(member.creature)"
+                                :alt="member.creature.name"
+                                class="size-full object-cover"
                               />
                             </div>
+                            <span class="text-[10px] font-semibold text-foreground">{{
+                              member.creature.name
+                            }}</span>
                           </div>
+                        </div>
+                        <div class="flex shrink-0 items-center gap-1.5 font-mono text-xs">
+                          <span class="text-muted-foreground">
+                            {{
+                              getActiveExpeditionParty(cost.sortedIndex)!.activeVariant.runsNeeded
+                            }}
+                            runs
+                          </span>
+                          <span
+                            class="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400"
+                          >
+                            <Clock3 class="size-3" />
+                            {{
+                              formatDuration(
+                                getActiveExpeditionParty(cost.sortedIndex)!.activeVariant.totalTime,
+                              )
+                            }}
+                          </span>
+                        </div>
+                      </div>
 
-                          <!-- Divider -->
-                          <div class="my-2 border-t border-border/40" />
-
-                          <!-- Active party -->
-                          <div class="flex items-center gap-1.5">
-                            <div class="flex min-w-0 flex-1 flex-wrap gap-1.5">
+                      <!-- Alternative parties (swaps with primary when selected) -->
+                      <template v-if="getDisplayedAlternatives(cost.sortedIndex).length">
+                        <div class="mt-2 space-y-1">
+                          <button
+                            v-for="{ variant, targetIndex } in getDisplayedAlternatives(
+                              cost.sortedIndex,
+                            )"
+                            :key="targetIndex"
+                            class="flex w-full items-center gap-1.5 rounded-md border border-border/30 bg-background/40 px-2 py-1.5 text-left transition hover:border-primary/30 hover:bg-primary/5"
+                            @click="selectExpeditionVariant(cost.itemId, targetIndex)"
+                          >
+                            <span
+                              class="text-[9px] font-semibold uppercase text-muted-foreground/50"
+                              >Alt</span
+                            >
+                            <div class="flex min-w-0 flex-1 flex-wrap gap-1">
                               <div
-                                v-for="member in getActiveExpeditionParty(cost.sortedIndex)!
-                                  .activeVariant.party"
+                                v-for="member in variant.party"
                                 :key="member.creature.id"
-                                class="inline-flex items-center gap-1.5 rounded-lg border py-0.5 pl-0.5 pr-2"
-                                :class="
-                                  conflictedCreatureIds.has(member.creature.id)
-                                    ? 'border-amber-500/50 bg-amber-500/10'
-                                    : 'border-border bg-muted/35'
-                                "
+                                class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/25 py-0.5 pl-0.5 pr-1.5"
                               >
-                                <div class="size-5 overflow-hidden rounded-md bg-card">
+                                <div class="size-4 overflow-hidden rounded bg-card">
                                   <img
                                     v-if="getCreatureImage(member.creature)"
                                     :src="getCreatureImage(member.creature)"
@@ -1076,109 +1635,52 @@ const expeditionPartiesByItemId = computed(() => {
                                     class="size-full object-cover"
                                   />
                                 </div>
-                                <span class="text-[10px] font-semibold text-foreground">{{
+                                <span class="text-[9px] font-semibold text-muted-foreground">{{
                                   member.creature.name
                                 }}</span>
                               </div>
                             </div>
-                            <div class="flex shrink-0 items-center gap-1.5 font-mono text-xs">
-                              <span class="text-muted-foreground">
-                                {{
-                                  getActiveExpeditionParty(cost.sortedIndex)!.activeVariant
-                                    .runsNeeded
-                                }}
-                                runs
-                              </span>
-                              <span
-                                class="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400"
-                              >
-                                <Clock3 class="size-3" />
-                                {{
-                                  formatDuration(
-                                    getActiveExpeditionParty(cost.sortedIndex)!.activeVariant
-                                      .totalTime,
-                                  )
-                                }}
-                              </span>
-                            </div>
-                          </div>
-
-                          <!-- Alternative parties (swaps with primary when selected) -->
-                          <template v-if="getDisplayedAlternatives(cost.sortedIndex).length">
-                            <div class="mt-2 space-y-1">
-                              <button
-                                v-for="{ variant, targetIndex } in getDisplayedAlternatives(
-                                  cost.sortedIndex,
-                                )"
-                                :key="targetIndex"
-                                class="flex w-full items-center gap-1.5 rounded-md border border-border/30 bg-background/40 px-2 py-1.5 text-left transition hover:border-primary/30 hover:bg-primary/5"
-                                @click="selectExpeditionVariant(cost.itemId, targetIndex)"
-                              >
-                                <span
-                                  class="text-[9px] font-semibold uppercase text-muted-foreground/50"
-                                  >Alt</span
-                                >
-                                <div class="flex min-w-0 flex-1 flex-wrap gap-1">
-                                  <div
-                                    v-for="member in variant.party"
-                                    :key="member.creature.id"
-                                    class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/25 py-0.5 pl-0.5 pr-1.5"
-                                  >
-                                    <div class="size-4 overflow-hidden rounded bg-card">
-                                      <img
-                                        v-if="getCreatureImage(member.creature)"
-                                        :src="getCreatureImage(member.creature)"
-                                        :alt="member.creature.name"
-                                        class="size-full object-cover"
-                                      />
-                                    </div>
-                                    <span class="text-[9px] font-semibold text-muted-foreground">{{
-                                      member.creature.name
-                                    }}</span>
-                                  </div>
-                                </div>
-                                <span class="shrink-0 font-mono text-[10px] text-muted-foreground">
-                                  {{ formatDuration(variant.totalTime) }}
-                                </span>
-                              </button>
-                            </div>
-                          </template>
+                            <span class="shrink-0 font-mono text-[10px] text-muted-foreground">
+                              {{ formatDuration(variant.totalTime) }}
+                            </span>
+                          </button>
                         </div>
-                      </div>
+                      </template>
                     </div>
-                  </template>
-                </template>
-              </div>
-            </div>
+                  </div>
+                </div>
+              </template>
+            </template>
           </div>
-
-          <PlannerInspector
-            v-if="isDesktop"
-            :focus-node="inspectorNode"
-            :focus-method="inspectorMethod"
-            :active-method="inspectorActiveMethod"
-            :nodes-by-id="inspectorNodesById"
-            :schedule="inspectorSchedule"
-            :get-active-method-for-node="inspectorGetActiveMethod"
-            :format-amount="formatAmount"
-            :is-root-node="false"
-            @pin-method="handlePinMethod"
-            @select-method="handleSelectMethod"
-            @select-node="handleSelectNode"
-            @open-item-planner="handleOpenItemPlanner"
-          />
         </div>
       </div>
 
-      <!-- ═══ Timeline Tab ═══ -->
-      <SummoningTimeline
-        v-else-if="activeSubTab === 'timeline'"
-        :schedule="mergedSchedule"
-        :nodes-by-id="mergedNodesById"
-        :waves="priorityWaves"
-        :expedition-parties="expeditionPartiesByItemId"
-      />
-    </template>
+      <!-- Gold total when no other Currency items exist -->
+      <div v-if="!hasCurrencyGroup && totalGold > 0" class="space-y-3">
+        <div class="flex w-full items-center gap-2 border-l-2 border-primary/30 pl-2">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            Currency
+          </span>
+          <span class="h-px flex-1 bg-border/40" />
+        </div>
+        <div :class="viewMode === 'tree' ? 'flex min-w-0 items-start gap-1' : ''">
+          <span v-if="viewMode === 'tree'" class="mt-4 w-5 shrink-0" />
+          <div :class="viewMode === 'tree' ? 'min-w-0 flex-1' : ''">
+            <SummoningObjectiveCard
+              item-id="gold"
+              item-name="Gold"
+              item-type="Currency"
+              :total-needed="totalGold"
+              :inventory-amount="goldInventory"
+              source-label=""
+              :source-icon="getItemImage({ id: 'gold' })"
+              :modifiers="goldModifiers"
+              :compact="viewMode === 'tree'"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Hidden trees for data (always rendered so summaries/schedules stay computed) -->
     <div v-if="aggregatedCosts.length > 0" class="hidden">
@@ -1198,5 +1700,62 @@ const expeditionPartiesByItemId = computed(() => {
         @activate="activeTreeIndex = index"
       />
     </div>
+
+    <!-- Conflict popover -->
+    <Teleport to="body">
+      <Transition name="conflict-popover">
+        <div
+          v-if="conflictPopover"
+          class="pointer-events-none z-50 w-72 -translate-y-full overflow-hidden rounded-xl border border-amber-500/40 bg-card shadow-xl shadow-black/30"
+          :style="conflictPopover.style"
+        >
+          <div class="flex items-center gap-2 px-3 py-2.5">
+            <div
+              class="flex size-6 shrink-0 items-center justify-center rounded-md border border-amber-500/50 bg-amber-500/15"
+            >
+              <span class="text-xs font-bold text-amber-500">!</span>
+            </div>
+            <div class="min-w-0">
+              <span class="block text-xs font-semibold text-foreground"
+                >Conflicting party member</span
+              >
+              <div class="mt-0.5 flex flex-wrap items-center gap-x-1">
+                <span class="text-[11px] text-muted-foreground">Also assigned to</span>
+                <template v-for="(exp, ni) in conflictPopover.otherExpeditions" :key="ni">
+                  <span v-if="ni > 0" class="text-[11px] text-muted-foreground/50">,</span>
+                  <span class="inline-flex items-center gap-1">
+                    <img
+                      v-if="getItemImage({ id: exp.rewardItemId })"
+                      :src="getItemImage({ id: exp.rewardItemId })"
+                      :alt="exp.name"
+                      class="size-3.5 shrink-0 object-contain"
+                    />
+                    <span class="text-[11px] font-semibold text-amber-400">{{ exp.name }}</span>
+                  </span>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+.conflict-popover-enter-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+.conflict-popover-leave-active {
+  transition:
+    opacity 0.1s ease,
+    transform 0.1s ease;
+}
+.conflict-popover-enter-from,
+.conflict-popover-leave-to {
+  opacity: 0;
+  transform: translateY(calc(-100% + 4px));
+}
+</style>
