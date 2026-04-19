@@ -76,14 +76,30 @@ export function useGanttZoom(
   }
 }
 
-export function niceTimeStep(total: number): number {
+export function niceTimeStep(total: number, zoomLevel = 1): number {
   if (total <= 0) return 1
-  const rough = total / 6
+  const targetMarkers = Math.round(5 * zoomLevel)
+  const rough = total / targetMarkers
   const candidates = [
-    1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 86400,
+    1, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 14400, 28800, 43200, 86400, 172800,
+    604800,
   ]
   for (const c of candidates) {
     if (c >= rough) return c
   }
-  return candidates[candidates.length - 1]
+  const days = Math.ceil(rough / 86400)
+  return days * 86400
+}
+
+export function formatAxisLabel(seconds: number): string {
+  if (seconds <= 0) return '0'
+  const d = Math.floor(seconds / 86400)
+  const h = Math.floor((seconds % 86400) / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (d > 0 && h === 0 && m === 0) return `${d}d`
+  if (d > 0) return `${d}d ${h}h`
+  if (h > 0 && m === 0) return `${h}h`
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m`
+  return `${seconds}s`
 }
