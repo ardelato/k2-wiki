@@ -14,7 +14,7 @@ import {
   MAX_TIER,
 } from '@/utils/sanctuaryConstants'
 
-export interface JobProgress {
+interface JobProgress {
   job: string
   score: number
   tier: number

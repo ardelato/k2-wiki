@@ -9,8 +9,6 @@ export const SANCTUARY_JOBS = [
   'Farming',
 ] as const
 
-export type SanctuaryJob = (typeof SANCTUARY_JOBS)[number]
-
 export const SCORE_DIVISOR = 60
 export const TIER_THRESHOLDS = [0.1, 0.3, 0.5, 0.7, 0.9]
 export const TIER_THRESHOLDS_RAW = TIER_THRESHOLDS.map((t) => t * SCORE_DIVISOR)
