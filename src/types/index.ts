@@ -401,10 +401,8 @@ export interface PartyLevelingPlan {
   totalRuns: number
 }
 
-export type CreatureStatKey = keyof CreatureStats
 export type ExpeditionStatKey = keyof ExpeditionStatWeights
 export type JobKey = keyof Jobs
-export type SortField = CreatureStatKey | 'name' | 'tier'
 
 // Machine types
 export type MachineType = 'generator' | 'processor'

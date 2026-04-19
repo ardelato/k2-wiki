@@ -10,7 +10,7 @@ import {
   PRE_AWAKEN_MAX,
 } from '@/utils/formulas'
 
-export interface LevelPlannerInput {
+interface LevelPlannerInput {
   creature: Creature
   startLevel: number
   targetLevel: number

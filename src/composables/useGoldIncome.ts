@@ -4,7 +4,7 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { computeGoldPerMinute } from '@/utils/goldIncome'
 
-export interface GoldIncomeBreakdown {
+interface GoldIncomeBreakdown {
   awakenedCount: number
   awakenGoldLevel: number
   creatureGoldPerMin: number

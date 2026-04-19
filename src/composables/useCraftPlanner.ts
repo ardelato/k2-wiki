@@ -30,7 +30,7 @@ import { computeGoldPerMinute, goldToSeconds } from '@/utils/goldIncome'
 
 export type { GardenFlowerEntry, AwakenGatherUpgrade }
 
-export interface PlannerModifiers {
+interface PlannerModifiers {
   gardenFlowers: Record<string, GardenFlowerEntry[]>
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number> // per workstation, 0–4
@@ -1107,7 +1107,7 @@ function computeSchedule(
   }
 }
 
-export interface CraftPlannerOptions {
+interface CraftPlannerOptions {
   /** When true, inventory deduction applies to the root node too (used by summoning planner) */
   deductRootInventory?: boolean
 }

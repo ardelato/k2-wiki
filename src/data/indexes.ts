@@ -12,7 +12,7 @@ import type {
   SummoningReference,
 } from '@/types'
 
-export interface ExpeditionSource {
+interface ExpeditionSource {
   expeditionId: string
   expeditionName: string
   amount: number
@@ -102,7 +102,7 @@ for (const creature of creatures) {
   }
 }
 
-export interface MachineRecipeSource {
+interface MachineRecipeSource {
   machineId: string
   machineName: string
   baseInterval: number

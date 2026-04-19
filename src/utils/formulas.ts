@@ -177,7 +177,7 @@ export function getLootAmount(baseAmount: number, tier: number): number {
 }
 
 export const PRE_AWAKEN_MAX = 70
-export const POST_AWAKEN_MAX = 120
+const POST_AWAKEN_MAX = 120
 
 export function maxLevelForState(awakened: boolean): number {
   return awakened ? POST_AWAKEN_MAX : PRE_AWAKEN_MAX
@@ -198,7 +198,7 @@ export function levelFromXp(xp: number): number {
   return Math.max(1, level)
 }
 
-export interface BestExpeditionEntry {
+interface BestExpeditionEntry {
   expedition: Expedition
   score: number
   biomeName: string
