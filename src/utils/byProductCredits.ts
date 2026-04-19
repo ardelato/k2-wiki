@@ -162,6 +162,9 @@ export function computeByProductCredits(
   return timeRatios
 }
 
+const resourceSortPriority = (r: string) =>
+  r.startsWith('Garden:') ? 2 : r.startsWith('Expedition:') ? 3 : 1
+
 /**
  * Apply by-product credits to a merged schedule by adjusting task local times.
  * Returns a new schedule with adjusted times.
@@ -211,8 +214,6 @@ export function applyByProductCreditsToSchedule(
 
   // Recalculate resource order from remaining tasks
   const resources = new Set(adjustedTasks.map((t) => t.resource))
-  const resourceSortPriority = (r: string) =>
-    r.startsWith('Garden:') ? 2 : r.startsWith('Expedition:') ? 3 : 1
   const resourceOrder = [...resources].toSorted((a, b) => {
     return resourceSortPriority(a) - resourceSortPriority(b) || a.localeCompare(b)
   })

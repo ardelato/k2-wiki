@@ -5,7 +5,7 @@ import type { PlannerMethod, PlannerNode } from '@/types'
 
 import { useGameConfig } from './useGameConfig'
 
-export interface Recommendation {
+interface Recommendation {
   text: string
 }
 

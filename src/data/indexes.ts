@@ -153,14 +153,14 @@ for (const machine of machinesData.machines) {
 
 export const machineSpeedMultipliers = machinesData.speedMultipliers
 
-export interface ActivityOutput {
+interface ActivityOutput {
   id: string
   chance: number
   min: number
   max: number
 }
 
-export interface ActivityInfo {
+interface ActivityInfo {
   jobId: string
   activityName: string
   duration: number
