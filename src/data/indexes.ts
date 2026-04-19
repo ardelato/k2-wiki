@@ -152,3 +152,38 @@ for (const machine of machinesData.machines) {
 }
 
 export const machineSpeedMultipliers = machinesData.speedMultipliers
+
+export interface ActivityOutput {
+  id: string
+  chance: number
+  min: number
+  max: number
+}
+
+export interface ActivityInfo {
+  jobId: string
+  activityName: string
+  duration: number
+  outputs: ActivityOutput[]
+}
+
+/** Maps "jobId/activityName" → full activity info including all outputs */
+export const activityOutputIndex = new Map<string, ActivityInfo>()
+for (const job of jobsData) {
+  if (!job.activities) continue
+  for (const activity of job.activities) {
+    if (!activity.output) continue
+    const key = `${job.id}/${activity.name}`
+    activityOutputIndex.set(key, {
+      jobId: job.id,
+      activityName: activity.name,
+      duration: activity.duration,
+      outputs: activity.output.map((o) => ({
+        id: o.id,
+        chance: o.chance,
+        min: o.min,
+        max: o.max,
+      })),
+    })
+  }
+}
