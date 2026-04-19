@@ -111,7 +111,7 @@ describe('computePriorityWaves', () => {
     expect(waves[1].waveNumber).toBe(2)
   })
 
-  test('expedition and garden tasks have kind "passive"', () => {
+  test('expedition and garden tasks keep their original kind', () => {
     const schedule = makeSchedule(
       [
         makeTask({
@@ -136,7 +136,9 @@ describe('computePriorityWaves', () => {
       600,
     )
     const waves = computePriorityWaves(schedule)
-    expect(waves[0].cards.every((c) => c.kind === 'passive')).toBe(true)
+    const kinds = waves[0].cards.map((c) => c.kind)
+    expect(kinds).toContain('expedition')
+    expect(kinds).toContain('garden')
   })
 
   test('deduplicates tasks by resource + itemName', () => {
