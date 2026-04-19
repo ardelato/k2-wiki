@@ -26,11 +26,12 @@ import type {
   ScheduledTask,
 } from '@/types'
 import { formatChance, formatDuration, methodKindLabel, toTitleCase } from '@/utils/format'
+import { tierModifiers } from '@/utils/formulas'
 import { computeGoldPerMinute, goldToSeconds } from '@/utils/goldIncome'
 
 export type { GardenFlowerEntry, AwakenGatherUpgrade }
 
-interface PlannerModifiers {
+export interface PlannerModifiers {
   gardenFlowers: Record<string, GardenFlowerEntry[]>
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number> // per workstation, 0–4
@@ -38,6 +39,7 @@ interface PlannerModifiers {
   goldPerMinute: number
   machineLevels: Record<string, number>
   fabricationAllocations: Record<string, number>
+  expeditionTier: number // 1–5, multiplies expedition loot rewards
 }
 
 interface GardenSource {
@@ -391,6 +393,7 @@ function buildPlannerGraph(
         localTimeSeconds,
         totalTimeSeconds: localTimeSeconds,
         cost: null,
+        actionsNeeded,
         detailRows: [
           { label: 'Activity', value: source.activityName },
           { label: 'Level', value: `Lv${source.levelRequirement}` },
@@ -524,8 +527,40 @@ function buildPlannerGraph(
       const expectedYield = source.amount * source.chance
       if (expectedYield <= 0) return
 
-      const openingsNeeded = requiredAmount / expectedYield
+      const passive = getPassiveRate(itemId, modifiers)
+      const fullOpeningsNeeded = requiredAmount / expectedYield
+      let openingsNeeded = fullOpeningsNeeded
       const childPath = `${nodeId}/container-${sourceIndex}:${source.containerId}`
+
+      // When passive production (machines/fabrication) contributes to this item,
+      // reduce containers needed. Two-pass: probe with full amount for a
+      // time-per-container estimate, then rebuild the child with reduced amount.
+      if (passive.rate > 0) {
+        const stockSnapshot = new Map(remainingStock)
+        const probeNode = buildNode(
+          source.containerId,
+          fullOpeningsNeeded,
+          depth + 1,
+          nextAncestry,
+          childPath,
+        )
+        // Restore inventory — we'll rebuild with the adjusted amount
+        remainingStock.clear()
+        for (const [k, v] of stockSnapshot) remainingStock.set(k, v)
+
+        const probeMethodId = probeNode.defaultMethodId
+        const probeTime = probeMethodId
+          ? (methodsById.get(probeMethodId)?.totalTimeSeconds ?? null)
+          : null
+
+        if (probeTime != null && probeTime > 0) {
+          // activeRate = items/sec obtained through container openings
+          const activeRate = requiredAmount / probeTime
+          const adjustedTime = applyPassiveRate(requiredAmount, activeRate, probeTime, passive)
+          openingsNeeded = Math.max(0, (adjustedTime / probeTime) * fullOpeningsNeeded)
+        }
+      }
+
       const containerNode = buildNode(
         source.containerId,
         openingsNeeded,
@@ -540,6 +575,7 @@ function buildPlannerGraph(
         : null
       const totalTimeSeconds = childTime
       const isContainerEstimated = source.chance !== 1
+      const passiveReduced = passive.rate > 0 && openingsNeeded < fullOpeningsNeeded
       const method: PlannerMethod = {
         id: `${nodeId}#container-${sourceIndex}`,
         nodeId,
@@ -560,15 +596,23 @@ function buildPlannerGraph(
             value: formatAmount(openingsNeeded),
             estimated: isContainerEstimated,
           },
+          ...passiveDetailRows(passive),
           {
             label: 'Total time',
             value: formatTimeOrUnknown(totalTimeSeconds),
             estimated: isContainerEstimated,
           },
         ],
-        formula: `${formatAmount(requiredAmount)} ÷ (${formatChance(source.chance)} × ${source.amount}) per ${source.containerName.toLowerCase()} opening`,
+        formula: passiveReduced
+          ? `${formatAmount(requiredAmount)} need − passive → ${formatAmount(openingsNeeded)} openings of ${source.containerName.toLowerCase()}`
+          : `${formatAmount(requiredAmount)} ÷ (${formatChance(source.chance)} × ${source.amount}) per ${source.containerName.toLowerCase()} opening`,
         notes: [
           'Opening time is treated as negligible; only obtaining the container contributes time.',
+          ...(passiveReduced
+            ? [
+                `Passive production reduces containers from ${formatAmount(fullOpeningsNeeded)} to ${formatAmount(openingsNeeded)}.`,
+              ]
+            : []),
         ],
         children: [
           {
@@ -584,7 +628,8 @@ function buildPlannerGraph(
     })
 
     ;(expeditionSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
-      const runsNeeded = requiredAmount / source.amount
+      const lootAmount = source.amount * tierModifiers.loot[(modifiers.expeditionTier || 1) - 1]
+      const runsNeeded = requiredAmount / lootAmount
       const estimatedTime = runsNeeded * source.baseDuration
       const method: PlannerMethod = {
         id: `${nodeId}#expedition-${sourceIndex}`,
@@ -597,7 +642,10 @@ function buildPlannerGraph(
         totalTimeSeconds: estimatedTime,
         cost: null,
         detailRows: [
-          { label: 'Reward / run', value: formatAmount(source.amount) },
+          {
+            label: 'Reward / run',
+            value: `${formatAmount(lootAmount)}${lootAmount !== source.amount ? ` (T${modifiers.expeditionTier})` : ''}`,
+          },
           { label: 'Base duration', value: formatDuration(source.baseDuration) },
           { label: 'Runs needed', value: formatAmount(runsNeeded) },
           { label: 'Total time', value: formatDuration(estimatedTime), estimated: true },
@@ -905,7 +953,7 @@ const resourceSortPriority = (r: string) =>
           ? 3
           : 1
 
-function computeSchedule(
+export function computeSchedule(
   root: PlannerNode,
   nodesById: Record<string, PlannerNode>,
   activeMethodIdByNode: Record<string, string | null>,
@@ -1038,7 +1086,7 @@ function computeSchedule(
         const produced = Math.floor(totalTime / interval) * source.outputAmount
         if (produced <= 0) continue
 
-        const resource = source.machineName
+        const resource = `Machine: ${source.machineName}`
         tasks.push({
           nodeId: `passive:machine:${source.machineId}:${itemId}`,
           itemId,
@@ -1182,6 +1230,7 @@ export function useCraftPlanner(
     goldPerMinute: goldPerMinute.value,
     machineLevels: machineLevels.value,
     fabricationAllocations: fabricationAllocations.value,
+    expeditionTier: 5,
   }))
 
   const graph = computed(() =>

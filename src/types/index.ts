@@ -204,6 +204,8 @@ export interface PlannerMethod {
   formula?: string
   notes: string[]
   children: PlannerMethodChild[]
+  /** Number of gathering actions needed (gather methods only) */
+  actionsNeeded?: number
 }
 
 export interface PlannerNode {

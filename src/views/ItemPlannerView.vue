@@ -3,9 +3,8 @@ import { useMediaQuery } from '@vueuse/core'
 import {
   ChevronsDownUp,
   ChevronsUpDown,
-  Clock3,
+  ClipboardList,
   GanttChart,
-  GitBranch,
   Hammer,
   Network,
   Search,
@@ -16,21 +15,17 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import GoldRateBadge from '@/components/planner/GoldRateBadge.vue'
-import PlannerActiveMods from '@/components/planner/PlannerActiveMods.vue'
-import PlannerBadge from '@/components/planner/PlannerBadge.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
 import PlannerGantt from '@/components/planner/PlannerGantt.vue'
-import PlannerInspector from '@/components/planner/PlannerInspector.vue'
 import PlannerItemPicker from '@/components/planner/PlannerItemPicker.vue'
-import PlannerSettings from '@/components/planner/PlannerSettings.vue'
-import PlannerShoppingList from '@/components/planner/PlannerShoppingList.vue'
+import PlannerListView from '@/components/planner/PlannerListView.vue'
 import PlannerToolbar from '@/components/planner/PlannerToolbar.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
 import { useCraftPlanner } from '@/composables/useCraftPlanner'
+import { useGameConfig } from '@/composables/useGameConfig'
 import { useItems } from '@/composables/useItems'
-import type { ScheduledTask } from '@/types'
-import { formatDuration, sourceLabel } from '@/utils/format'
-import { getItemImage } from '@/utils/itemImages'
+import { useRecommendations } from '@/composables/useRecommendations'
+import { sourceLabel } from '@/utils/format'
 import LevelPlannerView from '@/views/LevelPlannerView.vue'
 import SummoningPlannerView from '@/views/SummoningPlannerView.vue'
 
@@ -45,6 +40,7 @@ const route = useRoute()
 const router = useRouter()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 const { items } = useItems()
+const gameConfig = useGameConfig()
 
 
 const targetItemId = computed(() => {
@@ -85,59 +81,37 @@ const plannerItemOptions = computed(() =>
 const selectedPlannerItemId = ref('')
 
 
-const viewMode = ref<'tree' | 'timeline'>('tree')
+const viewMode = ref<'list' | 'tree' | 'timeline'>('list')
+
+
+const listViewRef = ref<InstanceType<typeof PlannerListView> | null>(null)
 
 
 const {
   rootNode,
   nodesById,
-  methodsById,
   activeMethodIdByNode,
   schedule,
-  summary,
-  shoppingListText,
   inventoryAmounts,
-  gardenFlowers,
-  awakenGatherUpgrades,
-  awakenSpeedTiers,
-  allTreeItems,
   getActiveMethod,
   setPinnedMethod,
   resetPins,
-  setInventory,
-  resetInventory,
-  setGardenFlowerEntries,
-  resetGarden,
-  setAwakenGatherYieldBonus,
-  setAwakenGatherDurationTier,
-  setAwakenSpeedTier,
-  resetAwaken,
-  jobTiers,
-  setJobTier,
-  resetJobTiers,
-  machineLevels,
-  setMachineLevel,
-  resetMachineLevels,
-  fabricationAllocations,
-  setFabricationAllocation,
-  resetFabrication,
-  resetAllSettings,
-  formatAmount,
 } = useCraftPlanner(targetItemId, targetQuantity)
+
+
+const recommendations = useRecommendations(nodesById, getActiveMethod, gameConfig)
 
 
 const collapsedNodeIds = ref(new Set<string>())
 
 
 const selectedNodeId = ref<string | null>(null)
-const selectedMethodId = ref<string | null>(null)
 
 
 watch(
   rootNode,
   (node) => {
     selectedNodeId.value = node?.id ?? null
-    selectedMethodId.value = null
   },
   { immediate: true },
 )
@@ -163,31 +137,6 @@ watch(
   },
   { immediate: true },
 )
-
-
-const selectedMethod = computed(() => {
-  if (!selectedMethodId.value) return null
-  return methodsById.value[selectedMethodId.value] ?? null
-})
-
-
-const selectedNode = computed(() => {
-  if (selectedMethod.value) return nodesById.value[selectedMethod.value.nodeId] ?? null
-  if (selectedNodeId.value) return nodesById.value[selectedNodeId.value] ?? null
-  return rootNode.value
-})
-
-
-const selectedPassiveTask = computed((): ScheduledTask | null => {
-  if (!selectedNodeId.value?.startsWith('passive:')) return null
-  return schedule.value?.tasks.find((t) => t.nodeId === selectedNodeId.value) ?? null
-})
-
-
-const activeMethodForSelectedNode = computed(() => {
-  if (!selectedNode.value) return null
-  return getActiveMethod(selectedNode.value.id)
-})
 
 
 function updateRoute(nextItemId: string, nextQuantity: number, replace: boolean = false) {
@@ -235,29 +184,11 @@ function handlePlannerTargetChange(nextItemId: string) {
 
 function selectNode(nodeId: string) {
   selectedNodeId.value = nodeId
-  selectedMethodId.value = null
-}
-
-
-function selectMethod(methodId: string) {
-  if (!methodId) {
-    selectedMethodId.value = null
-    return
-  }
-  const method = methodsById.value[methodId]
-  if (!method) return
-  selectedMethodId.value = methodId
-  selectedNodeId.value = method.nodeId
 }
 
 
 function pinMethod(nodeId: string, methodId: string) {
   setPinnedMethod(nodeId, methodId)
-}
-
-
-function openPlannerForItem(itemId: string, quantity: number = 1) {
-  updateRoute(itemId, Math.max(1, Math.round(quantity)))
 }
 
 
@@ -427,35 +358,12 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
             </div>
           </div>
         </template>
-
-        <template v-if="rootNode && summary" #summary>
-          <PlannerBadge
-            color="var(--color-green)"
-            title="Total time assumes independent steps run in parallel and dependent steps run in series"
-          >
-            <Clock3 class="size-3.5" />
-            {{ summary.totalTimeSeconds != null ? formatDuration(summary.totalTimeSeconds) : '?' }}
-          </PlannerBadge>
-          <PlannerBadge color="var(--color-yellow)">
-            <img
-              v-if="getItemImage({ id: 'gold' })"
-              :src="getItemImage({ id: 'gold' })"
-              alt="Gold"
-              class="size-3.5 object-contain"
-            />
-            {{ Math.round(summary.totalCost).toLocaleString() }}
-          </PlannerBadge>
-          <PlannerBadge color="var(--color-primary)">
-            <GitBranch class="size-3.5" />
-            {{ summary.branchPointCount }}
-          </PlannerBadge>
-        </template>
       </PlannerToolbar>
 
       <PlannerEmptyState
         v-if="!rootNode"
         title="Choose an item to begin planning."
-        subtitle="Select a target item above or jump here directly from any item card’s planner link."
+        subtitle="Select a target item above or jump here directly from any item card's planner link."
       >
         <template #action>
           <RouterLink
@@ -475,34 +383,20 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
       />
 
       <div v-else-if="rootNode" class="space-y-6">
-        <PlannerSettings
-          :tree-items="allTreeItems"
-          :inventory-amounts="inventoryAmounts"
-          :garden-flowers="gardenFlowers"
-          :awaken-gather-upgrades="awakenGatherUpgrades"
-          :awaken-speed-tiers="awakenSpeedTiers"
-          :job-tiers="jobTiers"
-          :machine-levels="machineLevels"
-          :fabrication-allocations="fabricationAllocations"
-          @set-inventory="setInventory"
-          @reset-inventory="resetInventory"
-          @set-garden-flower-entries="setGardenFlowerEntries"
-          @reset-garden="resetGarden"
-          @set-awaken-gather-yield-bonus="setAwakenGatherYieldBonus"
-          @set-awaken-gather-duration-tier="setAwakenGatherDurationTier"
-          @set-awaken-speed-tier="setAwakenSpeedTier"
-          @reset-awaken="resetAwaken"
-          @set-job-tier="setJobTier"
-          @reset-job-tiers="resetJobTiers"
-          @set-machine-level="setMachineLevel"
-          @reset-machine-levels="resetMachineLevels"
-          @set-fabrication-allocation="setFabricationAllocation"
-          @reset-fabrication="resetFabrication"
-          @reset-all="resetAllSettings"
-        />
-
         <div class="flex items-center gap-2">
           <div class="flex rounded-lg border border-border/60 p-0.5">
+            <button
+              class="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition"
+              :class="
+                viewMode === 'list'
+                  ? 'bg-primary/15 text-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+              @click="viewMode = 'list'"
+            >
+              <ClipboardList class="size-3.5" />
+              List
+            </button>
             <button
               class="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition"
               :class="
@@ -529,23 +423,23 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
             </button>
           </div>
 
-          <template v-if="viewMode === 'tree'">
+          <template v-if="viewMode === 'list' || viewMode === 'tree'">
             <button
               class="focus-ring inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/65 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
-              @click="collapseToLeaves"
+              @click="viewMode === 'list' ? listViewRef?.collapseAll() : collapseToLeaves()"
             >
               <ChevronsDownUp class="size-3.5" />
-              Collapse to Leaves
+              Collapse All
             </button>
             <button
               class="focus-ring inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/65 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
-              @click="expandAll"
+              @click="viewMode === 'list' ? listViewRef?.expandAll() : expandAll()"
             >
               <ChevronsUpDown class="size-3.5" />
               Expand All
             </button>
             <span
-              v-if="collapsedCount > 0"
+              v-if="viewMode === 'tree' && collapsedCount > 0"
               class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
             >
               {{ collapsedCount }} collapsed
@@ -553,108 +447,44 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
           </template>
         </div>
 
+        <!-- List view (default) -->
+        <PlannerListView
+          v-if="viewMode === 'list'"
+          ref="listViewRef"
+          :root-node="rootNode"
+          :nodes-by-id="nodesById"
+          :active-method-id-by-node="activeMethodIdByNode"
+          :inventory-amounts="inventoryAmounts"
+          :get-active-method="getActiveMethod"
+          :recommendations="recommendations"
+        />
+
         <!-- Timeline view -->
-        <div
-          v-if="viewMode === 'timeline' && schedule"
-          class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]"
-        >
-          <div class="space-y-3">
-            <PlannerGantt
-              :schedule="schedule"
-              :nodes-by-id="nodesById"
-              :selected-node-id="selectedNodeId"
-              @select-node="selectNode"
-            />
-
-            <PlannerActiveMods
-              :inventory-amounts="inventoryAmounts"
-              :garden-flowers="gardenFlowers"
-              :awaken-gather-upgrades="awakenGatherUpgrades"
-              :awaken-speed-tiers="awakenSpeedTiers"
-              :job-tiers="jobTiers"
-              :machine-levels="machineLevels"
-              :fabrication-allocations="fabricationAllocations"
-              :tree-items="allTreeItems"
-            />
-
-            <PlannerShoppingList
-              v-if="summary && summary.leafItems.length"
-              :leaf-items="summary.leafItems"
-              :format-amount="formatAmount"
-              :shopping-list-text="shoppingListText"
-            />
-          </div>
-
-          <PlannerInspector
-            :focus-node="selectedNode"
-            :focus-method="selectedMethod"
-            :active-method="activeMethodForSelectedNode"
-            :nodes-by-id="nodesById"
+        <div v-else-if="viewMode === 'timeline' && schedule" class="space-y-3">
+          <PlannerGantt
             :schedule="schedule"
-            :get-active-method-for-node="getActiveMethod"
-            :format-amount="formatAmount"
-            :is-root-node="selectedNode?.id === rootNode?.id"
-            :passive-task="selectedPassiveTask"
-            @pin-method="pinMethod"
-            @select-method="selectMethod"
+            :nodes-by-id="nodesById"
+            :selected-node-id="selectedNodeId"
             @select-node="selectNode"
-            @open-item-planner="openPlannerForItem"
           />
         </div>
 
         <!-- Tree view -->
-        <div v-else class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-          <div class="space-y-3">
-            <div class="space-y-3">
-              <PlannerTreeNode
-                :node="rootNode"
-                :nodes-by-id="nodesById"
-                :active-method-id-by-node="activeMethodIdByNode"
-                :selected-node-id="selectedNodeId"
-                :selected-method-id="selectedMethodId"
-                :collapsed-node-ids="collapsedNodeIds"
-                :inventory-amounts="inventoryAmounts"
-                :completion-time-by-node="schedule?.completionTimeByNode ?? {}"
-                @select-node="selectNode"
-                @select-method="selectMethod"
-                @pin-method="pinMethod"
-                @toggle-collapse="toggleCollapse"
-              />
-            </div>
-
-            <PlannerActiveMods
-              :inventory-amounts="inventoryAmounts"
-              :garden-flowers="gardenFlowers"
-              :awaken-gather-upgrades="awakenGatherUpgrades"
-              :awaken-speed-tiers="awakenSpeedTiers"
-              :job-tiers="jobTiers"
-              :machine-levels="machineLevels"
-              :fabrication-allocations="fabricationAllocations"
-              :tree-items="allTreeItems"
-            />
-
-            <PlannerShoppingList
-              v-if="summary && summary.leafItems.length"
-              :leaf-items="summary.leafItems"
-              :format-amount="formatAmount"
-              :shopping-list-text="shoppingListText"
-            />
-          </div>
-
-          <PlannerInspector
-            :focus-node="selectedNode"
-            :focus-method="selectedMethod"
-            :active-method="activeMethodForSelectedNode"
+        <div v-else-if="viewMode === 'tree'" class="space-y-3">
+          <PlannerTreeNode
+            :node="rootNode"
             :nodes-by-id="nodesById"
-            :schedule="schedule"
-            :get-active-method-for-node="getActiveMethod"
-            :format-amount="formatAmount"
-            :is-root-node="selectedNode?.id === rootNode?.id"
-            :passive-task="selectedPassiveTask"
-            @pin-method="pinMethod"
-            @select-method="selectMethod"
+            :active-method-id-by-node="activeMethodIdByNode"
+            :selected-node-id="selectedNodeId"
+            :selected-method-id="null"
+            :collapsed-node-ids="collapsedNodeIds"
+            :inventory-amounts="inventoryAmounts"
+            :completion-time-by-node="schedule?.completionTimeByNode ?? {}"
+            :recommendations="recommendations"
             @select-node="selectNode"
-            @open-item-planner="openPlannerForItem"
+            @select-method="() => {}"
+            @pin-method="pinMethod"
+            @toggle-collapse="toggleCollapse"
           />
         </div>
       </div>

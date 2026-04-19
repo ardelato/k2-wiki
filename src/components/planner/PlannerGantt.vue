@@ -1,11 +1,23 @@
 <script setup lang="ts">
-import { Clock3, Minus, Plus, RotateCcw } from 'lucide-vue-next'
+import { Clock3, Layers, Minus, Play, Plus, RotateCcw, Square } from 'lucide-vue-next'
 import { computed, nextTick, ref } from 'vue'
 
-import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
+import { useGanttZoom, niceTimeStep, formatAxisLabel } from '@/composables/useGanttZoom'
+import { itemById } from '@/data/indexes'
 import type { PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
-import { formatDuration, methodKindClasses, methodKindLabel } from '@/utils/format'
-import { sourceIcons } from '@/utils/icons'
+import { formatDuration, methodKindClasses, methodKindColor, methodKindLabel } from '@/utils/format'
+import {
+  mergePassiveTasks,
+  mergeConsecutiveSameItem,
+  getResourceGroupKey,
+} from '@/utils/ganttHelpers'
+import { machinesIcon, sourceIcons } from '@/utils/icons'
+
+const groupIcons: Record<string, string> = {
+  ...sourceIcons,
+  Machines: machinesIcon,
+  Refining: sourceIcons['Workbench'],
+}
 import { getItemImage } from '@/utils/itemImages'
 
 function humanAmount(n: number): string {
@@ -32,10 +44,111 @@ const tasksByResource = computed(() => {
   for (const task of props.schedule.tasks) {
     ;(map[task.resource] ??= []).push(task)
   }
-  for (const tasks of Object.values(map)) {
-    tasks.sort((a, b) => a.startTime - b.startTime)
+
+  for (const [resource, tasks] of Object.entries(map)) {
+    // Merge passive tasks that actually overlap in time (same item, same resource).
+    // Machine passives are serialized by mergeSchedules and should NOT be re-merged.
+    let merged = mergePassiveTasks(tasks, resource)
+    // Merge consecutive same-item tasks (e.g., buy tasks split across trees)
+    merged.sort((a, b) => a.startTime - b.startTime)
+    merged = mergeConsecutiveSameItem(merged)
+    map[resource] = merged
   }
+
   return map
+})
+
+
+// Group resources into categories for visual grouping
+interface ResourceGroup {
+  label: string
+  resources: string[]
+}
+
+
+// Garden essence → flower display name mapping
+const essenceToFlower: Record<string, string> = {
+  'Raw Fire Essence': 'Fire Flower',
+  'Raw Wind Essence': 'Wind Flower',
+  'Raw Earth Essence': 'Earth Flower',
+  'Raw Water Essence': 'Water Flower',
+}
+
+
+const essenceToFlowerId: Record<string, string> = {
+  'raw-fire-essence': 'fire-flower',
+  'raw-wind-essence': 'wind-flower',
+  'raw-earth-essence': 'earth-flower',
+  'raw-water-essence': 'water-flower',
+}
+
+
+function getSubRowLabel(resource: string, tasks: ScheduledTask[]): string {
+  const stripped = resource.replace(/^(Machine|Garden|Expedition|Fabrication|Buy): /, '')
+  // Garden: show flower name instead of essence
+  if (resource.startsWith('Garden:')) return essenceToFlower[stripped] ?? stripped
+  // Expedition: show expedition name from method title
+  if (resource.startsWith('Expedition:')) {
+    const task = tasks?.[0]
+    if (task) {
+      const node = props.nodesById[task.nodeId]
+      if (node) {
+        const method = node.methods.find((m) => m.kind === 'expedition')
+        if (method?.title) return method.title
+      }
+    }
+  }
+  return stripped
+}
+
+
+function getSubRowIcon(resource: string, tasks: ScheduledTask[]): string | undefined {
+  // Garden: show flower image
+  if (resource.startsWith('Garden:')) {
+    const itemId = tasks?.[0]?.itemId ?? ''
+    const flowerId = essenceToFlowerId[itemId]
+    if (flowerId) return getItemImage({ id: flowerId })
+  }
+  // Expedition: show the reward item image
+  if (resource.startsWith('Expedition:')) {
+    const itemId = tasks?.[0]?.itemId ?? ''
+    if (itemId) return getItemImage({ id: itemId })
+  }
+  // Fabrication / Merchant: show the item image
+  if (resource.startsWith('Fabrication:') || resource.startsWith('Buy:')) {
+    const itemId = tasks?.[0]?.itemId ?? ''
+    if (itemId) return getItemImage({ id: itemId })
+  }
+  // For all other sub-rows, use the source icon (job/workstation icon) not the item image
+  const task = tasks?.[0]
+  if (task)
+    return (
+      sourceIcons[task.resource.replace(/^(Machine|Garden|Expedition|Fabrication|Buy): /, '')] ??
+      sourceIcons[task.resource]
+    )
+  return undefined
+}
+
+
+const groupedResources = computed<ResourceGroup[]>(() => {
+  const groups = new Map<string, string[]>()
+  const groupOrder: string[] = []
+
+  for (const resource of props.schedule.resourceOrder) {
+    const tasks = tasksByResource.value[resource]
+    if (!tasks?.length) continue
+    const groupKey = getResourceGroupKey(resource, tasks)
+    if (!groups.has(groupKey)) {
+      groups.set(groupKey, [])
+      groupOrder.push(groupKey)
+    }
+    groups.get(groupKey)!.push(resource)
+  }
+
+  return groupOrder.map((key) => ({
+    label: key,
+    resources: groups.get(key)!,
+  }))
 })
 
 
@@ -57,30 +170,44 @@ const {
 const timeMarkers = computed(() => {
   const total = props.schedule.totalTime
   if (total <= 0) return []
-  const step = niceTimeStep(total)
+  const step = niceTimeStep(total, zoom.value)
   const markers = []
   for (let t = 0; t <= total; t += step) {
-    markers.push({ seconds: t, pct: (t / total) * 100, label: formatDuration(t) })
+    markers.push({ seconds: t, pct: (t / total) * 100, label: formatAxisLabel(t) })
   }
   return markers
 })
 
 
-// Popover state
+// Selection & popover state
 const activeTask = ref<ScheduledTask | null>(null)
+const popoverVisible = ref(false)
 const popoverStyle = ref<Record<string, string>>({})
 const popoverRef = ref<HTMLElement | null>(null)
 
 
-function togglePopover(task: ScheduledTask, event: MouseEvent) {
-  if (activeTask.value === task) {
-    activeTask.value = null
+function handleBarClick(task: ScheduledTask, event: MouseEvent) {
+  if (activeTask.value?.nodeId === task.nodeId) {
+    if (popoverVisible.value) {
+      // Third click on same bar — deselect everything
+      activeTask.value = null
+      popoverVisible.value = false
+    } else {
+      // Second click on same bar — open popover
+      activeTask.value = task
+      popoverVisible.value = true
+      positionPopover(event)
+    }
     return
   }
+  // First click on a new bar — highlight deps, no popover
   activeTask.value = task
+  popoverVisible.value = false
   emit('select-node', task.nodeId)
+}
 
 
+function positionPopover(event: MouseEvent) {
   const target = event.currentTarget as HTMLElement
   if (!target) return
 
@@ -123,6 +250,7 @@ function togglePopover(task: ScheduledTask, event: MouseEvent) {
 
 function closePopover() {
   activeTask.value = null
+  popoverVisible.value = false
 }
 
 
@@ -131,6 +259,110 @@ const activeTaskNode = computed(() => {
   const task = activeTask.value
   return props.nodesById[task.passive?.linkedNodeId ?? task.nodeId] ?? null
 })
+
+
+/** Total required amount across all merged nodes (for consolidated bars). */
+const activeTaskAmount = computed(() => {
+  if (!activeTask.value) return null
+  const task = activeTask.value as ScheduledTask & { _mergedNodeIds?: string[] }
+  const nodeIds = task._mergedNodeIds ?? [task.passive?.linkedNodeId ?? task.nodeId]
+  let total = 0
+  for (const id of nodeIds) {
+    const node = props.nodesById[id]
+    if (node) total += node.requiredAmount
+  }
+  return total > 0 ? total : (activeTaskNode.value?.requiredAmount ?? null)
+})
+
+
+const activeTaskGoldCost = computed(() => {
+  if (!activeTask.value || activeTask.value.kind !== 'buy') return null
+  if (activeTaskAmount.value == null) return null
+  const item = itemById.get(activeTask.value.itemId)
+  if (!item?.buyValue) return null
+  return Math.round(activeTaskAmount.value * item.buyValue)
+})
+
+
+// ── Dependency highlighting ──────────────────────────────────────────
+
+
+const taskByNodeId = computed(() => {
+  const map = new Map<string, ScheduledTask>()
+  for (const task of props.schedule.tasks) map.set(task.nodeId, task)
+  return map
+})
+
+
+const dependentsOf = computed(() => {
+  const map = new Map<string, string[]>()
+  for (const task of props.schedule.tasks) {
+    for (const dep of task.dependencies ?? []) {
+      const list = map.get(dep)
+      if (list) list.push(task.nodeId)
+      else map.set(dep, [task.nodeId])
+    }
+  }
+  return map
+})
+
+
+/** Transitive closure walking upstream (prerequisites). */
+function collectTransitive(startIds: string[], getNext: (id: string) => string[]): Set<string> {
+  const visited = new Set<string>()
+  const stack = [...startIds]
+  while (stack.length) {
+    const id = stack.pop()!
+    if (visited.has(id)) continue
+    visited.add(id)
+    for (const next of getNext(id)) stack.push(next)
+  }
+  return visited
+}
+
+
+const prereqNodeIds = computed<Set<string>>(() => {
+  if (!activeTask.value) return new Set()
+  const task = activeTask.value as ScheduledTask & { _mergedNodeIds?: string[] }
+  const rootIds = task._mergedNodeIds ?? [task.nodeId]
+  // Collect all direct deps of the root node(s) as starting points
+  const seedDeps: string[] = []
+  for (const id of rootIds) {
+    const t = taskByNodeId.value.get(id)
+    if (t?.dependencies) seedDeps.push(...t.dependencies)
+  }
+  return collectTransitive(seedDeps, (id) => taskByNodeId.value.get(id)?.dependencies ?? [])
+})
+
+
+const dependentNodeIds = computed<Set<string>>(() => {
+  if (!activeTask.value) return new Set()
+  const task = activeTask.value as ScheduledTask & { _mergedNodeIds?: string[] }
+  const rootIds = task._mergedNodeIds ?? [task.nodeId]
+  // Collect all direct dependents of the root node(s) as starting points
+  const seedDeps: string[] = []
+  for (const id of rootIds) {
+    for (const dep of dependentsOf.value.get(id) ?? []) seedDeps.push(dep)
+  }
+  return collectTransitive(seedDeps, (id) => dependentsOf.value.get(id) ?? [])
+})
+
+
+function barHighlightClasses(task: ScheduledTask): string {
+  if (!activeTask.value) return ''
+  const t = task as ScheduledTask & { _mergedNodeIds?: string[] }
+  const ids = t._mergedNodeIds ?? [task.nodeId]
+  // Check if this IS the active bar
+  const activeIds = (activeTask.value as ScheduledTask & { _mergedNodeIds?: string[] })
+    ._mergedNodeIds ?? [activeTask.value.nodeId]
+  if (ids.some((id) => activeIds.includes(id))) return ''
+  // Prereq
+  if (ids.some((id) => prereqNodeIds.value.has(id))) return 'gantt-prereq'
+  // Dependent
+  if (ids.some((id) => dependentNodeIds.value.has(id))) return 'gantt-dependent'
+  // Unrelated
+  return 'gantt-dimmed'
+}
 </script>
 
 <template>
@@ -187,85 +419,206 @@ const activeTaskNode = computed(() => {
         </div>
       </div>
 
-      <!-- Resource lanes -->
-      <div
-        v-for="resource in schedule.resourceOrder"
-        :key="resource"
-        class="flex items-center border-b border-border/40"
-      >
-        <!-- Resource label -->
-        <div
-          class="flex w-36 shrink-0 items-center gap-1.5 truncate px-3 py-3 text-xs font-bold text-foreground/80"
+      <!-- Grouped resource lanes -->
+      <template v-for="group in groupedResources" :key="group.label">
+        <!-- Single-resource group that is NOT a known multi-group — inline bar in header row -->
+        <template
+          v-if="
+            group.resources.length === 1 &&
+            ![
+              'Gathering',
+              'Refining',
+              'Machines',
+              'Expeditions',
+              'Garden',
+              'Fabrication',
+              'Merchant',
+            ].includes(group.label)
+          "
         >
-          <img
-            v-if="sourceIcons[resource]"
-            :src="sourceIcons[resource]"
-            alt=""
-            class="size-3.5 shrink-0"
-            loading="lazy"
-          />
-          <img
-            v-else-if="getItemImage({ id: tasksByResource[resource]?.[0]?.itemId ?? '' })"
-            :src="getItemImage({ id: tasksByResource[resource]?.[0]?.itemId ?? '' })"
-            alt=""
-            class="size-3.5 shrink-0 object-contain"
-            loading="lazy"
-          />
-          {{ resource }}
-        </div>
-        <!-- Lane with task bars -->
-        <div class="relative flex-1 py-2" :style="{ minWidth: laneMinWidth, minHeight: '44px' }">
-          <button
-            v-for="task in tasksByResource[resource]"
-            :key="task.nodeId"
-            class="absolute bottom-2 top-2 flex items-center gap-1.5 truncate rounded border px-2 text-[11px] font-bold transition-colors"
-            :class="[
-              task.nodeId === selectedNodeId ? 'ring-2 ring-primary' : '',
-              methodKindClasses(task.kind),
-              zoomModifierHeld
-                ? 'cursor-zoom-in'
-                : shiftHeld
-                  ? 'cursor-ew-resize'
-                  : 'cursor-pointer',
-            ]"
-            :style="{
-              left: `${(task.startTime / schedule.totalTime) * 100}%`,
-              width: `${(task.localTime / schedule.totalTime) * 100}%`,
-            }"
-            :title="`${task.itemName} — ${formatDuration(task.localTime)}`"
-            @click="!zoomModifierHeld && !shiftHeld && togglePopover(task, $event)"
-          >
-            <img
-              v-if="getItemImage({ id: task.itemId })"
-              :src="getItemImage({ id: task.itemId })"
-              :alt="task.itemName"
-              class="size-4 shrink-0 object-contain"
-              loading="lazy"
-            />
-            <span class="truncate">{{ task.itemName }}</span>
-            <span
-              v-if="
-                (nodesById[task.passive?.linkedNodeId ?? task.nodeId]?.requiredAmount ??
-                  task.passive?.produced ??
-                  0) > 0
-              "
-              class="shrink-0 font-mono text-[10px] opacity-70"
-              >×{{
-                humanAmount(
-                  Math.round(
-                    nodesById[task.passive?.linkedNodeId ?? task.nodeId]?.requiredAmount ??
-                      task.passive?.produced ??
-                      0,
-                  ),
-                )
-              }}</span
+          <div class="flex items-center border-b border-border/40">
+            <div
+              class="flex w-36 shrink-0 items-center gap-1.5 px-3 py-3 text-xs font-bold text-foreground/80"
             >
-            <span class="ml-auto shrink-0 pl-1 font-mono text-[10px] opacity-80">{{
-              formatDuration(task.localTime)
-            }}</span>
-          </button>
-        </div>
-      </div>
+              <img
+                v-if="groupIcons[group.label]"
+                :src="groupIcons[group.label]"
+                alt=""
+                class="size-4 shrink-0"
+                loading="lazy"
+              />
+              {{ group.label }}
+            </div>
+            <!-- Lane with individually positioned task segments -->
+            <div
+              class="relative flex-1 py-2"
+              :style="{ minWidth: laneMinWidth, minHeight: '44px' }"
+              @click.self="closePopover"
+            >
+              <button
+                v-for="task in tasksByResource[group.resources[0]]"
+                :key="task.nodeId"
+                class="absolute bottom-2 top-2 flex items-center justify-center overflow-hidden rounded-lg border bg-transparent transition-[opacity,box-shadow]"
+                :class="[
+                  task.nodeId === selectedNodeId ? 'ring-2 ring-inset ring-foreground/60' : '',
+                  zoomModifierHeld
+                    ? 'cursor-zoom-in'
+                    : shiftHeld
+                      ? 'cursor-ew-resize'
+                      : 'cursor-pointer',
+                  barHighlightClasses(task),
+                ]"
+                :style="{
+                  left: `${(task.startTime / schedule.totalTime) * 100}%`,
+                  width: `${Math.max(0.3, (task.localTime / schedule.totalTime) * 100)}%`,
+                  borderColor: methodKindColor(task.kind),
+                }"
+                :title="`${task.itemName} — ${formatDuration(task.localTime)}`"
+                @click="!zoomModifierHeld && !shiftHeld && handleBarClick(task, $event)"
+              >
+                <img
+                  v-if="getItemImage({ id: task.itemId })"
+                  :src="getItemImage({ id: task.itemId })"
+                  :alt="task.itemName"
+                  class="size-3.5 shrink-0 object-contain opacity-80"
+                  loading="lazy"
+                />
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <!-- Multi-resource group — header + sub-rows -->
+        <template v-else>
+          <!-- Group header -->
+          <div class="flex items-center border-b border-border/40 bg-card/40">
+            <div class="flex w-36 shrink-0 items-center gap-1.5 px-3 py-2">
+              <img
+                v-if="groupIcons[group.label]"
+                :src="groupIcons[group.label]"
+                alt=""
+                class="size-4 shrink-0"
+                loading="lazy"
+              />
+              <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {{ group.label }}
+              </span>
+              <span class="text-[10px] text-muted-foreground/40">
+                ({{ group.resources.length }})
+              </span>
+            </div>
+            <div class="flex-1" :style="{ minWidth: laneMinWidth }" />
+          </div>
+
+          <!-- Resource lanes within group -->
+          <div
+            v-for="resource in group.resources"
+            :key="resource"
+            class="flex items-center border-b border-border/40"
+          >
+            <!-- Resource label (indented) -->
+            <div
+              class="flex w-36 shrink-0 items-center gap-1.5 py-3 pl-6 pr-3 text-xs font-semibold leading-tight text-foreground/70"
+            >
+              <img
+                v-if="getSubRowIcon(resource, tasksByResource[resource])"
+                :src="getSubRowIcon(resource, tasksByResource[resource])"
+                alt=""
+                class="size-3.5 shrink-0 object-contain"
+                loading="lazy"
+              />
+              {{ getSubRowLabel(resource, tasksByResource[resource]) }}
+            </div>
+
+            <!-- Buy lane: dashed line for gold generation + marker at buy point -->
+            <div
+              v-if="resource.startsWith('Buy:')"
+              class="relative flex-1 py-2"
+              :style="{ minWidth: laneMinWidth, minHeight: '44px' }"
+              @click.self="closePopover"
+            >
+              <template v-for="task in tasksByResource[resource]" :key="task.nodeId">
+                <!-- Dashed line: gold generation period -->
+                <div
+                  class="absolute top-1/2 h-px -translate-y-1/2 border-t-2 border-dashed opacity-50 transition-opacity"
+                  :class="barHighlightClasses(task)"
+                  :style="{
+                    left: `${(task.startTime / schedule.totalTime) * 100}%`,
+                    width: `${(task.localTime / schedule.totalTime) * 100}%`,
+                    borderColor: methodKindColor(task.kind),
+                  }"
+                />
+                <!-- Marker at buy point -->
+                <button
+                  class="absolute top-1/2 flex size-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 transition-[opacity,box-shadow]"
+                  :class="[
+                    task.nodeId === selectedNodeId ? 'ring-2 ring-foreground/60' : '',
+                    zoomModifierHeld
+                      ? 'cursor-zoom-in'
+                      : shiftHeld
+                        ? 'cursor-ew-resize'
+                        : 'cursor-pointer',
+                    barHighlightClasses(task),
+                  ]"
+                  :style="{
+                    left: `${(task.endTime / schedule.totalTime) * 100}%`,
+                    borderColor: methodKindColor(task.kind),
+                    backgroundColor: 'hsl(var(--card))',
+                  }"
+                  :title="`${task.itemName} — buy at ${formatDuration(task.endTime)}`"
+                  @click="!zoomModifierHeld && !shiftHeld && handleBarClick(task, $event)"
+                >
+                  <img
+                    v-if="getItemImage({ id: task.itemId })"
+                    :src="getItemImage({ id: task.itemId })"
+                    :alt="task.itemName"
+                    class="size-3.5 shrink-0 object-contain"
+                    loading="lazy"
+                  />
+                </button>
+              </template>
+            </div>
+
+            <!-- Standard lane: individually positioned task segments -->
+            <div
+              v-else
+              class="relative flex-1 py-2"
+              :style="{ minWidth: laneMinWidth, minHeight: '44px' }"
+              @click.self="closePopover"
+            >
+              <button
+                v-for="task in tasksByResource[resource]"
+                :key="task.nodeId"
+                class="absolute bottom-2 top-2 flex items-center justify-center overflow-hidden rounded-lg border bg-transparent transition-[opacity,box-shadow]"
+                :class="[
+                  task.nodeId === selectedNodeId ? 'ring-2 ring-inset ring-foreground/60' : '',
+                  zoomModifierHeld
+                    ? 'cursor-zoom-in'
+                    : shiftHeld
+                      ? 'cursor-ew-resize'
+                      : 'cursor-pointer',
+                  barHighlightClasses(task),
+                ]"
+                :style="{
+                  left: `${(task.startTime / schedule.totalTime) * 100}%`,
+                  width: `${Math.max(0.3, (task.localTime / schedule.totalTime) * 100)}%`,
+                  borderColor: methodKindColor(task.kind),
+                }"
+                :title="`${task.itemName} — ${formatDuration(task.localTime)}`"
+                @click="!zoomModifierHeld && !shiftHeld && handleBarClick(task, $event)"
+              >
+                <img
+                  v-if="getItemImage({ id: task.itemId })"
+                  :src="getItemImage({ id: task.itemId })"
+                  :alt="task.itemName"
+                  class="size-3.5 shrink-0 object-contain opacity-80"
+                  loading="lazy"
+                />
+              </button>
+            </div>
+          </div>
+        </template>
+      </template>
 
       <!-- Empty state -->
       <div v-if="schedule.tasks.length === 0" class="px-6 py-8 text-center">
@@ -289,10 +642,10 @@ const activeTaskNode = computed(() => {
 
   <!-- Popover -->
   <Teleport to="body">
-    <div v-if="activeTask" class="fixed inset-0 z-40" @click="closePopover" />
+    <div v-if="popoverVisible && activeTask" class="fixed inset-0 z-40" @click="closePopover" />
     <Transition name="popover">
       <div
-        v-if="activeTask"
+        v-if="popoverVisible && activeTask"
         ref="popoverRef"
         class="z-50 w-72 rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
         :style="popoverStyle"
@@ -322,40 +675,76 @@ const activeTaskNode = computed(() => {
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3">
-          <div class="flex items-center gap-1.5 text-xs">
-            <Clock3 class="size-3 shrink-0" style="color: var(--color-green)" />
-            <span class="text-muted-foreground">Duration</span>
-            <span class="ml-auto font-mono font-semibold text-foreground">{{
+        <div class="flex flex-col gap-2 px-4 py-3">
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <Clock3 class="size-3 shrink-0" style="color: var(--color-green)" />
+              <span class="text-muted-foreground">Duration</span>
+            </div>
+            <span class="font-mono font-semibold text-foreground">{{
               formatDuration(activeTask.localTime)
             }}</span>
           </div>
-          <div class="flex items-center gap-1.5 text-xs">
-            <span class="size-3 shrink-0 text-center text-[10px] font-black text-primary">#</span>
-            <span class="text-muted-foreground">Amount</span>
-            <span class="ml-auto font-mono font-semibold text-foreground">
-              {{
-                activeTaskNode ? `×${humanAmount(Math.round(activeTaskNode.requiredAmount))}` : '—'
-              }}
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <Layers class="size-3 shrink-0 text-primary" />
+              <span class="text-muted-foreground">Amount</span>
+            </div>
+            <span class="font-mono font-semibold text-foreground">
+              {{ activeTaskAmount != null ? `×${humanAmount(Math.round(activeTaskAmount))}` : '—' }}
             </span>
           </div>
-          <div class="flex items-center gap-1.5 text-xs">
-            <span class="size-3 shrink-0 text-center text-[10px] font-black text-muted-foreground"
-              >▶</span
-            >
-            <span class="text-muted-foreground">Start</span>
-            <span class="ml-auto font-mono font-semibold text-foreground">{{
+          <div v-if="activeTaskGoldCost != null" class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <img
+                v-if="getItemImage({ id: 'gold' })"
+                :src="getItemImage({ id: 'gold' })"
+                alt="Gold"
+                class="size-3 shrink-0 object-contain"
+              />
+              <span class="text-muted-foreground">Gold</span>
+            </div>
+            <span class="font-mono font-semibold" style="color: var(--color-yellow)">
+              {{ activeTaskGoldCost.toLocaleString() }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <Play class="size-3 shrink-0 text-muted-foreground" />
+              <span class="text-muted-foreground">Start</span>
+            </div>
+            <span class="font-mono font-semibold text-foreground">{{
               formatDuration(activeTask.startTime)
             }}</span>
           </div>
-          <div class="flex items-center gap-1.5 text-xs">
-            <span class="size-3 shrink-0 text-center text-[10px] font-black text-muted-foreground"
-              >■</span
-            >
-            <span class="text-muted-foreground">End</span>
-            <span class="ml-auto font-mono font-semibold text-foreground">{{
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-1.5">
+              <Square class="size-3 shrink-0 text-muted-foreground" />
+              <span class="text-muted-foreground">End</span>
+            </div>
+            <span class="font-mono font-semibold text-foreground">{{
               formatDuration(activeTask.endTime)
             }}</span>
+          </div>
+        </div>
+        <!-- Dependency legend -->
+        <div
+          v-if="prereqNodeIds.size > 0 || dependentNodeIds.size > 0"
+          class="flex items-center gap-3 border-t border-border/40 px-4 py-2"
+        >
+          <div
+            v-if="prereqNodeIds.size > 0"
+            class="flex items-center gap-1.5 text-[10px] text-muted-foreground"
+          >
+            <span class="inline-block size-2 rounded-full bg-amber-400/80" />
+            {{ prereqNodeIds.size }} prereq{{ prereqNodeIds.size > 1 ? 's' : '' }}
+          </div>
+          <div
+            v-if="dependentNodeIds.size > 0"
+            class="flex items-center gap-1.5 text-[10px] text-muted-foreground"
+          >
+            <span class="inline-block size-2 rounded-full bg-sky-400/80" />
+            {{ dependentNodeIds.size }} dependent{{ dependentNodeIds.size > 1 ? 's' : '' }}
           </div>
         </div>
       </div>
@@ -378,5 +767,27 @@ const activeTaskNode = computed(() => {
 .popover-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* Dependency highlighting */
+.gantt-dimmed {
+  opacity: 0.2;
+}
+.gantt-prereq {
+  box-shadow: 0 0 0 2px rgb(251 191 36 / 0.7);
+  animation: gantt-pulse 1.5s ease-in-out infinite;
+}
+.gantt-dependent {
+  box-shadow: 0 0 0 2px rgb(56 189 248 / 0.7);
+  animation: gantt-pulse 1.5s ease-in-out infinite;
+}
+@keyframes gantt-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 </style>

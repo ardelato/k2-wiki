@@ -7,9 +7,9 @@ test.beforeEach(async ({ page }) => {
   await page.getByText('Creatures').first().waitFor()
 })
 
-/** Helper to get the "N of M selected" text element */
+/** Helper to get the "N selected" text element */
 function selectedCount(page: Page) {
-  return page.getByText(/\d+ of \d+ selected/)
+  return page.getByText(/\d+ selected/)
 }
 
 /** Select all creatures in the first tier */
@@ -35,73 +35,74 @@ test.describe('tab navigation', () => {
 
 test.describe('creature selection', () => {
   test('starts with 0 selected', async ({ page }) => {
-    await expect(selectedCount(page)).toHaveText(/^0 of \d+ selected/)
+    await expect(selectedCount(page)).toHaveText(/^0 selected/)
   })
 
   test('tier bulk selection increases count', async ({ page }) => {
-    await expect(selectedCount(page)).toHaveText(/^0 of \d+ selected/)
+    await expect(selectedCount(page)).toHaveText(/^0 selected/)
 
     await selectFirstTier(page)
 
     // After selecting a tier, count should show a non-zero number
-    await expect(selectedCount(page)).not.toHaveText(/^0 of \d+ selected/)
+    await expect(selectedCount(page)).not.toHaveText(/^0 selected/)
   })
 
   test('reset clears all selections', async ({ page }) => {
     await selectFirstTier(page)
-    await expect(selectedCount(page)).not.toHaveText(/^0 of \d+ selected/)
+    await expect(selectedCount(page)).not.toHaveText(/^0 selected/)
 
-    // Click reset
+    // Click reset (only visible when selections exist)
     await page.getByRole('button', { name: 'Reset', exact: true }).click()
-    await expect(selectedCount(page)).toHaveText(/^0 of \d+ selected/)
+    await expect(selectedCount(page)).toHaveText(/^0 selected/)
   })
 })
 
 // ── Cost accuracy after toggling tiers ───────────────────────────────
 
 test.describe('cost accuracy', () => {
-  test('material count returns to original after toggling a second tier', async ({ page }) => {
-    // 1. Select tier 1 and capture the material count
+  test('selected count returns to original after toggling a second tier', async ({ page }) => {
+    // 1. Select tier 1 and capture the selected count
     await selectFirstTier(page)
-    await page.getByRole('button', { name: 'Summary' }).waitFor()
-    const materialsLabel = page.getByText(/\d+ materials/)
-    await expect(materialsLabel).toBeVisible()
-    const originalText = await materialsLabel.textContent()
+    await page.getByRole('button', { name: 'List' }).waitFor()
+    const originalText = await selectedCount(page).textContent()
 
-    // 2. Select tier 2 — material count may change
+    // 2. Select tier 2 — count changes
     const selectButtons = page.getByRole('button', { name: 'Select all' })
     await selectButtons.nth(1).click()
-    // Wait for the count to potentially update
-    await expect(materialsLabel).toBeVisible()
+    await expect(selectedCount(page)).not.toHaveText(originalText!)
 
-    // 3. Deselect tier 2 — material count must return to the original
+    // 3. Deselect tier 2 — count must return to the original
     const deselectButtons = page.getByRole('button', { name: 'Deselect all' })
     await deselectButtons.nth(1).click()
-    await expect(materialsLabel).toHaveText(originalText!)
+    await expect(selectedCount(page)).toHaveText(originalText!)
   })
 })
 
-// ── Sub-tab switching ───────────────────────────────────────────────
+// ── View tab switching ──────────────────────────────────────────────
 
-test.describe('sub-tabs', () => {
+test.describe('view tabs', () => {
   test.beforeEach(async ({ page }) => {
     await selectFirstTier(page)
-    // Wait for sub-tabs to appear
-    await page.getByRole('button', { name: 'Summary' }).waitFor()
+    // Wait for view tabs to appear (List is the default)
+    await page.getByRole('button', { name: 'List' }).waitFor()
   })
 
-  test('summary tab shows totals', async ({ page }) => {
-    await expect(page.getByText('Total').first()).toBeVisible()
-    await expect(page.getByText(/\d+ materials/)).toBeVisible()
+  test('list tab shows source groups', async ({ page }) => {
+    // List view groups materials by source type (Refined, Gathered, Expedition, etc.)
+    // At least one group header should be visible
+    await expect(
+      page.getByText(/Refined Materials|Gathered Resources|Expedition Rewards/).first(),
+    ).toBeVisible()
   })
 
-  test('trees sub-tab renders', async ({ page }) => {
-    await page.getByRole('button', { name: 'Trees' }).click()
-    await expect(page.getByText('Materials').first()).toBeVisible()
+  test('tree tab renders material trees', async ({ page }) => {
+    await page.getByRole('button', { name: 'Tree' }).click()
+    // Tree view shows crafting dependency trees with item names
+    await expect(page.locator('.surface-card').first()).toBeVisible()
   })
 
-  test('timeline sub-tab renders', async ({ page }) => {
+  test('timeline tab renders', async ({ page }) => {
     await page.getByRole('button', { name: 'Timeline' }).click()
-    await expect(page.getByText(/Estimated|Priority Steps/).first()).toBeVisible()
+    await expect(page.getByText(/Priority Steps/).first()).toBeVisible()
   })
 })

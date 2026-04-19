@@ -1,6 +1,6 @@
 import type { PlannerNode, PlannerSchedule } from '@/types'
 
-export type StepKind = 'gather' | 'craft' | 'expedition' | 'passive' | 'buy' | 'container'
+export type StepKind = 'gather' | 'craft' | 'expedition' | 'garden' | 'buy' | 'container'
 
 export interface PriorityStepCard {
   label: string
@@ -84,14 +84,21 @@ export function computePriorityWaves(
         continue
       }
 
-      const isPassive = task.kind === 'expedition' || task.kind === 'garden'
+      // For buy tasks, pull gold cost from the node's buy method
+      let cost: number | undefined
+      if (task.kind === 'buy' && node) {
+        const buyMethod = node.methods.find((m) => m.kind === 'buy')
+        if (buyMethod?.cost != null && buyMethod.cost > 0) cost = Math.round(buyMethod.cost)
+      }
+
       cardMap.set(dedupeKey, {
         label: task.itemName,
-        description: task.resource.replace(/^(Expedition|Garden|Buy): /, ''),
+        description: task.resource.replace(/^(Expedition|Garden|Buy|Machine): /, ''),
         timeEstimate: task.localTime,
-        kind: isPassive ? 'passive' : (task.kind as StepKind),
+        kind: (task.kind === 'garden' ? 'garden' : task.kind) as StepKind,
         itemId: task.itemId,
         resource: task.resource,
+        cost,
         amount: Math.round(taskAmount) || undefined,
       })
     }

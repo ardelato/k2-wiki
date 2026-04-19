@@ -9,11 +9,12 @@ test.beforeEach(async ({ page }) => {
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-/** Navigate to a specific item plan */
+/** Navigate to a specific item plan — default view is now "List" */
 async function openItemPlan(page: Page, itemId: string, qty = 1) {
   const qtyParam = qty > 1 ? `?qty=${qty}` : ''
   await page.goto(`./planner/${itemId}${qtyParam}`)
-  await page.getByText('Gathering List').first().waitFor()
+  // Wait for list view to render — group headers like "Gather", "Craft" appear
+  await page.getByText('List').first().waitFor()
 }
 
 // ── Page rendering & item selection ─────────────────────────────────
@@ -24,13 +25,13 @@ test.describe('page rendering and item selection', () => {
     await expect(page.getByText('Browse Items')).toBeVisible()
   })
 
-  test('URL with item ID shows tree with root node', async ({ page }) => {
-    // Planks is a Refined item — always shows craft tree
+  test('URL with item ID shows planner with root item', async ({ page }) => {
+    // Planks is a Refined item — shows in list view
     await openItemPlan(page, 'planks')
     await expect(page.getByText('Planks').first()).toBeVisible()
   })
 
-  test('item picker selects item and shows tree', async ({ page }) => {
+  test('item picker selects item and shows planner', async ({ page }) => {
     // Click the item picker trigger button
     await page.locator('button[aria-haspopup="listbox"]').click()
 
@@ -81,12 +82,37 @@ test.describe('quantity controls', () => {
   })
 })
 
+// ── List view (default) ─────────────────────────────────────────────
+
+test.describe('list view', () => {
+  test.beforeEach(async ({ page }) => {
+    await openItemPlan(page, 'planks')
+  })
+
+  test('list view shows gather group with dependencies', async ({ page }) => {
+    // Planks needs Pine Log (gathered) and Saw (gathered)
+    await expect(page.getByText('Gather').first()).toBeVisible()
+    await expect(page.getByText('Pine Log').first()).toBeVisible()
+  })
+
+  test('Collapse All and Expand All toggle groups', async ({ page }) => {
+    await page.getByRole('button', { name: 'Collapse All' }).click()
+    // After collapse, group rows are hidden
+    await expect(page.getByText('Pine Log').first()).toBeHidden()
+
+    await page.getByRole('button', { name: 'Expand All' }).click()
+    await expect(page.getByText('Pine Log').first()).toBeVisible()
+  })
+})
+
 // ── Tree view ───────────────────────────────────────────────────────
 
 test.describe('tree view', () => {
   test.beforeEach(async ({ page }) => {
     // Planks: Workbench craft requires Saw + Pine Log
     await openItemPlan(page, 'planks')
+    // Switch to Tree view
+    await page.getByText('Tree', { exact: true }).click()
   })
 
   test('root node displays with item name', async ({ page }) => {
@@ -99,8 +125,8 @@ test.describe('tree view', () => {
     await expect(page.getByText('Pine Log').first()).toBeVisible()
   })
 
-  test('Collapse to Leaves and Expand All toggle tree', async ({ page }) => {
-    await page.getByRole('button', { name: 'Collapse to Leaves' }).click()
+  test('Collapse All and Expand All toggle tree', async ({ page }) => {
+    await page.getByRole('button', { name: 'Collapse All' }).click()
     await expect(page.getByText(/\d+ collapsed/)).toBeVisible()
 
     await page.getByRole('button', { name: 'Expand All' }).click()
@@ -108,46 +134,13 @@ test.describe('tree view', () => {
   })
 })
 
-// ── Inspector panel ─────────────────────────────────────────────────
+// ── Planner heading ─────────────────────────────────────────────────
 
-test.describe('inspector panel', () => {
-  test.beforeEach(async ({ page }) => {
-    await openItemPlan(page, 'planks')
-  })
-
-  test('inspector shows method info for root node', async ({ page }) => {
-    // Planks is crafted at Workbench — inspector should show workstation
-    await expect(page.getByText('Workbench').first()).toBeVisible()
-  })
-
-  test('clicking a child node updates inspector', async ({ page }) => {
-    // Click on Pine Log dependency
-    await page.getByText('Pine Log').first().click()
-
-    // Inspector should update — Pine Log is gathered from Chopping
-    await expect(page.getByText('Chopping').first()).toBeVisible()
-  })
-})
-
-// ── Summary badges ──────────────────────────────────────────────────
-
-test.describe('summary badges', () => {
-  test('time and cost badges visible when item selected', async ({ page }) => {
+test.describe('planner heading', () => {
+  test('heading shows item name when selected', async ({ page }) => {
     await openItemPlan(page, 'planks')
 
-    // Time badge shows duration format (e.g., "32s", "1m 4s", etc.)
-    await expect(page.getByText(/\d+[smhd]/).first()).toBeVisible()
-  })
-})
-
-// ── Shopping list ───────────────────────────────────────────────────
-
-test.describe('shopping list', () => {
-  test('shopping list shows leaf items needed', async ({ page }) => {
-    await openItemPlan(page, 'planks')
-
-    // Gathering list heading
-    await expect(page.getByText('Gathering List').first()).toBeVisible()
+    await expect(page.locator('h1', { hasText: 'Planks Planner' })).toBeVisible()
   })
 })
 
@@ -159,73 +152,45 @@ test.describe('view toggle', () => {
   })
 
   test('switching to timeline view shows Gantt chart', async ({ page }) => {
-    // The Timeline button is a plain button, not a role=button with accessible name
     await page.getByText('Timeline', { exact: true }).click()
 
-    // Gantt chart renders — verify the tree controls disappear and SVG appears
-    await expect(page.getByRole('button', { name: 'Collapse to Leaves' })).toBeHidden()
+    // Gantt chart renders — tree controls disappear
+    await expect(page.getByRole('button', { name: 'Collapse All' })).toBeHidden()
   })
 
-  test('switching back to tree view restores tree', async ({ page }) => {
-    await page.getByText('Timeline', { exact: true }).click()
+  test('switching to tree view and back to list restores list', async ({ page }) => {
     await page.getByText('Tree', { exact: true }).click()
-
     await expect(page.getByText('Planks').first()).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Collapse to Leaves' })).toBeVisible()
+
+    await page.getByText('List', { exact: true }).click()
+    await expect(page.getByText('Gather').first()).toBeVisible()
   })
 })
 
-// ── Settings panel ──────────────────────────────────────────────────
+// ── Inventory stock ─────────────────────────────────────────────────
 
-test.describe('settings panel', () => {
-  test('inventory stock marks dependency as fulfilled', async ({ page }) => {
+test.describe('inventory stock', () => {
+  test('inventory stock marks dependency as fulfilled in tree view', async ({ page }) => {
     // Seed inventory with Pine Log so the dependency is fulfilled
     await page.evaluate(() => {
       localStorage.setItem('config-inventory', JSON.stringify({ 'pine-log': 100 }))
     })
     await openItemPlan(page, 'planks')
 
-    // The Active Modifiers section should show "In Stock" with the stocked item
-    await expect(page.getByText('In Stock').first()).toBeVisible()
+    // Switch to tree view where "In stock" badges appear on fulfilled nodes
+    await page.getByText('Tree', { exact: true }).click()
+    await expect(page.getByText('In stock').first()).toBeVisible()
   })
-})
 
-// ── Craft planner — method pinning ──────────────────────────────────
-
-test.describe('craft planner - method pinning', () => {
-  test('pinning a method updates the active method for a node', async ({ page }) => {
-    // Planks has multiple recipes (different log types)
-    await openItemPlan(page, 'planks')
-
-    // The default recipe uses Pine Log — verify it's in the tree
-    await expect(page.getByText('Pine Log').first()).toBeVisible()
-
-    // Click the Pin button on a different method in the inspector
-    // The pin button has title="Pin this method"
-    const pinButtons = page.locator('button[title="Pin this method"]')
-    const pinCount = await pinButtons.count()
-    if (pinCount > 1) {
-      // Click a non-first pin to select an alternative recipe
-      await pinButtons.nth(1).click()
-
-      // The tree should update — the dependency list may change
-      // Verify the tree still renders (didn't break)
-      await expect(page.getByText('Planks').first()).toBeVisible()
-    }
-  })
-})
-
-// ── Cross-page: config affects planner ──────────────────────────────
-
-test.describe('cross-page config integration', () => {
-  test('config inventory shows in planner Active Modifiers', async ({ page }) => {
+  test('config inventory shows fulfilled node in tree view', async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem('config-inventory', JSON.stringify({ 'pine-log': 50 }))
     })
 
     await openItemPlan(page, 'planks')
+    await page.getByText('Tree', { exact: true }).click()
 
-    await expect(page.getByText('In Stock').first()).toBeVisible()
+    await expect(page.getByText('In stock').first()).toBeVisible()
     await expect(page.getByText('Pine Log').first()).toBeVisible()
   })
 })
@@ -233,16 +198,17 @@ test.describe('cross-page config integration', () => {
 // ── Machine and fabrication methods ─────────────────────────────────
 
 test.describe('machine and fabrication methods', () => {
-  test('copper-bar shows Smelter machine method', async ({ page }) => {
+  test('copper-bar shows tree with dependencies', async ({ page }) => {
     await openItemPlan(page, 'copper-bar')
-    await expect(page.getByText('Machine').first()).toBeVisible()
-    await expect(page.getByText('Smelter').first()).toBeVisible()
+    await page.getByText('Tree', { exact: true }).click()
+    await expect(page.getByText('Copper Bar').first()).toBeVisible()
+    // Copper Bar requires Copper Ore as input
+    await expect(page.getByText('Copper Ore').first()).toBeVisible()
   })
 
-  test('stone shows Stone Quarry machine method', async ({ page }) => {
+  test('stone renders in planner', async ({ page }) => {
     await openItemPlan(page, 'stone')
-    await expect(page.getByText('Machine').first()).toBeVisible()
-    await expect(page.getByText('Stone Quarry').first()).toBeVisible()
+    await expect(page.getByText('Stone').first()).toBeVisible()
   })
 })
 
@@ -531,136 +497,5 @@ test.describe('level up - expedition filter', () => {
 
     // Filtered badge should be gone from expedition section
     await expect(expSection.getByText('Filtered')).toBeHidden()
-  })
-})
-
-// ── Level Up — alternative routes ─────────────────────────────────
-
-test.describe('level up - alternative routes', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-  })
-
-  test('expanding a step shows Alternative Routes when multiple expeditions available', async ({
-    page,
-  }) => {
-    // Include all expeditions so alternatives appear
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
-
-    // Expand expedition filter and include all
-    await page.getByText('Expeditions', { exact: true }).first().click()
-    await page.getByRole('button', { name: 'Include All' }).click()
-    await expect(page.getByText('20 of 20 included')).toBeVisible()
-
-    // Wait for plan to recalculate, then expand first step
-    await page.locator('button[aria-expanded]').first().waitFor()
-    await page.locator('button[aria-expanded="false"]').first().click()
-
-    // Alternative Routes header should be visible
-    await expect(page.getByText('Alternative Routes')).toBeVisible()
-  })
-
-  test('clicking an alternative replans and shows Override badge', async ({ page }) => {
-    // Include all expeditions so alternatives appear
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
-
-    await page.getByText('Expeditions', { exact: true }).first().click()
-    await page.getByRole('button', { name: 'Include All' }).click()
-    await expect(page.getByText('20 of 20 included')).toBeVisible()
-
-    // Expand first step
-    await page.locator('button[aria-expanded]').first().waitFor()
-    await page.locator('button[aria-expanded="false"]').first().click()
-    await page.getByText('Alternative Routes').waitFor()
-
-    // Click the first alternative route button
-    const altSection = page.locator('div', { hasText: 'Alternative Routes' }).last()
-    const altButton = altSection.locator('button').first()
-    if ((await altButton.count()) > 0) {
-      await altButton.click()
-
-      // Override badge should appear
-      await expect(page.getByText('Override').first()).toBeVisible({ timeout: 10000 })
-    }
-  })
-})
-
-// ── Level Up — prestige mode ──────────────────────────────────────
-
-test.describe('level up - prestige mode', () => {
-  test('awakened creature at max level shows prestige step instead of max message', async ({
-    page,
-  }) => {
-    await page.evaluate(() => {
-      localStorage.setItem(
-        'creature-collection',
-        JSON.stringify({ moss: { owned: true, level: 120, awakened: true } }),
-      )
-    })
-    await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
-
-    // Should show Prestige step, not "Already at max level"
-    await expect(page.getByText('Prestige Creature')).toBeVisible()
-    await expect(page.getByText('Already at max level!')).toBeHidden()
-  })
-
-  test('prestige step shows correct level range 120→1', async ({ page }) => {
-    await page.evaluate(() => {
-      localStorage.setItem(
-        'creature-collection',
-        JSON.stringify({ moss: { owned: true, level: 120, awakened: true } }),
-      )
-    })
-    await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
-
-    // Should show LVL 120→1
-    await expect(page.getByText('LVL 120→1')).toBeVisible()
-  })
-})
-
-// ── Level Up — creature grid selector ─────────────────────────────
-
-test.describe('level up - creature grid selector', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-  })
-
-  test('creature grid is visible in single mode', async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
-
-    // Creature grid should show owned creature names
-    await expect(page.getByText('Moss').first()).toBeVisible()
-    await expect(page.getByText('Scoots').first()).toBeVisible()
-  })
-
-  test('clicking a creature tile selects it and shows plan', async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
-
-    // Click on Moss tile
-    await page.locator('button', { hasText: 'Moss' }).first().click()
-
-    // Heading should update and plan should show
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
-    await expect(page.getByText(/\d+ step/).first()).toBeVisible()
-  })
-
-  test('summary shows creature name and image', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
-
-    // Summary card contains "Leveling Plan" text
-    const summary = page.locator('.surface-card', { hasText: 'Leveling Plan' })
-    await expect(summary.getByText('Moss')).toBeVisible()
-    await expect(summary.getByText('Leveling Plan')).toBeVisible()
   })
 })

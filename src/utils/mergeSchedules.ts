@@ -47,8 +47,15 @@ export function mergeSchedules(
 
   for (const task of allTasks) {
     taskByNodeId.set(task.nodeId, task)
-    inDegree.set(task.nodeId, task.mergedDeps.length)
-    for (const dep of task.mergedDeps) {
+  }
+
+  for (const task of allTasks) {
+    // Only count dependencies that exist as actual tasks — fulfilled or zero-time
+    // nodes don't produce tasks and should be treated as already complete.
+    const effectiveDeps = task.mergedDeps.filter((dep) => taskByNodeId.has(dep))
+    task.mergedDeps = effectiveDeps
+    inDegree.set(task.nodeId, effectiveDeps.length)
+    for (const dep of effectiveDeps) {
       const list = dependents.get(dep)
       if (list) list.push(task.nodeId)
       else dependents.set(dep, [task.nodeId])
@@ -57,7 +64,8 @@ export function mergeSchedules(
 
   // Topological schedule with resource constraints
   const completionTimeByNode: Record<string, number> = {}
-  const resourceNextFree: Record<string, number> = {}
+  const resourceNextFree: Record<string, number> = {} // active tasks only
+  const passiveNextFree: Record<string, number> = {} // passive machine tasks only
   const resolvedTasks: ScheduledTask[] = []
 
   // Seed queue with tasks that have no dependencies
@@ -79,7 +87,14 @@ export function mergeSchedules(
     const nodeId = queue.shift()!
     const task = taskByNodeId.get(nodeId)!
 
-    const isPassive = task.resource.startsWith('Garden:') || task.resource.startsWith('Expedition:')
+    // Passive tasks represent background production already factored into active
+    // method times. They don't block active tasks — active tasks can preempt them.
+    // But passive machine tasks serialize with each other (one recipe at a time).
+    const isFullyPassive =
+      (!!task.passive && !task.resource.startsWith('Machine:')) ||
+      task.resource.startsWith('Garden:') ||
+      task.resource.startsWith('Expedition:')
+    const isMachinePassive = !!task.passive && task.resource.startsWith('Machine:')
 
     // Start time = max of all dependency completion times + resource availability
     let depsReady = 0
@@ -87,10 +102,24 @@ export function mergeSchedules(
       depsReady = Math.max(depsReady, completionTimeByNode[dep] ?? 0)
     }
 
-    const startTime = isPassive ? 0 : Math.max(depsReady, resourceNextFree[task.resource] ?? 0)
+    let startTime: number
+    if (isFullyPassive) {
+      // Garden, Expedition, Fabrication — dedicated resources, always start at 0
+      startTime = 0
+    } else if (isMachinePassive) {
+      // Passive machine tasks serialize with other passives on the same machine,
+      // but do NOT check resourceNextFree (active tasks can preempt them)
+      startTime = passiveNextFree[task.resource] ?? 0
+    } else {
+      // Active tasks check only active resource contention + dependencies
+      startTime = Math.max(depsReady, resourceNextFree[task.resource] ?? 0)
+    }
+
     const endTime = startTime + task.localTime
 
-    if (!isPassive) {
+    if (isMachinePassive) {
+      passiveNextFree[task.resource] = endTime
+    } else if (!isFullyPassive) {
       resourceNextFree[task.resource] = endTime
     }
 
@@ -127,10 +156,88 @@ export function mergeSchedules(
     return resourceSortPriority(a) - resourceSortPriority(b) || a.localeCompare(b)
   })
 
-  const totalTime = resolvedTasks.reduce((max, t) => Math.max(max, t.endTime), 0)
+  // Only active (non-passive) tasks drive the total time — passive tasks are
+  // background production already factored into active method calculations.
+  const activeTotalTime = resolvedTasks
+    .filter((t) => !t.passive)
+    .reduce((max, t) => Math.max(max, t.endTime), 0)
+  const totalTime = activeTotalTime || resolvedTasks.reduce((max, t) => Math.max(max, t.endTime), 0)
+
+  // Drop passive tasks whose output won't be used:
+  // - starts after the plan ends
+  // - starts after the linked active node has already completed (production arrives too late)
+  // Cap remaining passive tasks that overlap the plan end.
+  const filteredTasks = resolvedTasks
+    .filter((t) => {
+      if (!t.passive) return true
+      if (t.startTime >= totalTime) return false
+      const linkedId = t.passive.linkedNodeId
+      if (linkedId && completionTimeByNode[linkedId] != null) {
+        if (t.startTime >= completionTimeByNode[linkedId]) return false
+      }
+      return true
+    })
+    .map((t) => {
+      if (!t.passive || t.endTime <= totalTime) return t
+      return { ...t, endTime: totalTime, localTime: totalTime - t.startTime }
+    })
+
+  // Clip machine passive tasks around active tasks on the same resource.
+  // Passive production is interrupted when the machine runs an active task,
+  // then resumes after. Split passive tasks into gap-filling segments.
+  const finalTasks: ScheduledTask[] = []
+  const activeByResource = new Map<string, { start: number; end: number }[]>()
+  for (const t of filteredTasks) {
+    if (!t.passive && t.resource.startsWith('Machine:')) {
+      const ranges = activeByResource.get(t.resource) ?? []
+      ranges.push({ start: t.startTime, end: t.endTime })
+      activeByResource.set(t.resource, ranges)
+    }
+  }
+
+  for (const t of filteredTasks) {
+    if (!t.passive || !t.resource.startsWith('Machine:')) {
+      finalTasks.push(t)
+      continue
+    }
+
+    const activeRanges = activeByResource.get(t.resource)
+    if (!activeRanges || activeRanges.length === 0) {
+      finalTasks.push(t)
+      continue
+    }
+
+    // Find gaps in this passive task's span that don't overlap active tasks
+    const sorted = activeRanges.toSorted((a, b) => a.start - b.start)
+    let cursor = t.startTime
+    let segIdx = 0
+    for (const active of sorted) {
+      if (active.start > cursor && cursor < t.endTime) {
+        const segEnd = Math.min(active.start, t.endTime)
+        finalTasks.push({
+          ...t,
+          nodeId: `${t.nodeId}:seg${segIdx++}`,
+          startTime: cursor,
+          endTime: segEnd,
+          localTime: segEnd - cursor,
+        })
+      }
+      cursor = Math.max(cursor, active.end)
+    }
+    // Remaining gap after last active task
+    if (cursor < t.endTime) {
+      finalTasks.push({
+        ...t,
+        nodeId: `${t.nodeId}:seg${segIdx}`,
+        startTime: cursor,
+        endTime: t.endTime,
+        localTime: t.endTime - cursor,
+      })
+    }
+  }
 
   return {
-    tasks: resolvedTasks,
+    tasks: finalTasks,
     resourceOrder,
     totalTime,
     completionTimeByNode,
