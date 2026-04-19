@@ -1,442 +1,460 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ChevronDown, Compass, Minus, Plus, X } from 'lucide-vue-next'
+import { ref } from 'vue'
 
-import type { Expedition, Creature, ExpeditionStatWeights } from '@/types'
+import type { Creature, Expedition, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase } from '@/utils/format'
-import { statLabels } from '@/utils/formulas'
+import { TIER_UNLOCK_REQUIREMENTS } from '@/utils/expeditionUnlocks'
+import { formatDuration, toTitleCase } from '@/utils/format'
+import { statLabels, tierModifiers } from '@/utils/formulas'
+import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const props = defineProps<{
-  expedition: Expedition
-  selectedCreature: Creature | null
-  selectedCreatureStats: { rating: number; time: number; xpPerSec: number; level: number } | null
+  expedition: Expedition | null
+  selectedTier: number
+  partySlots: (Creature | null)[]
+  activeSlotIndex: number | null
+  creatureLevels: Record<string, number>
+  difficultyRating: number
+  partyScore: number
+  estimatedDuration: number | null
+  scoreRatio: number | null
+  loopCount: number
+  loopBonusPercent: number
+  totalXp: number | null
+  xpPerMinute: number | null
+  partyXpProgress: {
+    creature: Creature
+    currentLevel: number
+    targetLevel: number
+    progress: number
+  }[]
+  topRecommendedCreatures: { creature: Creature; percent: number }[]
+  weightedStats: [keyof ExpeditionStatWeights, number][]
+  getCreatureSlotRating: (creature: Creature) => number
 }>()
 
 
-type ExpeditionStatKey = keyof ExpeditionStatWeights
+const emit = defineEmits<{
+  'update:selectedTier': [tier: number]
+  'update:loopCount': [count: number]
+  'set-active-slot': [index: number]
+  'remove-creature': [index: number]
+}>()
 
 
-const typeColorMap: Record<string, string> = {
-  Fire: 'var(--color-fire)',
-  Water: 'var(--color-water)',
-  Wind: 'var(--color-wind)',
-  Earth: 'var(--color-earth)',
+const showAdvancedDetails = ref(false)
+
+
+function clampLoopCount(value: number): number {
+  if (Number.isNaN(value)) return 0
+  return Math.max(0, Math.min(200, Math.round(value)))
 }
 
 
-const selectedCreatureImage = computed(() => {
-  if (!props.selectedCreature) return undefined
-  return getCreatureImage(props.selectedCreature)
-})
+function stepLoopCount(delta: number) {
+  emit('update:loopCount', clampLoopCount(props.loopCount + delta))
+}
+
+
+function normalizeLoopCountOnBlur(event: FocusEvent) {
+  const target = event.target as HTMLInputElement
+  if (!target.value.trim()) {
+    emit('update:loopCount', 0)
+    return
+  }
+  const parsed = Number(target.value)
+  emit('update:loopCount', clampLoopCount(parsed))
+}
 </script>
 
 <template>
-  <div class="detail-panel">
-    <div class="detail-top">
-      <h2 class="exp-name">{{ expedition.name }}</h2>
-      <p class="exp-desc">{{ expedition.description }}</p>
+  <section class="surface-card flex flex-col overflow-hidden">
+    <div class="border-b border-border/70 px-4 py-3">
+      <h2 class="text-base font-bold">Expedition Details</h2>
     </div>
 
-    <!-- Info grid -->
-    <div class="info-grid">
-      <div class="info-cell">
-        <span class="info-label">Rating</span>
-        <span class="info-value">{{ expedition.baseRating }}</span>
+    <div
+      v-if="expedition"
+      class="max-h-[62vh] animate-fade-in space-y-4 overflow-y-auto p-4 lg:max-h-none lg:min-h-0 lg:flex-1"
+    >
+      <!-- Name & Description -->
+      <div>
+        <h3 class="text-2xl font-black leading-tight">{{ expedition.name }}</h3>
+        <p class="mt-1 text-sm text-muted-foreground">{{ expedition.description }}</p>
       </div>
-      <div class="info-cell">
-        <span class="info-label">Biome</span>
-        <span class="info-value">{{ toTitleCase(expedition.biome) }}</span>
-      </div>
-      <div class="info-cell">
-        <span class="info-label">Trait</span>
-        <span class="info-value trait-val">{{
-          expedition.trait ? toTitleCase(expedition.trait) : 'None'
-        }}</span>
-      </div>
-    </div>
 
-    <!-- Base stats -->
-    <div class="section">
-      <h3 class="section-title">Details</h3>
-      <div class="base-grid">
-        <div class="base-cell">
-          <span class="base-label">Duration</span>
-          <span class="base-value">{{ Math.round(expedition.baseDuration / 60) }}m</span>
+      <!-- Quick Facts: Biome, Trait -->
+      <div class="grid grid-cols-2 gap-2 text-sm">
+        <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
+          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Biome</p>
+          <p class="font-semibold">{{ toTitleCase(expedition.biome) }}</p>
         </div>
-        <div class="base-cell">
-          <span class="base-label">XP Multiplier</span>
-          <span class="base-value">{{ expedition.baseXP }}x</span>
-        </div>
-        <div class="base-cell">
-          <span class="base-label">Max Party</span>
-          <span class="base-value">{{ expedition.maxPartySize }}</span>
-        </div>
-        <div class="base-cell">
-          <span class="base-label">Required Clears</span>
-          <span class="base-value">{{ expedition.requiredExpeditionCompletions }}</span>
+        <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
+          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Trait</p>
+          <p class="font-semibold text-amber-700 dark:text-amber-300">
+            {{ expedition.trait ? toTitleCase(expedition.trait) : 'None' }}
+          </p>
         </div>
       </div>
-    </div>
 
-    <!-- Stat weights -->
-    <div class="section">
-      <h3 class="section-title">Stat Weights</h3>
-      <div class="weights-list">
-        <template
-          v-for="[key, weight] in Object.entries(expedition.statWeights) as [
-            ExpeditionStatKey,
-            number,
-          ][]"
-          :key="key"
-        >
-          <div v-if="weight > 0" class="weight-row">
-            <span class="weight-label">{{ statLabels[key] }}</span>
-            <div class="weight-bar-bg">
-              <div class="weight-bar-fill" :style="{ width: weight * 100 + '%' }" />
-            </div>
-            <span class="weight-pct">{{ Math.round(weight * 100) }}%</span>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <!-- Rewards -->
-    <div class="section">
-      <h3 class="section-title">Rewards</h3>
-      <div class="rewards-list">
-        <span v-for="(reward, i) in expedition.rewards" :key="i" class="reward-tag">
-          <img
-            v-if="getItemImage({ id: reward.itemId })"
-            :src="getItemImage({ id: reward.itemId })"
-            :alt="toTitleCase(reward.itemId)"
-            class="size-4 object-contain"
-            loading="lazy"
-          />
-          {{ reward.amount }}x {{ toTitleCase(reward.itemId) }}
-        </span>
-        <span v-if="expedition.rewards.length === 0" class="no-rewards">None</span>
-      </div>
-    </div>
-
-    <!-- Selected creature stats -->
-    <div v-if="selectedCreature && selectedCreatureStats" class="section creature-stats-section">
-      <h3 class="section-title">Creature Performance</h3>
-      <div class="creature-card">
-        <div
-          class="creature-avatar"
-          :style="{
-            backgroundColor: typeColorMap[selectedCreature.types[0]] + '33',
-            borderColor: typeColorMap[selectedCreature.types[0]] + '66',
-          }"
-        >
-          <img
-            v-if="selectedCreatureImage"
-            :src="selectedCreatureImage"
-            :alt="`${selectedCreature.name} artwork`"
-            class="creature-avatar-image"
-            loading="lazy"
-          />
-          <span v-else>{{ selectedCreature.name.charAt(0) }}</span>
-        </div>
-        <div class="creature-info">
-          <div class="creature-name-row">
-            <span class="creature-name">{{ selectedCreature.name }}</span>
-            <span
-              v-if="selectedCreature.types.length"
-              class="creature-type"
-              :style="{ color: typeColorMap[selectedCreature.types[0]] }"
-            >
-              {{ selectedCreature.types.join(' / ') }}
-            </span>
-          </div>
+      <!-- Rewards -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Rewards</h4>
+        <div class="flex flex-wrap gap-2">
           <span
-            v-if="selectedCreature.trait === expedition.trait && expedition.trait"
-            class="trait-match-badge"
+            v-for="reward in expedition.rewards"
+            :key="reward.itemId"
+            class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/45 px-3 py-1 font-mono text-xs"
           >
-            Trait Match
+            <img
+              v-if="getItemImage({ id: reward.itemId })"
+              :src="getItemImage({ id: reward.itemId })"
+              :alt="toTitleCase(reward.itemId)"
+              class="size-4 object-contain"
+              loading="lazy"
+            />
+            {{ reward.amount * tierModifiers.loot[selectedTier - 1] }}x
+            {{ toTitleCase(reward.itemId) }}
           </span>
         </div>
       </div>
-      <div class="perf-grid">
-        <div class="perf-cell">
-          <span class="perf-label">Rating</span>
-          <span class="perf-value">{{ selectedCreatureStats.rating }}</span>
+
+      <!-- Recommended Creatures -->
+      <div v-if="topRecommendedCreatures.length" class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Recommended Creatures
+        </h4>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="{ creature, percent } in topRecommendedCreatures"
+            :key="creature.id"
+            class="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3"
+          >
+            <div class="size-6 overflow-hidden rounded-full bg-card">
+              <img
+                :src="getCreatureImage(creature)"
+                :alt="creature.name"
+                class="size-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <span class="text-xs font-semibold">{{ creature.name }}</span>
+            <span
+              class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary"
+              >{{ percent }}%</span
+            >
+          </div>
         </div>
-        <div class="perf-cell">
-          <span class="perf-label">Time</span>
-          <span class="perf-value">{{ selectedCreatureStats.time }}m</span>
+      </div>
+
+      <!-- Advanced Details toggle -->
+      <div>
+        <button
+          class="focus-ring inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
+          :aria-expanded="showAdvancedDetails"
+          @click="showAdvancedDetails = !showAdvancedDetails"
+        >
+          <ChevronDown
+            class="size-3.5 transition-transform"
+            :class="showAdvancedDetails ? '' : '-rotate-90'"
+          />
+          Advanced Details
+        </button>
+
+        <div class="mt-3 space-y-4" :class="showAdvancedDetails ? 'block' : 'hidden'">
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Rating</p>
+              <p class="font-mono font-semibold">{{ difficultyRating }}</p>
+            </div>
+            <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">XP Pool</p>
+              <p class="font-semibold">
+                {{ Math.floor(expedition.baseXP * tierModifiers.xp[selectedTier - 1]) }}
+              </p>
+            </div>
+            <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Unlock After</p>
+              <p class="font-semibold">
+                {{ expedition.requiredExpeditionCompletions }} expeditions
+              </p>
+            </div>
+            <div
+              v-if="selectedTier > 1"
+              class="rounded-lg border border-border bg-muted/35 px-3 py-2"
+            >
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                Tier {{ selectedTier }} Requires
+              </p>
+              <p class="font-semibold">
+                {{ TIER_UNLOCK_REQUIREMENTS[selectedTier] }}x Tier {{ selectedTier - 1 }} clears
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              Stat Weights
+            </h4>
+            <div
+              v-for="[key, weight] in weightedStats"
+              :key="key"
+              class="grid grid-cols-[80px_minmax(0,1fr)_44px] items-center gap-2"
+            >
+              <span class="text-xs text-muted-foreground">{{ statLabels[key] }}</span>
+              <div class="h-2 rounded-full bg-muted">
+                <div
+                  class="h-full rounded-full bg-primary"
+                  :style="{ width: `${weight * 100}%` }"
+                />
+              </div>
+              <span class="text-right text-xs font-semibold text-foreground"
+                >{{ Math.round(weight * 100) }}%</span
+              >
+            </div>
+          </div>
         </div>
-        <div class="perf-cell">
-          <span class="perf-label">XP/Sec</span>
-          <span class="perf-value">{{ selectedCreatureStats.xpPerSec.toFixed(3) }}</span>
+      </div>
+
+      <!-- Tier & Loop Count -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Tier</h4>
+          <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
+            <button
+              v-for="t in 5"
+              :key="t"
+              class="focus-ring rounded-md px-1.5 py-1 text-xs font-semibold transition"
+              :class="
+                selectedTier === t
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+              @click="emit('update:selectedTier', t)"
+            >
+              <img
+                :src="expeditionTierIcons[t]"
+                :alt="`Tier ${t}`"
+                class="size-7 object-contain"
+                loading="lazy"
+              />
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            Loop Count
+          </h4>
+          <div class="flex items-center gap-2">
+            <div
+              class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
+            >
+              <button
+                class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="loopCount <= 0"
+                aria-label="Decrease loop count by 10"
+                @click="stepLoopCount(-10)"
+              >
+                <Minus class="size-3" />
+              </button>
+              <input
+                type="text"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                class="focus-ring h-8 w-14 border-x border-input bg-transparent text-center font-mono text-sm"
+                :value="loopCount"
+                aria-label="Loop count"
+                @blur="normalizeLoopCountOnBlur($event)"
+              />
+              <button
+                class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                :disabled="loopCount >= 200"
+                aria-label="Increase loop count by 10"
+                @click="stepLoopCount(10)"
+              >
+                <Plus class="size-3" />
+              </button>
+            </div>
+            <span
+              v-if="loopBonusPercent > 0"
+              class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+            >
+              +{{ loopBonusPercent }}%
+            </span>
+          </div>
+          <p class="text-[11px] text-muted-foreground">+1% XP per 10 loops, max +20%</p>
+        </div>
+      </div>
+
+      <!-- Party Slots -->
+      <div class="space-y-2">
+        <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">Party</h4>
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="(slot, index) in partySlots"
+            :key="index"
+            class="flex flex-col items-center gap-1"
+          >
+            <div
+              class="relative size-20 overflow-hidden rounded-lg border transition"
+              :class="[
+                slot
+                  ? 'border-border bg-card/50'
+                  : activeSlotIndex === index
+                    ? 'border-dashed border-primary bg-primary/10'
+                    : 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45',
+              ]"
+              @click="!slot ? emit('set-active-slot', index) : undefined"
+            >
+              <template v-if="slot">
+                <img
+                  :src="getCreatureImage(slot)"
+                  :alt="`${slot.name} artwork`"
+                  class="size-full object-cover"
+                  loading="lazy"
+                />
+                <span
+                  class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
+                >
+                  {{ getCreatureSlotRating(slot) }}
+                </span>
+                <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
+                  <p class="truncate text-center text-[10px] font-semibold text-white">
+                    {{ slot.name }}
+                  </p>
+                </div>
+                <button
+                  class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                  @click.stop="emit('remove-creature', index)"
+                >
+                  <X class="size-3" />
+                </button>
+              </template>
+              <template v-else>
+                <div class="flex size-full flex-col items-center justify-center gap-1">
+                  <Plus class="size-4 text-muted-foreground/50" />
+                  <span v-if="activeSlotIndex === index" class="text-[9px] text-primary"
+                    >Select</span
+                  >
+                </div>
+              </template>
+            </div>
+            <span
+              v-if="slot"
+              class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
+            >
+              LVL {{ creatureLevels[slot.id] || 1 }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Party Summary -->
+      <div v-if="partyScore > 0" class="space-y-2 rounded-lg border border-border bg-muted/30 p-3">
+        <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
+          Party Summary
+        </h4>
+        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+          <div class="rounded-md bg-card px-2 py-2">
+            <p class="text-muted-foreground">Party Score</p>
+            <p class="font-mono text-sm font-semibold text-primary">{{ partyScore }}</p>
+          </div>
+          <div class="rounded-md bg-card px-2 py-2">
+            <p class="text-muted-foreground">Difficulty</p>
+            <p class="font-mono text-sm font-semibold">{{ difficultyRating }}</p>
+          </div>
+          <div class="rounded-md bg-card px-2 py-2">
+            <p class="text-muted-foreground">Score Ratio</p>
+            <p
+              class="font-mono text-sm font-semibold"
+              :class="
+                scoreRatio && scoreRatio >= 1
+                  ? 'text-emerald-700 dark:text-emerald-400'
+                  : 'text-amber-700 dark:text-amber-400'
+              "
+            >
+              {{ scoreRatio ? scoreRatio.toFixed(2) : '—' }}
+            </p>
+          </div>
+          <div class="rounded-md bg-card px-2 py-2">
+            <p class="text-muted-foreground">Duration / Run</p>
+            <p class="font-mono text-sm font-semibold">
+              {{ estimatedDuration ? formatDuration(estimatedDuration) : '—' }}
+            </p>
+            <p
+              v-if="loopCount > 0 && estimatedDuration"
+              class="mt-0.5 text-[10px] text-muted-foreground"
+            >
+              {{ formatDuration(estimatedDuration * loopCount) }}
+            </p>
+          </div>
+          <div class="rounded-md bg-card px-2 py-2">
+            <p class="text-muted-foreground">XP / Creature</p>
+            <p class="font-mono text-sm font-semibold">
+              {{ totalXp ? totalXp.toLocaleString() : '—' }}
+              <span
+                v-if="loopBonusPercent > 0 && totalXp"
+                class="ml-0.5 inline-block rounded bg-emerald-100 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+              >
+                +{{ loopBonusPercent }}%
+              </span>
+            </p>
+          </div>
+          <div class="rounded-md bg-card px-2 py-2">
+            <p class="text-muted-foreground">XP Rate</p>
+            <div class="flex items-center justify-center gap-2">
+              <p class="font-mono text-sm font-semibold">
+                {{ xpPerMinute ? Math.round(xpPerMinute).toLocaleString() : '—'
+                }}<span class="text-[10px] text-muted-foreground">/m</span>
+              </p>
+              <div class="h-4 border-l border-border/50" />
+              <p class="font-mono text-sm font-semibold">
+                {{ xpPerMinute ? (xpPerMinute / 60).toFixed(2) : '—'
+                }}<span class="text-[10px] text-muted-foreground">/s</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="partyXpProgress.length" class="space-y-1.5">
+          <div
+            v-for="entry in partyXpProgress"
+            :key="entry.creature.id"
+            class="flex items-center gap-2"
+          >
+            <span
+              class="w-16 shrink-0 truncate font-mono text-[10px] font-semibold text-muted-foreground"
+            >
+              {{ entry.creature.name }}
+            </span>
+            <span
+              class="w-7 shrink-0 text-right font-mono text-[10px] font-semibold text-muted-foreground"
+            >
+              {{ entry.currentLevel }}
+            </span>
+            <div class="relative h-1.5 flex-1 overflow-hidden rounded-full bg-muted/60">
+              <div
+                class="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-500"
+                :style="{ width: `${entry.progress * 100}%` }"
+              />
+            </div>
+            <span class="w-7 shrink-0 font-mono text-[10px] font-semibold text-foreground">
+              {{ entry.targetLevel }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <div
+      v-else
+      class="flex min-h-[220px] flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground"
+    >
+      <Compass class="size-8 text-accent/65" />
+      <p class="text-sm">Select an expedition from the list.</p>
+    </div>
+  </section>
 </template>
-
-<style scoped>
-.detail-panel {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
-  max-height: calc(100vh - 280px);
-}
-
-.detail-top {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.exp-name {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.exp-desc {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.info-cell {
-  background: oklch(from var(--color-bg) l c h / 0.6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-}
-
-.info-label {
-  display: block;
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.info-value {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.trait-val {
-  color: var(--color-yellow);
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.section-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.base-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-}
-
-.base-cell {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 10px;
-  background: oklch(from var(--color-bg) l c h / 0.6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: 0.8125rem;
-}
-
-.base-label {
-  color: var(--color-text-muted);
-}
-
-.base-value {
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.weights-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.weight-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.weight-label {
-  width: 64px;
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
-
-.weight-bar-bg {
-  flex: 1;
-  height: 6px;
-  background: var(--color-border);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.weight-bar-fill {
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: 3px;
-  transition: width 0.2s;
-}
-
-.weight-pct {
-  width: 36px;
-  text-align: right;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--color-text);
-  flex-shrink: 0;
-}
-
-.rewards-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.reward-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  font-size: 0.75rem;
-  color: var(--color-text);
-  background: oklch(from var(--color-bg) l c h / 0.6);
-}
-
-.no-rewards {
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.creature-stats-section {
-  border-top: 1px solid var(--color-border);
-  padding-top: 16px;
-}
-
-.creature-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.creature-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  border: 2px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-
-.creature-avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.creature-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.creature-name-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.creature-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.creature-type {
-  font-size: 0.75rem;
-}
-
-.trait-match-badge {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: oklch(0.65 0.2 145 / 0.2);
-  color: var(--color-green);
-}
-
-.perf-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.perf-cell {
-  background: oklch(from var(--color-bg) l c h / 0.6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  text-align: center;
-}
-
-.perf-label {
-  display: block;
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.perf-value {
-  display: block;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
-</style>

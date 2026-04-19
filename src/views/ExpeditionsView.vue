@@ -2,50 +2,30 @@
 import { useMediaQuery } from '@vueuse/core'
 import {
   Check,
-  ChevronDown,
   ClipboardPaste,
-  Compass,
   Copy,
   Download,
   FileDown,
   FileUp,
   FolderOpen,
-  Info,
-  Minus,
-  Plus,
   RotateCcw,
   RotateCw,
-  Target,
   X,
 } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import summonedIcon from '@/assets/icons/summoned.webp'
-import ActiveFilters from '@/components/shared/ActiveFilters.vue'
-import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import CreatureSelector from '@/components/expeditions/CreatureSelector.vue'
+import ExpeditionDetail from '@/components/expeditions/ExpeditionDetail.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useExpeditions } from '@/composables/useExpeditions'
 import { useGameConfig } from '@/composables/useGameConfig'
-import type { Creature, ElementType, ExpeditionStatWeights } from '@/types'
+import type { Creature, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { TIER_UNLOCK_REQUIREMENTS } from '@/utils/expeditionUnlocks'
 import { formatDuration, toTitleCase } from '@/utils/format'
-import {
-  getLoopXpBonus,
-  getRecommendedCreatures,
-  statAbbreviations,
-  statLabels,
-  tierModifiers,
-} from '@/utils/formulas'
-import {
-  sanctuaryIcon,
-  helpersIcon,
-  machinesIcon,
-  expeditionTierIcons,
-  toolIcons,
-} from '@/utils/icons'
+import { getLoopXpBonus, getRecommendedCreatures } from '@/utils/formulas'
+import { expeditionTierIcons, toolIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const route = useRoute()
@@ -90,32 +70,9 @@ const {
 } = useExpeditions(creatures.value)
 
 
-const { collectionLevels, isOwned, isAwakened } = useCreatureCollection()
+const { collectionLevels } = useCreatureCollection()
 
 
-const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
-const creatureSearch = ref('')
-const selectedCreatureType = ref<ElementType | 'all'>('all')
-const selectedCreatureTiers = ref<number[]>([])
-const ownedOnly = ref(true)
-const showMoreCreatureFilters = ref(false)
-const showAdvancedDetails = ref(false)
-
-
-const topRecommendedCreatures = computed(() => {
-  if (!selectedExpedition.value) return []
-  const ranked = getRecommendedCreatures(creatures.value, selectedExpedition.value).slice(0, 6)
-  const topRating = ranked[0]?.rating ?? 1
-  return ranked.map(({ creature, rating }) => ({
-    creature,
-    percent: Math.round((rating / topRating) * 100),
-  }))
-})
-
-
-const hasSecondaryCreatureFilters = computed(
-  () => selectedCreatureType.value !== 'all' || !allCreatureTiersSelected.value,
-)
 const modalMode = ref<'import' | 'export' | null>(null)
 const modalText = ref('')
 const importError = ref('')
@@ -288,42 +245,14 @@ const weightedStats = computed(() => {
 })
 
 
-const creatureTierOptions = computed(() => {
-  const tiers = new Set(creatures.value.map((c) => c.tier))
-  return Array.from(tiers).toSorted((a, b) => a - b)
-})
-
-
-const allCreatureTiersSelected = computed(() => {
-  return (
-    creatureTierOptions.value.length > 0 &&
-    creatureTierOptions.value.every((tier) => selectedCreatureTiers.value.includes(tier))
-  )
-})
-
-
-watch(
-  creatureTierOptions,
-  (tiers) => {
-    const preserved = selectedCreatureTiers.value.filter((tier) => tiers.includes(tier))
-    selectedCreatureTiers.value = preserved.length ? preserved : [...tiers]
-  },
-  { immediate: true },
-)
-
-
-const filteredRecommended = computed(() => {
-  return recommendedCreatures.value.filter(({ creature }) => {
-    const query = creatureSearch.value.toLowerCase()
-    const matchesSearch =
-      creature.name.toLowerCase().includes(query) || creature.trait.toLowerCase().includes(query)
-    const matchesType =
-      selectedCreatureType.value === 'all' || creature.types.includes(selectedCreatureType.value)
-    const matchesTier =
-      selectedCreatureTiers.value.length === 0 ||
-      selectedCreatureTiers.value.includes(creature.tier)
-    return matchesSearch && matchesType && matchesTier
-  })
+const topRecommendedCreatures = computed(() => {
+  if (!selectedExpedition.value) return []
+  const ranked = getRecommendedCreatures(creatures.value, selectedExpedition.value).slice(0, 6)
+  const topRating = ranked[0]?.rating ?? 1
+  return ranked.map(({ creature, rating }) => ({
+    creature,
+    percent: Math.round((rating / topRating) * 100),
+  }))
 })
 
 
@@ -342,82 +271,7 @@ watchEffect(() => {
 })
 
 
-const displayRecommended = computed(() => {
-  if (!ownedOnly.value) return filteredRecommended.value
-  return filteredRecommended.value.filter(({ creature }) => isOwned(creature.id))
-})
-
-
 const hasEmptySlot = computed(() => partySlots.value.some((s) => s === null))
-
-
-const activeCreatureFilters = computed<ActiveFilter[]>(() => {
-  const filters: ActiveFilter[] = []
-  if (creatureSearch.value)
-    filters.push({
-      key: 'search',
-      group: 'Search',
-      label:
-        creatureSearch.value.length > 20
-          ? `${creatureSearch.value.slice(0, 20)}…`
-          : creatureSearch.value,
-    })
-  if (selectedCreatureType.value !== 'all')
-    filters.push({
-      key: 'type',
-      group: 'Type',
-      label: selectedCreatureType.value,
-      color: typeColor(selectedCreatureType.value),
-    })
-  if (!allCreatureTiersSelected.value) {
-    for (const tier of selectedCreatureTiers.value) {
-      filters.push({ key: `tier:${tier}`, group: 'Tier', label: `T${tier + 1}` })
-    }
-  }
-  if (!ownedOnly.value)
-    filters.push({ key: 'ownedOnly', group: 'Summoned', label: 'Showing All', image: summonedIcon })
-  if (showExcludedCreatures.value)
-    filters.push({ key: 'showExcluded', group: 'Excluded', label: 'Showing' })
-  return filters
-})
-
-
-function removeCreatureFilter(key: string) {
-  if (key === 'search') {
-    creatureSearch.value = ''
-    return
-  }
-  if (key === 'ownedOnly') {
-    ownedOnly.value = true
-    return
-  }
-  if (key === 'showExcluded') {
-    showExcludedCreatures.value = false
-    return
-  }
-  if (key === 'type') {
-    selectedCreatureType.value = 'all'
-    return
-  }
-  if (key.startsWith('tier:')) {
-    const tier = Number(key.slice(5))
-    if (selectedCreatureTiers.value.length === 1) {
-      selectedCreatureTiers.value = [...creatureTierOptions.value]
-    } else {
-      selectedCreatureTiers.value = selectedCreatureTiers.value.filter((t) => t !== tier)
-    }
-    return
-  }
-}
-
-
-function clearCreatureFilters() {
-  creatureSearch.value = ''
-  selectedCreatureType.value = 'all'
-  selectedCreatureTiers.value = [...creatureTierOptions.value]
-  ownedOnly.value = true
-  showExcludedCreatures.value = false
-}
 
 
 function selectExpedition(expedition: (typeof filteredExpeditions.value)[number]) {
@@ -442,16 +296,31 @@ function chooseCreature(creature: Creature) {
 }
 
 
-function typeColor(type: ElementType): string {
-  if (type === 'Fire') return 'hsl(var(--type-fire))'
-  if (type === 'Water') return 'hsl(var(--type-water))'
-  if (type === 'Wind') return 'hsl(var(--type-wind))'
-  return 'hsl(var(--type-earth))'
+function stepCreatureLevel(creatureId: string, currentLevel: number, delta: number) {
+  function clampLevel(level: number): number {
+    if (Number.isNaN(level)) return 1
+    return Math.max(1, Math.min(120, Math.round(level)))
+  }
+  updateCreatureLevel(creatureId, clampLevel(currentLevel + delta))
 }
 
 
-function statBar(creature: Creature, key: keyof ExpeditionStatWeights): number {
-  return Math.min(100, creature.stats[key])
+function normalizeLevelOnBlur(creatureId: string, currentLevel: number, event: FocusEvent) {
+  function clampLevel(level: number): number {
+    if (Number.isNaN(level)) return 1
+    return Math.max(1, Math.min(120, Math.round(level)))
+  }
+  const target = event.target as HTMLInputElement
+  if (!target.value.trim()) {
+    updateCreatureLevel(creatureId, currentLevel)
+    return
+  }
+  const parsed = Number(target.value)
+  if (Number.isNaN(parsed)) {
+    updateCreatureLevel(creatureId, currentLevel)
+    return
+  }
+  updateCreatureLevel(creatureId, clampLevel(parsed))
 }
 
 
@@ -465,82 +334,6 @@ function getPartyCreatures(expeditionId: string): Creature[] {
 
 function rowSelected(id: string): boolean {
   return selectedExpedition.value?.id === id
-}
-
-
-function clampLevel(level: number): number {
-  if (Number.isNaN(level)) return 1
-  return Math.max(1, Math.min(120, Math.round(level)))
-}
-
-
-function normalizeLevelOnBlur(creatureId: string, currentLevel: number, event: FocusEvent) {
-  const target = event.target as HTMLInputElement
-  if (!target.value.trim()) {
-    updateCreatureLevel(creatureId, currentLevel)
-    return
-  }
-
-
-  const parsed = Number(target.value)
-  if (Number.isNaN(parsed)) {
-    updateCreatureLevel(creatureId, currentLevel)
-    return
-  }
-
-
-  updateCreatureLevel(creatureId, clampLevel(parsed))
-}
-
-
-function stepCreatureLevel(creatureId: string, currentLevel: number, delta: number) {
-  updateCreatureLevel(creatureId, clampLevel(currentLevel + delta))
-}
-
-
-function clampLoopCount(value: number): number {
-  if (Number.isNaN(value)) return 0
-  return Math.max(0, Math.min(200, Math.round(value)))
-}
-
-
-function stepLoopCount(delta: number) {
-  loopCount.value = clampLoopCount(loopCount.value + delta)
-}
-
-
-function normalizeLoopCountOnBlur(event: FocusEvent) {
-  const target = event.target as HTMLInputElement
-  if (!target.value.trim()) {
-    loopCount.value = 0
-    return
-  }
-  const parsed = Number(target.value)
-  loopCount.value = clampLoopCount(parsed)
-}
-
-
-function toggleCreatureType(type: ElementType) {
-  selectedCreatureType.value = selectedCreatureType.value === type ? 'all' : type
-}
-
-
-function toggleCreatureTier(tier: number) {
-  if (allCreatureTiersSelected.value) {
-    selectedCreatureTiers.value = [tier]
-    return
-  }
-  if (selectedCreatureTiers.value.includes(tier)) {
-    if (selectedCreatureTiers.value.length === 1) {
-      selectedCreatureTiers.value = [...creatureTierOptions.value]
-      return
-    }
-    selectedCreatureTiers.value = selectedCreatureTiers.value.filter(
-      (selected) => selected !== tier,
-    )
-    return
-  }
-  selectedCreatureTiers.value = [...selectedCreatureTiers.value, tier]
 }
 </script>
 
@@ -587,6 +380,7 @@ function toggleCreatureTier(tier: number) {
     <div
       class="grid grid-cols-1 gap-4 lg:h-[calc(100vh-12rem)] lg:grid-cols-[minmax(260px,0.9fr)_minmax(320px,1fr)_minmax(320px,1fr)] lg:grid-rows-[minmax(0,1fr)]"
     >
+      <!-- Column 1: Expedition List -->
       <section
         class="surface-card flex flex-col overflow-hidden"
         :class="!isDesktop && mobileSection !== 'list' ? 'hidden' : ''"
@@ -752,698 +546,49 @@ function toggleCreatureTier(tier: number) {
         </div>
       </section>
 
-      <section
-        class="surface-card flex flex-col overflow-hidden"
+      <!-- Column 2: Expedition Details -->
+      <ExpeditionDetail
         :class="!isDesktop && mobileSection !== 'details' ? 'hidden' : ''"
-      >
-        <div class="border-b border-border/70 px-4 py-3">
-          <h2 class="text-base font-bold">Expedition Details</h2>
-        </div>
+        :expedition="selectedExpedition"
+        :selected-tier="selectedTier"
+        :party-slots="partySlots"
+        :active-slot-index="activeSlotIndex"
+        :creature-levels="creatureLevels"
+        :difficulty-rating="difficultyRating"
+        :party-score="partyScore"
+        :estimated-duration="estimatedDuration"
+        :score-ratio="scoreRatio"
+        :loop-count="loopCount"
+        :loop-bonus-percent="loopBonusPercent"
+        :total-xp="totalXp"
+        :xp-per-minute="xpPerMinute"
+        :party-xp-progress="partyXpProgress"
+        :top-recommended-creatures="topRecommendedCreatures"
+        :weighted-stats="weightedStats"
+        :get-creature-slot-rating="getCreatureSlotRating"
+        @update:selected-tier="selectedTier = $event"
+        @update:loop-count="loopCount = $event"
+        @set-active-slot="setActiveSlot"
+        @remove-creature="removeCreatureFromSlot"
+      />
 
-        <div
-          v-if="selectedExpedition"
-          class="max-h-[62vh] animate-fade-in space-y-4 overflow-y-auto p-4 lg:max-h-none lg:min-h-0 lg:flex-1"
-        >
-          <!-- Name & Description -->
-          <div>
-            <h3 class="text-2xl font-black leading-tight">{{ selectedExpedition.name }}</h3>
-            <p class="mt-1 text-sm text-muted-foreground">{{ selectedExpedition.description }}</p>
-          </div>
-
-          <!-- Quick Facts: Biome, Trait -->
-          <div class="grid grid-cols-2 gap-2 text-sm">
-            <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Biome</p>
-              <p class="font-semibold">{{ toTitleCase(selectedExpedition.biome) }}</p>
-            </div>
-            <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Trait</p>
-              <p class="font-semibold text-amber-700 dark:text-amber-300">
-                {{ selectedExpedition.trait ? toTitleCase(selectedExpedition.trait) : 'None' }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Rewards -->
-          <div class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Rewards
-            </h4>
-            <div class="flex flex-wrap gap-2">
-              <span
-                v-for="reward in selectedExpedition.rewards"
-                :key="reward.itemId"
-                class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/45 px-3 py-1 font-mono text-xs"
-              >
-                <img
-                  v-if="getItemImage({ id: reward.itemId })"
-                  :src="getItemImage({ id: reward.itemId })"
-                  :alt="toTitleCase(reward.itemId)"
-                  class="size-4 object-contain"
-                  loading="lazy"
-                />
-                {{ reward.amount * tierModifiers.loot[selectedTier - 1] }}x
-                {{ toTitleCase(reward.itemId) }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Recommended Creatures -->
-          <div v-if="topRecommendedCreatures.length" class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Recommended Creatures
-            </h4>
-            <div class="flex flex-wrap gap-2">
-              <div
-                v-for="{ creature, percent } in topRecommendedCreatures"
-                :key="creature.id"
-                class="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3"
-              >
-                <div class="size-6 overflow-hidden rounded-full bg-card">
-                  <img
-                    :src="getCreatureImage(creature)"
-                    :alt="creature.name"
-                    class="size-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-                <span class="text-xs font-semibold">{{ creature.name }}</span>
-                <span
-                  class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary"
-                  >{{ percent }}%</span
-                >
-              </div>
-            </div>
-          </div>
-
-          <!-- Advanced Details toggle -->
-          <div>
-            <button
-              class="focus-ring inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-              :aria-expanded="showAdvancedDetails"
-              @click="showAdvancedDetails = !showAdvancedDetails"
-            >
-              <ChevronDown
-                class="size-3.5 transition-transform"
-                :class="showAdvancedDetails ? '' : '-rotate-90'"
-              />
-              Advanced Details
-            </button>
-
-            <div class="mt-3 space-y-4" :class="showAdvancedDetails ? 'block' : 'hidden'">
-              <div class="grid grid-cols-2 gap-2 text-sm">
-                <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Rating</p>
-                  <p class="font-mono font-semibold">{{ difficultyRating }}</p>
-                </div>
-                <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">XP Pool</p>
-                  <p class="font-semibold">
-                    {{ Math.floor(selectedExpedition.baseXP * tierModifiers.xp[selectedTier - 1]) }}
-                  </p>
-                </div>
-                <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
-                    Unlock After
-                  </p>
-                  <p class="font-semibold">
-                    {{ selectedExpedition.requiredExpeditionCompletions }} expeditions
-                  </p>
-                </div>
-                <div
-                  v-if="selectedTier > 1"
-                  class="rounded-lg border border-border bg-muted/35 px-3 py-2"
-                >
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
-                    Tier {{ selectedTier }} Requires
-                  </p>
-                  <p class="font-semibold">
-                    {{ TIER_UNLOCK_REQUIREMENTS[selectedTier] }}x Tier {{ selectedTier - 1 }} clears
-                  </p>
-                </div>
-              </div>
-
-              <div class="space-y-2">
-                <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                  Stat Weights
-                </h4>
-                <div
-                  v-for="[key, weight] in weightedStats"
-                  :key="key"
-                  class="grid grid-cols-[80px_minmax(0,1fr)_44px] items-center gap-2"
-                >
-                  <span class="text-xs text-muted-foreground">{{ statLabels[key] }}</span>
-                  <div class="h-2 rounded-full bg-muted">
-                    <div
-                      class="h-full rounded-full bg-primary"
-                      :style="{ width: `${weight * 100}%` }"
-                    />
-                  </div>
-                  <span class="text-right text-xs font-semibold text-foreground"
-                    >{{ Math.round(weight * 100) }}%</span
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tier & Loop Count -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-2">
-              <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Tier
-              </h4>
-              <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
-                <button
-                  v-for="t in 5"
-                  :key="t"
-                  class="focus-ring rounded-md px-1.5 py-1 text-xs font-semibold transition"
-                  :class="
-                    selectedTier === t
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  "
-                  @click="selectedTier = t"
-                >
-                  <img
-                    :src="expeditionTierIcons[t]"
-                    :alt="`Tier ${t}`"
-                    class="size-7 object-contain"
-                    loading="lazy"
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div class="space-y-2">
-              <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Loop Count
-              </h4>
-              <div class="flex items-center gap-2">
-                <div
-                  class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
-                >
-                  <button
-                    class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="loopCount <= 0"
-                    aria-label="Decrease loop count by 10"
-                    @click="stepLoopCount(-10)"
-                  >
-                    <Minus class="size-3" />
-                  </button>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    class="focus-ring h-8 w-14 border-x border-input bg-transparent text-center font-mono text-sm"
-                    :value="loopCount"
-                    aria-label="Loop count"
-                    @blur="normalizeLoopCountOnBlur($event)"
-                  />
-                  <button
-                    class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="loopCount >= 200"
-                    aria-label="Increase loop count by 10"
-                    @click="stepLoopCount(10)"
-                  >
-                    <Plus class="size-3" />
-                  </button>
-                </div>
-                <span
-                  v-if="loopBonusPercent > 0"
-                  class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
-                >
-                  +{{ loopBonusPercent }}%
-                </span>
-              </div>
-              <p class="text-[11px] text-muted-foreground">+1% XP per 10 loops, max +20%</p>
-            </div>
-          </div>
-
-          <!-- Party Slots -->
-          <div class="space-y-2">
-            <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Party
-            </h4>
-            <div class="flex flex-wrap gap-2">
-              <div
-                v-for="(slot, index) in partySlots"
-                :key="index"
-                class="flex flex-col items-center gap-1"
-              >
-                <div
-                  class="relative size-20 overflow-hidden rounded-lg border transition"
-                  :class="[
-                    slot
-                      ? 'border-border bg-card/50'
-                      : activeSlotIndex === index
-                        ? 'border-dashed border-primary bg-primary/10'
-                        : 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45',
-                  ]"
-                  @click="!slot ? setActiveSlot(index) : undefined"
-                >
-                  <template v-if="slot">
-                    <img
-                      :src="getCreatureImage(slot)"
-                      :alt="`${slot.name} artwork`"
-                      class="size-full object-cover"
-                      loading="lazy"
-                    />
-                    <span
-                      class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
-                    >
-                      {{ getCreatureSlotRating(slot) }}
-                    </span>
-                    <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
-                      <p class="truncate text-center text-[10px] font-semibold text-white">
-                        {{ slot.name }}
-                      </p>
-                    </div>
-                    <button
-                      class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
-                      @click.stop="removeCreatureFromSlot(index)"
-                    >
-                      <X class="size-3" />
-                    </button>
-                  </template>
-                  <template v-else>
-                    <div class="flex size-full flex-col items-center justify-center gap-1">
-                      <Plus class="size-4 text-muted-foreground/50" />
-                      <span v-if="activeSlotIndex === index" class="text-[9px] text-primary"
-                        >Select</span
-                      >
-                    </div>
-                  </template>
-                </div>
-                <span
-                  v-if="slot"
-                  class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
-                >
-                  LVL {{ creatureLevels[slot.id] || 1 }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Party Summary -->
-          <div
-            v-if="partyScore > 0"
-            class="space-y-2 rounded-lg border border-border bg-muted/30 p-3"
-          >
-            <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Party Summary
-            </h4>
-            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-              <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Party Score</p>
-                <p class="font-mono text-sm font-semibold text-primary">{{ partyScore }}</p>
-              </div>
-              <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Difficulty</p>
-                <p class="font-mono text-sm font-semibold">{{ difficultyRating }}</p>
-              </div>
-              <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Score Ratio</p>
-                <p
-                  class="font-mono text-sm font-semibold"
-                  :class="
-                    scoreRatio && scoreRatio >= 1
-                      ? 'text-emerald-700 dark:text-emerald-400'
-                      : 'text-amber-700 dark:text-amber-400'
-                  "
-                >
-                  {{ scoreRatio ? scoreRatio.toFixed(2) : '—' }}
-                </p>
-              </div>
-              <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Duration / Run</p>
-                <p class="font-mono text-sm font-semibold">
-                  {{ estimatedDuration ? formatDuration(estimatedDuration) : '—' }}
-                </p>
-                <p
-                  v-if="loopCount > 0 && estimatedDuration"
-                  class="mt-0.5 text-[10px] text-muted-foreground"
-                >
-                  {{ formatDuration(estimatedDuration * loopCount) }}
-                </p>
-              </div>
-              <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">XP / Creature</p>
-                <p class="font-mono text-sm font-semibold">
-                  {{ totalXp ? totalXp.toLocaleString() : '—' }}
-                  <span
-                    v-if="loopBonusPercent > 0 && totalXp"
-                    class="ml-0.5 inline-block rounded bg-emerald-100 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
-                  >
-                    +{{ loopBonusPercent }}%
-                  </span>
-                </p>
-              </div>
-              <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">XP Rate</p>
-                <div class="flex items-center justify-center gap-2">
-                  <p class="font-mono text-sm font-semibold">
-                    {{ xpPerMinute ? Math.round(xpPerMinute).toLocaleString() : '—'
-                    }}<span class="text-[10px] text-muted-foreground">/m</span>
-                  </p>
-                  <div class="h-4 border-l border-border/50" />
-                  <p class="font-mono text-sm font-semibold">
-                    {{ xpPerMinute ? (xpPerMinute / 60).toFixed(2) : '—'
-                    }}<span class="text-[10px] text-muted-foreground">/s</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="partyXpProgress.length" class="space-y-1.5">
-              <div
-                v-for="entry in partyXpProgress"
-                :key="entry.creature.id"
-                class="flex items-center gap-2"
-              >
-                <span
-                  class="w-16 shrink-0 truncate font-mono text-[10px] font-semibold text-muted-foreground"
-                >
-                  {{ entry.creature.name }}
-                </span>
-                <span
-                  class="w-7 shrink-0 text-right font-mono text-[10px] font-semibold text-muted-foreground"
-                >
-                  {{ entry.currentLevel }}
-                </span>
-                <div class="relative h-1.5 flex-1 overflow-hidden rounded-full bg-muted/60">
-                  <div
-                    class="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-500"
-                    :style="{ width: `${entry.progress * 100}%` }"
-                  />
-                </div>
-                <span class="w-7 shrink-0 font-mono text-[10px] font-semibold text-foreground">
-                  {{ entry.targetLevel }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          v-else
-          class="flex min-h-[220px] flex-col items-center justify-center gap-2 px-4 text-center text-muted-foreground"
-        >
-          <Compass class="size-8 text-accent/65" />
-          <p class="text-sm">Select an expedition from the list.</p>
-        </div>
-      </section>
-
-      <section
-        class="surface-card flex flex-col overflow-hidden"
+      <!-- Column 3: Creature Selector -->
+      <CreatureSelector
         :class="!isDesktop && mobileSection !== 'creature' ? 'hidden' : ''"
-      >
-        <!-- Header with Focus stats -->
-        <div class="flex items-center gap-3 border-b border-border/70 px-4 py-3">
-          <h2 class="text-base font-bold">Select Creature</h2>
-          <div v-if="weightedStats.length" class="flex items-center gap-1.5">
-            <Target class="size-3.5 text-accent" />
-            <span
-              v-for="[key] in weightedStats"
-              :key="key"
-              class="bg-accent/12 rounded-md border border-accent/35 px-2 py-0.5 text-xs font-semibold text-accent"
-            >
-              {{ statAbbreviations[key] }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="space-y-3 border-b border-border/70 px-4 py-3">
-          <input
-            v-model="creatureSearch"
-            type="text"
-            placeholder="Search creature"
-            class="focus-ring w-full rounded-lg border border-input bg-background/70 px-3 py-2 text-sm"
-          />
-
-          <div class="flex flex-wrap gap-2">
-            <button
-              class="pill focus-ring gap-1.5"
-              :class="ownedOnly ? 'pill-active' : ''"
-              @click="ownedOnly = !ownedOnly"
-            >
-              <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
-              Summoned Only
-            </button>
-            <button
-              class="pill focus-ring gap-1.5"
-              :class="showExcludedCreatures ? 'pill-active' : ''"
-              @click="showExcludedCreatures = !showExcludedCreatures"
-            >
-              Show Excluded
-            </button>
-
-            <div
-              class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
-              aria-live="polite"
-            >
-              {{ displayRecommended.length }} creatures
-            </div>
-          </div>
-
-          <!-- More filters toggle -->
-          <div>
-            <button
-              class="focus-ring inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition hover:text-foreground"
-              :aria-expanded="showMoreCreatureFilters || hasSecondaryCreatureFilters"
-              @click="showMoreCreatureFilters = !showMoreCreatureFilters"
-            >
-              <ChevronDown
-                class="size-3.5 transition-transform"
-                :class="showMoreCreatureFilters || hasSecondaryCreatureFilters ? '' : '-rotate-90'"
-              />
-              More filters
-            </button>
-
-            <div
-              class="mt-3 space-y-3"
-              :class="showMoreCreatureFilters || hasSecondaryCreatureFilters ? 'block' : 'hidden'"
-            >
-              <!-- Type filter -->
-              <div class="flex flex-wrap items-center gap-2">
-                <span
-                  class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-                  >Type</span
-                >
-                <button
-                  v-for="type in creatureTypes"
-                  :key="type"
-                  class="pill focus-ring"
-                  :class="selectedCreatureType === type ? 'pill-active' : ''"
-                  @click="toggleCreatureType(type)"
-                >
-                  <span
-                    class="mr-1.5 inline-block size-2 rounded-full"
-                    :class="selectedCreatureType === type ? 'ring-1 ring-white/60' : ''"
-                    :style="{ backgroundColor: typeColor(type) }"
-                  />
-                  {{ type }}
-                </button>
-              </div>
-
-              <!-- Tier filter -->
-              <div class="flex flex-wrap items-center gap-2">
-                <span
-                  class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-                  >Tier</span
-                >
-                <button
-                  v-for="tier in creatureTierOptions"
-                  :key="tier"
-                  class="pill focus-ring font-mono"
-                  :class="
-                    !allCreatureTiersSelected && selectedCreatureTiers.includes(tier)
-                      ? 'pill-active'
-                      : ''
-                  "
-                  @click="toggleCreatureTier(tier)"
-                >
-                  T{{ tier + 1 }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <ActiveFilters
-            :filters="activeCreatureFilters"
-            @remove="removeCreatureFilter"
-            @clear-all="clearCreatureFilters"
-          />
-
-          <div class="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2">
-            <Info class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-            <p class="text-[11px] text-muted-foreground">
-              Level changes here are per-expedition only and do not update your collection.
-            </p>
-          </div>
-        </div>
-
-        <div class="max-h-[58vh] space-y-2 overflow-y-auto p-3 lg:max-h-none lg:min-h-0 lg:flex-1">
-          <button
-            v-for="{ creature, rating, level, suggestedLevel } in displayRecommended"
-            :key="creature.id"
-            class="focus-ring block w-full rounded-xl border px-3 py-3 text-left transition"
-            :class="
-              hasEmptySlot
-                ? 'border-border bg-card/50 hover:border-accent/45 hover:bg-muted/25'
-                : 'cursor-not-allowed border-border/50 bg-card/30 opacity-60'
-            "
-            @click="chooseCreature(creature)"
-          >
-            <div class="flex items-start gap-3">
-              <div class="relative shrink-0">
-                <img
-                  :src="getCreatureImage(creature)"
-                  :alt="`${creature.name} artwork`"
-                  class="size-10 rounded-md border border-border object-cover"
-                  loading="lazy"
-                />
-                <img
-                  v-if="sanctuaryCreatureIds.includes(creature.id)"
-                  :src="sanctuaryIcon"
-                  alt="Sanctuary"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="helperCreatureIds.includes(creature.id)"
-                  :src="helpersIcon"
-                  alt="Helper"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="machineCreatureIds.includes(creature.id)"
-                  :src="machinesIcon"
-                  alt="Machine"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-              </div>
-
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1">
-                  <p
-                    class="truncate font-semibold"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-600 dark:text-pink-400'
-                        : 'text-foreground'
-                    "
-                  >
-                    {{ creature.name }}
-                  </p>
-                  <span
-                    v-if="isOwned(creature.id)"
-                    class="text-xs"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-600 dark:text-pink-400'
-                        : 'text-amber-700 dark:text-amber-400'
-                    "
-                    >★</span
-                  >
-                </div>
-                <div class="mt-1 flex flex-wrap gap-1 text-xs">
-                  <span
-                    v-for="type in creature.types"
-                    :key="type"
-                    class="rounded-full bg-muted px-2 py-0.5 font-semibold"
-                    :style="{ color: typeColor(type) }"
-                  >
-                    {{ type }}
-                  </span>
-                  <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
-                </div>
-              </div>
-
-              <div class="text-right" @click.stop>
-                <p
-                  class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
-                >
-                  Lvl
-                  <span
-                    v-if="suggestedLevel != null"
-                    class="ml-1 normal-case tracking-normal"
-                    :class="
-                      level >= suggestedLevel
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-amber-700 dark:text-amber-400'
-                    "
-                  >
-                    (Suggested: {{ suggestedLevel }})
-                  </span>
-                </p>
-                <div
-                  class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
-                >
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="level <= 1"
-                    aria-label="Decrease creature level"
-                    @click.stop="stepCreatureLevel(creature.id, level, -1)"
-                  >
-                    <Minus class="size-3" />
-                  </button>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
-                    :value="level"
-                    aria-label="Creature level"
-                    @blur="normalizeLevelOnBlur(creature.id, level, $event)"
-                  />
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="level >= 120"
-                    aria-label="Increase creature level"
-                    @click.stop="stepCreatureLevel(creature.id, level, 1)"
-                  >
-                    <Plus class="size-3" />
-                  </button>
-                </div>
-                <p class="mt-1 font-mono text-sm font-semibold text-primary">{{ rating }}</p>
-              </div>
-            </div>
-
-            <div v-if="weightedStats.length" class="mt-3 space-y-1.5">
-              <div
-                v-for="[key, weight] in weightedStats"
-                :key="key"
-                class="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2"
-              >
-                <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{{
-                  statAbbreviations[key]
-                }}</span>
-                <div class="h-1.5 rounded-full bg-muted">
-                  <div
-                    class="h-full rounded-full bg-primary"
-                    :style="{ width: `${statBar(creature, key)}%`, opacity: 0.45 + weight * 0.55 }"
-                  />
-                </div>
-              </div>
-            </div>
-          </button>
-
-          <div
-            v-if="displayRecommended.length === 0"
-            class="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-7 text-center text-sm text-muted-foreground"
-          >
-            {{
-              selectedExpedition
-                ? 'No creatures match your creature filters.'
-                : 'Select an expedition first.'
-            }}
-          </div>
-        </div>
-      </section>
+        :recommended-creatures="recommendedCreatures"
+        :weighted-stats="weightedStats"
+        :has-empty-slot="hasEmptySlot"
+        :selected-expedition="selectedExpedition"
+        :sanctuary-creature-ids="sanctuaryCreatureIds"
+        :helper-creature-ids="helperCreatureIds"
+        :machine-creature-ids="machineCreatureIds"
+        :expedition-tool-xp-bonus="expeditionToolXpBonus"
+        :show-excluded-creatures="showExcludedCreatures"
+        @update:show-excluded-creatures="showExcludedCreatures = $event"
+        @choose-creature="chooseCreature"
+        @step-level="stepCreatureLevel"
+        @normalize-level="normalizeLevelOnBlur"
+      />
     </div>
 
     <Teleport to="body">
