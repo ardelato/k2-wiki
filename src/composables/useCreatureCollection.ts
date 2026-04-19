@@ -21,6 +21,11 @@ for (const [id, entry] of Object.entries(collection.value)) {
   }
 }
 
+function clampLevel(level: number): number {
+  if (Number.isNaN(level)) return 1
+  return Math.max(1, Math.min(120, Math.round(level)))
+}
+
 export function useCreatureCollection() {
   const ownedCreatureIds = computed(() => {
     const ids = new Set<string>()
@@ -103,6 +108,19 @@ export function useCreatureCollection() {
     }
   }
 
+  function stepLevel(id: string, delta: number) {
+    setLevel(id, clampLevel(getLevel(id) + delta))
+  }
+
+  function normalizeLevelOnBlur(id: string, event: FocusEvent) {
+    const target = event.target as HTMLInputElement
+    if (!target.value.trim()) {
+      setLevel(id, getLevel(id))
+      return
+    }
+    setLevel(id, clampLevel(Number(target.value)))
+  }
+
   return {
     collection,
     ownedCreatureIds,
@@ -115,5 +133,8 @@ export function useCreatureCollection() {
     isAwakened,
     setAwakened,
     resetCollection,
+    clampLevel,
+    stepLevel,
+    normalizeLevelOnBlur,
   }
 }
