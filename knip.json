@@ -1,0 +1,9 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "paths": {
+    "@/*": ["./src/*"]
+  },
+  "ignore": ["src/env.d.ts"],
+  "ignoreDependencies": ["@vitest/coverage-v8"],
+  "ignoreBinaries": ["tsx", "oxlintrc.json"]
+}

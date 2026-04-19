@@ -13,3 +13,5 @@ pre-push:
   commands:
     typecheck:
       run: npx vue-tsc -b
+    knip:
+      run: npx knip
