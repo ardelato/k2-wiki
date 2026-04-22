@@ -15,7 +15,7 @@ import type { Creature, ElementType, ExpeditionStatKey, GatheringSubFocus } from
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase } from '@/utils/format'
 import { statAbbreviations, statLabels } from '@/utils/formulas'
-import { sanctuaryIcon, helpersIcon, machinesIcon, jobIcons } from '@/utils/icons'
+import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 const route = useRoute()
@@ -24,7 +24,8 @@ const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 
 const { creatures } = useCreatures()
-const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds } = useGameConfig()
+const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds, expeditionCreatureIds } =
+  useGameConfig()
 const { isOwned, isAwakened, collectionLevels } = useCreatureCollection()
 
 
@@ -965,6 +966,13 @@ const tierLevelReq = computed(() => {
                   v-else-if="machineCreatureIds.includes(creature.id)"
                   :src="machinesIcon"
                   alt="Machine"
+                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                  loading="lazy"
+                />
+                <img
+                  v-else-if="expeditionCreatureIds.has(creature.id)"
+                  :src="expeditionsIcon"
+                  alt="Expedition"
                   class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
                   loading="lazy"
                 />

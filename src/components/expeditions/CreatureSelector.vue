@@ -11,7 +11,7 @@ import type { Creature, ElementType, Expedition, ExpeditionStatWeights } from '@
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase, typeColor } from '@/utils/format'
 import { statAbbreviations } from '@/utils/formulas'
-import { sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/icons'
+import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionsIcon } from '@/utils/icons'
 
 const props = defineProps<{
   recommendedCreatures: {
@@ -26,6 +26,7 @@ const props = defineProps<{
   sanctuaryCreatureIds: string[]
   helperCreatureIds: string[]
   machineCreatureIds: string[]
+  expeditionCreatureIds: Set<string>
   expeditionToolXpBonus: number
   showExcludedCreatures: boolean
 }>()
@@ -363,6 +364,13 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
               v-else-if="machineCreatureIds.includes(creature.id)"
               :src="machinesIcon"
               alt="Machine"
+              class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+              loading="lazy"
+            />
+            <img
+              v-else-if="expeditionCreatureIds.has(creature.id)"
+              :src="expeditionsIcon"
+              alt="Expedition"
               class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
               loading="lazy"
             />

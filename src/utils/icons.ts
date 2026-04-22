@@ -30,7 +30,7 @@ import sawItemIcon from '@/assets/items/saw.webp'
 import stoneItemIcon from '@/assets/items/stone.webp'
 import twigItemIcon from '@/assets/items/twig.webp'
 
-export { helpersIcon, itemGridIcon, machinesIcon, sanctuaryIcon, upgradesIcon }
+export { expeditionsIcon, helpersIcon, itemGridIcon, machinesIcon, sanctuaryIcon, upgradesIcon }
 
 export const jobIcons: Record<string, string> = {
   chopping: choppingIcon,
