@@ -2,31 +2,54 @@ import { useGameConfig } from '@/composables/useGameConfig'
 
 describe('useGameConfig', () => {
   beforeEach(() => {
-    const { resetGameConfig } = useGameConfig()
+    const { resetGameConfig, expeditionParties } = useGameConfig()
     resetGameConfig()
+    expeditionParties.value = {}
   })
 
-  test('excludedCreatureIds combines sanctuary, helper, and machine IDs', () => {
-    const { excludedCreatureIds, setSanctuaryCreatures, setHelperCreatures, setMachineCreatures } =
-      useGameConfig()
+  test('excludedCreatureIds combines sanctuary, helper, machine, and expedition IDs', () => {
+    const {
+      excludedCreatureIds,
+      expeditionParties,
+      setSanctuaryCreatures,
+      setHelperCreatures,
+      setMachineCreatures,
+    } = useGameConfig()
     setSanctuaryCreatures(['s1', 's2'])
     setHelperCreatures(['h1'])
     setMachineCreatures(['m1'])
+    expeditionParties.value = { exp1: ['e1'] }
     expect(excludedCreatureIds.value.has('s1')).toBe(true)
     expect(excludedCreatureIds.value.has('s2')).toBe(true)
     expect(excludedCreatureIds.value.has('h1')).toBe(true)
     expect(excludedCreatureIds.value.has('m1')).toBe(true)
-    expect(excludedCreatureIds.value.size).toBe(4)
+    expect(excludedCreatureIds.value.has('e1')).toBe(true)
+    expect(excludedCreatureIds.value.size).toBe(5)
   })
 
   test('excludedCreatureIds deduplicates IDs that appear in multiple sources', () => {
-    const { excludedCreatureIds, setSanctuaryCreatures, setHelperCreatures, setMachineCreatures } =
-      useGameConfig()
+    const {
+      excludedCreatureIds,
+      expeditionParties,
+      setSanctuaryCreatures,
+      setHelperCreatures,
+      setMachineCreatures,
+    } = useGameConfig()
     setSanctuaryCreatures(['shared', 'unique-s'])
     setHelperCreatures(['shared', 'unique-h'])
     setMachineCreatures(['shared'])
+    expeditionParties.value = { exp1: ['shared'] }
     expect(excludedCreatureIds.value.has('shared')).toBe(true)
     expect(excludedCreatureIds.value.size).toBe(3)
+  })
+
+  test('expeditionCreatureIds flattens all expedition party members', () => {
+    const { expeditionCreatureIds, expeditionParties } = useGameConfig()
+    expeditionParties.value = { exp1: ['c1', 'c2'], exp2: ['c3'] }
+    expect(expeditionCreatureIds.value.has('c1')).toBe(true)
+    expect(expeditionCreatureIds.value.has('c2')).toBe(true)
+    expect(expeditionCreatureIds.value.has('c3')).toBe(true)
+    expect(expeditionCreatureIds.value.size).toBe(3)
   })
 
   test('setInventory stores a positive amount', () => {

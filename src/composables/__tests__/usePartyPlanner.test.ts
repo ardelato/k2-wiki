@@ -43,6 +43,7 @@ vi.mock('@/composables/useGameConfig', () => ({
   useGameConfig: () => ({
     excludedCreatureIds: ref(new Set<string>()),
     expeditionToolXpBonus: ref(1),
+    expeditionParties: ref({}),
   }),
 }))
 
