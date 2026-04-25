@@ -2,7 +2,11 @@
 import { Minus, Plus, TrendingUp, X } from 'lucide-vue-next'
 import { computed } from 'vue'
 
+import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import summonedIcon from '@/assets/icons/summoned.webp'
+import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, CreatureStats, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
@@ -13,7 +17,7 @@ import {
   maxLevelForState,
   statLabels,
 } from '@/utils/formulas'
-import { jobIcons } from '@/utils/icons'
+import { jobIcons, sanctuaryIcon, helpersIcon, machinesIcon } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 import ProficiencyRing from './ProficiencyRing.vue'
@@ -33,9 +37,20 @@ const emit = defineEmits<{
 
 const { isOwned, isAwakened, toggleOwned, setAwakened, getLevel, stepLevel, normalizeLevelOnBlur } =
   useCreatureCollection()
+const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds } = useGameConfig()
 
 
 const maxJobLevel = 10
+
+
+const assignmentBadge = computed(() => {
+  if (!props.creature) return null
+  const id = props.creature.id
+  if (sanctuaryCreatureIds.value.includes(id)) return { icon: sanctuaryIcon, label: 'Sanctuary' }
+  if (helperCreatureIds.value.includes(id)) return { icon: helpersIcon, label: 'Helper' }
+  if (machineCreatureIds.value.includes(id)) return { icon: machinesIcon, label: 'Machine' }
+  return null
+})
 
 
 const jobEntries = computed(() => Object.entries(jobLabels) as [keyof Jobs, string][])
@@ -100,25 +115,42 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           }"
         >
           <button
+            aria-label="Close"
             class="focus-ring absolute right-3 top-3 rounded-lg border border-border/60 bg-card/80 p-2 text-muted-foreground backdrop-blur hover:text-foreground"
             @click="emit('close')"
           >
             <X class="size-4" />
           </button>
 
-          <img
-            :src="getCreatureImage(creature)"
-            :alt="`${creature.name} artwork`"
-            class="size-24 rounded-2xl border-2 border-border object-cover shadow-lg"
-            :style="{ backgroundColor: `hsl(${typeColorVar(creature.types[0])} / 0.1)` }"
-            loading="lazy"
-          />
+          <div class="relative">
+            <img
+              :src="getCreatureImage(creature)"
+              :alt="`${creature.name} artwork`"
+              class="size-24 rounded-2xl border-2 border-border object-cover shadow-lg"
+              :style="{ backgroundColor: `hsl(${typeColorVar(creature.types[0])} / 0.1)` }"
+              loading="lazy"
+            />
+            <span
+              class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[11px] font-bold text-muted-foreground shadow-sm"
+            >
+              T{{ creature.tier + 1 }}
+            </span>
+            <AppTooltip
+              v-if="assignmentBadge"
+              :text="`Assigned to ${assignmentBadge.label}`"
+              position="right"
+            >
+              <img
+                :src="assignmentBadge.icon"
+                :alt="assignmentBadge.label"
+                class="absolute -bottom-1 -right-1 size-7 rounded-full border-2 border-background bg-background"
+                loading="lazy"
+              />
+            </AppTooltip>
+          </div>
           <h2 class="mt-3 text-center text-2xl font-black leading-tight">
             {{ creature.name }}
           </h2>
-          <p class="mt-1 text-sm text-muted-foreground">
-            T{{ creature.tier + 1 }} · {{ toTitleCase(creature.mainJob) }}
-          </p>
           <div class="mt-2 flex flex-wrap justify-center gap-2">
             <span
               v-for="type in creature.types"
@@ -139,22 +171,23 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
 
         <div class="space-y-5 px-5 pb-5">
           <!-- Description -->
-          <div class="border-t border-border/60 pt-4">
+          <div class="detail-section">
             <p class="text-sm leading-relaxed text-muted-foreground">
               {{ creature.description }}
             </p>
           </div>
 
-          <!-- Collection -->
-          <section class="border-t border-border/60 pt-4">
-            <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Collection
-            </h3>
+          <!-- Collection & Actions -->
+          <div class="detail-section space-y-4 rounded-lg border border-border/60 bg-muted/10 p-4">
+            <h3 class="section-title">Collection</h3>
             <div class="space-y-3">
               <label
-                class="flex cursor-pointer items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5"
+                class="flex cursor-pointer items-center justify-between rounded-lg border border-border/60 bg-card/80 px-3 py-2.5"
               >
-                <span class="text-sm font-medium text-foreground">Summoned</span>
+                <span class="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
+                  Summoned
+                </span>
                 <button
                   role="switch"
                   :aria-checked="isOwned(creature.id)"
@@ -168,9 +201,39 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                   />
                 </button>
               </label>
+              <label
+                v-if="isOwned(creature.id)"
+                class="flex cursor-pointer items-center justify-between rounded-lg border border-border/60 bg-card/80 px-3 py-2.5"
+              >
+                <div>
+                  <span class="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
+                    Awakened
+                  </span>
+                  <p class="text-[11px] text-muted-foreground">
+                    {{
+                      isAwakened(creature.id)
+                        ? 'Cap raised to 120. Un-awaken to clamp to 70.'
+                        : 'Raises level cap to 120.'
+                    }}
+                  </p>
+                </div>
+                <button
+                  role="switch"
+                  :aria-checked="isAwakened(creature.id)"
+                  class="focus-ring relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
+                  :class="isAwakened(creature.id) ? 'bg-pink-500' : 'bg-muted'"
+                  @click="setAwakened(creature.id, !isAwakened(creature.id))"
+                >
+                  <span
+                    class="inline-block size-4 rounded-full bg-white shadow-sm transition-transform"
+                    :class="isAwakened(creature.id) ? 'translate-x-6' : 'translate-x-1'"
+                  />
+                </button>
+              </label>
               <div
                 v-if="isOwned(creature.id)"
-                class="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5"
+                class="flex items-center gap-3 rounded-lg border border-border/60 bg-card/80 px-3 py-2.5"
               >
                 <span class="text-sm font-medium text-foreground">Level</span>
                 <div
@@ -203,38 +266,8 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                   </button>
                 </div>
               </div>
-              <label
-                v-if="isOwned(creature.id)"
-                class="flex cursor-pointer items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5"
-              >
-                <div>
-                  <span class="text-sm font-medium text-foreground">Awakened</span>
-                  <p class="text-[11px] text-muted-foreground">
-                    {{
-                      isAwakened(creature.id)
-                        ? 'Cap raised to 120. Un-awaken to clamp to 70.'
-                        : 'Raises level cap to 120.'
-                    }}
-                  </p>
-                </div>
-                <button
-                  role="switch"
-                  :aria-checked="isAwakened(creature.id)"
-                  class="focus-ring relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
-                  :class="isAwakened(creature.id) ? 'bg-pink-500' : 'bg-muted'"
-                  @click="setAwakened(creature.id, !isAwakened(creature.id))"
-                >
-                  <span
-                    class="inline-block size-4 rounded-full bg-white shadow-sm transition-transform"
-                    :class="isAwakened(creature.id) ? 'translate-x-6' : 'translate-x-1'"
-                  />
-                </button>
-              </label>
             </div>
-          </section>
 
-          <!-- Plan Leveling Link -->
-          <section class="border-t border-border/60 pt-4">
             <router-link
               :to="{ path: '/planner', query: { tab: 'levelup', creature: creature.id } }"
               class="focus-ring bg-primary/12 hover:bg-primary/18 flex w-full items-center justify-center gap-2 rounded-lg border border-primary/35 px-4 py-2.5 text-sm font-semibold text-primary transition"
@@ -242,17 +275,18 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
               <TrendingUp class="size-4" />
               Plan Leveling
             </router-link>
-          </section>
+          </div>
+
+          <!-- Summoning Cost -->
+          <SummoningCost v-if="creature.summoningCost.length" :costs="creature.summoningCost" />
 
           <!-- Stats with Radar Chart -->
-          <section class="border-t border-border/60 pt-4">
+          <section class="detail-section">
             <div class="mb-3 flex items-baseline justify-between">
-              <h3 class="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Stats
-              </h3>
+              <h3 class="section-title">Stats</h3>
               <span
                 v-if="selectedCreatureStats"
-                class="font-mono text-[10px] text-muted-foreground"
+                class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary"
               >
                 LVL {{ getLevel(creature.id) }}
               </span>
@@ -288,10 +322,15 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           </section>
 
           <!-- Job Levels with Proficiency Rings -->
-          <section class="border-t border-border/60 pt-4">
-            <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Job Levels
-            </h3>
+          <section class="detail-section">
+            <div class="mb-3 flex items-baseline justify-between">
+              <h3 class="section-title">Job Levels</h3>
+              <span
+                class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary"
+              >
+                Total {{ Object.values(creature.jobs).reduce((sum, v) => sum + v, 0) }}
+              </span>
+            </div>
             <div class="flex flex-wrap justify-center gap-3">
               <div
                 v-for="[jobKey, jobName] in jobEntries"
@@ -317,10 +356,8 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           </section>
 
           <!-- Best Expeditions -->
-          <section v-if="bestExpeditions.length" class="border-t border-border/60 pt-4">
-            <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Best Expeditions
-            </h3>
+          <section v-if="bestExpeditions.length" class="detail-section">
+            <h3 class="section-title mb-3">Best Expeditions</h3>
             <div class="space-y-2">
               <router-link
                 v-for="(entry, index) in bestExpeditions"
@@ -366,9 +403,6 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
               </router-link>
             </div>
           </section>
-
-          <!-- Summoning Cost -->
-          <SummoningCost v-if="creature.summoningCost.length" :costs="creature.summoningCost" />
         </div>
       </div>
     </Transition>

@@ -57,6 +57,7 @@ const svgSize = computed(() => (radius.value + strokeWidth.value) * 2)
             size === 'sm' ? 'value-sm' : 'value-md',
             value === 0 ? 'value-zero' : '',
           ]"
+          :style="value > 0 ? { color } : undefined"
         >
           {{ value }}
         </span>
