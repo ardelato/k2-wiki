@@ -3,7 +3,6 @@ import { Minus, Plus, TrendingUp, X } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
-import { useItems } from '@/composables/useItems'
 import type { Creature, CreatureStats, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
@@ -19,6 +18,7 @@ import { getItemImage } from '@/utils/itemImages'
 
 import ProficiencyRing from './ProficiencyRing.vue'
 import StatRadarChart from './StatRadarChart.vue'
+import SummoningCost from './SummoningCost.vue'
 
 const props = defineProps<{
   creature: Creature | null
@@ -33,7 +33,6 @@ const emit = defineEmits<{
 
 const { isOwned, isAwakened, toggleOwned, setAwakened, getLevel, stepLevel, normalizeLevelOnBlur } =
   useCreatureCollection()
-const { getItemById } = useItems()
 
 
 const maxJobLevel = 10
@@ -369,34 +368,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           </section>
 
           <!-- Summoning Cost -->
-          <section class="border-t border-border/60 pt-4">
-            <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Summoning Cost
-            </h3>
-            <div class="space-y-2">
-              <router-link
-                v-for="cost in creature.summoningCost"
-                :key="cost.id"
-                :to="{ path: '/items', query: { item: cost.id } }"
-                class="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2 transition hover:border-accent/45 hover:bg-muted/30"
-              >
-                <img
-                  v-if="getItemImage({ id: cost.id })"
-                  :src="getItemImage({ id: cost.id })"
-                  :alt="getItemById(cost.id)?.name ?? toTitleCase(cost.id)"
-                  class="size-5 shrink-0 object-contain"
-                  loading="lazy"
-                />
-                <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
-                <span class="flex-1 text-sm text-foreground">{{
-                  getItemById(cost.id)?.name ?? toTitleCase(cost.id)
-                }}</span>
-                <span class="font-mono text-sm font-semibold text-muted-foreground"
-                  >x{{ cost.amount }}</span
-                >
-              </router-link>
-            </div>
-          </section>
+          <SummoningCost v-if="creature.summoningCost.length" :costs="creature.summoningCost" />
         </div>
       </div>
     </Transition>
