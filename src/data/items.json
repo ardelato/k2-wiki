@@ -356,6 +356,19 @@
         "outputAmount": 4,
         "craftTime": 16,
         "experience": 8
+      },
+      {
+        "workstation": "Furnace",
+        "levelRequirement": 1,
+        "ingredients": [
+          {
+            "id": "runic-log",
+            "amount": 4
+          }
+        ],
+        "outputAmount": 5,
+        "craftTime": 16,
+        "experience": 8
       }
     ]
   },
@@ -1133,8 +1146,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 16,
-        "experience": 16
+        "craftTime": 4,
+        "experience": 4
       }
     ],
     "buyValue": 50,
@@ -2091,8 +2104,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 16,
-        "experience": 16
+        "craftTime": 4,
+        "experience": 4
       }
     ],
     "buyValue": 50,
@@ -2429,8 +2442,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 16,
-        "experience": 16
+        "craftTime": 4,
+        "experience": 4
       }
     ],
     "buyValue": 50,
@@ -3916,8 +3929,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 32,
-        "experience": 64
+        "craftTime": 16,
+        "experience": 32
       },
       {
         "workstation": "Workbench",
@@ -3941,8 +3954,8 @@
           }
         ],
         "outputAmount": 1,
-        "craftTime": 32,
-        "experience": 64
+        "craftTime": 16,
+        "experience": 32
       }
     ]
   },
