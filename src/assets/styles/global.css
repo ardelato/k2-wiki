@@ -109,4 +109,12 @@
   .trait-chip-muted {
     @apply border-border bg-muted/45 text-muted-foreground;
   }
+
+  .section-title {
+    @apply text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground;
+  }
+
+  .detail-section {
+    @apply border-t border-border/60 pt-4;
+  }
 }
