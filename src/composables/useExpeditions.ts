@@ -24,7 +24,7 @@ const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
 const biomes = ref<Biome[]>(biomesData as Biome[])
 
 export function useExpeditions(creatures: Creature[]) {
-  const { excludedCreatureIds, expeditionToolXpBonus } = useGameConfig()
+  const { excludedCreatureIds, expeditionToolXpBonus, expeditionParties } = useGameConfig()
   const showExcludedCreatures = ref(false)
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
@@ -33,7 +33,6 @@ export function useExpeditions(creatures: Creature[]) {
   const selectedTier = ref(1)
   const partySlots = ref<(Creature | null)[]>([])
   const activeSlotIndex = ref<number | null>(null)
-  const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
   const creatureLevels = useLocalStorage<Record<string, number>>('expedition-creature-levels', {})
 
   const filteredExpeditions = computed(() => {

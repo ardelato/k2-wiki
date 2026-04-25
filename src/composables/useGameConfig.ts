@@ -14,6 +14,7 @@ const sanctuaryCreatureIds = useLocalStorage<string[]>('config-sanctuary-creatur
 const helperCreatureIds = useLocalStorage<string[]>('config-helper-creatures', [])
 const machineCreatureIds = useLocalStorage<string[]>('config-machine-creature-ids', [])
 const expeditionToolXpBonus = useLocalStorage<number>('config-tool-xp-bonus', 1)
+const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
 
 const inventoryAmounts = useLocalStorage<Record<string, number>>('config-inventory', {})
 const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
@@ -45,11 +46,20 @@ const skillLevels = useLocalStorage<Record<string, number>>('config-skill-levels
 
 export function useGameConfig() {
   const playerLevel = computed(() => getPlayerLevel(skillLevels.value))
+  const expeditionCreatureIds = computed(() => {
+    const set = new Set<string>()
+    for (const ids of Object.values(expeditionParties.value)) {
+      for (const id of ids) set.add(id)
+    }
+    return set
+  })
+
   const excludedCreatureIds = computed(() => {
     const set = new Set<string>()
     for (const id of sanctuaryCreatureIds.value) set.add(id)
     for (const id of helperCreatureIds.value) set.add(id)
     for (const id of machineCreatureIds.value) set.add(id)
+    for (const id of expeditionCreatureIds.value) set.add(id)
     return set
   })
 
@@ -193,6 +203,8 @@ export function useGameConfig() {
     sanctuaryCreatureIds,
     helperCreatureIds,
     machineCreatureIds,
+    expeditionParties,
+    expeditionCreatureIds,
     excludedCreatureIds,
     jobTiers,
     inventoryAmounts,

@@ -31,6 +31,7 @@ export function useSanctuary() {
     helperCreatureIds,
     machineCreatureIds,
     excludedCreatureIds,
+    expeditionCreatureIds,
     jobTiers,
     setSanctuaryCreatures,
   } = useGameConfig()
@@ -306,9 +307,10 @@ export function useSanctuary() {
     setSanctuaryCreatures([])
   }
 
-  function getCreatureStatus(id: string): 'helper' | 'machine' | null {
+  function getCreatureStatus(id: string): 'helper' | 'machine' | 'expedition' | null {
     if (helperCreatureIds.value.includes(id)) return 'helper'
     if (machineCreatureIds.value.includes(id)) return 'machine'
+    if (expeditionCreatureIds.value.has(id)) return 'expedition'
     return null
   }
 

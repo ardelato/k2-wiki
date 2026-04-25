@@ -34,8 +34,13 @@ const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 
 const { creatures } = useCreatures()
-const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds, expeditionToolXpBonus } =
-  useGameConfig()
+const {
+  sanctuaryCreatureIds,
+  helperCreatureIds,
+  machineCreatureIds,
+  expeditionCreatureIds,
+  expeditionToolXpBonus,
+} = useGameConfig()
 const {
   filteredExpeditions,
   selectedExpedition,
@@ -580,6 +585,7 @@ function rowSelected(id: string): boolean {
         :sanctuary-creature-ids="sanctuaryCreatureIds"
         :helper-creature-ids="helperCreatureIds"
         :machine-creature-ids="machineCreatureIds"
+        :expedition-creature-ids="expeditionCreatureIds"
         :expedition-tool-xp-bonus="expeditionToolXpBonus"
         :show-excluded-creatures="showExcludedCreatures"
         @update:show-excluded-creatures="showExcludedCreatures = $event"

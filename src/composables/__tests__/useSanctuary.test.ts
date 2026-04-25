@@ -228,6 +228,13 @@ describe('useSanctuary', () => {
       const { getCreatureStatus } = useSanctuary()
       expect(getCreatureStatus('m1')).toBe('machine')
     })
+
+    test('returns "expedition" for expedition creatures', () => {
+      const { expeditionParties } = useGameConfig()
+      expeditionParties.value = { exp1: ['e1'] }
+      const { getCreatureStatus } = useSanctuary()
+      expect(getCreatureStatus('e1')).toBe('expedition')
+    })
   })
 
   describe('recommendedCreatures', () => {

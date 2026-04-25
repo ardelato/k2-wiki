@@ -10,7 +10,7 @@ import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import { useSanctuary } from '@/composables/useSanctuary'
 import type { Creature, ElementType, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { helpersIcon, machinesIcon } from '@/utils/icons'
+import { helpersIcon, machinesIcon, expeditionsIcon } from '@/utils/icons'
 import { jobIcons } from '@/utils/icons'
 import {
   MAX_SANCTUARY_SLOTS,
@@ -758,6 +758,13 @@ function chooseCreature(creature: Creature) {
                   v-else-if="getCreatureStatus(creature.id) === 'machine'"
                   :src="machinesIcon"
                   alt="Machine"
+                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                  loading="lazy"
+                />
+                <img
+                  v-else-if="getCreatureStatus(creature.id) === 'expedition'"
+                  :src="expeditionsIcon"
+                  alt="Expedition"
                   class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
                   loading="lazy"
                 />

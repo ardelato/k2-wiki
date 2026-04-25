@@ -28,8 +28,7 @@ export function usePartyPlanner(
 ) {
   const { creatures } = useCreatures()
   const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
-  const { excludedCreatureIds, expeditionToolXpBonus } = useGameConfig()
-  const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
+  const { excludedCreatureIds, expeditionToolXpBonus, expeditionParties } = useGameConfig()
   const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
   const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
   const { effectiveExpeditionTierSelections } = useExpeditionTierSelections()
