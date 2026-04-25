@@ -5,17 +5,9 @@ import { ref, computed } from 'vue'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useMachines } from '@/composables/useMachines'
 import { itemById } from '@/data/indexes'
-import { itemName } from '@/utils/format'
+import { itemName, typeColor } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
 import { getMachineImage } from '@/utils/machineImages'
-
-const typeColorMap: Record<string, string> = {
-  Fire: 'var(--color-fire)',
-  Water: 'var(--color-water)',
-  Wind: 'var(--color-wind)',
-  Earth: 'var(--color-earth)',
-}
-
 
 const { machines, generators, processors, upgradeCosts, speedMultipliers, getInterval } =
   useMachines()
@@ -179,7 +171,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                     :key="t"
                     class="type-chip"
                     :style="{
-                      '--chip-color': typeColorMap[t],
+                      '--chip-color': typeColor(t),
                     }"
                   >
                     {{ t }}

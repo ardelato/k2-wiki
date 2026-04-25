@@ -8,7 +8,7 @@ import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import type { ElementType } from '@/types'
-import { toTitleCase } from '@/utils/format'
+import { toTitleCase, typeColor } from '@/utils/format'
 import { jobIcons } from '@/utils/icons'
 
 const props = defineProps<{
@@ -65,14 +65,6 @@ const hasActiveFilters = computed(
     props.ownedFilter !== 'all' ||
     props.awakenedFilter !== 'all',
 )
-
-
-const typeDotColor: Record<ElementType, string> = {
-  Fire: 'hsl(var(--type-fire))',
-  Water: 'hsl(var(--type-water))',
-  Wind: 'hsl(var(--type-wind))',
-  Earth: 'hsl(var(--type-earth))',
-}
 </script>
 
 <template>
@@ -300,7 +292,7 @@ const typeDotColor: Record<ElementType, string> = {
               <span
                 class="mr-1.5 inline-block size-2 rounded-full"
                 :class="props.typeFilter === option ? 'ring-1 ring-white/60' : ''"
-                :style="{ backgroundColor: typeDotColor[option as ElementType] }"
+                :style="{ backgroundColor: typeColor(option as ElementType) }"
               />
               {{ option }}
             </button>
