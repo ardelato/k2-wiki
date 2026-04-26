@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build && cp dist/index.html dist/404.html",
+    "build": "vue-tsc -b && vite build",
+    "build:ghpages": "vue-tsc -b && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "lint": "oxlint -c oxlintrc.json --vue-plugin",
     "lint:fix": "oxlint -c oxlintrc.json --vue-plugin --fix",

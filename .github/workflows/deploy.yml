@@ -21,12 +21,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: '.node-version'
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+      - run: |
+          mkdir -p dist
+          cp public/redirect.html dist/index.html
+          cp public/redirect.webp dist/redirect.webp
+          cp public/favicon.svg dist/favicon.svg
+          cp dist/index.html dist/404.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

@@ -1,5 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
+const basePath = process.env.CF_PAGES === '1' ? '/' : '/k2-wiki/'
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -8,13 +10,13 @@ export default defineConfig({
   workers: process.env.CI ? 4 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:4173/k2-wiki/',
+    baseURL: `http://localhost:4173${basePath}`,
     trace: 'on-first-retry',
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
   webServer: {
     command: 'npm run preview',
-    url: 'http://localhost:4173/k2-wiki/',
+    url: `http://localhost:4173${basePath}`,
     reuseExistingServer: !process.env.CI,
   },
 })
