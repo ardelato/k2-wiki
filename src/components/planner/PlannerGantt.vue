@@ -27,10 +27,20 @@ function humanAmount(n: number): string {
 }
 
 
+/** Get queue offset time for a resource (workstation name like "Furnace") */
+function queueOffsetFor(resource: string): number {
+  return props.queueOffsets?.[resource] ?? 0
+}
+
+
 const props = defineProps<{
   schedule: PlannerSchedule
   nodesById: Record<string, PlannerNode>
   selectedNodeId: string | null
+  /** Queue time offsets per workstation (e.g. { Furnace: 50650 }) */
+  queueOffsets?: Record<string, number>
+  /** Queued item amounts per itemId */
+  queuedAmounts?: Record<string, number>
 }>()
 
 
@@ -261,7 +271,7 @@ const activeTaskNode = computed(() => {
 })
 
 
-/** Total required amount across all merged nodes (for consolidated bars). */
+/** Total required amount across all merged nodes (for consolidated bars), minus queued. */
 const activeTaskAmount = computed(() => {
   if (!activeTask.value) return null
   const task = activeTask.value as ScheduledTask & { _mergedNodeIds?: string[] }
@@ -271,7 +281,11 @@ const activeTaskAmount = computed(() => {
     const node = props.nodesById[id]
     if (node) total += node.requiredAmount
   }
-  return total > 0 ? total : (activeTaskNode.value?.requiredAmount ?? null)
+  const raw = total > 0 ? total : (activeTaskNode.value?.requiredAmount ?? null)
+  if (raw == null) return null
+  const itemId = activeTask.value.itemId
+  const queued = props.queuedAmounts?.[itemId] ?? 0
+  return Math.max(0, raw - queued)
 })
 
 
@@ -455,6 +469,22 @@ function barHighlightClasses(task: ScheduledTask): string {
               :style="{ minWidth: laneMinWidth, minHeight: '44px' }"
               @click.self="closePopover"
             >
+              <!-- Queue offset bar -->
+              <div
+                v-if="queueOffsetFor(group.resources[0]) > 0"
+                class="gantt-queue-bar absolute bottom-2 top-2 rounded-lg border border-sky-500/40"
+                :style="{
+                  left: '0%',
+                  width: `${Math.max(0.3, (queueOffsetFor(group.resources[0]) / schedule.totalTime) * 100)}%`,
+                }"
+                :title="`Queue: ${formatDuration(queueOffsetFor(group.resources[0]))}`"
+              >
+                <span
+                  class="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-sky-600 dark:text-sky-400"
+                >
+                  Queue
+                </span>
+              </div>
               <button
                 v-for="task in tasksByResource[group.resources[0]]"
                 :key="task.nodeId"
@@ -586,6 +616,22 @@ function barHighlightClasses(task: ScheduledTask): string {
               :style="{ minWidth: laneMinWidth, minHeight: '44px' }"
               @click.self="closePopover"
             >
+              <!-- Queue offset bar -->
+              <div
+                v-if="queueOffsetFor(resource) > 0"
+                class="gantt-queue-bar absolute bottom-2 top-2 rounded-lg border border-sky-500/40"
+                :style="{
+                  left: '0%',
+                  width: `${Math.max(0.3, (queueOffsetFor(resource) / schedule.totalTime) * 100)}%`,
+                }"
+                :title="`Queue: ${formatDuration(queueOffsetFor(resource))}`"
+              >
+                <span
+                  class="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-sky-600 dark:text-sky-400"
+                >
+                  Queue
+                </span>
+              </div>
               <button
                 v-for="task in tasksByResource[resource]"
                 :key="task.nodeId"
@@ -767,6 +813,17 @@ function barHighlightClasses(task: ScheduledTask): string {
 .popover-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* Queue offset bar — diagonal stripe pattern */
+.gantt-queue-bar {
+  background: repeating-linear-gradient(
+    -45deg,
+    rgb(56 189 248 / 0.08),
+    rgb(56 189 248 / 0.08) 4px,
+    rgb(56 189 248 / 0.18) 4px,
+    rgb(56 189 248 / 0.18) 8px
+  );
 }
 
 /* Dependency highlighting */
