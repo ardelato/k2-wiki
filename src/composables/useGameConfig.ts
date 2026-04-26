@@ -15,6 +15,12 @@ const helperCreatureIds = useLocalStorage<string[]>('config-helper-creatures', [
 const machineCreatureIds = useLocalStorage<string[]>('config-machine-creature-ids', [])
 const expeditionToolXpBonus = useLocalStorage<number>('config-tool-xp-bonus', 1)
 const expeditionParties = useLocalStorage<Record<string, string[]>>('expedition-parties', {})
+const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
+const expeditionCreatureLevels = useLocalStorage<Record<string, number>>(
+  'expedition-creature-levels',
+  {},
+)
+const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
 
 const inventoryAmounts = useLocalStorage<Record<string, number>>('config-inventory', {})
 const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
@@ -202,6 +208,29 @@ export function useGameConfig() {
     queuedTimes.value = {}
   }
 
+  function setExpeditionParties(parties: Record<string, string[]>) {
+    expeditionParties.value = parties
+  }
+
+  function setExpeditionTiers(tiers: Record<string, number>) {
+    expeditionTiers.value = tiers
+  }
+
+  function setExpeditionCreatureLevels(levels: Record<string, number>) {
+    expeditionCreatureLevels.value = levels
+  }
+
+  function setExpeditionLoopCounts(counts: Record<string, number>) {
+    expeditionLoopCounts.value = counts
+  }
+
+  function resetExpeditionSetup() {
+    expeditionParties.value = {}
+    expeditionTiers.value = {}
+    expeditionCreatureLevels.value = {}
+    expeditionLoopCounts.value = {}
+  }
+
   function resetGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
@@ -210,12 +239,13 @@ export function useGameConfig() {
     resetInventory()
     resetGarden()
     resetAwaken()
+    awakenGoldLevel.value = 0
     expeditionCompletions.value = {}
+    resetExpeditionSetup()
     resetToolLevels()
     resetMachines()
     resetFabrication()
     resetQueuedAmounts()
-    awakenGoldLevel.value = 0
     resetSkillLevels()
   }
 
@@ -224,6 +254,9 @@ export function useGameConfig() {
     helperCreatureIds,
     machineCreatureIds,
     expeditionParties,
+    expeditionTiers,
+    expeditionCreatureLevels,
+    expeditionLoopCounts,
     expeditionCreatureIds,
     excludedCreatureIds,
     jobTiers,
@@ -241,6 +274,11 @@ export function useGameConfig() {
     setHelperCreatures,
     setMachineCreatures,
     setExpeditionCompletions,
+    setExpeditionParties,
+    setExpeditionTiers,
+    setExpeditionCreatureLevels,
+    setExpeditionLoopCounts,
+    resetExpeditionSetup,
     setInventory,
     resetInventory,
     setGardenFlowerEntries,
