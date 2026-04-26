@@ -54,6 +54,8 @@ export interface SaveConfig {
   fabricationAllocations: Record<string, number>
   awakenGoldLevel: number
   skillLevels: Record<string, number>
+  queuedAmounts: Record<string, Record<string, number>>
+  queuedTimes: Record<string, number>
   currentExpedition: ExpeditionData
 }
 
@@ -101,6 +103,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const { machineLevels, machineRecipes } = parseMachineDetails(save)
   const fabricationAllocations = parseFabricationAllocations(save)
   const skillLevels = parseSkillLevels(save)
+  const { queuedAmounts, queuedTimes } = parseWorkstationQueues(save)
 
   const currentExpedition = buildExpeditionData(save, creatures)
 
@@ -123,6 +126,8 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     fabricationAllocations,
     awakenGoldLevel,
     skillLevels,
+    queuedAmounts,
+    queuedTimes,
     currentExpedition,
   }
 }
@@ -398,4 +403,62 @@ function parseSkillLevels(save: Record<string, unknown>): Record<string, number>
     }
   }
   return result
+}
+
+interface SaveWorkstationQueueEntry {
+  itemId?: string
+  item?: { id?: string }
+  amount?: number
+  recipe?: { outputAmount?: number }
+  singleItemDuration?: number
+}
+
+interface SaveWorkstationState {
+  completedItems?: number
+  queue?: SaveWorkstationQueueEntry[]
+}
+
+function parseWorkstationQueues(save: Record<string, unknown>): {
+  queuedAmounts: Record<string, Record<string, number>>
+  queuedTimes: Record<string, number>
+} {
+  const queuedAmounts: Record<string, Record<string, number>> = {}
+  const queuedTimes: Record<string, number> = {}
+
+  for (const ws of ['furnace', 'stove', 'workbench']) {
+    const wsState = save[ws] as SaveWorkstationState | undefined
+    if (!wsState || typeof wsState !== 'object') continue
+    if (!Array.isArray(wsState.queue) || wsState.queue.length === 0) continue
+
+    const stationName = ws.charAt(0).toUpperCase() + ws.slice(1)
+    const stationItems: Record<string, number> = {}
+    let stationTime = 0
+
+    // The queue contains all items including the currently crafting one (index 0).
+    // completedItems on the workstation state tracks how many of queue[0] are done.
+    const completed = typeof wsState.completedItems === 'number' ? wsState.completedItems : 0
+
+    for (let i = 0; i < wsState.queue.length; i++) {
+      const entry: SaveWorkstationQueueEntry = wsState.queue[i]
+      const itemId = entry.itemId ?? entry.item?.id
+      if (!itemId || typeof entry.amount !== 'number' || entry.amount <= 0) continue
+      const outputAmount = entry.recipe?.outputAmount ?? 1
+      const crafts = i === 0 ? Math.max(0, entry.amount - completed) : entry.amount
+      if (crafts > 0) {
+        stationItems[itemId] = (stationItems[itemId] ?? 0) + crafts * outputAmount
+        // singleItemDuration is already speed-adjusted by the game
+        const duration = typeof entry.singleItemDuration === 'number' ? entry.singleItemDuration : 0
+        stationTime += crafts * duration
+      }
+    }
+
+    if (Object.keys(stationItems).length > 0) {
+      queuedAmounts[stationName] = stationItems
+    }
+    if (stationTime > 0) {
+      queuedTimes[stationName] = stationTime
+    }
+  }
+
+  return { queuedAmounts, queuedTimes }
 }

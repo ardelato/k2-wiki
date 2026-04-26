@@ -38,5 +38,49 @@
     "expedition-type-1": { "1": 25, "2": 10 }
   },
   "activeExpeditions": [],
-  "tools": { "sword": 2 }
+  "tools": { "sword": 2 },
+  "furnace": {
+    "isActive": true,
+    "item": { "id": "coal" },
+    "amount": 100,
+    "completedItems": 20,
+    "speedMode": true,
+    "queue": [
+      {
+        "id": "q1",
+        "itemId": "coal",
+        "amount": 100,
+        "recipe": { "outputAmount": 2 },
+        "singleItemDuration": 3.84
+      },
+      {
+        "id": "q2",
+        "itemId": "copper-bar",
+        "amount": 50,
+        "recipe": { "outputAmount": 1 },
+        "singleItemDuration": 7.68
+      }
+    ]
+  },
+  "stove": {
+    "isActive": false,
+    "queue": [],
+    "speedMode": false
+  },
+  "workbench": {
+    "isActive": true,
+    "item": { "id": "leather" },
+    "amount": 30,
+    "completedItems": 0,
+    "speedMode": false,
+    "queue": [
+      {
+        "id": "q3",
+        "itemId": "leather",
+        "amount": 30,
+        "recipe": { "outputAmount": 1 },
+        "singleItemDuration": 7.68
+      }
+    ]
+  }
 }
