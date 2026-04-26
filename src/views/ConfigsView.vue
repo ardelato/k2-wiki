@@ -1421,14 +1421,14 @@ function updateAwakenSpeed(ws: string, delta: number) {
                 >
                   {{ slot.name.charAt(0) }}
                 </div>
-                <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
                   <p class="truncate text-center text-[9px] font-semibold text-white">
                     {{ slot.name }}
                   </p>
                 </div>
                 <button
                   v-if="editingSection === 'exclusions'"
-                  class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                   @click.stop="removeFromSanctuary(index)"
                 >
                   <X class="size-3" />
@@ -1477,7 +1477,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                     class="size-full object-cover"
                     loading="lazy"
                   />
-                  <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
                     <p class="truncate text-center text-[8px] font-semibold text-white">
                       {{ c.name }}
                     </p>
@@ -1541,14 +1541,14 @@ function updateAwakenSpeed(ws: string, delta: number) {
                 >
                   {{ slot.name.charAt(0) }}
                 </div>
-                <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
                   <p class="truncate text-center text-[9px] font-semibold text-white">
                     {{ slot.name }}
                   </p>
                 </div>
                 <button
                   v-if="editingSection === 'exclusions'"
-                  class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                   @click.stop="removeFromHelpers(index)"
                 >
                   <X class="size-3" />
@@ -1597,7 +1597,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                     class="size-full object-cover"
                     loading="lazy"
                   />
-                  <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
                     <p class="truncate text-center text-[8px] font-semibold text-white">
                       {{ c.name }}
                     </p>
@@ -1666,14 +1666,14 @@ function updateAwakenSpeed(ws: string, delta: number) {
                 >
                   {{ slot.name.charAt(0) }}
                 </div>
-                <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
                   <p class="truncate text-center text-[9px] font-semibold text-white">
                     {{ slot.name }}
                   </p>
                 </div>
                 <button
                   v-if="editingSection === 'exclusions'"
-                  class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                   @click.stop="removeFromMachine(index)"
                 >
                   <X class="size-3" />
@@ -1722,7 +1722,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                     class="size-full object-cover"
                     loading="lazy"
                   />
-                  <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1 py-0.5">
+                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
                     <p class="truncate text-center text-[8px] font-semibold text-white">
                       {{ c.name }}
                     </p>
