@@ -5,17 +5,7 @@ import { computed, ref } from 'vue'
 import type { ItemType } from '@/types'
 import { itemTypeColor } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
-
-interface ModifierChipData {
-  label: string
-  value: string
-  icon?: string
-  color: string
-  accentColor: string
-  subtitle: string
-  stats: string[]
-}
-
+import type { ModifierChip } from '@/utils/modifierChips'
 
 const props = withDefaults(
   defineProps<{
@@ -26,7 +16,7 @@ const props = withDefaults(
     inventoryAmount: number
     sourceLabel: string
     sourceIcon?: string | null
-    modifiers?: ModifierChipData[]
+    modifiers?: ModifierChip[]
     compact?: boolean
   }>(),
   {
@@ -37,11 +27,11 @@ const props = withDefaults(
 
 
 const activeChipIndex = ref<number | null>(null)
-const activeChip = ref<ModifierChipData | null>(null)
+const activeChip = ref<ModifierChip | null>(null)
 const popoverStyle = ref<Record<string, string>>({})
 
 
-function onChipEnter(chip: ModifierChipData, index: number, event: MouseEvent) {
+function onChipEnter(chip: ModifierChip, index: number, event: MouseEvent) {
   activeChipIndex.value = index
   activeChip.value = chip
   const target = event.currentTarget as HTMLElement
