@@ -5,8 +5,11 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import summonedIcon from '@/assets/icons/summoned.webp'
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useSanctuary } from '@/composables/useSanctuary'
 import type { Creature, ElementType, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
@@ -48,6 +51,12 @@ const {
   jobScores,
   jobTiers,
 } = useSanctuary()
+const {
+  selectedCreature: inspectedCreature,
+  drawerOpen: creatureDrawerOpen,
+  openCreature: inspectCreature,
+  closeDrawer: closeCreatureDrawer,
+} = useCreatureDrawer()
 
 
 // ── Mobile section handling ──
@@ -418,19 +427,23 @@ function chooseCreature(creature: Creature) {
                     <img
                       :src="getCreatureImage(slot)"
                       :alt="slot.name"
-                      class="size-full object-cover"
+                      class="size-full cursor-pointer object-cover"
                       loading="lazy"
+                      @click="inspectCreature(slot)"
                     />
-                    <div class="absolute inset-x-0 bottom-0 bg-black/75 px-0.5 py-0.5">
+                    <div
+                      class="absolute inset-x-0 bottom-0 cursor-pointer select-none bg-black/75 px-0.5 py-0.5"
+                      @click="inspectCreature(slot)"
+                    >
                       <p class="truncate text-center text-[8px] font-semibold text-white">
                         {{ slot.name }}
                       </p>
                     </div>
                     <button
-                      class="focus-ring absolute right-0 top-0 rounded-bl bg-black/60 p-0.5 text-white/70 hover:text-white"
+                      class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                       @click.stop="removeCreatureFromSlot(index)"
                     >
-                      <X class="size-2.5" />
+                      <X class="size-3" />
                     </button>
                   </template>
                   <template v-else>
@@ -729,117 +742,125 @@ function chooseCreature(creature: Creature) {
               :class="
                 hasEmptySlot
                   ? 'border-border/50 bg-card/50 hover:border-accent/45 hover:bg-muted/25'
-                  : 'cursor-not-allowed border-border/30 bg-card/30 opacity-50'
+                  : 'border-border/30 bg-card/30 opacity-50'
               "
               @click="chooseCreature(creature)"
             >
-              <!-- Image + assignment badge -->
-              <div class="relative size-12 shrink-0">
-                <img
-                  :src="getCreatureImage(creature)"
-                  :alt="creature.name"
-                  class="size-12 rounded-md border border-border object-cover"
-                  loading="lazy"
-                />
-                <!-- Tier badge -->
-                <span
-                  class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
-                >
-                  T{{ creature.tier + 1 }}
-                </span>
-                <img
-                  v-if="getCreatureStatus(creature.id) === 'helper'"
-                  :src="helpersIcon"
-                  alt="Helper"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="getCreatureStatus(creature.id) === 'machine'"
-                  :src="machinesIcon"
-                  alt="Machine"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="getCreatureStatus(creature.id) === 'expedition'"
-                  :src="expeditionsIcon"
-                  alt="Expedition"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-              </div>
-
-              <!-- Name + status + Job scores -->
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-0.5">
+              <RightClickHint @contextmenu="inspectCreature(creature)">
+                <!-- Image + assignment badge -->
+                <div class="relative size-12 shrink-0">
+                  <img
+                    :src="getCreatureImage(creature)"
+                    :alt="creature.name"
+                    class="size-12 rounded-md border border-border object-cover"
+                    loading="lazy"
+                  />
+                  <!-- Tier badge -->
                   <span
-                    class="truncate text-sm font-semibold"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-600 dark:text-pink-400'
-                        : 'text-foreground/80'
-                    "
-                    >{{ creature.name }}</span
+                    class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
                   >
-                  <span
-                    v-if="isOwned(creature.id)"
-                    class="shrink-0 text-xs"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-500 dark:text-pink-400'
-                        : 'text-amber-500 dark:text-amber-400'
-                    "
-                    >★</span
-                  >
-                  <span
-                    v-if="score > 0"
-                    class="ml-auto shrink-0 font-mono text-sm font-semibold text-primary"
-                    >{{ score }}</span
-                  >
+                    T{{ creature.tier + 1 }}
+                  </span>
+                  <img
+                    v-if="getCreatureStatus(creature.id) === 'helper'"
+                    :src="helpersIcon"
+                    alt="Helper"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                  <img
+                    v-else-if="getCreatureStatus(creature.id) === 'machine'"
+                    :src="machinesIcon"
+                    alt="Machine"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                  <img
+                    v-else-if="getCreatureStatus(creature.id) === 'expedition'"
+                    :src="expeditionsIcon"
+                    alt="Expedition"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
                 </div>
-                <div class="mt-1 flex gap-1">
-                  <div
-                    v-for="job in SANCTUARY_JOBS"
-                    :key="job"
-                    class="flex flex-1 items-center gap-[2px]"
-                    :title="`${job}: ${creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0}`"
-                  >
-                    <img
-                      :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
-                      :alt="job"
-                      class="size-3.5 shrink-0 opacity-60"
-                      loading="lazy"
-                    />
-                    <div class="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/30">
-                      <div
-                        class="h-full rounded-full"
-                        :style="{
-                          width: `${((creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) / 10) * 100}%`,
-                          backgroundColor:
-                            (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
-                              ? JOB_COLORS[job.toLowerCase()]
-                              : 'transparent',
-                        }"
-                      />
-                    </div>
+
+                <!-- Name + status + Job scores -->
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-0.5">
                     <span
-                      class="w-3 shrink-0 text-right font-mono text-[10px] font-semibold"
+                      class="truncate text-sm font-semibold"
                       :class="
-                        (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
-                          ? 'text-muted-foreground'
-                          : 'text-muted-foreground/30'
+                        isAwakened(creature.id)
+                          ? 'text-pink-600 dark:text-pink-400'
+                          : 'text-foreground/80'
                       "
+                      >{{ creature.name }}</span
                     >
-                      {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
-                    </span>
+                    <span
+                      v-if="isOwned(creature.id)"
+                      class="shrink-0 text-xs"
+                      :class="
+                        isAwakened(creature.id)
+                          ? 'text-pink-500 dark:text-pink-400'
+                          : 'text-amber-500 dark:text-amber-400'
+                      "
+                      >★</span
+                    >
+                    <span
+                      v-if="score > 0"
+                      class="ml-auto shrink-0 font-mono text-sm font-semibold text-primary"
+                      >{{ score }}</span
+                    >
+                  </div>
+                  <div class="mt-1 flex gap-1">
+                    <div
+                      v-for="job in SANCTUARY_JOBS"
+                      :key="job"
+                      class="flex flex-1 items-center gap-[2px]"
+                      :title="`${job}: ${creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0}`"
+                    >
+                      <img
+                        :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
+                        :alt="job"
+                        class="size-3.5 shrink-0 opacity-60"
+                        loading="lazy"
+                      />
+                      <div class="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/30">
+                        <div
+                          class="h-full rounded-full"
+                          :style="{
+                            width: `${((creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) / 10) * 100}%`,
+                            backgroundColor:
+                              (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
+                                ? JOB_COLORS[job.toLowerCase()]
+                                : 'transparent',
+                          }"
+                        />
+                      </div>
+                      <span
+                        class="w-3 shrink-0 text-right font-mono text-[10px] font-semibold"
+                        :class="
+                          (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
+                            ? 'text-muted-foreground'
+                            : 'text-muted-foreground/30'
+                        "
+                      >
+                        {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </RightClickHint>
             </button>
           </div>
         </div>
       </section>
     </div>
+
+    <CreatureDetail
+      :creature="inspectedCreature"
+      :open="creatureDrawerOpen"
+      @close="closeCreatureDrawer"
+    />
   </div>
 </template>
