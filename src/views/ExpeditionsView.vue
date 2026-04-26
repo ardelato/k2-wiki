@@ -15,9 +15,12 @@ import {
 import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import CreatureSelector from '@/components/expeditions/CreatureSelector.vue'
 import ExpeditionDetail from '@/components/expeditions/ExpeditionDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import { useExpeditions } from '@/composables/useExpeditions'
 import { useGameConfig } from '@/composables/useGameConfig'
@@ -301,6 +304,14 @@ function chooseCreature(creature: Creature) {
 }
 
 
+const {
+  selectedCreature: inspectedCreature,
+  drawerOpen: creatureDrawerOpen,
+  openCreature: inspectCreature,
+  closeDrawer: closeCreatureDrawer,
+} = useCreatureDrawer()
+
+
 function clampLevel(level: number): number {
   if (Number.isNaN(level)) return 1
   return Math.max(1, Math.min(120, Math.round(level)))
@@ -500,23 +511,27 @@ function rowSelected(id: string): boolean {
 
               <div class="flex items-center gap-1.5">
                 <div class="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                  <div
+                  <RightClickHint
                     v-for="creature in getPartyCreatures(expedition.id)"
                     :key="creature.id"
-                    class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
+                    @contextmenu="inspectCreature(creature)"
                   >
-                    <div class="size-5 overflow-hidden rounded-md bg-card">
-                      <img
-                        :src="getCreatureImage(creature)"
-                        :alt="creature.name"
-                        class="size-full object-cover"
-                        loading="lazy"
-                      />
+                    <div
+                      class="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
+                    >
+                      <div class="size-5 overflow-hidden rounded-md bg-card">
+                        <img
+                          :src="getCreatureImage(creature)"
+                          :alt="creature.name"
+                          class="size-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                      <span class="text-[10px] font-semibold text-foreground">{{
+                        creature.name
+                      }}</span>
                     </div>
-                    <span class="text-[10px] font-semibold text-foreground">{{
-                      creature.name
-                    }}</span>
-                  </div>
+                  </RightClickHint>
                 </div>
                 <div
                   v-if="expeditionEvaluations[expedition.id]"
@@ -573,6 +588,7 @@ function rowSelected(id: string): boolean {
         @update:loop-count="loopCount = $event"
         @set-active-slot="setActiveSlot"
         @remove-creature="removeCreatureFromSlot"
+        @inspect-creature="inspectCreature"
       />
 
       <!-- Column 3: Creature Selector -->
@@ -590,6 +606,7 @@ function rowSelected(id: string): boolean {
         :show-excluded-creatures="showExcludedCreatures"
         @update:show-excluded-creatures="showExcludedCreatures = $event"
         @choose-creature="chooseCreature"
+        @inspect-creature="inspectCreature"
         @step-level="stepCreatureLevel"
         @normalize-level="normalizeLevelOnBlur"
       />
@@ -684,5 +701,11 @@ function rowSelected(id: string): boolean {
         </div>
       </Transition>
     </Teleport>
+
+    <CreatureDetail
+      :creature="inspectedCreature"
+      :open="creatureDrawerOpen"
+      @close="closeCreatureDrawer"
+    />
   </section>
 </template>
