@@ -3,8 +3,9 @@ import { computed, ref } from 'vue'
 
 import type { PlannerMethod, PlannerNode } from '@/types'
 import { itemTypeColor } from '@/utils/format'
-import { upgradesIcon, sanctuaryIcon, machinesIcon, itemGridIcon, sourceIcons } from '@/utils/icons'
+import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+import { extractModifierChips, type ModifierChip } from '@/utils/modifierChips'
 
 import PlannerRecommendation from './PlannerRecommendation.vue'
 
@@ -17,80 +18,11 @@ const props = defineProps<{
 }>()
 
 
-type ModifierChip = {
-  label: string
-  value: string
-  icon?: string
-  color: string
-  accentColor: string
-  subtitle: string
-  stats: string[]
-}
-
-
-function parseStats(value: string): string[] {
-  const inner = value.match(/\(([^)]+)\)/)
-  const raw = inner ? inner[1] : value
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
-
 const modifierChips = computed<ModifierChip[]>(() => {
   if (!props.activeMethod) return []
-  const chips: ModifierChip[] = []
-  for (const row of props.activeMethod.detailRows) {
-    if (row.label === 'Awaken Tree') {
-      chips.push({
-        label: row.label,
-        value: row.value,
-        icon: upgradesIcon,
-        color:
-          'border-cyan-600/35 bg-cyan-100 text-cyan-800 dark:border-cyan-400/40 dark:bg-cyan-400/20 dark:text-cyan-100',
-        accentColor: 'bg-cyan-500',
-        subtitle: 'Skill tree bonuses',
-        stats: parseStats(row.value),
-      })
-    } else if (row.label === 'Sanctuary') {
-      const tierMatch = row.value.match(/^T(\d+)/)
-      chips.push({
-        label: row.label,
-        value: row.value,
-        icon: sanctuaryIcon,
-        color:
-          'border-amber-600/35 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/20 dark:text-amber-100',
-        accentColor: 'bg-amber-500',
-        subtitle: tierMatch ? `Tier ${tierMatch[1]} job bonus` : 'Job tier bonus',
-        stats: parseStats(row.value),
-      })
-    } else if (row.label.startsWith('Machine')) {
-      const machineName = row.label.replace('Machine — ', '')
-      chips.push({
-        label: machineName,
-        value: row.value,
-        icon: sourceIcons[machineName] ?? machinesIcon,
-        color:
-          'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100',
-        accentColor: 'bg-orange-500',
-        subtitle: 'Passive machine production',
-        stats: [row.value],
-      })
-    } else if (row.label.startsWith('Fabrication')) {
-      chips.push({
-        label: 'Fab',
-        value: row.value,
-        icon: itemGridIcon,
-        color:
-          'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100',
-        accentColor: 'bg-violet-500',
-        subtitle: 'Passive fabrication output',
-        stats: [row.value],
-      })
-    }
-  }
-  return chips
+  return extractModifierChips(props.activeMethod.detailRows, props.activeMethod.title, {
+    compact: true,
+  })
 })
 
 

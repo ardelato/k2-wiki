@@ -38,16 +38,10 @@ import {
   getLootAmount,
   getRecommendedCreatures,
 } from '@/utils/formulas'
-import {
-  expeditionTierIcons,
-  itemGridIcon,
-  machinesIcon,
-  sanctuaryIcon,
-  sourceIcons,
-  upgradesIcon,
-} from '@/utils/icons'
+import { expeditionTierIcons, sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { mergeSchedules } from '@/utils/mergeSchedules'
+import { extractModifierChips, type ModifierChip } from '@/utils/modifierChips'
 import { computePriorityWaves } from '@/utils/prioritySteps'
 
 const isDesktop = useMediaQuery('(min-width: 1024px)')
@@ -929,7 +923,7 @@ const goldInventory = computed(() => gameConfig.inventoryAmounts.value['gold'] ?
 const hasCurrencyGroup = computed(() => groupedCosts.value.some((g) => g.group === 'Currency'))
 
 
-const goldModifiers = computed<ModifierChipData[]>(() => {
+const goldModifiers = computed<ModifierChip[]>(() => {
   if (goldPerMinute.value <= 0) return []
   return [
     {
@@ -954,82 +948,6 @@ const goldModifiers = computed<ModifierChipData[]>(() => {
 
 
 // --- Flattened list of all nodes across all trees ---
-interface ModifierChipData {
-  label: string
-  value: string
-  icon?: string
-  color: string
-  accentColor: string
-  subtitle: string
-  stats: string[]
-}
-
-
-function parseModifierStats(value: string): string[] {
-  const inner = value.match(/\(([^)]+)\)/)
-  const raw = inner ? inner[1] : value
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
-
-function extractModifierChips(detailRows: { label: string; value: string }[]): ModifierChipData[] {
-  const chips: ModifierChipData[] = []
-  for (const row of detailRows) {
-    if (row.label === 'Awaken Tree') {
-      chips.push({
-        label: row.label,
-        value: row.value,
-        icon: upgradesIcon,
-        color:
-          'border-cyan-600/35 bg-cyan-100 text-cyan-800 dark:border-cyan-400/40 dark:bg-cyan-400/20 dark:text-cyan-100',
-        accentColor: 'bg-cyan-500',
-        subtitle: 'Skill tree bonuses',
-        stats: parseModifierStats(row.value),
-      })
-    } else if (row.label === 'Sanctuary') {
-      const tierMatch = row.value.match(/^T(\d+)/)
-      chips.push({
-        label: row.label,
-        value: row.value,
-        icon: sanctuaryIcon,
-        color:
-          'border-amber-600/35 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/20 dark:text-amber-100',
-        accentColor: 'bg-amber-500',
-        subtitle: tierMatch ? `Tier ${tierMatch[1]} job bonus` : 'Job tier bonus',
-        stats: parseModifierStats(row.value),
-      })
-    } else if (row.label.startsWith('Machine')) {
-      const machineName = row.label.replace('Machine — ', '')
-      chips.push({
-        label: machineName,
-        value: row.value,
-        icon: sourceIcons[machineName] ?? machinesIcon,
-        color:
-          'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100',
-        accentColor: 'bg-orange-500',
-        subtitle: 'Passive machine production',
-        stats: [row.value],
-      })
-    } else if (row.label.startsWith('Fabrication')) {
-      chips.push({
-        label: 'Fabrication',
-        value: row.value,
-        icon: itemGridIcon,
-        color:
-          'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100',
-        accentColor: 'bg-violet-500',
-        subtitle: 'Passive fabrication output',
-        stats: [row.value],
-      })
-    }
-  }
-  return chips
-}
-
-
 interface FlatListEntry {
   itemId: string
   itemName: string
@@ -1040,7 +958,7 @@ interface FlatListEntry {
   sourceIcon: string | null
   sourceGroup: SourceGroup
   gatherJob: string | null
-  modifiers: ModifierChipData[]
+  modifiers: ModifierChip[]
   maxDepth: number
 }
 
@@ -1079,7 +997,9 @@ const flatListEntries = computed(() => {
         sourceIcon: source.icon,
         sourceGroup: group,
         gatherJob: gatherInfo?.jobId ?? null,
-        modifiers: activeMethod ? extractModifierChips(activeMethod.detailRows) : [],
+        modifiers: activeMethod
+          ? extractModifierChips(activeMethod.detailRows, activeMethod.title)
+          : [],
         maxDepth: node.depth,
       })
     }

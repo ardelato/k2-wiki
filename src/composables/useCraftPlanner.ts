@@ -3,6 +3,7 @@ import { computed, ref, type Ref } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
+import { useTools } from '@/composables/useTools'
 import {
   itemById,
   jobActivityIndex,
@@ -35,6 +36,7 @@ export interface PlannerModifiers {
   gardenFlowers: Record<string, GardenFlowerEntry[]>
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number> // per workstation, 0–4
+  toolSpeedBonuses: Record<string, number> // workstation → speed bonus fraction (e.g. 0.10 = +10%)
   jobTiers: Record<string, number>
   goldPerMinute: number
   machineLevels: Record<string, number>
@@ -160,7 +162,7 @@ function passiveDetailRows(passive: PassiveRateResult): { label: string; value: 
   }))
 }
 
-function buildPlannerGraph(
+export function buildPlannerGraph(
   targetItemId: string,
   targetQuantity: number,
   inventory: Record<string, number>,
@@ -283,7 +285,9 @@ function buildPlannerGraph(
         }
       })
 
-      const speedReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.15
+      const awakenReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.15
+      const toolSpeedBonus = modifiers.toolSpeedBonuses[recipe.workstation] ?? 0
+      const speedReduction = awakenReduction + toolSpeedBonus
       const effectiveCraftTime = Math.max(
         recipe.craftTime * 0.01,
         recipe.craftTime * (1 - speedReduction),
@@ -328,7 +332,15 @@ function buildPlannerGraph(
             ? [
                 {
                   label: 'Speed Tier',
-                  value: `+${modifiers.awakenSpeedTiers[recipe.workstation] * 15}%`,
+                  value: `+${modifiers.awakenSpeedTiers[recipe.workstation] * 15}% Speed`,
+                },
+              ]
+            : []),
+          ...((modifiers.toolSpeedBonuses[recipe.workstation] ?? 0) > 0
+            ? [
+                {
+                  label: 'Tool Speed',
+                  value: `+${Math.round(modifiers.toolSpeedBonuses[recipe.workstation] * 100)}% Speed`,
                 },
               ]
             : []),
@@ -1176,8 +1188,11 @@ export function useCraftPlanner(
     machineLevels: baseMachineLevels,
     fabricationAllocations: baseFabricationAllocations,
     awakenGoldLevel,
+    toolSpeedModes: baseToolSpeedModes,
+    toolLevels: baseToolLevels,
   } = useGameConfig()
 
+  const { workstationTools, speedBonusPerLevel } = useTools()
   const { ownedCreatureIds, isAwakened: isCreatureAwakened } = useCreatureCollection()
 
   // Fabrication simulated allocations (from Fabrication page, separate from save baseline)
@@ -1191,6 +1206,8 @@ export function useCraftPlanner(
   const jobTierOverrides = ref<Record<string, number> | null>(null)
   const machineLevelOverrides = ref<Record<string, number> | null>(null)
   const fabricationOverrides = ref<Record<string, number> | null>(null)
+  const toolSpeedModeOverrides = ref<Record<string, boolean> | null>(null)
+  const toolLevelOverrides = ref<Record<string, number> | null>(null)
 
   const inventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
   const gardenFlowers = computed(() => gardenOverrides.value ?? baseGarden.value)
@@ -1205,6 +1222,18 @@ export function useCraftPlanner(
         ...fabricationSimulated.value,
       },
   )
+  const toolSpeedModes = computed(() => toolSpeedModeOverrides.value ?? baseToolSpeedModes.value)
+  const toolLevels = computed(() => toolLevelOverrides.value ?? baseToolLevels.value)
+
+  const toolSpeedBonuses = computed(() => {
+    const bonuses: Record<string, number> = {}
+    for (const tool of workstationTools.value) {
+      if (toolSpeedModes.value[tool.skillId]) {
+        bonuses[tool.skillId] = ((toolLevels.value[tool.id] ?? 0) * speedBonusPerLevel) / 100
+      }
+    }
+    return bonuses
+  })
 
   const awakenedCount = computed(() => {
     let count = 0
@@ -1226,6 +1255,7 @@ export function useCraftPlanner(
     gardenFlowers: gardenFlowers.value,
     awakenGatherUpgrades: awakenGatherUpgrades.value,
     awakenSpeedTiers: awakenSpeedTiers.value,
+    toolSpeedBonuses: toolSpeedBonuses.value,
     jobTiers: jobTiers.value,
     goldPerMinute: goldPerMinute.value,
     machineLevels: machineLevels.value,
