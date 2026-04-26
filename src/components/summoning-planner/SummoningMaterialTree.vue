@@ -31,6 +31,7 @@ const {
   schedule,
   summary,
   inventoryAmounts,
+  flatQueuedAmounts,
   getActiveMethod,
   setPinnedMethod,
 } = useCraftPlanner(targetItemId, targetQuantity, { deductRootInventory: true })
@@ -225,6 +226,7 @@ defineExpose({
         :selected-method-id="selectedMethodId"
         :collapsed-node-ids="collapsedNodeIds"
         :inventory-amounts="inventoryAmounts"
+        :queued-amounts="flatQueuedAmounts"
         :completion-time-by-node="schedule?.completionTimeByNode ?? {}"
         @select-node="selectNode"
         @select-method="selectMethod"

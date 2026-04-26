@@ -18,6 +18,8 @@ const props = defineProps<{
     string,
     { expeditionName: string; party: { creature: Creature; rating: number }[] }
   >
+  queueOffsets?: Record<string, number>
+  queuedAmounts?: Record<string, number>
 }>()
 
 
@@ -68,6 +70,8 @@ function copyScheduleJson() {
       :schedule="schedule"
       :nodes-by-id="nodesById"
       :selected-node-id="null"
+      :queue-offsets="queueOffsets"
+      :queued-amounts="queuedAmounts"
     />
 
     <!-- Debug: copy schedule JSON -->
