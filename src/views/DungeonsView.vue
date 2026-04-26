@@ -5,9 +5,12 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import summonedIcon from '@/assets/icons/summoned.webp'
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import { useDungeons } from '@/composables/useDungeons'
 import { useGameConfig } from '@/composables/useGameConfig'
@@ -27,6 +30,12 @@ const { creatures } = useCreatures()
 const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds, expeditionCreatureIds } =
   useGameConfig()
 const { isOwned, isAwakened, collectionLevels } = useCreatureCollection()
+const {
+  selectedCreature: inspectedCreature,
+  drawerOpen: creatureDrawerOpen,
+  openCreature: inspectCreature,
+  closeDrawer: closeCreatureDrawer,
+} = useCreatureDrawer()
 
 
 const {
@@ -674,21 +683,25 @@ const tierLevelReq = computed(() => {
                     <img
                       :src="getCreatureImage(slot)"
                       :alt="`${slot.name} artwork`"
-                      class="size-full object-cover"
+                      class="size-full cursor-pointer object-cover"
                       loading="lazy"
+                      @click="inspectCreature(slot)"
                     />
                     <span
                       class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
                     >
                       {{ getCreatureSlotScore(slot) }}
                     </span>
-                    <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
+                    <div
+                      class="absolute inset-x-0 bottom-0 cursor-pointer select-none bg-black/75 px-1.5 py-1"
+                      @click="inspectCreature(slot)"
+                    >
                       <p class="truncate text-center text-[10px] font-semibold text-white">
                         {{ slot.name }}
                       </p>
                     </div>
                     <button
-                      class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                      class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                       @click.stop="removeCreatureFromSlot(index)"
                     >
                       <X class="size-3" />
@@ -936,83 +949,85 @@ const tierLevelReq = computed(() => {
             :class="
               hasEmptySlot
                 ? 'border-border bg-card/50 hover:border-accent/45 hover:bg-muted/25'
-                : 'cursor-not-allowed border-border/50 bg-card/30 opacity-60'
+                : 'border-border/50 bg-card/30 opacity-60'
             "
             @click="chooseCreature(creature)"
           >
             <div class="flex items-start gap-3">
-              <div class="relative shrink-0">
-                <img
-                  :src="getCreatureImage(creature)"
-                  :alt="`${creature.name} artwork`"
-                  class="size-10 rounded-md border border-border object-cover"
-                  loading="lazy"
-                />
-                <img
-                  v-if="sanctuaryCreatureIds.includes(creature.id)"
-                  :src="sanctuaryIcon"
-                  alt="Sanctuary"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="helperCreatureIds.includes(creature.id)"
-                  :src="helpersIcon"
-                  alt="Helper"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="machineCreatureIds.includes(creature.id)"
-                  :src="machinesIcon"
-                  alt="Machine"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-                <img
-                  v-else-if="expeditionCreatureIds.has(creature.id)"
-                  :src="expeditionsIcon"
-                  alt="Expedition"
-                  class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                  loading="lazy"
-                />
-              </div>
+              <RightClickHint @contextmenu="inspectCreature(creature)">
+                <div class="relative shrink-0">
+                  <img
+                    :src="getCreatureImage(creature)"
+                    :alt="`${creature.name} artwork`"
+                    class="size-10 rounded-md border border-border object-cover"
+                    loading="lazy"
+                  />
+                  <img
+                    v-if="sanctuaryCreatureIds.includes(creature.id)"
+                    :src="sanctuaryIcon"
+                    alt="Sanctuary"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                  <img
+                    v-else-if="helperCreatureIds.includes(creature.id)"
+                    :src="helpersIcon"
+                    alt="Helper"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                  <img
+                    v-else-if="machineCreatureIds.includes(creature.id)"
+                    :src="machinesIcon"
+                    alt="Machine"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                  <img
+                    v-else-if="expeditionCreatureIds.has(creature.id)"
+                    :src="expeditionsIcon"
+                    alt="Expedition"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                </div>
 
-              <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1">
-                  <p
-                    class="truncate font-semibold"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-600 dark:text-pink-400'
-                        : 'text-foreground'
-                    "
-                  >
-                    {{ creature.name }}
-                  </p>
-                  <span
-                    v-if="isOwned(creature.id)"
-                    class="text-xs"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-600 dark:text-pink-400'
-                        : 'text-amber-700 dark:text-amber-400'
-                    "
-                    >★</span
-                  >
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-1">
+                    <p
+                      class="truncate font-semibold"
+                      :class="
+                        isAwakened(creature.id)
+                          ? 'text-pink-600 dark:text-pink-400'
+                          : 'text-foreground'
+                      "
+                    >
+                      {{ creature.name }}
+                    </p>
+                    <span
+                      v-if="isOwned(creature.id)"
+                      class="text-xs"
+                      :class="
+                        isAwakened(creature.id)
+                          ? 'text-pink-600 dark:text-pink-400'
+                          : 'text-amber-700 dark:text-amber-400'
+                      "
+                      >★</span
+                    >
+                  </div>
+                  <div class="mt-1 flex flex-wrap gap-1 text-xs">
+                    <span
+                      v-for="type in creature.types"
+                      :key="type"
+                      class="rounded-full bg-muted px-2 py-0.5 font-semibold"
+                      :style="{ color: typeColor(type) }"
+                    >
+                      {{ type }}
+                    </span>
+                    <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
+                  </div>
                 </div>
-                <div class="mt-1 flex flex-wrap gap-1 text-xs">
-                  <span
-                    v-for="type in creature.types"
-                    :key="type"
-                    class="rounded-full bg-muted px-2 py-0.5 font-semibold"
-                    :style="{ color: typeColor(type) }"
-                  >
-                    {{ type }}
-                  </span>
-                  <span class="trait-chip">{{ toTitleCase(creature.trait) }}</span>
-                </div>
-              </div>
+              </RightClickHint>
 
               <div class="text-right" @click.stop>
                 <p
@@ -1092,5 +1107,11 @@ const tierLevelReq = computed(() => {
         </div>
       </section>
     </div>
+
+    <CreatureDetail
+      :creature="inspectedCreature"
+      :open="creatureDrawerOpen"
+      @close="closeCreatureDrawer"
+    />
   </section>
 </template>
