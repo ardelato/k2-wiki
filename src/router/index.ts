@@ -76,6 +76,10 @@ export const router = createRouter({
       path: '/collection',
       redirect: '/',
     },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/',
+    },
   ],
 })
 
