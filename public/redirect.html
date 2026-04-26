@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <meta http-equiv="refresh" content="10;url=https://k2-wiki.pages.dev" />
+    <title>K2 Wiki Has Moved</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 1rem;
+        box-sizing: border-box;
+        background: hsl(225, 38%, 7%);
+        color: hsl(214, 32%, 92%);
+      }
+      a {
+        color: hsl(189, 82%, 56%);
+      }
+      .container {
+        text-align: center;
+        padding: 2rem;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+        margin-bottom: 1.5rem;
+        background: hsl(220, 20%, 97%);
+        border-radius: 1rem;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+      h1 {
+        margin-bottom: 0.5rem;
+      }
+      p {
+        color: hsl(220, 17%, 66%);
+      }
+      .countdown {
+        margin-top: 0.5rem;
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img src="./redirect.webp" alt="K2 Wiki has moved to k2-wiki.pages.dev" />
+      <h1>K2 Wiki has moved!</h1>
+      <p>
+        Automatically redirecting to <a href="https://k2-wiki.pages.dev">k2-wiki.pages.dev</a>...
+      </p>
+      <p class="countdown" id="countdown">Redirecting in 10 seconds</p>
+    </div>
+    <script>
+      var seconds = 10
+      var el = document.getElementById('countdown')
+      var timer = setInterval(function () {
+        seconds--
+        if (seconds <= 0) {
+          clearInterval(timer)
+          var path = location.pathname.replace('/k2-wiki', '') || '/'
+          if (path.charAt(0) !== '/' || path.indexOf('//') === 0) {
+            path = '/'
+          }
+          window.location.replace(
+            'https://k2-wiki.pages.dev' + path + location.search + location.hash,
+          )
+        } else {
+          el.textContent = 'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '')
+        }
+      }, 1000)
+    </script>
+  </body>
+</html>
