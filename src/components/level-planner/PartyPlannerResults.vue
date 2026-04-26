@@ -4,6 +4,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import { useGameConfig } from '@/composables/useGameConfig'
 import biomesData from '@/data/biomes.json'
 import type { PartyLevelingPlan, Creature, PartyPlanStep, PlannerStrategy } from '@/types'
 import type { Biome } from '@/types'
@@ -31,6 +32,16 @@ const props = defineProps<{
 
 
 const router = useRouter()
+const {
+  expeditionParties,
+  expeditionCreatureLevels,
+  expeditionTiers,
+  expeditionLoopCounts,
+  setExpeditionParties,
+  setExpeditionCreatureLevels,
+  setExpeditionTiers,
+  setExpeditionLoopCounts,
+} = useGameConfig()
 const viewMode = ref<'timeline' | 'steps' | 'chart'>('timeline')
 const expandedIndex = ref<number | null>(null)
 const copied = ref(false)
@@ -262,18 +273,10 @@ const stepsAsPlanSteps = computed(() => {
 
 
 function writeExpeditionSetup(steps: PartyPlanStep[], merge: boolean) {
-  const parties: Record<string, string[]> = merge
-    ? JSON.parse(localStorage.getItem('expedition-parties') ?? '{}')
-    : {}
-  const levels: Record<string, number> = merge
-    ? JSON.parse(localStorage.getItem('expedition-creature-levels') ?? '{}')
-    : {}
-  const tiers: Record<string, number> = merge
-    ? JSON.parse(localStorage.getItem('expedition-tiers') ?? '{}')
-    : {}
-  const loopCounts: Record<string, number> = merge
-    ? JSON.parse(localStorage.getItem('expedition-loop-counts') ?? '{}')
-    : {}
+  const parties: Record<string, string[]> = merge ? { ...expeditionParties.value } : {}
+  const levels: Record<string, number> = merge ? { ...expeditionCreatureLevels.value } : {}
+  const tiers: Record<string, number> = merge ? { ...expeditionTiers.value } : {}
+  const loopCounts: Record<string, number> = merge ? { ...expeditionLoopCounts.value } : {}
 
 
   for (const step of steps) {
@@ -302,10 +305,10 @@ function writeExpeditionSetup(steps: PartyPlanStep[], merge: boolean) {
   }
 
 
-  localStorage.setItem('expedition-parties', JSON.stringify(parties))
-  localStorage.setItem('expedition-creature-levels', JSON.stringify(levels))
-  localStorage.setItem('expedition-tiers', JSON.stringify(tiers))
-  localStorage.setItem('expedition-loop-counts', JSON.stringify(loopCounts))
+  setExpeditionParties(parties)
+  setExpeditionCreatureLevels(levels)
+  setExpeditionTiers(tiers)
+  setExpeditionLoopCounts(loopCounts)
 }
 
 

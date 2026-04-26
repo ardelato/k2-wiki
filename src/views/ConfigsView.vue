@@ -91,6 +91,11 @@ const {
   setQueuedAmounts,
   setQueuedTimes,
   resetQueuedAmounts,
+  setExpeditionParties,
+  setExpeditionTiers,
+  setExpeditionCreatureLevels,
+  setExpeditionLoopCounts,
+  resetExpeditionSetup,
 } = useGameConfig()
 
 
@@ -814,19 +819,10 @@ function applyExpeditionCompletions() {
 
 function applyExpedition() {
   if (!saveConfig.value) return
-  localStorage.setItem(
-    'expedition-parties',
-    JSON.stringify(saveConfig.value.currentExpedition.parties),
-  )
-  localStorage.setItem(
-    'expedition-creature-levels',
-    JSON.stringify(saveConfig.value.currentExpedition.levels),
-  )
-  localStorage.setItem('expedition-tiers', JSON.stringify(saveConfig.value.currentExpedition.tiers))
-  localStorage.setItem(
-    'expedition-loop-counts',
-    JSON.stringify(saveConfig.value.currentExpedition.loopCounts),
-  )
+  setExpeditionParties({ ...saveConfig.value.currentExpedition.parties })
+  setExpeditionCreatureLevels({ ...saveConfig.value.currentExpedition.levels })
+  setExpeditionTiers({ ...saveConfig.value.currentExpedition.tiers })
+  setExpeditionLoopCounts({ ...saveConfig.value.currentExpedition.loopCounts })
 }
 
 
@@ -884,10 +880,7 @@ function resetAwaken() {
 
 function resetExpeditions() {
   expeditionCompletions.value = {}
-  localStorage.removeItem('expedition-parties')
-  localStorage.removeItem('expedition-creature-levels')
-  localStorage.removeItem('expedition-tiers')
-  localStorage.removeItem('expedition-loop-counts')
+  resetExpeditionSetup()
 }
 
 
@@ -956,14 +949,20 @@ function toggleExpeditionTier(expeditionId: string, tier: number) {
 function resetAll() {
   resetExclusions()
   resetInventory()
+  resetQueuedAmounts()
   resetGarden()
   resetAwaken()
+  setAwakenGoldLevel(0)
   resetToolLevels()
+  setExpeditionToolXpBonus(1)
   resetMachines()
   resetFabrication()
   resetExpeditions()
   resetSkillLevels()
   resetCollection()
+  localStorage.removeItem('dungeon-party')
+  localStorage.removeItem('dungeon-creature-levels')
+  localStorage.removeItem('summoning-planner-selection')
 }
 
 

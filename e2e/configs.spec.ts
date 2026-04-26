@@ -392,17 +392,18 @@ test.describe('reset all', () => {
     await expect(page.getByText('No garden flowers configured.')).toBeVisible()
     await expect(page.getByText('Yield +0, Duration -0%').first()).toBeVisible()
 
-    // Verify expedition setup keys are cleared
+    // Verify expedition setup keys are cleared (useLocalStorage writes the
+    // default value rather than removing the key, so we check for empty objects)
     const expeditionKeys = await page.evaluate(() => ({
-      parties: localStorage.getItem('expedition-parties'),
-      tiers: localStorage.getItem('expedition-tiers'),
-      levels: localStorage.getItem('expedition-creature-levels'),
-      loopCounts: localStorage.getItem('expedition-loop-counts'),
+      parties: JSON.parse(localStorage.getItem('expedition-parties') ?? '{}'),
+      tiers: JSON.parse(localStorage.getItem('expedition-tiers') ?? '{}'),
+      levels: JSON.parse(localStorage.getItem('expedition-creature-levels') ?? '{}'),
+      loopCounts: JSON.parse(localStorage.getItem('expedition-loop-counts') ?? '{}'),
     }))
-    expect(expeditionKeys.parties).toBeNull()
-    expect(expeditionKeys.tiers).toBeNull()
-    expect(expeditionKeys.levels).toBeNull()
-    expect(expeditionKeys.loopCounts).toBeNull()
+    expect(expeditionKeys.parties).toEqual({})
+    expect(expeditionKeys.tiers).toEqual({})
+    expect(expeditionKeys.levels).toEqual({})
+    expect(expeditionKeys.loopCounts).toEqual({})
   })
 })
 

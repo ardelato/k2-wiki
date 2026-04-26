@@ -8,6 +8,7 @@ import summonedIcon from '@/assets/icons/summoned.webp'
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import AppTooltip from '@/components/shared/AppTooltip.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useSanctuary } from '@/composables/useSanctuary'
@@ -798,6 +799,16 @@ function chooseCreature(creature: Creature) {
                       "
                       >★</span
                     >
+                    <AppTooltip
+                      v-if="isOwned(creature.id) && !isAwakened(creature.id)"
+                      text="Must be awakened to place in Sanctuary in-game"
+                      position="top"
+                    >
+                      <span
+                        class="shrink-0 cursor-help rounded border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[9px] font-semibold text-amber-500 dark:text-amber-400"
+                        >Not Awakened</span
+                      >
+                    </AppTooltip>
                     <span
                       v-if="score > 0"
                       class="ml-auto shrink-0 font-mono text-sm font-semibold text-primary"

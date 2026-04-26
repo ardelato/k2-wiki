@@ -1,4 +1,3 @@
-import { useLocalStorage } from '@vueuse/core'
 import { ref, computed, watch } from 'vue'
 
 import biomesData from '@/data/biomes.json'
@@ -24,16 +23,22 @@ const expeditions = ref<Expedition[]>(expeditionsData as Expedition[])
 const biomes = ref<Biome[]>(biomesData as Biome[])
 
 export function useExpeditions(creatures: Creature[]) {
-  const { excludedCreatureIds, expeditionToolXpBonus, expeditionParties } = useGameConfig()
+  const {
+    excludedCreatureIds,
+    expeditionToolXpBonus,
+    expeditionParties,
+    expeditionTiers,
+    expeditionCreatureLevels,
+    expeditionLoopCounts,
+  } = useGameConfig()
   const showExcludedCreatures = ref(false)
   const searchQuery = ref('')
   const biomeFilter = ref<string | 'all'>('all')
   const selectedExpedition = ref<Expedition | null>(null)
-  const expeditionTiers = useLocalStorage<Record<string, number>>('expedition-tiers', {})
   const selectedTier = ref(1)
   const partySlots = ref<(Creature | null)[]>([])
   const activeSlotIndex = ref<number | null>(null)
-  const creatureLevels = useLocalStorage<Record<string, number>>('expedition-creature-levels', {})
+  const creatureLevels = expeditionCreatureLevels
 
   const filteredExpeditions = computed(() => {
     return expeditions.value
@@ -251,8 +256,6 @@ export function useExpeditions(creatures: Creature[]) {
     if (difficultyRating.value <= 0 || partyScore.value <= 0) return null
     return partyScore.value / difficultyRating.value
   })
-
-  const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
 
   const loopCount = computed({
     get: () =>

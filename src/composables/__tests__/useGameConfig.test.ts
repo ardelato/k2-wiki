@@ -2,9 +2,8 @@ import { useGameConfig } from '@/composables/useGameConfig'
 
 describe('useGameConfig', () => {
   beforeEach(() => {
-    const { resetGameConfig, expeditionParties } = useGameConfig()
+    const { resetGameConfig } = useGameConfig()
     resetGameConfig()
-    expeditionParties.value = {}
   })
 
   test('excludedCreatureIds combines sanctuary, helper, machine, and expedition IDs', () => {
@@ -221,5 +220,62 @@ describe('useGameConfig', () => {
     expect(machineLevels.value).toEqual({})
     expect(machineRecipes.value).toEqual({})
     expect(fabricationAllocations.value).toEqual({})
+  })
+
+  test('resetGameConfig clears every settable field back to defaults', () => {
+    const config = useGameConfig()
+
+    // Set every piece of state to a non-default value
+    config.setSanctuaryCreatures(['c1', 'c2'])
+    config.setHelperCreatures(['h1'])
+    config.setMachineCreatures(['m1'])
+    config.setExpeditionToolXpBonus(1.25)
+    config.setInventory('twig', 10)
+    config.setGardenFlowerEntries('fire-flower', [{ level: 3, count: 2 }])
+    config.setAwakenGatherYieldBonus('Chopping', 2)
+    config.setAwakenGatherDurationTier('Mining', 3)
+    config.setAwakenSpeedTier('Furnace', 4)
+    config.setAwakenGoldLevel(3)
+    config.setExpeditionCompletions({ 'expedition-type-1': { 1: 5 } })
+    config.setExpeditionParties({ 'expedition-type-1': ['c1', 'c2'] })
+    config.setExpeditionTiers({ 'expedition-type-1': 3 })
+    config.setExpeditionCreatureLevels({ c1: 50, c2: 30 })
+    config.setExpeditionLoopCounts({ 'expedition-type-1': 10 })
+    config.setToolLevels({ axe: 5 })
+    config.setToolSpeedModes({ Furnace: true })
+    config.setMachineLevels({ smelter: 3 })
+    config.setMachineRecipes({ smelter: 'copper-ore' })
+    config.setFabricationAllocations({ 'pine-log': 2 })
+    config.setSkillLevels({ mining: 5 })
+    config.setQueuedAmounts({ Furnace: { 'copper-bar': 10 } })
+    config.setQueuedTimes({ Furnace: 5000 })
+
+    // Reset everything
+    config.resetGameConfig()
+
+    // Verify every field is back to its default
+    expect(config.sanctuaryCreatureIds.value).toEqual([])
+    expect(config.helperCreatureIds.value).toEqual([])
+    expect(config.machineCreatureIds.value).toEqual([])
+    expect(config.expeditionToolXpBonus.value).toBe(1)
+    expect(config.inventoryAmounts.value).toEqual({})
+    expect(config.gardenFlowers.value['fire-flower']).toEqual([])
+    expect(config.awakenGatherUpgrades.value['Chopping'].yieldBonus).toBe(0)
+    expect(config.awakenGatherUpgrades.value['Mining'].durationTier).toBe(0)
+    expect(config.awakenSpeedTiers.value['Furnace']).toBe(0)
+    expect(config.awakenGoldLevel.value).toBe(0)
+    expect(config.expeditionCompletions.value).toEqual({})
+    expect(config.expeditionParties.value).toEqual({})
+    expect(config.expeditionTiers.value).toEqual({})
+    expect(config.expeditionCreatureLevels.value).toEqual({})
+    expect(config.expeditionLoopCounts.value).toEqual({})
+    expect(config.toolLevels.value).toEqual({})
+    expect(config.toolSpeedModes.value).toEqual({})
+    expect(config.machineLevels.value).toEqual({})
+    expect(config.machineRecipes.value).toEqual({})
+    expect(config.fabricationAllocations.value).toEqual({})
+    expect(config.skillLevels.value).toEqual({})
+    expect(config.queuedAmounts.value).toEqual({})
+    expect(config.queuedTimes.value).toEqual({})
   })
 })
