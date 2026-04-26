@@ -3,10 +3,12 @@ import { useMediaQuery } from '@vueuse/core'
 import { computed, ref, nextTick, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import ItemCard from '@/components/items/ItemCard.vue'
 import ItemDetail from '@/components/items/ItemDetail.vue'
 import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useItems } from '@/composables/useItems'
 import { summoningIndex } from '@/data/indexes'
 import type { Item } from '@/types'
@@ -24,6 +26,14 @@ const {
   getItemById,
   getRecipeUsages,
 } = useItems()
+
+
+const {
+  selectedCreature: drawerCreature,
+  drawerOpen: creatureDrawerOpen,
+  openCreatureById,
+  closeDrawer: closeCreatureDrawer,
+} = useCreatureDrawer()
 
 
 const viewMode = ref<'grid' | 'table'>('grid')
@@ -525,7 +535,12 @@ onMounted(() => {
             tabindex="-1"
             class="surface-card sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto outline-none"
           >
-            <ItemDetail :item="selectedItem" @close="closeDetail" @select-item="selectItemById" />
+            <ItemDetail
+              :item="selectedItem"
+              @close="closeDetail"
+              @select-item="selectItemById"
+              @select-creature="openCreatureById"
+            />
           </div>
         </aside>
       </Transition>
@@ -557,11 +572,22 @@ onMounted(() => {
             <div
               class="mx-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-card shadow-card"
             >
-              <ItemDetail :item="selectedItem" @close="closeDetail" @select-item="selectItemById" />
+              <ItemDetail
+                :item="selectedItem"
+                @close="closeDetail"
+                @select-item="selectItemById"
+                @select-creature="openCreatureById"
+              />
             </div>
           </Transition>
         </div>
       </Transition>
     </Teleport>
+
+    <CreatureDetail
+      :creature="drawerCreature"
+      :open="creatureDrawerOpen"
+      @close="closeCreatureDrawer"
+    />
   </section>
 </template>
