@@ -960,6 +960,9 @@ function resetAll() {
   resetExpeditions()
   resetSkillLevels()
   resetCollection()
+  localStorage.removeItem('dungeon-party')
+  localStorage.removeItem('dungeon-creature-levels')
+  localStorage.removeItem('summoning-planner-selection')
 }
 
 
