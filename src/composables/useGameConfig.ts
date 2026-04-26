@@ -41,6 +41,12 @@ const fabricationAllocations = useLocalStorage<Record<string, number>>(
   'config-fabrication-allocations',
   {},
 )
+const queuedAmounts = useLocalStorage<Record<string, Record<string, number>>>(
+  'config-queued-recipes',
+  {},
+)
+/** Estimated total queue time in seconds per workstation (e.g. { Furnace: 50650 }) */
+const queuedTimes = useLocalStorage<Record<string, number>>('config-queued-times', {})
 const awakenGoldLevel = useLocalStorage<number>('config-awaken-gold-level', 0)
 const skillLevels = useLocalStorage<Record<string, number>>('config-skill-levels', {})
 
@@ -183,6 +189,19 @@ export function useGameConfig() {
     skillLevels.value = {}
   }
 
+  function setQueuedAmounts(amounts: Record<string, Record<string, number>>) {
+    queuedAmounts.value = amounts
+  }
+
+  function setQueuedTimes(times: Record<string, number>) {
+    queuedTimes.value = times
+  }
+
+  function resetQueuedAmounts() {
+    queuedAmounts.value = {}
+    queuedTimes.value = {}
+  }
+
   function resetGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
@@ -195,6 +214,7 @@ export function useGameConfig() {
     resetToolLevels()
     resetMachines()
     resetFabrication()
+    resetQueuedAmounts()
     awakenGoldLevel.value = 0
     resetSkillLevels()
   }
@@ -246,5 +266,10 @@ export function useGameConfig() {
     playerLevel,
     setSkillLevels,
     resetSkillLevels,
+    queuedAmounts,
+    queuedTimes,
+    setQueuedAmounts,
+    setQueuedTimes,
+    resetQueuedAmounts,
   }
 }
