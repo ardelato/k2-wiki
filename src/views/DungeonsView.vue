@@ -672,7 +672,7 @@ const tierLevelReq = computed(() => {
                   class="relative size-20 overflow-hidden rounded-lg border transition"
                   :class="[
                     slot
-                      ? 'border-border bg-card/50'
+                      ? 'border-border bg-card/50 hover:border-primary/50'
                       : activeSlotIndex === index
                         ? 'border-dashed border-primary bg-primary/10'
                         : 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45',
