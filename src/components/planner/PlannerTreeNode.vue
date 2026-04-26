@@ -21,6 +21,7 @@ const props = withDefaults(
     selectedMethodId: string | null
     collapsedNodeIds: Set<string>
     inventoryAmounts: Record<string, number>
+    queuedAmounts?: Record<string, number>
     completionTimeByNode: Record<string, number>
     nodeAnnotations?: Record<string, string>
     subtreeCostByNode?: Record<string, number>
@@ -30,6 +31,7 @@ const props = withDefaults(
   {
     nodeAnnotations: () => ({}),
     subtreeCostByNode: () => ({}),
+    queuedAmounts: () => ({}),
     forceCollapsible: false,
     recommendations: () => ({}),
   },
@@ -37,7 +39,9 @@ const props = withDefaults(
 
 
 const stockOnHand = computed(() => props.inventoryAmounts[props.node.itemId] ?? 0)
+const queuedForItem = computed(() => props.queuedAmounts?.[props.node.itemId] ?? 0)
 const totalNeeded = computed(() => props.node.requiredAmount + stockOnHand.value)
+const deficit = computed(() => Math.max(0, props.node.requiredAmount - queuedForItem.value))
 
 
 const activeMethod = computed(() => {
@@ -153,6 +157,38 @@ function onChipEnter(chip: ModifierChip, index: number, event: MouseEvent) {
 function onChipLeave() {
   activeChipIndex.value = null
   activeChip.value = null
+}
+
+
+const barPopoverSegment = ref<'owned' | 'queued' | null>(null)
+const barPopoverStyle = ref<Record<string, string>>({})
+
+
+function onSegmentEnter(segment: 'owned' | 'queued', event: MouseEvent) {
+  barPopoverSegment.value = segment
+  updateBarPopoverPosition(event)
+}
+
+
+function onSegmentMove(event: MouseEvent) {
+  if (!barPopoverSegment.value) return
+  updateBarPopoverPosition(event)
+}
+
+
+function updateBarPopoverPosition(event: MouseEvent) {
+  const POPOVER_WIDTH = 180
+  const GAP = 12
+  const viewportWidth = document.documentElement.clientWidth
+  let top = event.clientY + GAP
+  let left = event.clientX - POPOVER_WIDTH / 2
+  left = Math.max(GAP, Math.min(left, viewportWidth - POPOVER_WIDTH - GAP))
+  barPopoverStyle.value = { position: 'fixed', top: `${top}px`, left: `${left}px` }
+}
+
+
+function onSegmentLeave() {
+  barPopoverSegment.value = null
 }
 
 
@@ -295,12 +331,28 @@ function forwardPinMethod(nodeId: string, methodId: string) {
 
             <!-- Progress bar -->
             <div class="h-1.5 overflow-hidden rounded-full bg-border/30">
-              <div
-                class="h-full rounded-full bg-amber-400 transition-all duration-300"
-                :style="{
-                  width: `${Math.min(100, Math.round((stockOnHand / Math.max(1, totalNeeded)) * 100))}%`,
-                }"
-              />
+              <div class="flex h-full">
+                <div
+                  class="h-full rounded-l-full bg-amber-400 transition-all duration-300"
+                  :class="{ 'rounded-r-full': queuedForItem === 0 }"
+                  :style="{
+                    width: `${Math.min(100, Math.round((stockOnHand / Math.max(1, totalNeeded)) * 100))}%`,
+                  }"
+                  @mouseenter="onSegmentEnter('owned', $event)"
+                  @mousemove="onSegmentMove"
+                  @mouseleave="onSegmentLeave"
+                />
+                <div
+                  v-if="queuedForItem > 0"
+                  class="h-full rounded-r-full bg-sky-400 transition-all duration-300"
+                  :style="{
+                    width: `${Math.min(100 - Math.round((stockOnHand / Math.max(1, totalNeeded)) * 100), Math.round((queuedForItem / Math.max(1, totalNeeded)) * 100))}%`,
+                  }"
+                  @mouseenter="onSegmentEnter('queued', $event)"
+                  @mousemove="onSegmentMove"
+                  @mouseleave="onSegmentLeave"
+                />
+              </div>
             </div>
 
             <!-- Amounts -->
@@ -312,13 +364,13 @@ function forwardPinMethod(nodeId: string, methodId: string) {
                 <span class="text-[10px] font-normal text-muted-foreground/50"> Total</span>
               </span>
               <span
-                v-if="node.requiredAmount > 0"
+                v-if="deficit > 0"
                 class="font-mono text-[11px] font-semibold text-amber-600 dark:text-amber-400"
               >
                 <span class="text-[10px] font-normal text-amber-600/60 dark:text-amber-400/60"
                   >Need
                 </span>
-                {{ node.requiredAmount.toLocaleString() }}
+                {{ deficit.toLocaleString() }}
               </span>
             </div>
           </div>
@@ -342,6 +394,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
         :selected-method-id="selectedMethodId"
         :collapsed-node-ids="collapsedNodeIds"
         :inventory-amounts="inventoryAmounts"
+        :queued-amounts="queuedAmounts"
         :completion-time-by-node="completionTimeByNode"
         :node-annotations="nodeAnnotations"
         :subtree-cost-by-node="subtreeCostByNode"
@@ -366,6 +419,32 @@ function forwardPinMethod(nodeId: string, methodId: string) {
         {{ activeMethod!.children.length }} items
       </button>
     </div>
+
+    <!-- Bar segment popover -->
+    <Teleport to="body">
+      <Transition name="chip-popover">
+        <div
+          v-if="barPopoverSegment !== null"
+          class="w-45 pointer-events-none z-50 overflow-hidden rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
+          :style="barPopoverStyle"
+        >
+          <div class="flex items-center gap-1.5 px-3 py-2">
+            <template v-if="barPopoverSegment === 'owned'">
+              <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                {{ stockOnHand.toLocaleString() }}
+              </span>
+              <span class="text-[11px] text-muted-foreground">have</span>
+            </template>
+            <template v-else-if="barPopoverSegment === 'queued'">
+              <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                {{ queuedForItem.toLocaleString() }}
+              </span>
+              <span class="text-[11px] text-muted-foreground">queued</span>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Modifier chip popover -->
     <Teleport to="body">
