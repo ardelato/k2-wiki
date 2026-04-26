@@ -153,6 +153,7 @@ export function useSanctuary() {
     const available = creatures.value.filter((c) => {
       if (partyCreatureIds.value.has(c.id)) return false
       if (ownedOnly.value && !isOwned(c.id)) return false
+      if (isOwned(c.id) && !isAwakened(c.id)) return false
       return true
     })
 
@@ -206,6 +207,7 @@ export function useSanctuary() {
     const browsable = creatures.value.filter((c) => {
       if (partyCreatureIds.value.has(c.id)) return false
       if (!showExcludedCreatures.value && excludedCreatureIds.value.has(c.id)) return false
+      if (isOwned(c.id) && !isAwakened(c.id)) return showExcludedCreatures.value
       return true
     })
 
