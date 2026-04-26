@@ -13,8 +13,8 @@ import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useSanctuary } from '@/composables/useSanctuary'
 import type { Creature, ElementType, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { helpersIcon, machinesIcon, expeditionsIcon } from '@/utils/icons'
-import { jobIcons } from '@/utils/icons'
+import { typeColor } from '@/utils/format'
+import { helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
 import {
   MAX_SANCTUARY_SLOTS,
   SANCTUARY_JOBS,
@@ -85,14 +85,6 @@ const selectedCreatureType = ref<ElementType | 'all'>('all')
 const selectedCreatureTiers = ref<number[]>([])
 const showMoreCreatureFilters = ref(false)
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
-
-
-function typeColor(type: ElementType): string {
-  if (type === 'Fire') return 'hsl(var(--type-fire))'
-  if (type === 'Water') return 'hsl(var(--type-water))'
-  if (type === 'Wind') return 'hsl(var(--type-wind))'
-  return 'hsl(var(--type-earth))'
-}
 
 
 const creatureTierOptions = computed(() => {

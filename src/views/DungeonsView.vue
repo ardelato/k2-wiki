@@ -16,7 +16,7 @@ import { useDungeons } from '@/composables/useDungeons'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, ElementType, ExpeditionStatKey, GatheringSubFocus } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase } from '@/utils/format'
+import { toTitleCase, typeColor } from '@/utils/format'
 import { statAbbreviations, statLabels } from '@/utils/formulas'
 import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -97,14 +97,6 @@ const selectedCreatureTiers = ref<number[]>([])
 const ownedOnly = ref(true)
 const showMoreCreatureFilters = ref(false)
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
-
-
-function typeColor(type: ElementType): string {
-  if (type === 'Fire') return 'hsl(var(--type-fire))'
-  if (type === 'Water') return 'hsl(var(--type-water))'
-  if (type === 'Wind') return 'hsl(var(--type-wind))'
-  return 'hsl(var(--type-earth))'
-}
 
 
 const weightedStats = computed<[ExpeditionStatKey, number][]>(() => {
