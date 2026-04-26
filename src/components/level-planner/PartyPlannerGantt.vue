@@ -3,6 +3,9 @@ import { Clock3, Minus, Plus, Repeat, RotateCcw, Users, Zap } from 'lucide-vue-n
 import { computed, ref, nextTick } from 'vue'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
 import biomesData from '@/data/biomes.json'
 import type { PartyLevelingPlan, PartyPlanStep, Creature, AwakenEvent } from '@/types'
@@ -27,6 +30,14 @@ const props = withDefaults(
     filterCreatureId: '',
   },
 )
+
+
+const {
+  selectedCreature: ganttInspectedCreature,
+  drawerOpen: ganttDrawerOpen,
+  openCreature: ganttInspectCreature,
+  closeDrawer: ganttCloseDrawer,
+} = useCreatureDrawer()
 
 
 interface GanttBar {
@@ -383,13 +394,17 @@ const activeBarScoreRatio = computed(() => {
               class="size-7 overflow-hidden rounded-full border-2 border-pink-500 bg-card shadow-md shadow-pink-500/20 transition-transform hover:scale-110"
               :class="activeAwakenMarker === marker ? 'ring-2 ring-pink-400/60' : ''"
             >
-              <img
+              <RightClickHint
                 v-if="marker.creature"
-                :src="getCreatureImage(marker.creature)"
-                :alt="marker.creature.name"
-                class="size-full object-cover"
-                loading="lazy"
-              />
+                @contextmenu="ganttInspectCreature(marker.creature)"
+              >
+                <img
+                  :src="getCreatureImage(marker.creature)"
+                  :alt="marker.creature.name"
+                  class="size-full object-cover"
+                  loading="lazy"
+                />
+              </RightClickHint>
             </div>
           </button>
         </div>
@@ -434,14 +449,18 @@ const activeBarScoreRatio = computed(() => {
           >
             <!-- Creature avatars -->
             <div class="flex shrink-0 -space-x-2">
-              <img
+              <RightClickHint
                 v-for="cId in bar.creatureIds.slice(0, 3)"
                 :key="cId"
-                :src="getCreatureImage(creatures.get(cId)!)"
-                :alt="creatures.get(cId)?.name"
-                class="size-8 rounded-full border-2 border-background object-cover"
-                loading="lazy"
-              />
+                @contextmenu="ganttInspectCreature(creatures.get(cId)!)"
+              >
+                <img
+                  :src="getCreatureImage(creatures.get(cId)!)"
+                  :alt="creatures.get(cId)?.name"
+                  class="size-8 rounded-full border-2 border-background object-cover"
+                  loading="lazy"
+                />
+              </RightClickHint>
             </div>
             <img
               :src="expeditionTierIcons[bar.tier]"
@@ -587,8 +606,9 @@ const activeBarScoreRatio = computed(() => {
                   v-if="creatures.get(member.creatureId)"
                   :src="getCreatureImage(creatures.get(member.creatureId)!)"
                   :alt="creatures.get(member.creatureId)?.name"
-                  class="size-7 shrink-0 rounded-full border border-border object-cover"
+                  class="size-7 shrink-0 cursor-pointer rounded-full border border-border object-cover transition hover:ring-1 hover:ring-accent/40"
                   loading="lazy"
+                  @click="ganttInspectCreature(creatures.get(member.creatureId)!)"
                 />
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-xs font-semibold text-foreground">
@@ -627,7 +647,12 @@ const activeBarScoreRatio = computed(() => {
           <div class="px-4 py-3">
             <div class="flex items-center gap-3">
               <div
-                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card"
+                class="size-10 shrink-0 cursor-pointer overflow-hidden rounded-full border-2 border-pink-500 bg-card transition hover:ring-1 hover:ring-pink-500/50"
+                @click="
+                  activeAwakenMarker.creature
+                    ? ganttInspectCreature(activeAwakenMarker.creature)
+                    : undefined
+                "
               >
                 <img
                   v-if="activeAwakenMarker.creature"
@@ -673,6 +698,11 @@ const activeBarScoreRatio = computed(() => {
       </span>
     </div>
   </div>
+  <CreatureDetail
+    :creature="ganttInspectedCreature"
+    :open="ganttDrawerOpen"
+    @close="ganttCloseDrawer"
+  />
 </template>
 
 <style scoped>

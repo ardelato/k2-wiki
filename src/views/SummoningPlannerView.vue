@@ -14,13 +14,16 @@ import {
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import SummoningCreatureFilter from '@/components/summoning-planner/SummoningCreatureFilter.vue'
 import SummoningMaterialTree from '@/components/summoning-planner/SummoningMaterialTree.vue'
 import SummoningObjectiveCard from '@/components/summoning-planner/SummoningObjectiveCard.vue'
 import SummoningTimeline from '@/components/summoning-planner/SummoningTimeline.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useGoldIncome } from '@/composables/useGoldIncome'
@@ -49,6 +52,12 @@ const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened, collectionLevels } = useCreatureCollection()
 const gameConfig = useGameConfig()
 const { goldPerMinute, breakdown: goldBreakdown } = useGoldIncome()
+const {
+  selectedCreature: inspectedCreature,
+  drawerOpen: creatureDrawerOpen,
+  openCreature: inspectCreature,
+  closeDrawer: closeCreatureDrawer,
+} = useCreatureDrawer()
 
 
 const flatQueuedAmounts = computed(() => {
@@ -1502,37 +1511,41 @@ const flatGroupedCosts = computed(() => {
                       <!-- Active party -->
                       <div class="flex items-center gap-1.5">
                         <div class="flex min-w-0 flex-1 flex-wrap gap-1.5">
-                          <div
+                          <RightClickHint
                             v-for="member in getActiveExpeditionParty(cost.sortedIndex)!
                               .activeVariant.party"
                             :key="member.creature.id"
-                            class="inline-flex items-center gap-1.5 rounded-lg border py-0.5 pl-0.5 pr-2"
-                            :class="
-                              conflictedCreatureIds.has(member.creature.id)
-                                ? 'cursor-default border-amber-500/50 bg-amber-500/10'
-                                : 'border-border bg-muted/35'
-                            "
-                            @mouseenter="
-                              onConflictEnter(
-                                member.creature.id,
-                                getActiveExpeditionParty(cost.sortedIndex)!.expeditionName,
-                                $event,
-                              )
-                            "
-                            @mouseleave="onConflictLeave"
+                            @contextmenu="inspectCreature(member.creature)"
                           >
-                            <div class="size-5 overflow-hidden rounded-md bg-card">
-                              <img
-                                v-if="getCreatureImage(member.creature)"
-                                :src="getCreatureImage(member.creature)"
-                                :alt="member.creature.name"
-                                class="size-full object-cover"
-                              />
+                            <div
+                              class="inline-flex cursor-default items-center gap-1.5 rounded-lg border py-0.5 pl-0.5 pr-2"
+                              :class="
+                                conflictedCreatureIds.has(member.creature.id)
+                                  ? 'cursor-default border-amber-500/50 bg-amber-500/10'
+                                  : 'border-border bg-muted/35'
+                              "
+                              @mouseenter="
+                                onConflictEnter(
+                                  member.creature.id,
+                                  getActiveExpeditionParty(cost.sortedIndex)!.expeditionName,
+                                  $event,
+                                )
+                              "
+                              @mouseleave="onConflictLeave"
+                            >
+                              <div class="size-5 overflow-hidden rounded-md bg-card">
+                                <img
+                                  v-if="getCreatureImage(member.creature)"
+                                  :src="getCreatureImage(member.creature)"
+                                  :alt="member.creature.name"
+                                  class="size-full object-cover"
+                                />
+                              </div>
+                              <span class="text-[10px] font-semibold text-foreground">{{
+                                member.creature.name
+                              }}</span>
                             </div>
-                            <span class="text-[10px] font-semibold text-foreground">{{
-                              member.creature.name
-                            }}</span>
-                          </div>
+                          </RightClickHint>
                         </div>
                         <div class="flex shrink-0 items-center gap-1.5 font-mono text-xs">
                           <span class="text-muted-foreground">
@@ -1570,23 +1583,27 @@ const flatGroupedCosts = computed(() => {
                               >Alt</span
                             >
                             <div class="flex min-w-0 flex-1 flex-wrap gap-1">
-                              <div
+                              <RightClickHint
                                 v-for="member in variant.party"
                                 :key="member.creature.id"
-                                class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/25 py-0.5 pl-0.5 pr-1.5"
+                                @contextmenu="inspectCreature(member.creature)"
                               >
-                                <div class="size-4 overflow-hidden rounded bg-card">
-                                  <img
-                                    v-if="getCreatureImage(member.creature)"
-                                    :src="getCreatureImage(member.creature)"
-                                    :alt="member.creature.name"
-                                    class="size-full object-cover"
-                                  />
+                                <div
+                                  class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/25 py-0.5 pl-0.5 pr-1.5"
+                                >
+                                  <div class="size-4 overflow-hidden rounded bg-card">
+                                    <img
+                                      v-if="getCreatureImage(member.creature)"
+                                      :src="getCreatureImage(member.creature)"
+                                      :alt="member.creature.name"
+                                      class="size-full object-cover"
+                                    />
+                                  </div>
+                                  <span class="text-[9px] font-semibold text-muted-foreground">{{
+                                    member.creature.name
+                                  }}</span>
                                 </div>
-                                <span class="text-[9px] font-semibold text-muted-foreground">{{
-                                  member.creature.name
-                                }}</span>
-                              </div>
+                              </RightClickHint>
                             </div>
                             <span class="shrink-0 font-mono text-[10px] text-muted-foreground">
                               {{ formatDuration(variant.totalTime) }}
@@ -1687,6 +1704,12 @@ const flatGroupedCosts = computed(() => {
         </div>
       </Transition>
     </Teleport>
+
+    <CreatureDetail
+      :creature="inspectedCreature"
+      :open="creatureDrawerOpen"
+      @close="closeCreatureDrawer"
+    />
   </div>
 </template>
 

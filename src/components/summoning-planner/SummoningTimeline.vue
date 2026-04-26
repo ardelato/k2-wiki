@@ -2,7 +2,10 @@
 import { Clock3, Copy, Check } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import PlannerGantt from '@/components/planner/PlannerGantt.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature, ItemType, PlannerNode, PlannerSchedule } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration, itemTypeColor, methodKindLabel } from '@/utils/format'
@@ -21,6 +24,9 @@ const props = defineProps<{
   queueOffsets?: Record<string, number>
   queuedAmounts?: Record<string, number>
 }>()
+
+
+const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
 
 
 /** Kinds that are passive / non-actionable — hide from priority steps */
@@ -217,23 +223,27 @@ function copyScheduleJson() {
                 v-if="card.kind === 'expedition' && expeditionParties[card.itemId]?.party.length"
                 class="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/30 pt-2"
               >
-                <div
+                <RightClickHint
                   v-for="member in expeditionParties[card.itemId].party"
                   :key="member.creature.id"
-                  class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
+                  @contextmenu="openCreature(member.creature)"
                 >
-                  <div class="size-5 overflow-hidden rounded-md bg-card">
-                    <img
-                      v-if="getCreatureImage(member.creature)"
-                      :src="getCreatureImage(member.creature)"
-                      :alt="member.creature.name"
-                      class="size-full object-cover"
-                    />
+                  <div
+                    class="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
+                  >
+                    <div class="size-5 overflow-hidden rounded-md bg-card">
+                      <img
+                        v-if="getCreatureImage(member.creature)"
+                        :src="getCreatureImage(member.creature)"
+                        :alt="member.creature.name"
+                        class="size-full object-cover"
+                      />
+                    </div>
+                    <span class="text-[10px] font-semibold text-foreground">
+                      {{ member.creature.name }}
+                    </span>
                   </div>
-                  <span class="text-[10px] font-semibold text-foreground">
-                    {{ member.creature.name }}
-                  </span>
-                </div>
+                </RightClickHint>
               </div>
             </div>
           </div>
@@ -241,4 +251,5 @@ function copyScheduleJson() {
       </div>
     </div>
   </div>
+  <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
 </template>

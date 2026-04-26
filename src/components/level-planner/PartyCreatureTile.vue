@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 
@@ -17,6 +20,9 @@ const props = defineProps<{
 defineEmits<{
   toggle: []
 }>()
+
+
+const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
 
 
 function tileBorderClass(): string {
@@ -54,13 +60,15 @@ function levelBadgeClass(): string {
       :title="`${creature.name} — LVL ${level}${awakened ? ' ★' : ''}${titleSuffix ?? ''}`"
       @click="$emit('toggle')"
     >
-      <img
-        v-if="getCreatureImage(creature)"
-        :src="getCreatureImage(creature)"
-        :alt="creature.name"
-        class="size-full object-cover"
-        loading="lazy"
-      />
+      <RightClickHint @contextmenu="openCreature(creature)">
+        <img
+          v-if="getCreatureImage(creature)"
+          :src="getCreatureImage(creature)"
+          :alt="creature.name"
+          class="size-full object-cover"
+          loading="lazy"
+        />
+      </RightClickHint>
       <div class="absolute inset-x-0 bottom-0 bg-black/70 px-1 py-0.5">
         <p class="truncate text-center text-[9px] font-semibold" :class="nameClass()">
           {{ creature.name }}
@@ -74,4 +82,5 @@ function levelBadgeClass(): string {
       LVL {{ level }}<span v-if="awakened" class="ml-0.5">★</span>
     </span>
   </div>
+  <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
 </template>

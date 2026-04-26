@@ -41,6 +41,7 @@ const emit = defineEmits<{
   'update:loopCount': [count: number]
   'set-active-slot': [index: number]
   'remove-creature': [index: number]
+  'inspect-creature': [creature: Creature]
 }>()
 
 
@@ -130,7 +131,8 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
           <div
             v-for="{ creature, percent } in topRecommendedCreatures"
             :key="creature.id"
-            class="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3 transition hover:border-accent/45 hover:bg-muted/50"
+            @click="emit('inspect-creature', creature)"
           >
             <div class="size-6 overflow-hidden rounded-full bg-card">
               <img
@@ -302,7 +304,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
               class="relative size-20 overflow-hidden rounded-lg border transition"
               :class="[
                 slot
-                  ? 'border-border bg-card/50'
+                  ? 'border-border bg-card/50 hover:border-primary/50'
                   : activeSlotIndex === index
                     ? 'border-dashed border-primary bg-primary/10'
                     : 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45',
@@ -313,21 +315,25 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
                 <img
                   :src="getCreatureImage(slot)"
                   :alt="`${slot.name} artwork`"
-                  class="size-full object-cover"
+                  class="size-full cursor-pointer object-cover"
                   loading="lazy"
+                  @click="emit('inspect-creature', slot)"
                 />
                 <span
                   class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
                 >
                   {{ getCreatureSlotRating(slot) }}
                 </span>
-                <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
+                <div
+                  class="absolute inset-x-0 bottom-0 cursor-pointer select-none bg-black/75 px-1.5 py-1"
+                  @click="emit('inspect-creature', slot)"
+                >
                   <p class="truncate text-center text-[10px] font-semibold text-white">
                     {{ slot.name }}
                   </p>
                 </div>
                 <button
-                  class="focus-ring absolute right-0.5 top-0.5 rounded-full bg-black/60 p-0.5 text-white/70 hover:text-white"
+                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                   @click.stop="emit('remove-creature', index)"
                 >
                   <X class="size-3" />

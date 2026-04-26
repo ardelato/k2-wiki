@@ -28,6 +28,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   close: []
   'select-item': [id: string]
+  'select-creature': [id: string]
 }>()
 
 
@@ -632,7 +633,9 @@ const jobColorMap: Record<string, string> = {
           <div
             v-for="creature in summoningCreatures"
             :key="creature.id"
-            class="relative aspect-square overflow-hidden rounded-lg bg-muted/20"
+            role="button"
+            class="relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-muted/20 transition hover:ring-1 hover:ring-accent/40"
+            @click="emit('select-creature', creature.id)"
           >
             <img
               v-if="getCreatureImage({ id: creature.id, image: '' })"

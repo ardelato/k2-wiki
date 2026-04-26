@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Check, Minus, Pencil, Plus, X } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import notSummonedIcon from '@/assets/icons/not_summoned.webp'
@@ -11,8 +11,8 @@ import CreatureGrid from '@/components/beastiary/CreatureGrid.vue'
 import CreaturesTable from '@/components/beastiary/CreaturesTable.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
-import type { Creature } from '@/types'
 import { toTitleCase, typeColor } from '@/utils/format'
 import { jobIcons } from '@/utils/icons'
 
@@ -230,24 +230,7 @@ function removeFilter(key: string) {
 }
 
 
-const selectedCreature = ref<Creature | null>(null)
-const panelOpen = ref(false)
-
-
-watch(selectedCreature, (val) => {
-  if (val) panelOpen.value = true
-})
-
-
-function selectCreature(creature: Creature) {
-  selectedCreature.value = creature
-}
-
-
-function closeDetail() {
-  panelOpen.value = false
-  selectedCreature.value = null
-}
+const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
 </script>
 
 <template>
@@ -427,7 +410,7 @@ function closeDetail() {
         :editing="editing"
         :selected-ids="selectedIds"
         :selected-creature-id="selectedCreature?.id ?? null"
-        @select="selectCreature"
+        @select="openCreature"
         @toggle-selected="toggleSelected"
       />
       <CreaturesTable
@@ -436,13 +419,13 @@ function closeDetail() {
         :editing="editing"
         :selected-ids="selectedIds"
         :selected-creature-id="selectedCreature?.id ?? null"
-        @select="selectCreature"
+        @select="openCreature"
         @toggle-selected="toggleSelected"
       />
     </div>
 
     <!-- Detail Panel -->
-    <CreatureDetail :creature="selectedCreature" :open="panelOpen" @close="closeDetail" />
+    <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
   </section>
 </template>
 
