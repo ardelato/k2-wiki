@@ -17,6 +17,7 @@ import LevelPlannerCreaturePicker from '@/components/level-planner/LevelPlannerC
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
+import { useTools } from '@/composables/useTools'
 import expeditionsData from '@/data/expeditions.json'
 import type { Expedition, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
@@ -68,6 +69,7 @@ const {
   setExpeditionCompletions,
   setExpeditionToolXpBonus,
   toolLevels,
+  toolSpeedModes,
   machineLevels,
   fabricationAllocations,
   setToolLevels,
@@ -85,6 +87,9 @@ const {
   setSkillLevels,
   resetSkillLevels,
 } = useGameConfig()
+
+
+const { getToolById, speedBonusPerLevel } = useTools()
 
 
 const MACHINES_MAX = 9
@@ -2491,8 +2496,37 @@ function updateAwakenSpeed(ws: string, delta: number) {
               />
               {{ toolId.replace(/-/g, ' ') }}
             </span>
-            <span class="text-xs tabular-nums text-muted-foreground">
-              Level {{ level }}/10 (+{{ level * 5 }}% XP)
+            <span class="flex items-center gap-2">
+              <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
+              <span
+                v-if="getToolById(toolId)?.category === 'workstation'"
+                class="cursor-pointer rounded px-1.5 py-0.5 text-xs font-semibold transition"
+                :class="
+                  toolSpeedModes[getToolById(toolId)!.skillId]
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-muted/50 text-muted-foreground hover:text-foreground'
+                "
+                :title="
+                  toolSpeedModes[getToolById(toolId)!.skillId]
+                    ? 'Speed Mode — click to switch to XP mode'
+                    : 'XP Mode — click to switch to Speed mode'
+                "
+                @click="
+                  setToolSpeedModes({
+                    ...toolSpeedModes,
+                    [getToolById(toolId)!.skillId]: !toolSpeedModes[getToolById(toolId)!.skillId],
+                  })
+                "
+              >
+                {{
+                  toolSpeedModes[getToolById(toolId)!.skillId]
+                    ? `+${(level as number) * speedBonusPerLevel}% Spd`
+                    : `+${(level as number) * 5}% XP`
+                }}
+              </span>
+              <span v-else class="text-xs text-muted-foreground">
+                +{{ (level as number) * 5 }}% XP
+              </span>
             </span>
           </div>
           <div
