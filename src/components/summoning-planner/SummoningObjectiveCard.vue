@@ -14,6 +14,7 @@ const props = withDefaults(
     itemType: ItemType
     totalNeeded: number
     inventoryAmount: number
+    queuedAmount?: number
     sourceLabel: string
     sourceIcon?: string | null
     modifiers?: ModifierChip[]
@@ -54,6 +55,38 @@ function onChipLeave() {
 }
 
 
+const barPopoverSegment = ref<'owned' | 'queued' | null>(null)
+const barPopoverStyle = ref<Record<string, string>>({})
+
+
+function onSegmentEnter(segment: 'owned' | 'queued', event: MouseEvent) {
+  barPopoverSegment.value = segment
+  updateBarPopoverPosition(event)
+}
+
+
+function onSegmentMove(event: MouseEvent) {
+  if (!barPopoverSegment.value) return
+  updateBarPopoverPosition(event)
+}
+
+
+function updateBarPopoverPosition(event: MouseEvent) {
+  const POPOVER_WIDTH = 180
+  const GAP = 12
+  const viewportWidth = document.documentElement.clientWidth
+  let top = event.clientY + GAP
+  let left = event.clientX - POPOVER_WIDTH / 2
+  left = Math.max(GAP, Math.min(left, viewportWidth - POPOVER_WIDTH - GAP))
+  barPopoverStyle.value = { position: 'fixed', top: `${top}px`, left: `${left}px` }
+}
+
+
+function onSegmentLeave() {
+  barPopoverSegment.value = null
+}
+
+
 const fulfilled = computed(() => props.inventoryAmount >= props.totalNeeded)
 
 
@@ -62,7 +95,9 @@ const progressPct = computed(() =>
 )
 
 
-const deficit = computed(() => Math.max(0, props.totalNeeded - props.inventoryAmount))
+const deficit = computed(() =>
+  Math.max(0, props.totalNeeded - props.inventoryAmount - (props.queuedAmount ?? 0)),
+)
 
 
 function fmt(n: number): string {
@@ -144,11 +179,29 @@ function fmt(n: number): string {
 
         <!-- Progress bar -->
         <div class="h-1.5 overflow-hidden rounded-full bg-border/30">
-          <div
-            class="h-full rounded-full transition-all"
-            :class="fulfilled ? 'bg-emerald-500' : 'bg-amber-400'"
-            :style="{ width: `${progressPct}%` }"
-          />
+          <div class="flex h-full">
+            <div
+              class="h-full rounded-l-full transition-all"
+              :class="[
+                fulfilled ? 'bg-emerald-500' : 'bg-amber-400',
+                { 'rounded-r-full': !queuedAmount || queuedAmount === 0 },
+              ]"
+              :style="{ width: `${progressPct}%` }"
+              @mouseenter="onSegmentEnter('owned', $event)"
+              @mousemove="onSegmentMove"
+              @mouseleave="onSegmentLeave"
+            />
+            <div
+              v-if="queuedAmount && queuedAmount > 0"
+              class="h-full rounded-r-full bg-sky-400 transition-all"
+              :style="{
+                width: `${Math.min(100 - progressPct, Math.round((queuedAmount / Math.max(1, totalNeeded)) * 100))}%`,
+              }"
+              @mouseenter="onSegmentEnter('queued', $event)"
+              @mousemove="onSegmentMove"
+              @mouseleave="onSegmentLeave"
+            />
+          </div>
         </div>
 
         <!-- Amounts -->
@@ -173,6 +226,32 @@ function fmt(n: number): string {
         </div>
       </div>
     </div>
+
+    <!-- Bar segment popover -->
+    <Teleport to="body">
+      <Transition name="chip-popover">
+        <div
+          v-if="barPopoverSegment !== null"
+          class="w-45 pointer-events-none z-50 overflow-hidden rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
+          :style="barPopoverStyle"
+        >
+          <div class="flex items-center gap-1.5 px-3 py-2">
+            <template v-if="barPopoverSegment === 'owned'">
+              <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+                {{ fmt(inventoryAmount) }}
+              </span>
+              <span class="text-[11px] text-muted-foreground">have</span>
+            </template>
+            <template v-else-if="barPopoverSegment === 'queued'">
+              <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+                {{ fmt(queuedAmount ?? 0) }}
+              </span>
+              <span class="text-[11px] text-muted-foreground">queued</span>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- Modifier chip popover -->
     <Teleport to="body">

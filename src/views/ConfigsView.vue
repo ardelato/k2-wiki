@@ -27,7 +27,7 @@ import {
   getMaxUnlockedTier,
   TIER_UNLOCK_REQUIREMENTS,
 } from '@/utils/expeditionUnlocks'
-import { toTitleCase } from '@/utils/format'
+import { formatDuration, toTitleCase } from '@/utils/format'
 import { levelFromXp, getPlayerLevel, getPlayerLevelXpBonus, SKILLING_IDS } from '@/utils/formulas'
 import {
   sourceIcons,
@@ -86,6 +86,11 @@ const {
   playerLevel,
   setSkillLevels,
   resetSkillLevels,
+  queuedAmounts,
+  queuedTimes,
+  setQueuedAmounts,
+  setQueuedTimes,
+  resetQueuedAmounts,
 } = useGameConfig()
 
 
@@ -362,6 +367,12 @@ const inventoryHasDiff = computed(() => {
 })
 
 
+const queuedHasDiff = computed(() => {
+  if (!saveConfig.value) return false
+  return JSON.stringify(queuedAmounts.value) !== JSON.stringify(saveConfig.value.queuedAmounts)
+})
+
+
 const gardenHasDiff = computed(() => {
   if (!saveConfig.value) return false
   return JSON.stringify(gardenFlowers.value) !== JSON.stringify(saveConfig.value.gardenFlowers)
@@ -554,6 +565,53 @@ const inventoryDiff = computed(() => {
 })
 
 
+function flattenQueued(nested: Record<string, Record<string, number>>): Record<string, number> {
+  const flat: Record<string, number> = {}
+  for (const items of Object.values(nested)) {
+    for (const [id, amount] of Object.entries(items)) {
+      if (amount > 0) flat[id] = (flat[id] ?? 0) + amount
+    }
+  }
+  return flat
+}
+
+
+const queuedDiff = computed(() => {
+  if (!saveConfig.value) return []
+  const saveFlat = flattenQueued(saveConfig.value.queuedAmounts)
+  const currentFlat = flattenQueued(queuedAmounts.value)
+  const allKeys = new Set([...Object.keys(saveFlat), ...Object.keys(currentFlat)])
+  return [...allKeys]
+    .map((id) => ({
+      id,
+      name: toTitleCase(id),
+      current: currentFlat[id] ?? 0,
+      save: saveFlat[id] ?? 0,
+    }))
+    .filter((d) => d.current !== d.save)
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+})
+
+
+const queuedStationCount = computed(() =>
+  Object.values(queuedAmounts.value).reduce((sum, items) => sum + Object.keys(items).length, 0),
+)
+
+
+const queuedByStation = computed(() =>
+  Object.entries(queuedAmounts.value)
+    .filter(([, items]) => Object.keys(items).length > 0)
+    .map(([station, items]) => ({
+      station,
+      items: Object.entries(items)
+        .filter(([, amount]) => amount > 0)
+        .map(([id, amount]) => ({ id, name: toTitleCase(id), amount }))
+        .toSorted((a, b) => a.name.localeCompare(b.name)),
+    }))
+    .toSorted((a, b) => a.station.localeCompare(b.station)),
+)
+
+
 interface GardenTierDiff {
   level: number
   current: number
@@ -640,6 +698,7 @@ watch(saveConfig, () => {
     if (!creatureCollectionHasDiff.value) sectionsCollapsed.value.creatures = true
     if (!exclusionsHaveDiff.value) sectionsCollapsed.value.exclusions = true
     if (!inventoryHasDiff.value) sectionsCollapsed.value.inventory = true
+    if (!queuedHasDiff.value) sectionsCollapsed.value.queued = true
     if (!gardenHasDiff.value) sectionsCollapsed.value.garden = true
     if (!awakenHasDiff.value) sectionsCollapsed.value.awaken = true
     if (!jobTiersHasDiff.value) sectionsCollapsed.value.jobTiers = true
@@ -680,6 +739,15 @@ function applyInventory() {
   inventoryAmounts.value = { ...saveConfig.value.inventory }
   appliedSections.value = { ...appliedSections.value, inventory: true }
   sectionsCollapsed.value = { ...sectionsCollapsed.value, inventory: true }
+}
+
+
+function applyQueued() {
+  if (!saveConfig.value) return
+  setQueuedAmounts({ ...saveConfig.value.queuedAmounts })
+  setQueuedTimes({ ...saveConfig.value.queuedTimes })
+  appliedSections.value = { ...appliedSections.value, queued: true }
+  sectionsCollapsed.value = { ...sectionsCollapsed.value, queued: true }
 }
 
 
@@ -766,6 +834,7 @@ function applyAll() {
   applyCreatureCollection()
   applyExclusions()
   applyInventory()
+  applyQueued()
   applyGarden()
   applyAwaken()
   applyTools()
@@ -1858,6 +1927,133 @@ function updateAwakenSpeed(ws: string, delta: number) {
           </p>
           <p v-else class="text-sm text-muted-foreground">
             {{ Object.keys(inventoryAmounts).length }} items tracked. Upload a save file to compare.
+          </p>
+        </div>
+      </div>
+
+      <!-- Workstation Queues -->
+      <div class="rounded-xl border border-border bg-card/50 p-4">
+        <div class="flex items-center justify-between">
+          <button class="flex items-center gap-2" @click="toggleSection('queued')">
+            <component
+              :is="sectionsCollapsed.queued ? ChevronDown : ChevronUp"
+              class="size-4 text-muted-foreground"
+            />
+            <h3 class="text-sm font-bold">Workstation Queues</h3>
+          </button>
+          <div class="flex items-center gap-2">
+            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
+              {{ queuedStationCount }} items
+            </span>
+            <template v-if="saveConfig">
+              <button
+                v-if="!appliedSections.queued && queuedHasDiff"
+                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
+                @click="applyQueued"
+              >
+                Apply
+              </button>
+              <span
+                v-else-if="!appliedSections.queued && !queuedHasDiff"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Matches Save
+              </span>
+              <span
+                v-else-if="appliedSections.queued"
+                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+              >
+                <Check class="size-3.5" /> Applied
+              </span>
+            </template>
+            <button
+              v-if="queuedStationCount > 0"
+              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+              @click="resetQueuedAmounts"
+            >
+              <RotateCcw class="size-3" />
+            </button>
+          </div>
+        </div>
+
+        <div v-if="!sectionsCollapsed.queued" class="mt-3 space-y-3">
+          <!-- Save Diff -->
+          <div v-if="saveConfig && queuedDiff.length > 0">
+            <p class="mb-1 text-xs font-medium text-muted-foreground">Save changes</p>
+            <div class="max-h-40 space-y-0.5 overflow-y-auto pr-1">
+              <div
+                v-for="d in queuedDiff"
+                :key="'diff-' + d.id"
+                class="flex items-center justify-between rounded-lg bg-amber-500/10 px-2 py-1.5 text-sm"
+              >
+                <div class="flex items-center gap-2">
+                  <img
+                    v-if="getItemImage({ id: d.id })"
+                    :src="getItemImage({ id: d.id })"
+                    :alt="d.name"
+                    class="size-5 object-contain"
+                    loading="lazy"
+                  />
+                  <span class="font-medium">{{ d.name }}</span>
+                </div>
+                <span class="tabular-nums text-muted-foreground">
+                  <span class="text-muted-foreground/60">{{ d.current.toLocaleString() }}</span>
+                  <span class="mx-1">&rarr;</span>
+                  <span class="text-foreground">{{ d.save.toLocaleString() }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+          <p
+            v-else-if="saveConfig && queuedDiff.length === 0 && queuedByStation.length > 0"
+            class="text-sm text-muted-foreground"
+          >
+            Queued items match save file.
+          </p>
+          <p
+            v-else-if="saveConfig && queuedByStation.length === 0"
+            class="text-sm text-muted-foreground"
+          >
+            No queued recipes found in save file.
+          </p>
+
+          <!-- Current queued items grouped by workstation -->
+          <div v-if="queuedByStation.length > 0" class="space-y-2">
+            <div v-for="group in queuedByStation" :key="group.station">
+              <div class="mb-1 flex items-center gap-2">
+                <p class="text-xs font-medium text-muted-foreground">{{ group.station }}</p>
+                <span
+                  v-if="queuedTimes[group.station]"
+                  class="rounded-md bg-muted/50 px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground"
+                >
+                  {{ formatDuration(queuedTimes[group.station]) }}
+                </span>
+              </div>
+              <div class="space-y-0.5">
+                <div
+                  v-for="item in group.items"
+                  :key="item.id"
+                  class="flex items-center justify-between rounded-lg bg-muted/30 px-2 py-1.5 text-sm"
+                >
+                  <div class="flex items-center gap-2">
+                    <img
+                      v-if="getItemImage({ id: item.id })"
+                      :src="getItemImage({ id: item.id })"
+                      :alt="item.name"
+                      class="size-5 object-contain"
+                      loading="lazy"
+                    />
+                    <span class="font-medium">{{ item.name }}</span>
+                  </div>
+                  <span class="tabular-nums text-foreground">
+                    {{ item.amount.toLocaleString() }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p v-else-if="!saveConfig" class="text-sm text-muted-foreground">
+            No queued recipes configured. Upload a save to import workstation queues.
           </p>
         </div>
       </div>

@@ -971,9 +971,11 @@ export function computeSchedule(
   activeMethodIdByNode: Record<string, string | null>,
   methodsById: Record<string, PlannerMethod>,
   modifiers?: PlannerModifiers,
+  /** Pre-existing queue times per workstation — offsets when the planner can start using each station */
+  queueOffsets?: Record<string, number>,
 ): PlannerSchedule {
   const tasks: ScheduledTask[] = []
-  const resourceNextFree: Record<string, number> = {}
+  const resourceNextFree: Record<string, number> = { ...queueOffsets }
   const completionTime = new Map<string, number>()
 
   function schedule(node: PlannerNode): number {
@@ -1181,6 +1183,8 @@ export function useCraftPlanner(
 
   const {
     inventoryAmounts: baseInventory,
+    queuedAmounts: baseQueuedAmounts,
+    queuedTimes: baseQueuedTimes,
     gardenFlowers: baseGarden,
     awakenGatherUpgrades: baseAwakenGather,
     awakenSpeedTiers: baseAwakenSpeed,
@@ -1209,7 +1213,20 @@ export function useCraftPlanner(
   const toolSpeedModeOverrides = ref<Record<string, boolean> | null>(null)
   const toolLevelOverrides = ref<Record<string, number> | null>(null)
 
-  const inventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
+  const rawInventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
+  const queuedAmounts = computed(() => baseQueuedAmounts.value)
+  const inventoryAmounts = computed(() => {
+    const inv = rawInventoryAmounts.value
+    const queued = queuedAmounts.value
+    if (Object.keys(queued).length === 0) return inv
+    const merged = { ...inv }
+    for (const stationItems of Object.values(queued)) {
+      for (const [id, amount] of Object.entries(stationItems)) {
+        if (amount > 0) merged[id] = (merged[id] ?? 0) + amount
+      }
+    }
+    return merged
+  })
   const gardenFlowers = computed(() => gardenOverrides.value ?? baseGarden.value)
   const awakenGatherUpgrades = computed(() => awakenGatherOverrides.value ?? baseAwakenGather.value)
   const awakenSpeedTiers = computed(() => awakenSpeedOverrides.value ?? baseAwakenSpeed.value)
@@ -1578,6 +1595,7 @@ export function useCraftPlanner(
       activeMethodIdByNode.value,
       graph.value.methodsById,
       modifiers.value,
+      baseQueuedTimes.value,
     )
   })
 
@@ -1617,6 +1635,16 @@ export function useCraftPlanner(
     shoppingListText,
     pinnedMethodIds,
     inventoryAmounts,
+    queuedAmounts,
+    flatQueuedAmounts: computed(() => {
+      const flat: Record<string, number> = {}
+      for (const stationItems of Object.values(queuedAmounts.value)) {
+        for (const [id, amount] of Object.entries(stationItems)) {
+          if (amount > 0) flat[id] = (flat[id] ?? 0) + amount
+        }
+      }
+      return flat
+    }),
     gardenFlowers,
     awakenGatherUpgrades,
     awakenSpeedTiers,

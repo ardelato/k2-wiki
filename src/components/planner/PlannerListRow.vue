@@ -13,6 +13,7 @@ const props = defineProps<{
   node: PlannerNode
   activeMethod: PlannerMethod | null
   inventoryAmount: number
+  queuedAmount?: number
   recommendation: { text: string } | null
   subtreeCost: number | null
 }>()
@@ -74,6 +75,55 @@ function onChipLeave() {
   activeChipIndex.value = null
   activeChip.value = null
 }
+
+
+const totalNeeded = computed(() => props.node.requiredAmount + props.inventoryAmount)
+
+
+const ownedPct = computed(() =>
+  Math.min(100, Math.round((props.inventoryAmount / Math.max(1, totalNeeded.value)) * 100)),
+)
+
+
+const queuedPct = computed(() => {
+  if (!props.queuedAmount || props.queuedAmount <= 0) return 0
+  return Math.min(
+    100 - ownedPct.value,
+    Math.round((props.queuedAmount / Math.max(1, totalNeeded.value)) * 100),
+  )
+})
+
+
+const barPopoverSegment = ref<'owned' | 'queued' | null>(null)
+const barPopoverStyle = ref<Record<string, string>>({})
+
+
+function onSegmentEnter(segment: 'owned' | 'queued', event: MouseEvent) {
+  barPopoverSegment.value = segment
+  updateBarPopoverPosition(event)
+}
+
+
+function onSegmentMove(event: MouseEvent) {
+  if (!barPopoverSegment.value) return
+  updateBarPopoverPosition(event)
+}
+
+
+function updateBarPopoverPosition(event: MouseEvent) {
+  const POPOVER_WIDTH = 180
+  const GAP = 12
+  const viewportWidth = document.documentElement.clientWidth
+  let top = event.clientY + GAP
+  let left = event.clientX - POPOVER_WIDTH / 2
+  left = Math.max(GAP, Math.min(left, viewportWidth - POPOVER_WIDTH - GAP))
+  barPopoverStyle.value = { position: 'fixed', top: `${top}px`, left: `${left}px` }
+}
+
+
+function onSegmentLeave() {
+  barPopoverSegment.value = null
+}
 </script>
 
 <template>
@@ -134,6 +184,27 @@ function onChipLeave() {
             activeMethod.title
           }}</span>
         </div>
+        <!-- Progress bar -->
+        <div class="h-1 overflow-hidden rounded-full bg-border/30">
+          <div class="flex h-full">
+            <div
+              class="h-full rounded-l-full bg-amber-400 transition-all duration-300"
+              :class="{ 'rounded-r-full': queuedPct === 0 }"
+              :style="{ width: `${ownedPct}%` }"
+              @mouseenter="onSegmentEnter('owned', $event)"
+              @mousemove="onSegmentMove"
+              @mouseleave="onSegmentLeave"
+            />
+            <div
+              v-if="queuedPct > 0"
+              class="h-full rounded-r-full bg-sky-400 transition-all duration-300"
+              :style="{ width: `${queuedPct}%` }"
+              @mouseenter="onSegmentEnter('queued', $event)"
+              @mousemove="onSegmentMove"
+              @mouseleave="onSegmentLeave"
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Right side: cost -->
@@ -156,6 +227,32 @@ function onChipLeave() {
     <!-- Recommendation hint -->
     <PlannerRecommendation v-if="recommendation" :text="recommendation.text" class="mx-1" />
   </div>
+
+  <!-- Bar segment popover -->
+  <Teleport to="body">
+    <Transition name="popover">
+      <div
+        v-if="barPopoverSegment !== null"
+        class="w-45 pointer-events-none z-50 overflow-hidden rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
+        :style="barPopoverStyle"
+      >
+        <div class="flex items-center gap-1.5 px-3 py-2">
+          <template v-if="barPopoverSegment === 'owned'">
+            <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+              {{ inventoryAmount.toLocaleString() }}
+            </span>
+            <span class="text-[11px] text-muted-foreground">have</span>
+          </template>
+          <template v-else-if="barPopoverSegment === 'queued'">
+            <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
+              {{ (queuedAmount ?? 0).toLocaleString() }}
+            </span>
+            <span class="text-[11px] text-muted-foreground">queued</span>
+          </template>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 
   <!-- Modifier chip popover -->
   <Teleport to="body">

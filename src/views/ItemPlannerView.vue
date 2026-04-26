@@ -93,6 +93,7 @@ const {
   activeMethodIdByNode,
   schedule,
   inventoryAmounts,
+  flatQueuedAmounts,
   getActiveMethod,
   setPinnedMethod,
   resetPins,
@@ -360,6 +361,16 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
         </template>
       </PlannerToolbar>
 
+      <div
+        v-if="rootNode"
+        class="flex items-center gap-2 rounded-lg border border-sky-500/25 bg-sky-500/5 px-3 py-2"
+      >
+        <span class="text-xs text-sky-700 dark:text-sky-300">
+          This planner targets <span class="font-bold">additional</span> crafts beyond your current
+          inventory and queued workstation items.
+        </span>
+      </div>
+
       <PlannerEmptyState
         v-if="!rootNode"
         title="Choose an item to begin planning."
@@ -455,6 +466,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
           :nodes-by-id="nodesById"
           :active-method-id-by-node="activeMethodIdByNode"
           :inventory-amounts="inventoryAmounts"
+          :queued-amounts="flatQueuedAmounts"
           :get-active-method="getActiveMethod"
           :recommendations="recommendations"
         />
@@ -465,6 +477,8 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
             :schedule="schedule"
             :nodes-by-id="nodesById"
             :selected-node-id="selectedNodeId"
+            :queue-offsets="gameConfig.queuedTimes.value"
+            :queued-amounts="flatQueuedAmounts"
             @select-node="selectNode"
           />
         </div>
@@ -479,6 +493,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
             :selected-method-id="null"
             :collapsed-node-ids="collapsedNodeIds"
             :inventory-amounts="inventoryAmounts"
+            :queued-amounts="flatQueuedAmounts"
             :completion-time-by-node="schedule?.completionTimeByNode ?? {}"
             :recommendations="recommendations"
             @select-node="selectNode"

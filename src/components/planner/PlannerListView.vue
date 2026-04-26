@@ -13,6 +13,7 @@ const props = defineProps<{
   nodesById: Record<string, PlannerNode>
   activeMethodIdByNode: Record<string, string | null>
   inventoryAmounts: Record<string, number>
+  queuedAmounts?: Record<string, number>
   getActiveMethod: (nodeId: string) => PlannerMethod | null
   recommendations: Record<string, { text: string }>
 }>()
@@ -157,6 +158,7 @@ defineExpose({ collapseAll, expandAll })
         :node="node"
         :active-method="getActiveMethod(node.id)"
         :inventory-amount="inventoryAmounts[node.itemId] ?? 0"
+        :queued-amount="queuedAmounts?.[node.itemId] ?? 0"
         :recommendation="recommendations[node.id] ?? null"
         :subtree-cost="subtreeCostForNode(node)"
       />

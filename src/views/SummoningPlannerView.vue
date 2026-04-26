@@ -51,6 +51,17 @@ const gameConfig = useGameConfig()
 const { goldPerMinute, breakdown: goldBreakdown } = useGoldIncome()
 
 
+const flatQueuedAmounts = computed(() => {
+  const flat: Record<string, number> = {}
+  for (const items of Object.values(gameConfig.queuedAmounts.value)) {
+    for (const [id, amount] of Object.entries(items)) {
+      if (amount > 0) flat[id] = (flat[id] ?? 0) + amount
+    }
+  }
+  return flat
+})
+
+
 const expeditions = expeditionsData as Expedition[]
 const biomeMap = new Map((biomesData as import('@/types').Biome[]).map((b) => [b.id, b]))
 
@@ -248,8 +259,12 @@ function sortTreeEntries(entries: GroupedCostEntry[]): GroupedCostEntry[] {
       case 'name':
         return dir * a.itemName.localeCompare(b.itemName)
       case 'progress': {
-        const invA = gameConfig.inventoryAmounts.value[a.itemId] ?? 0
-        const invB = gameConfig.inventoryAmounts.value[b.itemId] ?? 0
+        const invA =
+          (gameConfig.inventoryAmounts.value[a.itemId] ?? 0) +
+          (flatQueuedAmounts.value[a.itemId] ?? 0)
+        const invB =
+          (gameConfig.inventoryAmounts.value[b.itemId] ?? 0) +
+          (flatQueuedAmounts.value[b.itemId] ?? 0)
         const pctA = a.amount > 0 ? invA / a.amount : 1
         const pctB = b.amount > 0 ? invB / b.amount : 1
         return dir * (pctA - pctB) || a.itemName.localeCompare(b.itemName)
@@ -809,7 +824,7 @@ const mergedNodesById = computed(() => {
 
 
 const priorityWaves = computed(() =>
-  computePriorityWaves(mergedSchedule.value, mergedNodesById.value),
+  computePriorityWaves(mergedSchedule.value, mergedNodesById.value, flatQueuedAmounts.value),
 )
 
 
@@ -863,7 +878,9 @@ const readiness = computed(() => {
 
   let fulfilled = 0
   for (const cost of costs) {
-    const owned = gameConfig.inventoryAmounts.value[cost.itemId] ?? 0
+    const owned =
+      (gameConfig.inventoryAmounts.value[cost.itemId] ?? 0) +
+      (flatQueuedAmounts.value[cost.itemId] ?? 0)
     if (owned >= cost.amount) fulfilled++
   }
   const percent = Math.round((fulfilled / costs.length) * 100)
@@ -954,6 +971,7 @@ interface FlatListEntry {
   itemType: import('@/types').ItemType
   totalNeeded: number
   inventoryAmount: number
+  queuedAmount: number
   sourceLabel: string
   sourceIcon: string | null
   sourceGroup: SourceGroup
@@ -974,6 +992,8 @@ const flatListEntries = computed(() => {
     treeRef: InstanceType<typeof SummoningMaterialTree>,
   ) {
     const inv = gameConfig.inventoryAmounts.value[node.itemId] ?? 0
+    const queued = flatQueuedAmounts.value[node.itemId] ?? 0
+    const available = inv + queued
     const existing = merged.get(node.itemId)
 
     if (existing) {
@@ -991,8 +1011,9 @@ const flatListEntries = computed(() => {
         itemId: node.itemId,
         itemName: node.itemName,
         itemType: node.itemType,
-        totalNeeded: node.requiredAmount + inv,
-        inventoryAmount: inv,
+        totalNeeded: node.requiredAmount + available,
+        inventoryAmount: available,
+        queuedAmount: queued,
         sourceLabel: source.label,
         sourceIcon: source.icon,
         sourceGroup: group,
@@ -1033,6 +1054,7 @@ const flatListEntries = computed(() => {
       itemType: 'Currency',
       totalNeeded: totalGold.value,
       inventoryAmount: goldInventory.value,
+      queuedAmount: 0,
       sourceLabel: '',
       sourceIcon: getItemImage({ id: 'gold' }) ?? null,
       sourceGroup: 'Currency',
@@ -1275,6 +1297,7 @@ const flatGroupedCosts = computed(() => {
                     :item-type="entry.itemType"
                     :total-needed="entry.totalNeeded"
                     :inventory-amount="entry.inventoryAmount"
+                    :queued-amount="entry.queuedAmount"
                     :source-label="entry.sourceLabel"
                     :source-icon="entry.sourceIcon"
                     :modifiers="entry.modifiers"
@@ -1294,6 +1317,7 @@ const flatGroupedCosts = computed(() => {
                   :item-type="entry.itemType"
                   :total-needed="entry.totalNeeded"
                   :inventory-amount="entry.inventoryAmount"
+                  :queued-amount="entry.queuedAmount"
                   :source-label="entry.sourceLabel"
                   :source-icon="entry.sourceIcon"
                   :modifiers="entry.modifiers"
@@ -1311,6 +1335,8 @@ const flatGroupedCosts = computed(() => {
         :nodes-by-id="mergedNodesById"
         :waves="priorityWaves"
         :expedition-parties="expeditionPartiesByItemId"
+        :queue-offsets="gameConfig.queuedTimes.value"
+        :queued-amounts="flatQueuedAmounts"
       />
 
       <!-- Tree view -->
@@ -1349,6 +1375,7 @@ const flatGroupedCosts = computed(() => {
                     :selected-method-id="treeRefs[cost.sortedIndex].selectedMethodId"
                     :collapsed-node-ids="treeRefs[cost.sortedIndex].collapsedNodeIds"
                     :inventory-amounts="treeRefs[cost.sortedIndex].inventoryAmounts"
+                    :queued-amounts="flatQueuedAmounts"
                     :completion-time-by-node="
                       treeRefs[cost.sortedIndex].schedule?.completionTimeByNode ?? {}
                     "
@@ -1398,6 +1425,7 @@ const flatGroupedCosts = computed(() => {
                     :selected-method-id="treeRefs[cost.sortedIndex].selectedMethodId"
                     :collapsed-node-ids="treeRefs[cost.sortedIndex].collapsedNodeIds"
                     :inventory-amounts="treeRefs[cost.sortedIndex].inventoryAmounts"
+                    :queued-amounts="flatQueuedAmounts"
                     :completion-time-by-node="
                       treeRefs[cost.sortedIndex].schedule?.completionTimeByNode ?? {}
                     "

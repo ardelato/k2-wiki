@@ -27,6 +27,7 @@ export interface PriorityWave {
 export function computePriorityWaves(
   schedule: PlannerSchedule,
   nodesById?: Record<string, PlannerNode>,
+  queuedAmounts?: Record<string, number>,
 ): PriorityWave[] {
   if (schedule.tasks.length === 0) return []
 
@@ -75,7 +76,9 @@ export function computePriorityWaves(
     for (const task of raw.tasks) {
       const dedupeKey = `${task.resource}:${task.itemName}`
       const node = nodesById?.[task.passive?.linkedNodeId ?? task.nodeId]
-      const taskAmount = node?.requiredAmount ?? task.passive?.produced ?? 0
+      const rawAmount = node?.requiredAmount ?? task.passive?.produced ?? 0
+      const queued = node ? (queuedAmounts?.[node.itemId] ?? 0) : 0
+      const taskAmount = Math.max(0, rawAmount - queued)
 
       const existing = cardMap.get(dedupeKey)
       if (existing) {
