@@ -1,3 +1,4 @@
+import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useSanctuary } from '@/composables/useSanctuary'
@@ -7,6 +8,8 @@ describe('useSanctuary', () => {
   beforeEach(() => {
     const { resetGameConfig } = useGameConfig()
     resetGameConfig()
+    const { resetCollection } = useCreatureCollection()
+    resetCollection()
     localStorage.removeItem('sanctuary-target-tiers')
   })
 
@@ -305,6 +308,70 @@ describe('useSanctuary', () => {
       for (const job of SANCTUARY_JOBS) {
         expect(maxAchievableTiers.value[job]).toBeLessThanOrEqual(5)
       }
+    })
+
+    test('excludes owned-but-unawakened creatures from calculation', () => {
+      const { creatures } = useCreatures()
+      const { setOwned, setAwakened } = useCreatureCollection()
+
+      // Pick a creature with non-zero job scores
+      const creature = creatures.value.find((c) => Object.values(c.jobs).some((v) => v > 0))!
+
+      // Owned but NOT awakened — should be excluded from tier calc
+      setOwned(creature.id, true)
+
+      const { maxAchievableTiers } = useSanctuary()
+      const tiersExcluded = { ...maxAchievableTiers.value }
+
+      // Now awaken — should be included
+      setAwakened(creature.id, true)
+      const tiersIncluded = { ...maxAchievableTiers.value }
+
+      // Tiers should be at least as high when the creature is available
+      for (const job of SANCTUARY_JOBS) {
+        expect(tiersIncluded[job]).toBeGreaterThanOrEqual(tiersExcluded[job])
+      }
+    })
+  })
+
+  describe('owned-but-unawakened filtering', () => {
+    test('recommendedCreatures excludes owned-but-unawakened creatures', () => {
+      const { creatures } = useCreatures()
+      const { setOwned } = useCreatureCollection()
+      const { recommendedCreatures } = useSanctuary()
+      const creature = creatures.value[0]
+
+      // Mark as owned but not awakened (awakened defaults to false)
+      setOwned(creature.id, true)
+
+      const ids = recommendedCreatures.value.map(({ creature: c }) => c.id)
+      expect(ids).not.toContain(creature.id)
+    })
+
+    test('recommendedCreatures shows owned-but-unawakened when showExcludedCreatures is on', () => {
+      const { creatures } = useCreatures()
+      const { setOwned } = useCreatureCollection()
+      const { recommendedCreatures, showExcludedCreatures } = useSanctuary()
+      const creature = creatures.value[0]
+
+      setOwned(creature.id, true)
+      showExcludedCreatures.value = true
+
+      const ids = recommendedCreatures.value.map(({ creature: c }) => c.id)
+      expect(ids).toContain(creature.id)
+    })
+
+    test('recommendedCreatures includes owned-and-awakened creatures', () => {
+      const { creatures } = useCreatures()
+      const { setOwned, setAwakened } = useCreatureCollection()
+      const { recommendedCreatures } = useSanctuary()
+      const creature = creatures.value[0]
+
+      setOwned(creature.id, true)
+      setAwakened(creature.id, true)
+
+      const ids = recommendedCreatures.value.map(({ creature: c }) => c.id)
+      expect(ids).toContain(creature.id)
     })
   })
 })
