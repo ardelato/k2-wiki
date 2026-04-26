@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Compass } from 'lucide-vue-next'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Expedition } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import type { ExpeditionPlan } from '@/utils/expeditionOptimizer'
@@ -12,6 +15,9 @@ defineProps<{
   plans: { expedition: Expedition; plan: ExpeditionPlan }[]
   bestPlan: ExpeditionPlan
 }>()
+
+
+const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
 </script>
 
 <template>
@@ -86,23 +92,27 @@ defineProps<{
 
         <div class="flex items-center gap-1.5">
           <div class="flex min-w-0 flex-1 flex-wrap gap-1.5">
-            <div
+            <RightClickHint
               v-for="member in plan.party"
               :key="member.creature.id"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
+              @contextmenu="openCreature(member.creature)"
             >
-              <div class="size-5 overflow-hidden rounded-md bg-card">
-                <img
-                  v-if="getCreatureImage(member.creature)"
-                  :src="getCreatureImage(member.creature)"
-                  :alt="member.creature.name"
-                  class="size-full object-cover"
-                />
+              <div
+                class="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
+              >
+                <div class="size-5 overflow-hidden rounded-md bg-card">
+                  <img
+                    v-if="getCreatureImage(member.creature)"
+                    :src="getCreatureImage(member.creature)"
+                    :alt="member.creature.name"
+                    class="size-full object-cover"
+                  />
+                </div>
+                <span class="text-[10px] font-semibold text-foreground">{{
+                  member.creature.name
+                }}</span>
               </div>
-              <span class="text-[10px] font-semibold text-foreground">{{
-                member.creature.name
-              }}</span>
-            </div>
+            </RightClickHint>
           </div>
           <div class="shrink-0 text-right text-[10px] text-muted-foreground">
             <span>{{ toTitleCase(expedition.biome) }}</span>
@@ -112,4 +122,5 @@ defineProps<{
       </div>
     </div>
   </div>
+  <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
 </template>
