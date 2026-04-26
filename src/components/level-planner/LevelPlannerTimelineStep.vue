@@ -11,6 +11,8 @@ import {
 } from 'lucide-vue-next'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration } from '@/utils/format'
@@ -51,6 +53,9 @@ defineEmits<{
   selectAlternative: [fromLevel: number, toLevel: number, expeditionId: string, tier: number]
   resetOverride: [fromLevel: number]
 }>()
+
+
+const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
 
 
 function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
@@ -113,8 +118,9 @@ function formatDelta(value: number): string {
             v-if="partyMembers?.[0]?.creature"
             :src="getCreatureImage(partyMembers[0].creature)"
             :alt="creatureName"
-            class="size-10 shrink-0 rounded-lg border border-pink-500/30 object-cover sm:size-12"
+            class="size-10 shrink-0 cursor-pointer rounded-lg border border-pink-500/30 object-cover transition hover:ring-1 hover:ring-pink-500/50 sm:size-12"
             loading="lazy"
+            @click.stop="openCreature(partyMembers[0].creature!)"
           />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
@@ -216,11 +222,15 @@ function formatDelta(value: number): string {
               >
                 <div
                   class="relative size-16 overflow-hidden rounded-lg border bg-card/50 sm:size-20"
-                  :class="
+                  :class="[
                     highlightCreatureId && member.creatureId === highlightCreatureId
                       ? 'border-primary ring-2 ring-primary/50'
-                      : 'border-border'
-                  "
+                      : 'border-border',
+                    member.creature
+                      ? 'cursor-pointer transition hover:ring-1 hover:ring-accent/40'
+                      : '',
+                  ]"
+                  @click="member.creature ? openCreature(member.creature) : undefined"
                 >
                   <img
                     v-if="member.creature"
@@ -471,4 +481,5 @@ function formatDelta(value: number): string {
       </div>
     </div>
   </div>
+  <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
 </template>

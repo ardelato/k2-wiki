@@ -2,7 +2,10 @@
 import { Search } from 'lucide-vue-next'
 import { computed, ref, nextTick, watch } from 'vue'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
@@ -29,6 +32,12 @@ const emit = defineEmits<{
 
 
 const { creatures } = useCreatures()
+const {
+  selectedCreature: drawerCreature,
+  drawerOpen,
+  openCreature,
+  closeDrawer,
+} = useCreatureDrawer()
 const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
 
 
@@ -107,13 +116,15 @@ function close() {
       @click="toggle"
     >
       <template v-if="selected">
-        <img
-          :src="getCreatureImage(selected)"
-          :alt="selected.name"
-          class="size-10 rounded-xl border border-border object-cover"
-          :style="{ backgroundColor: `hsl(${typeColorVar(selected.types[0])} / 0.1)` }"
-          loading="lazy"
-        />
+        <RightClickHint @contextmenu="openCreature(selected)">
+          <img
+            :src="getCreatureImage(selected)"
+            :alt="selected.name"
+            class="size-10 rounded-xl border border-border object-cover"
+            :style="{ backgroundColor: `hsl(${typeColorVar(selected.types[0])} / 0.1)` }"
+            loading="lazy"
+          />
+        </RightClickHint>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-1.5">
             <p
@@ -199,13 +210,15 @@ function close() {
             "
             @click.stop="pick(creature)"
           >
-            <img
-              :src="getCreatureImage(creature)"
-              :alt="creature.name"
-              class="size-10 rounded-xl border border-border object-cover"
-              :style="{ backgroundColor: `hsl(${typeColorVar(creature.types[0])} / 0.1)` }"
-              loading="lazy"
-            />
+            <RightClickHint @contextmenu="openCreature(creature)">
+              <img
+                :src="getCreatureImage(creature)"
+                :alt="creature.name"
+                class="size-10 rounded-xl border border-border object-cover"
+                :style="{ backgroundColor: `hsl(${typeColorVar(creature.types[0])} / 0.1)` }"
+                loading="lazy"
+              />
+            </RightClickHint>
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1">
                 <p
@@ -241,4 +254,5 @@ function close() {
       </div>
     </Teleport>
   </div>
+  <CreatureDetail :creature="drawerCreature" :open="drawerOpen" @close="closeDrawer" />
 </template>
