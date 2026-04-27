@@ -1,6 +1,7 @@
 import axeIcon from '@/assets/icons/axe.webp'
 import choppingIcon from '@/assets/icons/chopping.webp'
 import diggingIcon from '@/assets/icons/digging.webp'
+import dungeonsIcon from '@/assets/icons/dungeons.webp'
 import expeditionToolIcon from '@/assets/icons/expedition.webp'
 import expeditionsIcon from '@/assets/icons/expeditions.webp'
 import exploringIcon from '@/assets/icons/explorering.webp'
@@ -30,7 +31,15 @@ import sawItemIcon from '@/assets/items/saw.webp'
 import stoneItemIcon from '@/assets/items/stone.webp'
 import twigItemIcon from '@/assets/items/twig.webp'
 
-export { expeditionsIcon, helpersIcon, itemGridIcon, machinesIcon, sanctuaryIcon, upgradesIcon }
+export {
+  dungeonsIcon,
+  expeditionsIcon,
+  helpersIcon,
+  itemGridIcon,
+  machinesIcon,
+  sanctuaryIcon,
+  upgradesIcon,
+}
 
 export const jobIcons: Record<string, string> = {
   chopping: choppingIcon,

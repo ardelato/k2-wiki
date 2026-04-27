@@ -21,6 +21,7 @@ const expeditionCreatureLevels = useLocalStorage<Record<string, number>>(
   {},
 )
 const expeditionLoopCounts = useLocalStorage<Record<string, number>>('expedition-loop-counts', {})
+const dungeonParty = useLocalStorage<string[]>('dungeon-party', [])
 
 const inventoryAmounts = useLocalStorage<Record<string, number>>('config-inventory', {})
 const gardenFlowers = useLocalStorage<Record<string, GardenFlowerEntry[]>>(
@@ -72,6 +73,7 @@ export function useGameConfig() {
     for (const id of helperCreatureIds.value) set.add(id)
     for (const id of machineCreatureIds.value) set.add(id)
     for (const id of expeditionCreatureIds.value) set.add(id)
+    for (const id of dungeonParty.value) set.add(id)
     return set
   })
 
@@ -231,6 +233,10 @@ export function useGameConfig() {
     expeditionLoopCounts.value = {}
   }
 
+  function resetDungeonParty() {
+    dungeonParty.value = []
+  }
+
   function resetGameConfig() {
     sanctuaryCreatureIds.value = []
     helperCreatureIds.value = []
@@ -247,6 +253,7 @@ export function useGameConfig() {
     resetFabrication()
     resetQueuedAmounts()
     resetSkillLevels()
+    resetDungeonParty()
   }
 
   return {
@@ -279,6 +286,8 @@ export function useGameConfig() {
     setExpeditionCreatureLevels,
     setExpeditionLoopCounts,
     resetExpeditionSetup,
+    dungeonParty,
+    resetDungeonParty,
     setInventory,
     resetInventory,
     setGardenFlowerEntries,

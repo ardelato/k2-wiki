@@ -96,6 +96,7 @@ const {
   setExpeditionCreatureLevels,
   setExpeditionLoopCounts,
   resetExpeditionSetup,
+  resetDungeonParty,
 } = useGameConfig()
 
 
@@ -960,7 +961,7 @@ function resetAll() {
   resetExpeditions()
   resetSkillLevels()
   resetCollection()
-  localStorage.removeItem('dungeon-party')
+  resetDungeonParty()
   localStorage.removeItem('dungeon-creature-levels')
   localStorage.removeItem('summoning-planner-selection')
 }
