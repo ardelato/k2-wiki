@@ -60,13 +60,12 @@ const GATHERING_SUB_FOCUSES: GatheringSubFocus[] = [
 ]
 
 export function useDungeons(creatures: Creature[], collectionLevels?: Ref<Record<string, number>>) {
-  const { excludedCreatureIds } = useGameConfig()
+  const { excludedCreatureIds, dungeonParty } = useGameConfig()
   const showExcludedCreatures = ref(false)
 
   const selectedTier = useLocalStorage<number>('dungeon-tier', 1)
   const selectedFocus = useLocalStorage<DungeonFocus>('dungeon-focus', 'combat')
   const selectedSubFocus = useLocalStorage<GatheringSubFocus>('dungeon-sub-focus', 'Mining')
-  const dungeonParty = useLocalStorage<string[]>('dungeon-party', [])
   const creatureLevels = useLocalStorage<Record<string, number>>('dungeon-creature-levels', {})
 
   // Merge collection levels as defaults behind dungeon-specific levels

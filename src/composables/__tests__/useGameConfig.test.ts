@@ -6,10 +6,11 @@ describe('useGameConfig', () => {
     resetGameConfig()
   })
 
-  test('excludedCreatureIds combines sanctuary, helper, machine, and expedition IDs', () => {
+  test('excludedCreatureIds combines sanctuary, helper, machine, expedition, and dungeon IDs', () => {
     const {
       excludedCreatureIds,
       expeditionParties,
+      dungeonParty,
       setSanctuaryCreatures,
       setHelperCreatures,
       setMachineCreatures,
@@ -18,18 +19,21 @@ describe('useGameConfig', () => {
     setHelperCreatures(['h1'])
     setMachineCreatures(['m1'])
     expeditionParties.value = { exp1: ['e1'] }
+    dungeonParty.value = ['d1']
     expect(excludedCreatureIds.value.has('s1')).toBe(true)
     expect(excludedCreatureIds.value.has('s2')).toBe(true)
     expect(excludedCreatureIds.value.has('h1')).toBe(true)
     expect(excludedCreatureIds.value.has('m1')).toBe(true)
     expect(excludedCreatureIds.value.has('e1')).toBe(true)
-    expect(excludedCreatureIds.value.size).toBe(5)
+    expect(excludedCreatureIds.value.has('d1')).toBe(true)
+    expect(excludedCreatureIds.value.size).toBe(6)
   })
 
   test('excludedCreatureIds deduplicates IDs that appear in multiple sources', () => {
     const {
       excludedCreatureIds,
       expeditionParties,
+      dungeonParty,
       setSanctuaryCreatures,
       setHelperCreatures,
       setMachineCreatures,
@@ -38,6 +42,7 @@ describe('useGameConfig', () => {
     setHelperCreatures(['shared', 'unique-h'])
     setMachineCreatures(['shared'])
     expeditionParties.value = { exp1: ['shared'] }
+    dungeonParty.value = ['shared']
     expect(excludedCreatureIds.value.has('shared')).toBe(true)
     expect(excludedCreatureIds.value.size).toBe(3)
   })
@@ -249,6 +254,7 @@ describe('useGameConfig', () => {
     config.setSkillLevels({ mining: 5 })
     config.setQueuedAmounts({ Furnace: { 'copper-bar': 10 } })
     config.setQueuedTimes({ Furnace: 5000 })
+    config.dungeonParty.value = ['c1', 'c2']
 
     // Reset everything
     config.resetGameConfig()
@@ -277,5 +283,6 @@ describe('useGameConfig', () => {
     expect(config.skillLevels.value).toEqual({})
     expect(config.queuedAmounts.value).toEqual({})
     expect(config.queuedTimes.value).toEqual({})
+    expect(config.dungeonParty.value).toEqual([])
   })
 })
