@@ -89,6 +89,21 @@ const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
 const sortByJob = ref<string>('recommended')
 
 
+const hasTargets = computed(() => Object.values(targetTiers.value).some((t) => t > 0))
+
+
+const highlightedJobs = computed<Set<string>>(() => {
+  const jobs = new Set<string>()
+  if (sortByJob.value !== 'recommended') jobs.add(sortByJob.value)
+  if (hasTargets.value) {
+    for (const job of SANCTUARY_JOBS) {
+      if ((targetTiers.value[job] ?? 0) > 0) jobs.add(job)
+    }
+  }
+  return jobs
+})
+
+
 const creatureTierOptions = computed(() => {
   const tiers = new Set(recommendedCreatures.value.map(({ creature }) => creature.tier))
   return Array.from(tiers).toSorted((a, b) => a - b)
@@ -141,7 +156,9 @@ const displayRecommended = computed(() => {
   if (sortByJob.value === 'recommended') return list
 
   const jobKey = sortByJob.value.toLowerCase() as keyof Jobs
-  return [...list].toSorted((a, b) => (b.creature.jobs[jobKey] ?? 0) - (a.creature.jobs[jobKey] ?? 0))
+  return [...list].toSorted(
+    (a, b) => (b.creature.jobs[jobKey] ?? 0) - (a.creature.jobs[jobKey] ?? 0),
+  )
 })
 
 
@@ -854,32 +871,40 @@ function chooseCreature(creature: Creature) {
                         >Not Awakened</span
                       >
                     </AppTooltip>
-                    <span
-                      v-if="score > 0"
-                      class="ml-auto shrink-0 font-mono text-sm font-semibold text-primary"
-                      >{{ score }}</span
-                    >
+                    <span v-if="score > 0" class="ml-auto flex shrink-0 items-baseline gap-1">
+                      <span class="font-mono text-sm font-semibold text-primary">{{ score }}</span>
+                      <span class="text-[10px] text-muted-foreground">{{
+                        hasTargets ? 'value' : 'total'
+                      }}</span>
+                    </span>
                   </div>
                   <div class="mt-1 flex gap-1 divide-x divide-border">
                     <div
                       v-for="(job, ji) in SANCTUARY_JOBS"
                       :key="job"
-                      class="flex flex-1 items-center gap-[2px]"
-                      :class="ji > 0 ? 'pl-1' : ''"
+                      class="flex flex-1 items-center gap-[2px] rounded-md px-0.5 py-0.5 transition"
+                      :class="[
+                        ji > 0 ? 'pl-1' : '',
+                        highlightedJobs.has(job) ? 'bg-primary/10 ring-1 ring-primary/30' : '',
+                        highlightedJobs.size > 0 && !highlightedJobs.has(job) ? 'opacity-25' : '',
+                      ]"
                       :title="`${job}: ${creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0}`"
                     >
                       <img
                         :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
                         :alt="job"
-                        class="size-3.5 shrink-0 opacity-60"
+                        class="size-3.5 shrink-0"
+                        :class="highlightedJobs.has(job) ? 'opacity-100' : 'opacity-60'"
                         loading="lazy"
                       />
                       <span
                         class="w-3 shrink-0 font-mono text-[10px] font-semibold"
                         :class="
-                          (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
-                            ? 'text-muted-foreground'
-                            : 'text-muted-foreground/30'
+                          highlightedJobs.has(job)
+                            ? 'text-primary'
+                            : (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
+                              ? 'text-muted-foreground'
+                              : 'text-muted-foreground/30'
                         "
                       >
                         {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
