@@ -17,7 +17,14 @@ import {
   maxLevelForState,
   statLabels,
 } from '@/utils/formulas'
-import { jobIcons, sanctuaryIcon, helpersIcon, machinesIcon, dungeonsIcon } from '@/utils/icons'
+import {
+  jobIcons,
+  sanctuaryIcon,
+  helpersIcon,
+  machinesIcon,
+  dungeonsIcon,
+  expeditionsIcon,
+} from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
 import ProficiencyRing from './ProficiencyRing.vue'
@@ -37,8 +44,13 @@ const emit = defineEmits<{
 
 const { isOwned, isAwakened, toggleOwned, setAwakened, getLevel, stepLevel, normalizeLevelOnBlur } =
   useCreatureCollection()
-const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds, dungeonParty } =
-  useGameConfig()
+const {
+  sanctuaryCreatureIds,
+  helperCreatureIds,
+  machineCreatureIds,
+  dungeonParty,
+  expeditionCreatureIds,
+} = useGameConfig()
 
 
 const maxJobLevel = 10
@@ -51,6 +63,7 @@ const assignmentBadge = computed(() => {
   if (helperCreatureIds.value.includes(id)) return { icon: helpersIcon, label: 'Helper' }
   if (machineCreatureIds.value.includes(id)) return { icon: machinesIcon, label: 'Machine' }
   if (dungeonParty.value.includes(id)) return { icon: dungeonsIcon, label: 'Dungeon' }
+  if (expeditionCreatureIds.value.has(id)) return { icon: expeditionsIcon, label: 'Expedition' }
   return null
 })
 
