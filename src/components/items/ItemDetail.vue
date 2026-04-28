@@ -2,6 +2,7 @@
 import { X, ChevronRight, ChevronDown, GitBranch } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useItems } from '@/composables/useItems'
 import expeditionsData from '@/data/expeditions.json'
 import { summoningIndex } from '@/data/indexes'
@@ -630,32 +631,34 @@ const jobColorMap: Record<string, string> = {
           Summoning
         </h3>
         <div class="grid grid-cols-4 gap-3">
-          <div
+          <RightClickHint
             v-for="creature in summoningCreatures"
             :key="creature.id"
-            role="button"
-            class="relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-muted/20 transition hover:ring-1 hover:ring-accent/40"
-            @click="emit('select-creature', creature.id)"
+            @contextmenu="emit('select-creature', creature.id)"
           >
-            <img
-              v-if="getCreatureImage({ id: creature.id, image: '' })"
-              :src="getCreatureImage({ id: creature.id, image: '' })"
-              :alt="`${creature.name} artwork`"
-              class="size-full object-cover"
-              loading="lazy"
-            />
             <div
-              v-else
-              class="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground/50"
+              class="relative aspect-square overflow-hidden rounded-lg bg-muted/20 transition hover:ring-1 hover:ring-accent/40"
             >
-              {{ creature.name.charAt(0) }}
+              <img
+                v-if="getCreatureImage({ id: creature.id, image: '' })"
+                :src="getCreatureImage({ id: creature.id, image: '' })"
+                :alt="`${creature.name} artwork`"
+                class="size-full object-cover"
+                loading="lazy"
+              />
+              <div
+                v-else
+                class="flex size-full items-center justify-center text-2xl font-bold text-muted-foreground/50"
+              >
+                {{ creature.name.charAt(0) }}
+              </div>
+              <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
+                <p class="truncate text-center text-[10px] font-semibold text-white">
+                  {{ creature.name }}
+                </p>
+              </div>
             </div>
-            <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
-              <p class="truncate text-center text-[10px] font-semibold text-white">
-                {{ creature.name }}
-              </p>
-            </div>
-          </div>
+          </RightClickHint>
         </div>
       </section>
     </div>

@@ -35,7 +35,7 @@ const props = withDefaults(
 const {
   selectedCreature: ganttInspectedCreature,
   drawerOpen: ganttDrawerOpen,
-  openCreature: ganttInspectCreature,
+  toggleCreature: ganttToggleCreature,
   closeDrawer: ganttCloseDrawer,
 } = useCreatureDrawer()
 
@@ -396,7 +396,7 @@ const activeBarScoreRatio = computed(() => {
             >
               <RightClickHint
                 v-if="marker.creature"
-                @contextmenu="ganttInspectCreature(marker.creature)"
+                @contextmenu="ganttToggleCreature(marker.creature)"
               >
                 <img
                   :src="getCreatureImage(marker.creature)"
@@ -452,7 +452,7 @@ const activeBarScoreRatio = computed(() => {
               <RightClickHint
                 v-for="cId in bar.creatureIds.slice(0, 3)"
                 :key="cId"
-                @contextmenu="ganttInspectCreature(creatures.get(cId)!)"
+                @contextmenu="ganttToggleCreature(creatures.get(cId)!)"
               >
                 <img
                   :src="getCreatureImage(creatures.get(cId)!)"
@@ -602,14 +602,17 @@ const activeBarScoreRatio = computed(() => {
                 :key="member.creatureId"
                 class="flex items-center gap-2"
               >
-                <img
+                <RightClickHint
                   v-if="creatures.get(member.creatureId)"
-                  :src="getCreatureImage(creatures.get(member.creatureId)!)"
-                  :alt="creatures.get(member.creatureId)?.name"
-                  class="size-7 shrink-0 cursor-pointer rounded-full border border-border object-cover transition hover:ring-1 hover:ring-accent/40"
-                  loading="lazy"
-                  @click="ganttInspectCreature(creatures.get(member.creatureId)!)"
-                />
+                  @contextmenu="ganttToggleCreature(creatures.get(member.creatureId)!)"
+                >
+                  <img
+                    :src="getCreatureImage(creatures.get(member.creatureId)!)"
+                    :alt="creatures.get(member.creatureId)?.name"
+                    class="size-7 shrink-0 rounded-full border border-border object-cover transition hover:ring-1 hover:ring-accent/40"
+                    loading="lazy"
+                  />
+                </RightClickHint>
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-xs font-semibold text-foreground">
                     {{ creatures.get(member.creatureId)?.name ?? member.creatureId }}
@@ -646,22 +649,25 @@ const activeBarScoreRatio = computed(() => {
         >
           <div class="px-4 py-3">
             <div class="flex items-center gap-3">
-              <div
-                class="size-10 shrink-0 cursor-pointer overflow-hidden rounded-full border-2 border-pink-500 bg-card transition hover:ring-1 hover:ring-pink-500/50"
-                @click="
-                  activeAwakenMarker.creature
-                    ? ganttInspectCreature(activeAwakenMarker.creature)
-                    : undefined
-                "
+              <RightClickHint
+                v-if="activeAwakenMarker.creature"
+                @contextmenu="ganttToggleCreature(activeAwakenMarker.creature)"
               >
-                <img
-                  v-if="activeAwakenMarker.creature"
-                  :src="getCreatureImage(activeAwakenMarker.creature)"
-                  :alt="activeAwakenMarker.creature.name"
-                  class="size-full object-cover"
-                  loading="lazy"
-                />
-              </div>
+                <div
+                  class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card transition hover:ring-1 hover:ring-pink-500/50"
+                >
+                  <img
+                    :src="getCreatureImage(activeAwakenMarker.creature)"
+                    :alt="activeAwakenMarker.creature.name"
+                    class="size-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              </RightClickHint>
+              <div
+                v-else
+                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card"
+              />
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1.5">
                   <img

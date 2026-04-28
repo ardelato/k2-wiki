@@ -17,9 +17,17 @@ export function useCreatureDrawer() {
     selectedCreature.value = creature
   }
 
-  function openCreatureById(id: string) {
+  function toggleCreature(creature: Creature) {
+    if (drawerOpen.value && selectedCreature.value?.id === creature.id) {
+      closeDrawer()
+    } else {
+      openCreature(creature)
+    }
+  }
+
+  function toggleCreatureById(id: string) {
     const creature = creatures.find((c) => c.id === id)
-    if (creature) selectedCreature.value = creature
+    if (creature) toggleCreature(creature)
   }
 
   function closeDrawer() {
@@ -27,5 +35,12 @@ export function useCreatureDrawer() {
     selectedCreature.value = null
   }
 
-  return { selectedCreature, drawerOpen, openCreature, openCreatureById, closeDrawer }
+  return {
+    selectedCreature,
+    drawerOpen,
+    openCreature,
+    toggleCreature,
+    toggleCreatureById,
+    closeDrawer,
+  }
 }

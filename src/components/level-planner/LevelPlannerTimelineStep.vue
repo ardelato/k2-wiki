@@ -12,6 +12,7 @@ import {
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
@@ -55,7 +56,7 @@ defineEmits<{
 }>()
 
 
-const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
+const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 
 
 function nodeColor(status: 'advantage' | 'disadvantage' | 'neutral'): string {
@@ -114,14 +115,17 @@ function formatDelta(value: number): string {
         class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-amber-500/10"
       >
         <div class="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
-          <img
+          <RightClickHint
             v-if="partyMembers?.[0]?.creature"
-            :src="getCreatureImage(partyMembers[0].creature)"
-            :alt="creatureName"
-            class="size-10 shrink-0 cursor-pointer rounded-lg border border-pink-500/30 object-cover transition hover:ring-1 hover:ring-pink-500/50 sm:size-12"
-            loading="lazy"
-            @click.stop="openCreature(partyMembers[0].creature!)"
-          />
+            @contextmenu="toggleCreature(partyMembers[0].creature!)"
+          >
+            <img
+              :src="getCreatureImage(partyMembers[0].creature)"
+              :alt="creatureName"
+              class="size-10 shrink-0 rounded-lg border border-pink-500/30 object-cover transition hover:ring-1 hover:ring-pink-500/50 sm:size-12"
+              loading="lazy"
+            />
+          </RightClickHint>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <div class="flex min-w-0 flex-1 items-center gap-2">
@@ -226,31 +230,46 @@ function formatDelta(value: number): string {
                     highlightCreatureId && member.creatureId === highlightCreatureId
                       ? 'border-primary ring-2 ring-primary/50'
                       : 'border-border',
-                    member.creature
-                      ? 'cursor-pointer transition hover:ring-1 hover:ring-accent/40'
-                      : '',
+                    member.creature ? 'transition hover:ring-1 hover:ring-accent/40' : '',
                   ]"
-                  @click="member.creature ? openCreature(member.creature) : undefined"
                 >
-                  <img
+                  <RightClickHint
                     v-if="member.creature"
-                    :src="getCreatureImage(member.creature)"
-                    :alt="member.creature?.name ?? member.creatureId"
-                    class="size-full object-cover"
-                    loading="lazy"
-                  />
-                  <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
-                    <p
-                      class="truncate text-center text-[10px] font-semibold"
-                      :class="
-                        highlightCreatureId && member.creatureId === highlightCreatureId
-                          ? 'text-primary'
-                          : 'text-white'
-                      "
-                    >
-                      {{ member.creature?.name ?? member.creatureId }}
-                    </p>
-                  </div>
+                    @contextmenu="toggleCreature(member.creature)"
+                  >
+                    <img
+                      :src="getCreatureImage(member.creature)"
+                      :alt="member.creature?.name ?? member.creatureId"
+                      class="size-full object-cover"
+                      loading="lazy"
+                    />
+                    <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
+                      <p
+                        class="truncate text-center text-[10px] font-semibold"
+                        :class="
+                          highlightCreatureId && member.creatureId === highlightCreatureId
+                            ? 'text-primary'
+                            : 'text-white'
+                        "
+                      >
+                        {{ member.creature?.name ?? member.creatureId }}
+                      </p>
+                    </div>
+                  </RightClickHint>
+                  <template v-else>
+                    <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
+                      <p
+                        class="truncate text-center text-[10px] font-semibold"
+                        :class="
+                          highlightCreatureId && member.creatureId === highlightCreatureId
+                            ? 'text-primary'
+                            : 'text-white'
+                        "
+                      >
+                        {{ member.creatureId }}
+                      </p>
+                    </div>
+                  </template>
                 </div>
                 <span
                   class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"

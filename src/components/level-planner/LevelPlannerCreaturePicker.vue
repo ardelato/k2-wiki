@@ -35,7 +35,7 @@ const { creatures } = useCreatures()
 const {
   selectedCreature: drawerCreature,
   drawerOpen,
-  openCreature,
+  toggleCreature,
   closeDrawer,
 } = useCreatureDrawer()
 const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
@@ -116,7 +116,7 @@ function close() {
       @click="toggle"
     >
       <template v-if="selected">
-        <RightClickHint @contextmenu="openCreature(selected)">
+        <RightClickHint @contextmenu="toggleCreature(selected)">
           <img
             :src="getCreatureImage(selected)"
             :alt="selected.name"
@@ -210,7 +210,7 @@ function close() {
             "
             @click.stop="pick(creature)"
           >
-            <RightClickHint @contextmenu="openCreature(creature)">
+            <RightClickHint @contextmenu="toggleCreature(creature)">
               <img
                 :src="getCreatureImage(creature)"
                 :alt="creature.name"

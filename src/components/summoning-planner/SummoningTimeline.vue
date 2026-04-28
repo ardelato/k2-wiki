@@ -26,7 +26,7 @@ const props = defineProps<{
 }>()
 
 
-const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
+const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 
 
 /** Kinds that are passive / non-actionable — hide from priority steps */
@@ -226,7 +226,7 @@ function copyScheduleJson() {
                 <RightClickHint
                   v-for="member in expeditionParties[card.itemId].party"
                   :key="member.creature.id"
-                  @contextmenu="openCreature(member.creature)"
+                  @contextmenu="toggleCreature(member.creature)"
                 >
                   <div
                     class="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"

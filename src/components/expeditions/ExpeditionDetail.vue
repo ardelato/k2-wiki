@@ -2,6 +2,7 @@
 import { ChevronDown, Compass, Minus, Plus, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 
+import RightClickHint from '@/components/shared/RightClickHint.vue'
 import type { Creature, Expedition, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { TIER_UNLOCK_REQUIREMENTS } from '@/utils/expeditionUnlocks'
@@ -128,26 +129,29 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
           Recommended Creatures
         </h4>
         <div class="flex flex-wrap gap-2">
-          <div
+          <RightClickHint
             v-for="{ creature, percent } in topRecommendedCreatures"
             :key="creature.id"
-            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3 transition hover:border-accent/45 hover:bg-muted/50"
-            @click="emit('inspect-creature', creature)"
+            @contextmenu="emit('inspect-creature', creature)"
           >
-            <div class="size-6 overflow-hidden rounded-full bg-card">
-              <img
-                :src="getCreatureImage(creature)"
-                :alt="creature.name"
-                class="size-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <span class="text-xs font-semibold">{{ creature.name }}</span>
-            <span
-              class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary"
-              >{{ percent }}%</span
+            <div
+              class="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3 transition hover:border-accent/45 hover:bg-muted/50"
             >
-          </div>
+              <div class="size-6 overflow-hidden rounded-full bg-card">
+                <img
+                  :src="getCreatureImage(creature)"
+                  :alt="creature.name"
+                  class="size-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <span class="text-xs font-semibold">{{ creature.name }}</span>
+              <span
+                class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                >{{ percent }}%</span
+              >
+            </div>
+          </RightClickHint>
         </div>
       </div>
 
@@ -312,26 +316,24 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
               @click="!slot ? emit('set-active-slot', index) : undefined"
             >
               <template v-if="slot">
-                <img
-                  :src="getCreatureImage(slot)"
-                  :alt="`${slot.name} artwork`"
-                  class="size-full cursor-pointer object-cover"
-                  loading="lazy"
-                  @click="emit('inspect-creature', slot)"
-                />
-                <span
-                  class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
-                >
-                  {{ getCreatureSlotRating(slot) }}
-                </span>
-                <div
-                  class="absolute inset-x-0 bottom-0 cursor-pointer select-none bg-black/75 px-1.5 py-1"
-                  @click="emit('inspect-creature', slot)"
-                >
-                  <p class="truncate text-center text-[10px] font-semibold text-white">
-                    {{ slot.name }}
-                  </p>
-                </div>
+                <RightClickHint @contextmenu="emit('inspect-creature', slot)">
+                  <img
+                    :src="getCreatureImage(slot)"
+                    :alt="`${slot.name} artwork`"
+                    class="size-full object-cover"
+                    loading="lazy"
+                  />
+                  <span
+                    class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
+                  >
+                    {{ getCreatureSlotRating(slot) }}
+                  </span>
+                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1.5 py-1">
+                    <p class="truncate text-center text-[10px] font-semibold text-white">
+                      {{ slot.name }}
+                    </p>
+                  </div>
+                </RightClickHint>
                 <button
                   class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                   @click.stop="emit('remove-creature', index)"

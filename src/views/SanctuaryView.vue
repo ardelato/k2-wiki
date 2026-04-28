@@ -60,7 +60,7 @@ const {
 const {
   selectedCreature: inspectedCreature,
   drawerOpen: creatureDrawerOpen,
-  openCreature: inspectCreature,
+  toggleCreature: toggleInspectCreature,
   closeDrawer: closeCreatureDrawer,
 } = useCreatureDrawer()
 
@@ -406,21 +406,21 @@ function chooseCreature(creature: Creature) {
                   @click="!slot ? setActiveSlot(index) : undefined"
                 >
                   <template v-if="slot">
-                    <img
-                      :src="getCreatureImage(slot)"
-                      :alt="slot.name"
-                      class="size-full cursor-pointer object-cover"
-                      loading="lazy"
-                      @click="inspectCreature(slot)"
-                    />
-                    <div
-                      class="absolute inset-x-0 bottom-0 cursor-pointer select-none bg-black/75 px-0.5 py-0.5"
-                      @click="inspectCreature(slot)"
-                    >
-                      <p class="truncate text-center text-[8px] font-semibold text-white">
-                        {{ slot.name }}
-                      </p>
-                    </div>
+                    <RightClickHint @contextmenu="toggleInspectCreature(slot)">
+                      <img
+                        :src="getCreatureImage(slot)"
+                        :alt="slot.name"
+                        class="size-full object-cover"
+                        loading="lazy"
+                      />
+                      <div
+                        class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-0.5 py-0.5"
+                      >
+                        <p class="truncate text-center text-[8px] font-semibold text-white">
+                          {{ slot.name }}
+                        </p>
+                      </div>
+                    </RightClickHint>
                     <button
                       class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                       @click.stop="removeCreatureFromSlot(index)"
@@ -790,7 +790,7 @@ function chooseCreature(creature: Creature) {
               "
               @click="chooseCreature(creature)"
             >
-              <RightClickHint @contextmenu="inspectCreature(creature)">
+              <RightClickHint @contextmenu="toggleInspectCreature(creature)">
                 <!-- Image + assignment badge -->
                 <div class="relative size-12 shrink-0">
                   <img

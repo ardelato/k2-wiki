@@ -33,7 +33,7 @@ const { isOwned, isAwakened, collectionLevels } = useCreatureCollection()
 const {
   selectedCreature: inspectedCreature,
   drawerOpen: creatureDrawerOpen,
-  openCreature: inspectCreature,
+  toggleCreature: toggleInspectCreature,
   closeDrawer: closeCreatureDrawer,
 } = useCreatureDrawer()
 
@@ -672,26 +672,24 @@ const tierLevelReq = computed(() => {
                   @click="!slot ? setActiveSlot(index) : undefined"
                 >
                   <template v-if="slot">
-                    <img
-                      :src="getCreatureImage(slot)"
-                      :alt="`${slot.name} artwork`"
-                      class="size-full cursor-pointer object-cover"
-                      loading="lazy"
-                      @click="inspectCreature(slot)"
-                    />
-                    <span
-                      class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
-                    >
-                      {{ getCreatureSlotScore(slot) }}
-                    </span>
-                    <div
-                      class="absolute inset-x-0 bottom-0 cursor-pointer select-none bg-black/75 px-1.5 py-1"
-                      @click="inspectCreature(slot)"
-                    >
-                      <p class="truncate text-center text-[10px] font-semibold text-white">
-                        {{ slot.name }}
-                      </p>
-                    </div>
+                    <RightClickHint @contextmenu="toggleInspectCreature(slot)">
+                      <img
+                        :src="getCreatureImage(slot)"
+                        :alt="`${slot.name} artwork`"
+                        class="size-full object-cover"
+                        loading="lazy"
+                      />
+                      <span
+                        class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
+                      >
+                        {{ getCreatureSlotScore(slot) }}
+                      </span>
+                      <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1.5 py-1">
+                        <p class="truncate text-center text-[10px] font-semibold text-white">
+                          {{ slot.name }}
+                        </p>
+                      </div>
+                    </RightClickHint>
                     <button
                       class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
                       @click.stop="removeCreatureFromSlot(index)"
@@ -946,7 +944,7 @@ const tierLevelReq = computed(() => {
             @click="chooseCreature(creature)"
           >
             <div class="flex items-start gap-3">
-              <RightClickHint @contextmenu="inspectCreature(creature)">
+              <RightClickHint @contextmenu="toggleInspectCreature(creature)">
                 <div class="relative shrink-0">
                   <img
                     :src="getCreatureImage(creature)"
