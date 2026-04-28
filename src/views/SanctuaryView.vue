@@ -23,6 +23,11 @@ import {
   JOB_TIER_BENEFITS,
   TIER_THRESHOLDS_RAW,
   jobTierLabel,
+  tierBenefitType,
+  tierIncrementalLabel,
+  progressPercent,
+  targetPercent,
+  isScoreAtThreshold,
 } from '@/utils/sanctuaryConstants'
 
 const route = useRoute()
@@ -288,46 +293,6 @@ function toggleCreatureTier(tier: number) {
   } else {
     selectedCreatureTiers.value = [...selectedCreatureTiers.value, tier]
   }
-}
-
-
-// ── Helpers ──
-const maxScore = TIER_THRESHOLDS_RAW[TIER_THRESHOLDS_RAW.length - 1] // 54
-
-
-type BenefitType = 'xp' | 'duration' | 'yield'
-
-
-function tierBenefitType(tier: number): BenefitType {
-  if (tier < 1 || tier > 5) return 'xp'
-  const curr = JOB_TIER_BENEFITS[tier]
-  const prev = JOB_TIER_BENEFITS[tier - 1]
-  if (curr.xpBonus > prev.xpBonus) return 'xp'
-  if (curr.durationReduction > prev.durationReduction) return 'duration'
-  return 'yield'
-}
-
-
-function tierIncrementalLabel(tier: number): string {
-  if (tier < 1 || tier > 5) return ''
-  const curr = JOB_TIER_BENEFITS[tier]
-  const prev = JOB_TIER_BENEFITS[tier - 1]
-  if (curr.xpBonus > prev.xpBonus) return `+${curr.xpBonus - prev.xpBonus}% XP`
-  if (curr.durationReduction > prev.durationReduction)
-    return `-${curr.durationReduction - prev.durationReduction}% Dur`
-  if (curr.yieldBonus > prev.yieldBonus) return `+${curr.yieldBonus - prev.yieldBonus} Yield`
-  return ''
-}
-
-
-function progressPercent(score: number): number {
-  return Math.min(100, (score / maxScore) * 100)
-}
-
-
-function targetPercent(targetTier: number): number {
-  if (targetTier <= 0 || targetTier > 5) return 0
-  return (TIER_THRESHOLDS_RAW[targetTier - 1] / maxScore) * 100
 }
 
 
