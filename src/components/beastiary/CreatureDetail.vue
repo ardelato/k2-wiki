@@ -113,6 +113,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
         v-if="open && creature"
         class="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
         @click="emit('close')"
+        @contextmenu.prevent="emit('close')"
       />
     </Transition>
 
