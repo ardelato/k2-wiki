@@ -36,7 +36,7 @@ export function jobTierLabel(tier: number, shortDuration = false): string {
 
 export const MAX_SCORE = TIER_THRESHOLDS_RAW[TIER_THRESHOLDS_RAW.length - 1]
 
-export type BenefitType = 'xp' | 'duration' | 'yield'
+type BenefitType = 'xp' | 'duration' | 'yield'
 
 export function tierBenefitType(tier: number): BenefitType {
   if (tier < 1 || tier > MAX_TIER) return 'xp'
