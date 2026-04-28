@@ -86,6 +86,7 @@ const selectedCreatureType = ref<ElementType | 'all'>('all')
 const selectedCreatureTiers = ref<number[]>([])
 const showMoreCreatureFilters = ref(false)
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
+const sortByJob = ref<string>('recommended')
 
 
 const creatureTierOptions = computed(() => {
@@ -133,9 +134,14 @@ const filteredRecommended = computed(() => {
 
 
 const displayRecommended = computed(() => {
-  if (ownedOnly.value)
-    return filteredRecommended.value.filter(({ creature }) => isOwned(creature.id))
-  return filteredRecommended.value
+  const list = ownedOnly.value
+    ? filteredRecommended.value.filter(({ creature }) => isOwned(creature.id))
+    : filteredRecommended.value
+
+  if (sortByJob.value === 'recommended') return list
+
+  const jobKey = sortByJob.value.toLowerCase() as keyof Jobs
+  return [...list].toSorted((a, b) => (b.creature.jobs[jobKey] ?? 0) - (a.creature.jobs[jobKey] ?? 0))
 })
 
 
@@ -242,6 +248,7 @@ function clearCreatureFilters() {
   selectedCreatureTiers.value = [...creatureTierOptions.value]
   ownedOnly.value = true
   showExcludedCreatures.value = false
+  sortByJob.value = 'recommended'
 }
 
 
@@ -717,6 +724,44 @@ function chooseCreature(creature: Creature) {
             @remove="removeCreatureFilter"
             @clear-all="clearCreatureFilters"
           />
+        </div>
+
+        <!-- Sort row -->
+        <div class="flex items-center gap-3 border-b border-border/70 py-1.5 pl-[20px] pr-[20px]">
+          <AppTooltip text="Recommended" position="top">
+            <button
+              class="focus-ring inline-flex w-12 shrink-0 items-center justify-center rounded-md border px-1 py-1 text-[10px] font-medium transition"
+              :class="
+                sortByJob === 'recommended'
+                  ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
+                  : 'border-border bg-muted/40 text-muted-foreground'
+              "
+              @click="sortByJob = 'recommended'"
+            >
+              Rec.
+            </button>
+          </AppTooltip>
+          <div class="flex min-w-0 flex-1 gap-1">
+            <button
+              v-for="job in SANCTUARY_JOBS"
+              :key="job"
+              class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[10px] font-medium transition"
+              :class="
+                sortByJob === job
+                  ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
+                  : 'border-border bg-muted/40 text-muted-foreground'
+              "
+              @click="sortByJob = sortByJob === job ? 'recommended' : job"
+            >
+              <img
+                :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
+                :alt="job"
+                class="size-3"
+                loading="lazy"
+              />
+              <span class="hidden sm:inline">{{ job }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- Creature list -->
