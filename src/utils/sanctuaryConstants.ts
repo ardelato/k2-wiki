@@ -34,6 +34,44 @@ export function jobTierLabel(tier: number, shortDuration = false): string {
   return parts.join(', ')
 }
 
+export const MAX_SCORE = TIER_THRESHOLDS_RAW[TIER_THRESHOLDS_RAW.length - 1]
+
+type BenefitType = 'xp' | 'duration' | 'yield'
+
+export function tierBenefitType(tier: number): BenefitType {
+  if (tier < 1 || tier > MAX_TIER) return 'xp'
+  const curr = JOB_TIER_BENEFITS[tier]
+  const prev = JOB_TIER_BENEFITS[tier - 1]
+  if (curr.xpBonus > prev.xpBonus) return 'xp'
+  if (curr.durationReduction > prev.durationReduction) return 'duration'
+  return 'yield'
+}
+
+export function tierIncrementalLabel(tier: number): string {
+  if (tier < 1 || tier > MAX_TIER) return ''
+  const curr = JOB_TIER_BENEFITS[tier]
+  const prev = JOB_TIER_BENEFITS[tier - 1]
+  if (curr.xpBonus > prev.xpBonus) return `+${curr.xpBonus - prev.xpBonus}% XP`
+  if (curr.durationReduction > prev.durationReduction)
+    return `-${curr.durationReduction - prev.durationReduction}% Dur`
+  if (curr.yieldBonus > prev.yieldBonus) return `+${curr.yieldBonus - prev.yieldBonus} Yield`
+  return ''
+}
+
+export function progressPercent(score: number): number {
+  return Math.min(100, (score / MAX_SCORE) * 100)
+}
+
+export function targetPercent(targetTier: number): number {
+  if (targetTier <= 0 || targetTier > MAX_TIER) return 0
+  return (TIER_THRESHOLDS_RAW[targetTier - 1] / MAX_SCORE) * 100
+}
+
+export function isScoreAtThreshold(score: number): boolean {
+  if (score >= MAX_SCORE) return false
+  return TIER_THRESHOLDS_RAW.includes(score)
+}
+
 export const JOB_COLORS: Record<string, string> = {
   chopping: '#59e843',
   mining: '#c9c9c9',

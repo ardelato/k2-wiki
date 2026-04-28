@@ -23,6 +23,11 @@ import {
   JOB_TIER_BENEFITS,
   TIER_THRESHOLDS_RAW,
   jobTierLabel,
+  tierBenefitType,
+  tierIncrementalLabel,
+  progressPercent,
+  targetPercent,
+  isScoreAtThreshold,
 } from '@/utils/sanctuaryConstants'
 
 const route = useRoute()
@@ -86,6 +91,22 @@ const selectedCreatureType = ref<ElementType | 'all'>('all')
 const selectedCreatureTiers = ref<number[]>([])
 const showMoreCreatureFilters = ref(false)
 const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
+const sortByJob = ref<string>('recommended')
+
+
+const hasTargets = computed(() => Object.values(targetTiers.value).some((t) => t > 0))
+
+
+const highlightedJobs = computed<Set<string>>(() => {
+  const jobs = new Set<string>()
+  if (sortByJob.value !== 'recommended') jobs.add(sortByJob.value)
+  if (hasTargets.value) {
+    for (const job of SANCTUARY_JOBS) {
+      if ((targetTiers.value[job] ?? 0) > 0) jobs.add(job)
+    }
+  }
+  return jobs
+})
 
 
 const creatureTierOptions = computed(() => {
@@ -133,9 +154,16 @@ const filteredRecommended = computed(() => {
 
 
 const displayRecommended = computed(() => {
-  if (ownedOnly.value)
-    return filteredRecommended.value.filter(({ creature }) => isOwned(creature.id))
-  return filteredRecommended.value
+  const list = ownedOnly.value
+    ? filteredRecommended.value.filter(({ creature }) => isOwned(creature.id))
+    : filteredRecommended.value
+
+  if (sortByJob.value === 'recommended') return list
+
+  const jobKey = sortByJob.value.toLowerCase() as keyof Jobs
+  return [...list].toSorted(
+    (a, b) => (b.creature.jobs[jobKey] ?? 0) - (a.creature.jobs[jobKey] ?? 0),
+  )
 })
 
 
@@ -242,6 +270,7 @@ function clearCreatureFilters() {
   selectedCreatureTiers.value = [...creatureTierOptions.value]
   ownedOnly.value = true
   showExcludedCreatures.value = false
+  sortByJob.value = 'recommended'
 }
 
 
@@ -264,46 +293,6 @@ function toggleCreatureTier(tier: number) {
   } else {
     selectedCreatureTiers.value = [...selectedCreatureTiers.value, tier]
   }
-}
-
-
-// ── Helpers ──
-const maxScore = TIER_THRESHOLDS_RAW[TIER_THRESHOLDS_RAW.length - 1] // 54
-
-
-type BenefitType = 'xp' | 'duration' | 'yield'
-
-
-function tierBenefitType(tier: number): BenefitType {
-  if (tier < 1 || tier > 5) return 'xp'
-  const curr = JOB_TIER_BENEFITS[tier]
-  const prev = JOB_TIER_BENEFITS[tier - 1]
-  if (curr.xpBonus > prev.xpBonus) return 'xp'
-  if (curr.durationReduction > prev.durationReduction) return 'duration'
-  return 'yield'
-}
-
-
-function tierIncrementalLabel(tier: number): string {
-  if (tier < 1 || tier > 5) return ''
-  const curr = JOB_TIER_BENEFITS[tier]
-  const prev = JOB_TIER_BENEFITS[tier - 1]
-  if (curr.xpBonus > prev.xpBonus) return `+${curr.xpBonus - prev.xpBonus}% XP`
-  if (curr.durationReduction > prev.durationReduction)
-    return `-${curr.durationReduction - prev.durationReduction}% Dur`
-  if (curr.yieldBonus > prev.yieldBonus) return `+${curr.yieldBonus - prev.yieldBonus} Yield`
-  return ''
-}
-
-
-function progressPercent(score: number): number {
-  return Math.min(100, (score / maxScore) * 100)
-}
-
-
-function targetPercent(targetTier: number): number {
-  if (targetTier <= 0 || targetTier > 5) return 0
-  return (TIER_THRESHOLDS_RAW[targetTier - 1] / maxScore) * 100
 }
 
 
@@ -458,21 +447,36 @@ function chooseCreature(creature: Creature) {
               <h3 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Skill Benefits
               </h3>
-              <div
-                v-if="unreachableTargets.length > 0"
-                class="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400"
-              >
-                <AlertCircle class="size-3 shrink-0" />
-                <template v-for="(job, i) in unreachableTargets" :key="job">
-                  <span v-if="i > 0">,</span>
-                  <img
-                    :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
-                    :alt="job"
-                    class="size-3"
-                  />
-                  <span>{{ job }}</span>
-                </template>
-                <span>unreachable</span>
+              <div class="flex items-center gap-2">
+                <AppTooltip
+                  v-if="unreachableTargets.length > 0"
+                  text="These targets cannot be reached with the current selectable creatures"
+                  position="bottom"
+                >
+                  <div
+                    class="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400"
+                  >
+                    <AlertCircle class="size-3 shrink-0" />
+                    <template v-for="(job, i) in unreachableTargets" :key="job">
+                      <span v-if="i > 0">,</span>
+                      <img
+                        :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
+                        :alt="job"
+                        class="size-3"
+                      />
+                      <span>{{ job }}</span>
+                    </template>
+                    <span>unreachable</span>
+                  </div>
+                </AppTooltip>
+                <button
+                  class="focus-ring inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] font-semibold text-red-400 transition hover:bg-red-500/20"
+                  :class="hasTargets ? '' : 'invisible'"
+                  @click="setAllTargets(0)"
+                >
+                  <X class="size-3" />
+                  Clear Targets
+                </button>
               </div>
             </div>
             <div class="space-y-2">
@@ -482,7 +486,7 @@ function chooseCreature(creature: Creature) {
                 class="rounded-lg border border-border/50 bg-muted/10 px-3 py-2.5"
               >
                 <!-- Header: icon + name + active benefit pills -->
-                <div class="mb-1.5 flex items-center gap-1.5">
+                <div class="mb-1.5 flex min-h-7 items-center gap-1.5">
                   <img
                     :src="jobIcons[jp.job.toLowerCase() as keyof typeof jobIcons]"
                     :alt="jp.job"
@@ -490,7 +494,7 @@ function chooseCreature(creature: Creature) {
                     loading="lazy"
                   />
                   <span class="text-sm font-semibold">{{ jp.job }}</span>
-                  <div v-if="jp.tier > 0" class="ml-auto flex gap-1">
+                  <div v-if="jp.tier > 0" class="ml-auto flex flex-wrap justify-end gap-1">
                     <span
                       v-if="JOB_TIER_BENEFITS[jp.tier].xpBonus > 0"
                       class="inline-flex items-center gap-0.5 rounded-full border border-emerald-500/25 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
@@ -520,27 +524,30 @@ function chooseCreature(creature: Creature) {
 
                 <!-- Progress bar with tier markers -->
                 <div class="space-y-0.5">
-                  <div
-                    class="relative h-3 overflow-hidden rounded-full border border-border/40 bg-muted/30 dark:border-transparent"
-                  >
+                  <div class="relative">
                     <div
-                      class="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
-                      :style="{
-                        width: `${progressPercent(jp.score)}%`,
-                        backgroundColor: JOB_COLORS[jp.job.toLowerCase()],
-                      }"
-                    />
-                    <!-- Tier threshold markers -->
+                      class="relative h-3 overflow-hidden rounded-full border border-border/40 bg-muted/30 dark:border-transparent"
+                    >
+                      <div
+                        class="absolute inset-y-0 left-0 transition-all duration-500"
+                        :class="isScoreAtThreshold(jp.score) ? 'rounded-l-full' : 'rounded-full'"
+                        :style="{
+                          width: `${progressPercent(jp.score)}%`,
+                          backgroundColor: JOB_COLORS[jp.job.toLowerCase()],
+                        }"
+                      />
+                    </div>
+                    <!-- Tier threshold markers (overlaid on top of bar) -->
                     <div
                       v-for="t in [1, 2, 3, 4, 5]"
                       :key="t"
-                      class="absolute inset-y-0 w-px bg-foreground/30"
+                      class="absolute inset-y-0 w-px -translate-x-1/2 bg-foreground/30"
                       :style="{ left: `${targetPercent(t)}%` }"
                     />
                     <!-- Target marker -->
                     <div
                       v-if="(targetTiers[jp.job] ?? 0) > jp.tier"
-                      class="absolute inset-y-0 w-0.5 bg-primary shadow-sm shadow-primary/50"
+                      class="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-primary shadow-sm shadow-primary/50"
                       :style="{ left: `${targetPercent(targetTiers[jp.job])}%` }"
                     />
                   </div>
@@ -586,29 +593,35 @@ function chooseCreature(creature: Creature) {
                 </div>
 
                 <!-- Target selector -->
-                <div class="mt-1.5 flex gap-[3px]">
-                  <button
-                    v-for="t in [1, 2, 3, 4, 5]"
-                    :key="t"
-                    class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded px-0.5 py-1 text-[10px] font-semibold transition"
-                    :class="
-                      (targetTiers[jp.job] ?? 0) === t
-                        ? 'bg-primary text-primary-foreground'
-                        : jp.tier >= t
-                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
-                          : 'bg-muted/50 text-muted-foreground hover:text-foreground'
-                    "
-                    :title="`Tier ${t}: ${jobTierLabel(t)}`"
-                    @click="setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t ? 0 : t)"
+                <div class="mt-2">
+                  <span
+                    class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    >Set Target</span
                   >
-                    <template v-if="jp.tier >= t">✓</template>
-                    <template v-else>
-                      <Zap v-if="tierBenefitType(t) === 'xp'" class="size-2.5" />
-                      <Clock3 v-else-if="tierBenefitType(t) === 'duration'" class="size-2.5" />
-                      <Layers v-else class="size-2.5" />
-                      <span class="hidden sm:inline">{{ tierIncrementalLabel(t) }}</span>
-                    </template>
-                  </button>
+                  <div class="flex gap-1">
+                    <button
+                      v-for="t in [1, 2, 3, 4, 5]"
+                      :key="t"
+                      class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[10px] font-medium transition"
+                      :class="
+                        (targetTiers[jp.job] ?? 0) === t
+                          ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
+                          : jp.tier >= t
+                            ? 'border-emerald-500/30 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                            : 'border-border bg-muted/40 text-muted-foreground hover:border-primary/50 hover:text-foreground'
+                      "
+                      :title="`Tier ${t}: ${jobTierLabel(t)}`"
+                      @click="setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t ? 0 : t)"
+                    >
+                      <template v-if="jp.tier >= t">✓</template>
+                      <template v-else>
+                        <Zap v-if="tierBenefitType(t) === 'xp'" class="size-2.5" />
+                        <Clock3 v-else-if="tierBenefitType(t) === 'duration'" class="size-2.5" />
+                        <Layers v-else class="size-2.5" />
+                      </template>
+                      <span class="hidden text-[9px] sm:inline">{{ tierIncrementalLabel(t) }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -719,6 +732,44 @@ function chooseCreature(creature: Creature) {
           />
         </div>
 
+        <!-- Sort row -->
+        <div class="flex items-center gap-3 border-b border-border/70 py-1.5 pl-[20px] pr-[20px]">
+          <AppTooltip text="Recommended" position="top">
+            <button
+              class="focus-ring inline-flex w-12 shrink-0 items-center justify-center rounded-md border px-1 py-1 text-[10px] font-medium transition"
+              :class="
+                sortByJob === 'recommended'
+                  ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
+                  : 'border-border bg-muted/40 text-muted-foreground'
+              "
+              @click="sortByJob = 'recommended'"
+            >
+              Rec.
+            </button>
+          </AppTooltip>
+          <div class="flex min-w-0 flex-1 gap-1">
+            <button
+              v-for="job in SANCTUARY_JOBS"
+              :key="job"
+              class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[10px] font-medium transition"
+              :class="
+                sortByJob === job
+                  ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
+                  : 'border-border bg-muted/40 text-muted-foreground'
+              "
+              @click="sortByJob = sortByJob === job ? 'recommended' : job"
+            >
+              <img
+                :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
+                :alt="job"
+                class="size-3"
+                loading="lazy"
+              />
+              <span class="hidden sm:inline">{{ job }}</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Creature list -->
         <div class="flex-1 overflow-y-auto p-2">
           <div
@@ -809,25 +860,44 @@ function chooseCreature(creature: Creature) {
                         >Not Awakened</span
                       >
                     </AppTooltip>
-                    <span
-                      v-if="score > 0"
-                      class="ml-auto shrink-0 font-mono text-sm font-semibold text-primary"
-                      >{{ score }}</span
-                    >
+                    <span v-if="score > 0" class="ml-auto flex shrink-0 items-baseline gap-1">
+                      <span class="font-mono text-sm font-semibold text-primary">{{ score }}</span>
+                      <span class="text-[10px] text-muted-foreground">{{
+                        hasTargets ? 'value' : 'total'
+                      }}</span>
+                    </span>
                   </div>
-                  <div class="mt-1 flex gap-1">
+                  <div class="mt-1 flex gap-1 divide-x divide-border">
                     <div
-                      v-for="job in SANCTUARY_JOBS"
+                      v-for="(job, ji) in SANCTUARY_JOBS"
                       :key="job"
-                      class="flex flex-1 items-center gap-[2px]"
+                      class="flex flex-1 items-center gap-[2px] rounded-md px-0.5 py-0.5 transition"
+                      :class="[
+                        ji > 0 ? 'pl-1' : '',
+                        highlightedJobs.has(job) ? 'bg-primary/10 ring-1 ring-primary/30' : '',
+                        highlightedJobs.size > 0 && !highlightedJobs.has(job) ? 'opacity-25' : '',
+                      ]"
                       :title="`${job}: ${creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0}`"
                     >
                       <img
                         :src="jobIcons[job.toLowerCase() as keyof typeof jobIcons]"
                         :alt="job"
-                        class="size-3.5 shrink-0 opacity-60"
+                        class="size-3.5 shrink-0"
+                        :class="highlightedJobs.has(job) ? 'opacity-100' : 'opacity-60'"
                         loading="lazy"
                       />
+                      <span
+                        class="w-3 shrink-0 font-mono text-[10px] font-semibold"
+                        :class="
+                          highlightedJobs.has(job)
+                            ? 'text-primary'
+                            : (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
+                              ? 'text-muted-foreground'
+                              : 'text-muted-foreground/30'
+                        "
+                      >
+                        {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
+                      </span>
                       <div class="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/30">
                         <div
                           class="h-full rounded-full"
@@ -840,16 +910,6 @@ function chooseCreature(creature: Creature) {
                           }"
                         />
                       </div>
-                      <span
-                        class="w-3 shrink-0 text-right font-mono text-[10px] font-semibold"
-                        :class="
-                          (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
-                            ? 'text-muted-foreground'
-                            : 'text-muted-foreground/30'
-                        "
-                      >
-                        {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
-                      </span>
                     </div>
                   </div>
                 </div>
