@@ -815,11 +815,12 @@ function chooseCreature(creature: Creature) {
                       >{{ score }}</span
                     >
                   </div>
-                  <div class="mt-1 flex gap-1">
+                  <div class="mt-1 flex gap-1 divide-x divide-border">
                     <div
-                      v-for="job in SANCTUARY_JOBS"
+                      v-for="(job, ji) in SANCTUARY_JOBS"
                       :key="job"
                       class="flex flex-1 items-center gap-[2px]"
+                      :class="ji > 0 ? 'pl-1' : ''"
                       :title="`${job}: ${creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0}`"
                     >
                       <img
@@ -828,6 +829,16 @@ function chooseCreature(creature: Creature) {
                         class="size-3.5 shrink-0 opacity-60"
                         loading="lazy"
                       />
+                      <span
+                        class="w-3 shrink-0 font-mono text-[10px] font-semibold"
+                        :class="
+                          (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
+                            ? 'text-muted-foreground'
+                            : 'text-muted-foreground/30'
+                        "
+                      >
+                        {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
+                      </span>
                       <div class="h-2.5 flex-1 overflow-hidden rounded-full bg-muted/30">
                         <div
                           class="h-full rounded-full"
@@ -840,16 +851,6 @@ function chooseCreature(creature: Creature) {
                           }"
                         />
                       </div>
-                      <span
-                        class="w-3 shrink-0 text-right font-mono text-[10px] font-semibold"
-                        :class="
-                          (creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0) > 0
-                            ? 'text-muted-foreground'
-                            : 'text-muted-foreground/30'
-                        "
-                      >
-                        {{ creature.jobs[job.toLowerCase() as keyof Jobs] ?? 0 }}
-                      </span>
                     </div>
                   </div>
                 </div>
