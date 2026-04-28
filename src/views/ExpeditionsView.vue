@@ -307,7 +307,7 @@ function chooseCreature(creature: Creature) {
 const {
   selectedCreature: inspectedCreature,
   drawerOpen: creatureDrawerOpen,
-  openCreature: inspectCreature,
+  toggleCreature: toggleInspectCreature,
   closeDrawer: closeCreatureDrawer,
 } = useCreatureDrawer()
 
@@ -514,7 +514,7 @@ function rowSelected(id: string): boolean {
                   <RightClickHint
                     v-for="creature in getPartyCreatures(expedition.id)"
                     :key="creature.id"
-                    @contextmenu="inspectCreature(creature)"
+                    @contextmenu="toggleInspectCreature(creature)"
                   >
                     <div
                       class="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
@@ -588,7 +588,7 @@ function rowSelected(id: string): boolean {
         @update:loop-count="loopCount = $event"
         @set-active-slot="setActiveSlot"
         @remove-creature="removeCreatureFromSlot"
-        @inspect-creature="inspectCreature"
+        @inspect-creature="toggleInspectCreature"
       />
 
       <!-- Column 3: Creature Selector -->
@@ -606,7 +606,7 @@ function rowSelected(id: string): boolean {
         :show-excluded-creatures="showExcludedCreatures"
         @update:show-excluded-creatures="showExcludedCreatures = $event"
         @choose-creature="chooseCreature"
-        @inspect-creature="inspectCreature"
+        @inspect-creature="toggleInspectCreature"
         @step-level="stepCreatureLevel"
         @normalize-level="normalizeLevelOnBlur"
       />

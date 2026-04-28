@@ -31,7 +31,7 @@ const {
 const {
   selectedCreature: drawerCreature,
   drawerOpen: creatureDrawerOpen,
-  openCreatureById,
+  toggleCreatureById,
   closeDrawer: closeCreatureDrawer,
 } = useCreatureDrawer()
 
@@ -539,7 +539,7 @@ onMounted(() => {
               :item="selectedItem"
               @close="closeDetail"
               @select-item="selectItemById"
-              @select-creature="openCreatureById"
+              @select-creature="toggleCreatureById"
             />
           </div>
         </aside>
@@ -576,7 +576,7 @@ onMounted(() => {
                 :item="selectedItem"
                 @close="closeDetail"
                 @select-item="selectItemById"
-                @select-creature="openCreatureById"
+                @select-creature="toggleCreatureById"
               />
             </div>
           </Transition>

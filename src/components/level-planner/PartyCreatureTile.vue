@@ -22,7 +22,7 @@ defineEmits<{
 }>()
 
 
-const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
+const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 
 
 function tileBorderClass(): string {
@@ -60,7 +60,7 @@ function levelBadgeClass(): string {
       :title="`${creature.name} — LVL ${level}${awakened ? ' ★' : ''}${titleSuffix ?? ''}`"
       @click="$emit('toggle')"
     >
-      <RightClickHint @contextmenu="openCreature(creature)">
+      <RightClickHint @contextmenu="toggleCreature(creature)">
         <img
           v-if="getCreatureImage(creature)"
           :src="getCreatureImage(creature)"

@@ -55,7 +55,7 @@ const { goldPerMinute, breakdown: goldBreakdown } = useGoldIncome()
 const {
   selectedCreature: inspectedCreature,
   drawerOpen: creatureDrawerOpen,
-  openCreature: inspectCreature,
+  toggleCreature: toggleInspectCreature,
   closeDrawer: closeCreatureDrawer,
 } = useCreatureDrawer()
 
@@ -1515,7 +1515,7 @@ const flatGroupedCosts = computed(() => {
                             v-for="member in getActiveExpeditionParty(cost.sortedIndex)!
                               .activeVariant.party"
                             :key="member.creature.id"
-                            @contextmenu="inspectCreature(member.creature)"
+                            @contextmenu="toggleInspectCreature(member.creature)"
                           >
                             <div
                               class="inline-flex cursor-default items-center gap-1.5 rounded-lg border py-0.5 pl-0.5 pr-2"
@@ -1586,7 +1586,7 @@ const flatGroupedCosts = computed(() => {
                               <RightClickHint
                                 v-for="member in variant.party"
                                 :key="member.creature.id"
-                                @contextmenu="inspectCreature(member.creature)"
+                                @contextmenu="toggleInspectCreature(member.creature)"
                               >
                                 <div
                                   class="inline-flex items-center gap-1 rounded-md border border-border/40 bg-muted/25 py-0.5 pl-0.5 pr-1.5"

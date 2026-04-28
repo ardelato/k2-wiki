@@ -17,7 +17,7 @@ defineProps<{
 }>()
 
 
-const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
+const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 </script>
 
 <template>
@@ -95,7 +95,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             <RightClickHint
               v-for="member in plan.party"
               :key="member.creature.id"
-              @contextmenu="openCreature(member.creature)"
+              @contextmenu="toggleCreature(member.creature)"
             >
               <div
                 class="inline-flex cursor-default items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-0.5 pr-2"
