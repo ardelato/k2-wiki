@@ -293,7 +293,10 @@ function forwardPinMethod(nodeId: string, methodId: string) {
             <div class="mt-1.5 flex items-baseline justify-between">
               <span class="font-mono text-[11px] font-semibold">
                 <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
-                <span class="text-foreground">{{ stockOnHand.toLocaleString() }}</span>
+                <span class="text-foreground"
+                  >{{ stockOnHand.toLocaleString()
+                  }}<sup v-if="queuedForItem > 0" class="text-sky-500">*</sup></span
+                >
                 <span class="text-muted-foreground/50"> / {{ totalNeeded.toLocaleString() }}</span>
                 <span class="text-[10px] font-normal text-muted-foreground/50"> Total</span>
               </span>

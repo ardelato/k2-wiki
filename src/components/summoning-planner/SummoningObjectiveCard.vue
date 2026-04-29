@@ -87,6 +87,8 @@ function onSegmentLeave() {
 }
 
 
+// Only fulfilled when raw inventory alone covers the need — queued items
+// shouldn't mark an objective as complete since they're still being crafted.
 const fulfilled = computed(() => props.inventoryAmount >= props.totalNeeded)
 
 
@@ -187,9 +189,9 @@ function fmt(n: number): string {
                 { 'rounded-r-full': !queuedAmount || queuedAmount === 0 },
               ]"
               :style="{ width: `${progressPct}%` }"
-              @mouseenter="onSegmentEnter('owned', $event)"
-              @mousemove="onSegmentMove"
-              @mouseleave="onSegmentLeave"
+              @mouseenter="!fulfilled && onSegmentEnter('owned', $event)"
+              @mousemove="!fulfilled && onSegmentMove($event)"
+              @mouseleave="!fulfilled && onSegmentLeave()"
             />
             <div
               v-if="queuedAmount && queuedAmount > 0"
@@ -197,9 +199,9 @@ function fmt(n: number): string {
               :style="{
                 width: `${Math.min(100 - progressPct, Math.round((queuedAmount / Math.max(1, totalNeeded)) * 100))}%`,
               }"
-              @mouseenter="onSegmentEnter('queued', $event)"
-              @mousemove="onSegmentMove"
-              @mouseleave="onSegmentLeave"
+              @mouseenter="!fulfilled && onSegmentEnter('queued', $event)"
+              @mousemove="!fulfilled && onSegmentMove($event)"
+              @mouseleave="!fulfilled && onSegmentLeave()"
             />
           </div>
         </div>
@@ -209,7 +211,10 @@ function fmt(n: number): string {
           <span class="font-mono text-xs font-semibold">
             <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
             <span :class="fulfilled ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'">
-              {{ fmt(inventoryAmount) }}
+              {{ fmt(inventoryAmount)
+              }}<sup v-if="!fulfilled && queuedAmount && queuedAmount > 0" class="text-sky-500"
+                >*</sup
+              >
             </span>
             <span class="text-muted-foreground/50"> / {{ fmt(totalNeeded) }} </span>
             <span class="text-[10px] font-normal text-muted-foreground/50"> Total</span>
