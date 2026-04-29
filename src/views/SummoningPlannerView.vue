@@ -1002,7 +1002,6 @@ const flatListEntries = computed(() => {
   ) {
     const inv = gameConfig.inventoryAmounts.value[node.itemId] ?? 0
     const queued = flatQueuedAmounts.value[node.itemId] ?? 0
-    const available = inv + queued
     const existing = merged.get(node.itemId)
 
     if (existing) {
@@ -1021,7 +1020,7 @@ const flatListEntries = computed(() => {
         itemName: node.itemName,
         itemType: node.itemType,
         totalNeeded: node.grossAmount,
-        inventoryAmount: available,
+        inventoryAmount: inv,
         queuedAmount: queued,
         sourceLabel: source.label,
         sourceIcon: source.icon,

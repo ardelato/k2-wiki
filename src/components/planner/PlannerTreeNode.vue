@@ -39,10 +39,16 @@ const props = withDefaults(
 )
 
 
-const stockOnHand = computed(() => props.inventoryAmounts[props.node.itemId] ?? 0)
 const queuedForItem = computed(() => props.queuedAmounts?.[props.node.itemId] ?? 0)
+// inventoryAmounts is a merged pool (raw + queued) used by the planner graph.
+// Derive the raw (non-queued) portion so the progress bar shows owned vs queued correctly.
+const stockOnHand = computed(() => {
+  const merged = props.inventoryAmounts[props.node.itemId] ?? 0
+  return Math.max(0, merged - queuedForItem.value)
+})
 const totalNeeded = computed(() => props.node.grossAmount)
-const deficit = computed(() => Math.max(0, props.node.requiredAmount - queuedForItem.value))
+// requiredAmount is already net of all claimed stock (raw + queued), so it IS the deficit.
+const deficit = computed(() => props.node.requiredAmount)
 
 
 const activeMethod = computed(() => {
