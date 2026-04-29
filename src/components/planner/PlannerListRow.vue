@@ -77,7 +77,7 @@ function onChipLeave() {
 }
 
 
-const totalNeeded = computed(() => props.node.requiredAmount + props.inventoryAmount)
+const totalNeeded = computed(() => props.node.grossAmount)
 
 
 const ownedPct = computed(() =>

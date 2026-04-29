@@ -41,7 +41,7 @@ const props = withDefaults(
 
 const stockOnHand = computed(() => props.inventoryAmounts[props.node.itemId] ?? 0)
 const queuedForItem = computed(() => props.queuedAmounts?.[props.node.itemId] ?? 0)
-const totalNeeded = computed(() => props.node.requiredAmount + stockOnHand.value)
+const totalNeeded = computed(() => props.node.grossAmount)
 const deficit = computed(() => Math.max(0, props.node.requiredAmount - queuedForItem.value))
 
 

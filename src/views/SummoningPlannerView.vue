@@ -1006,7 +1006,7 @@ const flatListEntries = computed(() => {
     const existing = merged.get(node.itemId)
 
     if (existing) {
-      existing.totalNeeded += node.requiredAmount
+      existing.totalNeeded += node.grossAmount
       existing.maxDepth = Math.max(existing.maxDepth, node.depth)
     } else {
       const source = getNodeSource(node, treeIndex)
@@ -1020,7 +1020,7 @@ const flatListEntries = computed(() => {
         itemId: node.itemId,
         itemName: node.itemName,
         itemType: node.itemType,
-        totalNeeded: node.requiredAmount + available,
+        totalNeeded: node.grossAmount,
         inventoryAmount: available,
         queuedAmount: queued,
         sourceLabel: source.label,

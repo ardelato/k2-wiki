@@ -213,7 +213,10 @@ export interface PlannerNode {
   itemId: string
   itemName: string
   itemType: ItemType
+  /** Amount still needed after inventory/queue stock was claimed. */
   requiredAmount: number
+  /** Original amount before any stock was claimed (the from-scratch cost). */
+  grossAmount: number
   depth: number
   defaultMethodId: string | null
   methods: PlannerMethod[]
