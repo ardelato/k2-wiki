@@ -238,6 +238,13 @@ describe('useSanctuary', () => {
       const { getCreatureStatus } = useSanctuary()
       expect(getCreatureStatus('e1')).toBe('expedition')
     })
+
+    test('returns "dungeon" for dungeon party creatures', () => {
+      const { setDungeonParty } = useGameConfig()
+      setDungeonParty(['d1'])
+      const { getCreatureStatus } = useSanctuary()
+      expect(getCreatureStatus('d1')).toBe('dungeon')
+    })
   })
 
   describe('recommendedCreatures', () => {

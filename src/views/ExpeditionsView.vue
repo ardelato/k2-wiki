@@ -42,6 +42,7 @@ const {
   helperCreatureIds,
   machineCreatureIds,
   expeditionCreatureIds,
+  dungeonParty,
   expeditionToolXpBonus,
 } = useGameConfig()
 const {
@@ -602,6 +603,7 @@ function rowSelected(id: string): boolean {
         :helper-creature-ids="helperCreatureIds"
         :machine-creature-ids="machineCreatureIds"
         :expedition-creature-ids="expeditionCreatureIds"
+        :dungeon-party="dungeonParty"
         :expedition-tool-xp-bonus="expeditionToolXpBonus"
         :show-excluded-creatures="showExcludedCreatures"
         @update:show-excluded-creatures="showExcludedCreatures = $event"
