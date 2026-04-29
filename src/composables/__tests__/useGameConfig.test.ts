@@ -227,6 +227,19 @@ describe('useGameConfig', () => {
     expect(fabricationAllocations.value).toEqual({})
   })
 
+  test('setDungeonParty updates the dungeon party ref', () => {
+    const { dungeonParty, setDungeonParty } = useGameConfig()
+    setDungeonParty(['pudge', 'finn', 'kroko'])
+    expect(dungeonParty.value).toEqual(['pudge', 'finn', 'kroko'])
+  })
+
+  test('resetDungeonParty clears the dungeon party', () => {
+    const { dungeonParty, setDungeonParty, resetDungeonParty } = useGameConfig()
+    setDungeonParty(['pudge', 'finn'])
+    resetDungeonParty()
+    expect(dungeonParty.value).toEqual([])
+  })
+
   test('resetGameConfig clears every settable field back to defaults', () => {
     const config = useGameConfig()
 
@@ -254,7 +267,7 @@ describe('useGameConfig', () => {
     config.setSkillLevels({ mining: 5 })
     config.setQueuedAmounts({ Furnace: { 'copper-bar': 10 } })
     config.setQueuedTimes({ Furnace: 5000 })
-    config.dungeonParty.value = ['c1', 'c2']
+    config.setDungeonParty(['c1', 'c2'])
 
     // Reset everything
     config.resetGameConfig()

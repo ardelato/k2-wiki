@@ -233,6 +233,10 @@ export function useGameConfig() {
     expeditionLoopCounts.value = {}
   }
 
+  function setDungeonParty(party: string[]) {
+    dungeonParty.value = party
+  }
+
   function resetDungeonParty() {
     dungeonParty.value = []
   }
@@ -287,6 +291,7 @@ export function useGameConfig() {
     setExpeditionLoopCounts,
     resetExpeditionSetup,
     dungeonParty,
+    setDungeonParty,
     resetDungeonParty,
     setInventory,
     resetInventory,
