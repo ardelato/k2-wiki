@@ -13,6 +13,7 @@ function baseSave(): Record<string, unknown> {
     fabrication: { allocations: {} },
     expeditionCompletions: {},
     activeExpeditions: [],
+    dungeons: { activeDungeons: [] },
   }
 }
 
@@ -191,5 +192,92 @@ describe('parseSave — skillLevels', () => {
 
     const config = extractSaveConfig(save)
     expect(config.skillLevels).toEqual({ Chopping: 5 })
+  })
+})
+
+describe('parseSave — currentDungeon', () => {
+  test('parses active dungeon with creature mapping', () => {
+    const save = baseSave()
+    save.creatures = [
+      { id: 'inst-1', species: 'pudge', experience: 5000 },
+      { id: 'inst-2', species: 'finn', experience: 20000 },
+    ]
+    save.dungeons = {
+      activeDungeons: [
+        {
+          tier: 4,
+          focus: 'combat',
+          gatheringSkill: null,
+          creatures: ['inst-1', 'inst-2'],
+        },
+      ],
+    }
+
+    const config = extractSaveConfig(save)
+    expect(config.currentDungeon).toEqual({
+      party: ['pudge', 'finn'],
+      tier: 4,
+      focus: 'combat',
+      gatheringSkill: null,
+      levels: { pudge: 10, finn: 20 },
+    })
+  })
+
+  test('parses gathering dungeon with sub-focus', () => {
+    const save = baseSave()
+    save.creatures = [{ id: 'inst-1', species: 'kroko', experience: 5000 }]
+    save.dungeons = {
+      activeDungeons: [
+        {
+          tier: 2,
+          focus: 'gathering',
+          gatheringSkill: 'Mining',
+          creatures: ['inst-1'],
+        },
+      ],
+    }
+
+    const config = extractSaveConfig(save)
+    expect(config.currentDungeon).toEqual({
+      party: ['kroko'],
+      tier: 2,
+      focus: 'gathering',
+      gatheringSkill: 'Mining',
+      levels: { kroko: 10 },
+    })
+  })
+
+  test('returns null when no active dungeons', () => {
+    const save = baseSave()
+
+    const config = extractSaveConfig(save)
+    expect(config.currentDungeon).toBeNull()
+  })
+
+  test('returns null when dungeons key is missing', () => {
+    const save = baseSave()
+    delete save.dungeons
+
+    const config = extractSaveConfig(save)
+    expect(config.currentDungeon).toBeNull()
+  })
+
+  test('filters out creatures not found in creature map', () => {
+    const save = baseSave()
+    save.creatures = [{ id: 'inst-1', species: 'pudge', experience: 5000 }]
+    save.dungeons = {
+      activeDungeons: [
+        {
+          tier: 1,
+          focus: 'combat',
+          gatheringSkill: null,
+          creatures: ['inst-1', 'missing-id'],
+        },
+      ],
+    }
+
+    const config = extractSaveConfig(save)
+    expect(config.currentDungeon!.party).toEqual(['pudge'])
+    expect(config.currentDungeon!.levels).toEqual({ pudge: 10 })
   })
 })

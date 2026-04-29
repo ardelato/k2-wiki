@@ -97,6 +97,7 @@ const {
   setExpeditionCreatureLevels,
   setExpeditionLoopCounts,
   resetExpeditionSetup,
+  setDungeonParty,
   resetDungeonParty,
 } = useGameConfig()
 
@@ -836,6 +837,19 @@ function applyExpedition() {
 }
 
 
+function applyDungeon() {
+  if (!saveConfig.value?.currentDungeon) return
+  const d = saveConfig.value.currentDungeon
+  setDungeonParty(d.party)
+  localStorage.setItem('dungeon-creature-levels', JSON.stringify(d.levels))
+  localStorage.setItem('dungeon-tier', String(d.tier))
+  localStorage.setItem('dungeon-focus', d.focus)
+  if (d.gatheringSkill) {
+    localStorage.setItem('dungeon-sub-focus', d.gatheringSkill)
+  }
+}
+
+
 function applyAll() {
   applyCreatureCollection()
   applyExclusions()
@@ -849,6 +863,7 @@ function applyAll() {
   applyFabrication()
   applyExpeditionCompletions()
   applyExpedition()
+  applyDungeon()
 }
 
 
