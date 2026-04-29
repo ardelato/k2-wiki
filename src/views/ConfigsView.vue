@@ -19,6 +19,7 @@ import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useTools } from '@/composables/useTools'
 import expeditionsData from '@/data/expeditions.json'
+import { itemById } from '@/data/indexes'
 import type { Expedition, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { decryptSave } from '@/utils/decrypt'
@@ -562,7 +563,7 @@ const inventoryDiff = computed(() => {
   return [...allKeys]
     .map((id) => ({
       id,
-      name: toTitleCase(id),
+      name: itemById.get(id)?.name ?? toTitleCase(id),
       current: inventoryAmounts.value[id] ?? 0,
       save: saveInv[id] ?? 0,
     }))
@@ -590,7 +591,7 @@ const queuedDiff = computed(() => {
   return [...allKeys]
     .map((id) => ({
       id,
-      name: toTitleCase(id),
+      name: itemById.get(id)?.name ?? toTitleCase(id),
       current: currentFlat[id] ?? 0,
       save: saveFlat[id] ?? 0,
     }))
@@ -611,7 +612,7 @@ const queuedByStation = computed(() =>
       station,
       items: Object.entries(items)
         .filter(([, amount]) => amount > 0)
-        .map(([id, amount]) => ({ id, name: toTitleCase(id), amount }))
+        .map(([id, amount]) => ({ id, name: itemById.get(id)?.name ?? toTitleCase(id), amount }))
         .toSorted((a, b) => a.name.localeCompare(b.name)),
     }))
     .toSorted((a, b) => a.station.localeCompare(b.station)),
