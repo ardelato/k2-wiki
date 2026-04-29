@@ -57,6 +57,7 @@ export interface SaveConfig {
   queuedAmounts: Record<string, Record<string, number>>
   queuedTimes: Record<string, number>
   currentExpedition: ExpeditionData
+  currentDungeon: DungeonData
 }
 
 type ExpeditionData = {
@@ -65,6 +66,14 @@ type ExpeditionData = {
   loopCounts: Record<string, number>
   levels: Record<string, number>
 }
+
+type DungeonData = {
+  party: string[]
+  tier: number
+  focus: string
+  gatheringSkill: string | null
+  levels: Record<string, number>
+} | null
 
 const GATHER_JOBS = new Set(['Chopping', 'Mining', 'Digging', 'Exploring', 'Fishing', 'Farming'])
 const WORKSTATIONS = new Set(['Furnace', 'Stove', 'Workbench'])
@@ -106,6 +115,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const { queuedAmounts, queuedTimes } = parseWorkstationQueues(save)
 
   const currentExpedition = buildExpeditionData(save, creatures)
+  const currentDungeon = buildDungeonData(save, creatures)
 
   return {
     sanctuary,
@@ -129,6 +139,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     queuedAmounts,
     queuedTimes,
     currentExpedition,
+    currentDungeon,
   }
 }
 
@@ -159,6 +170,33 @@ function buildExpeditionData(save: Record<string, any>, creatureMap: SaveCreatur
   })
 
   return result
+}
+
+function buildDungeonData(save: Record<string, any>, creatureMap: SaveCreature[]): DungeonData {
+  const dungeons = save.dungeons
+  if (!dungeons?.activeDungeons?.length) return null
+
+  const dungeon = dungeons.activeDungeons[0]
+  const levels: Record<string, number> = {}
+
+  const party = dungeon.creatures
+    .map((id: string) => {
+      const creature = creatureMap.find((c) => c.id === id)
+      if (creature) {
+        levels[creature.species] = levelFromXp(creature.experience)
+        return creature.species
+      }
+      return undefined
+    })
+    .filter((s: string | undefined): s is string => s != null)
+
+  return {
+    party,
+    tier: dungeon.tier,
+    focus: dungeon.focus,
+    gatheringSkill: dungeon.gatheringSkill ?? null,
+    levels,
+  }
 }
 
 function parseInventory(inventory: SaveInventoryItem[]): Record<string, number> {
