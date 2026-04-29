@@ -77,11 +77,14 @@ function onChipLeave() {
 }
 
 
-const totalNeeded = computed(() => props.node.requiredAmount + props.inventoryAmount)
+// inventoryAmount is a merged pool (raw + queued) from the planner graph.
+// Derive the raw (non-queued) portion so the progress bar shows owned vs queued correctly.
+const rawInventory = computed(() => Math.max(0, props.inventoryAmount - (props.queuedAmount ?? 0)))
+const totalNeeded = computed(() => props.node.grossAmount)
 
 
 const ownedPct = computed(() =>
-  Math.min(100, Math.round((props.inventoryAmount / Math.max(1, totalNeeded.value)) * 100)),
+  Math.min(100, Math.round((rawInventory.value / Math.max(1, totalNeeded.value)) * 100)),
 )
 
 
@@ -239,7 +242,7 @@ function onSegmentLeave() {
         <div class="flex items-center gap-1.5 px-3 py-2">
           <template v-if="barPopoverSegment === 'owned'">
             <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
-              {{ inventoryAmount.toLocaleString() }}
+              {{ rawInventory.toLocaleString() }}
             </span>
             <span class="text-[11px] text-muted-foreground">have</span>
           </template>

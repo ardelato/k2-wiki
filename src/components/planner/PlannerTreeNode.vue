@@ -39,10 +39,16 @@ const props = withDefaults(
 )
 
 
-const stockOnHand = computed(() => props.inventoryAmounts[props.node.itemId] ?? 0)
 const queuedForItem = computed(() => props.queuedAmounts?.[props.node.itemId] ?? 0)
-const totalNeeded = computed(() => props.node.requiredAmount + stockOnHand.value)
-const deficit = computed(() => Math.max(0, props.node.requiredAmount - queuedForItem.value))
+// inventoryAmounts is a merged pool (raw + queued) used by the planner graph.
+// Derive the raw (non-queued) portion so the progress bar shows owned vs queued correctly.
+const stockOnHand = computed(() => {
+  const merged = props.inventoryAmounts[props.node.itemId] ?? 0
+  return Math.max(0, merged - queuedForItem.value)
+})
+const totalNeeded = computed(() => props.node.grossAmount)
+// requiredAmount is already net of all claimed stock (raw + queued), so it IS the deficit.
+const deficit = computed(() => props.node.requiredAmount)
 
 
 const activeMethod = computed(() => {
@@ -287,7 +293,10 @@ function forwardPinMethod(nodeId: string, methodId: string) {
             <div class="mt-1.5 flex items-baseline justify-between">
               <span class="font-mono text-[11px] font-semibold">
                 <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
-                <span class="text-foreground">{{ stockOnHand.toLocaleString() }}</span>
+                <span class="text-foreground"
+                  >{{ stockOnHand.toLocaleString()
+                  }}<sup v-if="queuedForItem > 0" class="text-sky-500">*</sup></span
+                >
                 <span class="text-muted-foreground/50"> / {{ totalNeeded.toLocaleString() }}</span>
                 <span class="text-[10px] font-normal text-muted-foreground/50"> Total</span>
               </span>

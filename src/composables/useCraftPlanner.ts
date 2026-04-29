@@ -189,6 +189,7 @@ export function buildPlannerGraph(
   ): PlannerNode {
     const item = itemById.get(itemId)
     const nodeId = path
+    const grossAmount = requiredAmount
 
     // Skip inventory deduction for the root target in craft planner (we want to build
     // *additional* items). Summoning planner passes deductRootInventory=true since
@@ -203,6 +204,7 @@ export function buildPlannerGraph(
         itemName: item?.name ?? toTitleCase(itemId),
         itemType: item?.type ?? 'Gathered',
         requiredAmount: 0,
+        grossAmount,
         depth,
         defaultMethodId: null,
         methods: [],
@@ -222,6 +224,7 @@ export function buildPlannerGraph(
         itemName: toTitleCase(itemId),
         itemType: 'Gathered',
         requiredAmount,
+        grossAmount,
         depth,
         defaultMethodId: null,
         methods: [],
@@ -253,6 +256,7 @@ export function buildPlannerGraph(
         itemName: item.name,
         itemType: item.type,
         requiredAmount,
+        grossAmount,
         depth,
         defaultMethodId: cycleMethod.id,
         methods: [cycleMethod],
@@ -925,6 +929,7 @@ export function buildPlannerGraph(
       itemName: item.name,
       itemType: item.type,
       requiredAmount,
+      grossAmount,
       depth,
       defaultMethodId,
       methods,

@@ -19,6 +19,7 @@ import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useTools } from '@/composables/useTools'
 import expeditionsData from '@/data/expeditions.json'
+import { itemById } from '@/data/indexes'
 import type { Expedition, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { decryptSave } from '@/utils/decrypt'
@@ -562,13 +563,21 @@ const inventoryDiff = computed(() => {
   return [...allKeys]
     .map((id) => ({
       id,
-      name: toTitleCase(id),
+      name: itemById.get(id)?.name ?? toTitleCase(id),
       current: inventoryAmounts.value[id] ?? 0,
       save: saveInv[id] ?? 0,
     }))
     .filter((d) => d.current !== d.save)
     .toSorted((a, b) => a.name.localeCompare(b.name))
 })
+
+
+const inventoryList = computed(() =>
+  Object.entries(inventoryAmounts.value)
+    .filter(([, amount]) => amount > 0)
+    .map(([id, amount]) => ({ id, name: itemById.get(id)?.name ?? toTitleCase(id), amount }))
+    .toSorted((a, b) => a.name.localeCompare(b.name)),
+)
 
 
 function flattenQueued(nested: Record<string, Record<string, number>>): Record<string, number> {
@@ -590,7 +599,7 @@ const queuedDiff = computed(() => {
   return [...allKeys]
     .map((id) => ({
       id,
-      name: toTitleCase(id),
+      name: itemById.get(id)?.name ?? toTitleCase(id),
       current: currentFlat[id] ?? 0,
       save: saveFlat[id] ?? 0,
     }))
@@ -611,7 +620,7 @@ const queuedByStation = computed(() =>
       station,
       items: Object.entries(items)
         .filter(([, amount]) => amount > 0)
-        .map(([id, amount]) => ({ id, name: toTitleCase(id), amount }))
+        .map(([id, amount]) => ({ id, name: itemById.get(id)?.name ?? toTitleCase(id), amount }))
         .toSorted((a, b) => a.name.localeCompare(b.name)),
     }))
     .toSorted((a, b) => a.station.localeCompare(b.station)),
@@ -1928,6 +1937,30 @@ function updateAwakenSpeed(ws: string, delta: number) {
           <p v-else class="text-sm text-muted-foreground">
             {{ Object.keys(inventoryAmounts).length }} items tracked. Upload a save file to compare.
           </p>
+
+          <!-- Full inventory list -->
+          <div
+            v-if="inventoryList.length > 0"
+            class="mt-3 max-h-72 space-y-0.5 overflow-y-auto rounded-lg border border-border/50 pr-1"
+          >
+            <div
+              v-for="item in inventoryList"
+              :key="item.id"
+              class="flex items-center justify-between px-2 py-1.5 text-sm odd:bg-muted/20"
+            >
+              <div class="flex items-center gap-2">
+                <img
+                  v-if="getItemImage({ id: item.id })"
+                  :src="getItemImage({ id: item.id })"
+                  :alt="item.name"
+                  class="size-5 object-contain"
+                  loading="lazy"
+                />
+                <span class="font-medium">{{ item.name }}</span>
+              </div>
+              <span class="tabular-nums text-foreground">{{ item.amount.toLocaleString() }}</span>
+            </div>
+          </div>
         </div>
       </div>
 

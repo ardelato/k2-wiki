@@ -1002,11 +1002,10 @@ const flatListEntries = computed(() => {
   ) {
     const inv = gameConfig.inventoryAmounts.value[node.itemId] ?? 0
     const queued = flatQueuedAmounts.value[node.itemId] ?? 0
-    const available = inv + queued
     const existing = merged.get(node.itemId)
 
     if (existing) {
-      existing.totalNeeded += node.requiredAmount
+      existing.totalNeeded += node.grossAmount
       existing.maxDepth = Math.max(existing.maxDepth, node.depth)
     } else {
       const source = getNodeSource(node, treeIndex)
@@ -1020,8 +1019,8 @@ const flatListEntries = computed(() => {
         itemId: node.itemId,
         itemName: node.itemName,
         itemType: node.itemType,
-        totalNeeded: node.requiredAmount + available,
-        inventoryAmount: available,
+        totalNeeded: node.grossAmount,
+        inventoryAmount: inv,
         queuedAmount: queued,
         sourceLabel: source.label,
         sourceIcon: source.icon,

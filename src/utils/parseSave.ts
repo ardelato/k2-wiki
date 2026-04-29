@@ -103,7 +103,17 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const { machineLevels, machineRecipes } = parseMachineDetails(save)
   const fabricationAllocations = parseFabricationAllocations(save)
   const skillLevels = parseSkillLevels(save)
-  const { queuedAmounts, queuedTimes } = parseWorkstationQueues(save)
+  const { queuedAmounts, queuedTimes, completedOutputs } = parseWorkstationQueues(save)
+
+  // The game save includes completed-but-uncollected workstation items in the
+  // inventory array. Subtract them so "Have" reflects actual bag contents —
+  // completed items are already counted in queuedAmounts (sky bar) instead.
+  for (const [itemId, amount] of Object.entries(completedOutputs)) {
+    if (inventory[itemId]) {
+      inventory[itemId] = Math.max(0, inventory[itemId] - amount)
+      if (inventory[itemId] === 0) delete inventory[itemId]
+    }
+  }
 
   const currentExpedition = buildExpeditionData(save, creatures)
 
@@ -421,9 +431,11 @@ interface SaveWorkstationState {
 function parseWorkstationQueues(save: Record<string, unknown>): {
   queuedAmounts: Record<string, Record<string, number>>
   queuedTimes: Record<string, number>
+  completedOutputs: Record<string, number>
 } {
   const queuedAmounts: Record<string, Record<string, number>> = {}
   const queuedTimes: Record<string, number> = {}
+  const completedOutputs: Record<string, number> = {}
 
   for (const ws of ['furnace', 'stove', 'workbench']) {
     const wsState = save[ws] as SaveWorkstationState | undefined
@@ -443,12 +455,24 @@ function parseWorkstationQueues(save: Record<string, unknown>): {
       const itemId = entry.itemId ?? entry.item?.id
       if (!itemId || typeof entry.amount !== 'number' || entry.amount <= 0) continue
       const outputAmount = entry.recipe?.outputAmount ?? 1
-      const crafts = i === 0 ? Math.max(0, entry.amount - completed) : entry.amount
-      if (crafts > 0) {
-        stationItems[itemId] = (stationItems[itemId] ?? 0) + crafts * outputAmount
-        // singleItemDuration is already speed-adjusted by the game
+
+      // Queued amounts include ALL items at the workstation (completed + remaining)
+      // so they show in the sky "queued" bar. Time only counts remaining crafts.
+      stationItems[itemId] = (stationItems[itemId] ?? 0) + entry.amount * outputAmount
+
+      // Track completed outputs so we can subtract them from inventory — the game
+      // save includes them in the inventory array but the player hasn't collected them.
+      if (i === 0 && completed > 0) {
+        const completedAmount = Math.min(completed, entry.amount) * outputAmount
+        if (completedAmount > 0) {
+          completedOutputs[itemId] = (completedOutputs[itemId] ?? 0) + completedAmount
+        }
+      }
+
+      const remainingCrafts = i === 0 ? Math.max(0, entry.amount - completed) : entry.amount
+      if (remainingCrafts > 0) {
         const duration = typeof entry.singleItemDuration === 'number' ? entry.singleItemDuration : 0
-        stationTime += crafts * duration
+        stationTime += remainingCrafts * duration
       }
     }
 
@@ -460,5 +484,5 @@ function parseWorkstationQueues(save: Record<string, unknown>): {
     }
   }
 
-  return { queuedAmounts, queuedTimes }
+  return { queuedAmounts, queuedTimes, completedOutputs }
 }
