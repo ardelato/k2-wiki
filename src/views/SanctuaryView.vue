@@ -15,7 +15,7 @@ import { useSanctuary } from '@/composables/useSanctuary'
 import type { Creature, ElementType, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { typeColor } from '@/utils/format'
-import { helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
+import { helpersIcon, machinesIcon, expeditionsIcon, dungeonsIcon, jobIcons } from '@/utils/icons'
 import {
   MAX_SANCTUARY_SLOTS,
   SANCTUARY_JOBS,
@@ -823,6 +823,13 @@ function chooseCreature(creature: Creature) {
                     v-else-if="getCreatureStatus(creature.id) === 'expedition'"
                     :src="expeditionsIcon"
                     alt="Expedition"
+                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    loading="lazy"
+                  />
+                  <img
+                    v-else-if="getCreatureStatus(creature.id) === 'dungeon'"
+                    :src="dungeonsIcon"
+                    alt="Dungeon"
                     class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
