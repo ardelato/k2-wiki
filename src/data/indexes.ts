@@ -30,15 +30,13 @@ for (const item of items) {
   itemById.set(item.id, item)
 }
 
-export const tools = toolsData.tools as Tool[]
 export const toolById = new Map<string, Tool>()
-for (const tool of tools) {
+for (const tool of toolsData.tools as Tool[]) {
   toolById.set(tool.id, tool)
 }
 
-export const machines = machinesData.machines as Machine[]
 export const machineById = new Map<string, Machine>()
-for (const machine of machines) {
+for (const machine of machinesData.machines as Machine[]) {
   machineById.set(machine.id, machine)
 }
 
