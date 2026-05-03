@@ -3135,7 +3135,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                   getItemImage({ id: item.expedition.rewards[0].itemId })
                 "
                 :src="getItemImage({ id: item.expedition.rewards[0].itemId })"
-                :alt="item.expedition.rewards[0].itemId"
+                :alt="itemName(item.expedition.rewards[0].itemId)"
                 loading="lazy"
                 class="size-5 shrink-0 object-contain"
               />
