@@ -7,7 +7,7 @@ import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Expedition } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import type { ExpeditionPlan } from '@/utils/expeditionOptimizer'
-import { formatDuration, toTitleCase } from '@/utils/format'
+import { formatDuration, itemName, toTitleCase } from '@/utils/format'
 import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
@@ -63,7 +63,7 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
                 expedition.rewards.length > 0 && getItemImage({ id: expedition.rewards[0].itemId })
               "
               :src="getItemImage({ id: expedition.rewards[0].itemId })"
-              :alt="expedition.rewards[0].itemId"
+              :alt="itemName(expedition.rewards[0].itemId)"
               class="size-5 shrink-0 object-contain"
             />
             <p class="truncate text-sm font-semibold text-foreground">{{ expedition.name }}</p>

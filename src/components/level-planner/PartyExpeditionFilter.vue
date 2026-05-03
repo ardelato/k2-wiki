@@ -3,6 +3,7 @@ import { ChevronDown, RotateCcw } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { Expedition } from '@/types'
+import { itemName } from '@/utils/format'
 import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 
@@ -160,7 +161,7 @@ function handleRowClick(expeditionId: string) {
             <img
               v-if="exp.rewards.length > 0 && getItemImage({ id: exp.rewards[0].itemId })"
               :src="getItemImage({ id: exp.rewards[0].itemId })"
-              :alt="exp.rewards[0].itemId"
+              :alt="itemName(exp.rewards[0].itemId)"
               loading="lazy"
               class="size-5 shrink-0 object-contain"
             />

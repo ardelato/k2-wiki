@@ -1,10 +1,13 @@
 import {
   formatChance,
   formatDuration,
+  itemName,
+  machineName,
   methodKindClasses,
   methodKindColor,
   methodKindLabel,
   sourceLabel,
+  toolName,
   toTitleCase,
 } from '@/utils/format'
 
@@ -198,5 +201,35 @@ describe('methodKindColor', () => {
 
   test('fabrication kind returns violet color', () => {
     expect(methodKindColor('fabrication')).toBe('rgb(167, 139, 250)')
+  })
+})
+
+describe('itemName', () => {
+  test('returns canonical name for known item id (regression: dungeon-rune is Chronicle Rune, not Dungeon Rune)', () => {
+    expect(itemName('dungeon-rune')).toBe('Chronicle Rune')
+  })
+
+  test('falls back to title-cased id for unknown id', () => {
+    expect(itemName('totally-fake-item')).toBe('Totally Fake Item')
+  })
+})
+
+describe('toolName', () => {
+  test('returns canonical name for known tool id', () => {
+    expect(toolName('axe')).toBe('Axe')
+  })
+
+  test('falls back to title-cased id for unknown id', () => {
+    expect(toolName('totally-fake-tool')).toBe('Totally Fake Tool')
+  })
+})
+
+describe('machineName', () => {
+  test('returns canonical name for known machine id', () => {
+    expect(machineName('stone-quarry')).toBe('Stone Quarry')
+  })
+
+  test('falls back to title-cased id for unknown id', () => {
+    expect(machineName('totally-fake-machine')).toBe('Totally Fake Machine')
   })
 })

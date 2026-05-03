@@ -19,7 +19,6 @@ import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useTools } from '@/composables/useTools'
 import expeditionsData from '@/data/expeditions.json'
-import { itemById } from '@/data/indexes'
 import type { Expedition, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { decryptSave } from '@/utils/decrypt'
@@ -28,7 +27,7 @@ import {
   getMaxUnlockedTier,
   TIER_UNLOCK_REQUIREMENTS,
 } from '@/utils/expeditionUnlocks'
-import { formatDuration, toTitleCase } from '@/utils/format'
+import { formatDuration, itemName, machineName, toTitleCase, toolName } from '@/utils/format'
 import { levelFromXp, getPlayerLevel, getPlayerLevelXpBonus, SKILLING_IDS } from '@/utils/formulas'
 import {
   sourceIcons,
@@ -564,7 +563,7 @@ const inventoryDiff = computed(() => {
   return [...allKeys]
     .map((id) => ({
       id,
-      name: itemById.get(id)?.name ?? toTitleCase(id),
+      name: itemName(id),
       current: inventoryAmounts.value[id] ?? 0,
       save: saveInv[id] ?? 0,
     }))
@@ -576,7 +575,7 @@ const inventoryDiff = computed(() => {
 const inventoryList = computed(() =>
   Object.entries(inventoryAmounts.value)
     .filter(([, amount]) => amount > 0)
-    .map(([id, amount]) => ({ id, name: itemById.get(id)?.name ?? toTitleCase(id), amount }))
+    .map(([id, amount]) => ({ id, name: itemName(id), amount }))
     .toSorted((a, b) => a.name.localeCompare(b.name)),
 )
 
@@ -600,7 +599,7 @@ const queuedDiff = computed(() => {
   return [...allKeys]
     .map((id) => ({
       id,
-      name: itemById.get(id)?.name ?? toTitleCase(id),
+      name: itemName(id),
       current: currentFlat[id] ?? 0,
       save: saveFlat[id] ?? 0,
     }))
@@ -621,7 +620,7 @@ const queuedByStation = computed(() =>
       station,
       items: Object.entries(items)
         .filter(([, amount]) => amount > 0)
-        .map(([id, amount]) => ({ id, name: itemById.get(id)?.name ?? toTitleCase(id), amount }))
+        .map(([id, amount]) => ({ id, name: itemName(id), amount }))
         .toSorted((a, b) => a.name.localeCompare(b.name)),
     }))
     .toSorted((a, b) => a.station.localeCompare(b.station)),
@@ -2730,7 +2729,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
             :key="toolId"
             class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
           >
-            <span class="flex items-center gap-2 font-medium capitalize">
+            <span class="flex items-center gap-2 font-medium">
               <img
                 v-if="toolIcons[toolId]"
                 :src="toolIcons[toolId]"
@@ -2738,7 +2737,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                 class="size-5"
                 loading="lazy"
               />
-              {{ toolId.replace(/-/g, ' ') }}
+              {{ toolName(toolId) }}
             </span>
             <span class="flex items-center gap-2">
               <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
@@ -2944,15 +2943,15 @@ function updateAwakenSpeed(ws: string, delta: number) {
             :key="machineId"
             class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
           >
-            <span class="flex items-center gap-2 font-medium capitalize">
+            <span class="flex items-center gap-2 font-medium">
               <img
-                v-if="sourceIcons[toTitleCase(machineId)]"
-                :src="sourceIcons[toTitleCase(machineId)]"
+                v-if="sourceIcons[machineName(machineId)]"
+                :src="sourceIcons[machineName(machineId)]"
                 alt=""
                 class="size-5"
                 loading="lazy"
               />
-              {{ machineId.replace(/-/g, ' ') }}
+              {{ machineName(machineId) }}
             </span>
             <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
           </div>
@@ -3024,7 +3023,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                 class="size-4"
                 loading="lazy"
               />
-              <span class="font-medium capitalize">{{ itemId.replace(/-/g, ' ') }}</span>
+              <span class="font-medium">{{ itemName(itemId) }}</span>
             </div>
             <span class="text-xs tabular-nums text-muted-foreground">
               {{ amount }}/5 points &middot; {{ amount }} per cycle
@@ -3135,7 +3134,7 @@ function updateAwakenSpeed(ws: string, delta: number) {
                   getItemImage({ id: item.expedition.rewards[0].itemId })
                 "
                 :src="getItemImage({ id: item.expedition.rewards[0].itemId })"
-                :alt="item.expedition.rewards[0].itemId"
+                :alt="itemName(item.expedition.rewards[0].itemId)"
                 loading="lazy"
                 class="size-5 shrink-0 object-contain"
               />

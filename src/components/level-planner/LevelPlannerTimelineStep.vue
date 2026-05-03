@@ -16,7 +16,7 @@ import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { formatDuration } from '@/utils/format'
+import { formatDuration, itemName } from '@/utils/format'
 import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import type { PlanStep } from '@/utils/levelPlanner'
@@ -179,7 +179,7 @@ function formatDelta(value: number): string {
                     getItemImage({ id: step.expedition.rewards[0].itemId })
                   "
                   :src="getItemImage({ id: step.expedition.rewards[0].itemId })"
-                  :alt="step.expedition.rewards[0].itemId"
+                  :alt="itemName(step.expedition.rewards[0].itemId)"
                   loading="lazy"
                   class="size-5 shrink-0 object-contain"
                 />
@@ -443,7 +443,7 @@ function formatDelta(value: number): string {
                       getItemImage({ id: alt.expedition.rewards[0].itemId })
                     "
                     :src="getItemImage({ id: alt.expedition.rewards[0].itemId })"
-                    :alt="alt.expedition.rewards[0].itemId"
+                    :alt="itemName(alt.expedition.rewards[0].itemId)"
                     loading="lazy"
                     class="size-4 shrink-0 object-contain"
                   />

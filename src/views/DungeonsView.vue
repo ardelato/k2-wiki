@@ -16,7 +16,7 @@ import { useDungeons } from '@/composables/useDungeons'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, ElementType, ExpeditionStatKey, GatheringSubFocus } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase, typeColor } from '@/utils/format'
+import { itemName, toTitleCase, typeColor } from '@/utils/format'
 import { statAbbreviations, statLabels } from '@/utils/formulas'
 import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -554,9 +554,7 @@ const tierLevelReq = computed(() => {
           <div class="rounded-lg border border-border bg-muted/30 p-3">
             <p class="text-[11px] text-muted-foreground">
               Requires
-              <span class="font-semibold text-foreground">{{
-                toTitleCase(config.requiresItem)
-              }}</span>
+              <span class="font-semibold text-foreground">{{ itemName(config.requiresItem) }}</span>
               to enter (1 per creature). Duration:
               <span class="font-semibold text-foreground">{{ config.duration / 60 }} minutes</span>.
             </p>
@@ -608,12 +606,12 @@ const tierLevelReq = computed(() => {
                 <img
                   v-if="getItemImage({ id: config.requiresItem })"
                   :src="getItemImage({ id: config.requiresItem })"
-                  :alt="toTitleCase(config.requiresItem)"
+                  :alt="itemName(config.requiresItem)"
                   class="size-4 object-contain"
                   loading="lazy"
                 />
                 {{ partySlots.filter((s) => s !== null).length || 0 }}x
-                {{ toTitleCase(config.requiresItem) }}
+                {{ itemName(config.requiresItem) }}
               </p>
             </div>
           </div>
@@ -639,12 +637,12 @@ const tierLevelReq = computed(() => {
                 <img
                   v-if="getItemImage({ id: reward.itemId })"
                   :src="getItemImage({ id: reward.itemId })"
-                  :alt="toTitleCase(reward.itemId)"
+                  :alt="itemName(reward.itemId)"
                   class="size-4 object-contain"
                   loading="lazy"
                 />
                 {{ reward.amount }}x
-                {{ toTitleCase(reward.itemId) }}
+                {{ itemName(reward.itemId) }}
               </span>
             </div>
           </div>

@@ -6,7 +6,7 @@ import RightClickHint from '@/components/shared/RightClickHint.vue'
 import type { Creature, Expedition, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { TIER_UNLOCK_REQUIREMENTS } from '@/utils/expeditionUnlocks'
-import { formatDuration, toTitleCase } from '@/utils/format'
+import { formatDuration, itemName, toTitleCase } from '@/utils/format'
 import { statLabels, tierModifiers } from '@/utils/formulas'
 import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -113,12 +113,12 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             <img
               v-if="getItemImage({ id: reward.itemId })"
               :src="getItemImage({ id: reward.itemId })"
-              :alt="toTitleCase(reward.itemId)"
+              :alt="itemName(reward.itemId)"
               class="size-4 object-contain"
               loading="lazy"
             />
             {{ reward.amount * tierModifiers.loot[selectedTier - 1] }}x
-            {{ toTitleCase(reward.itemId) }}
+            {{ itemName(reward.itemId) }}
           </span>
         </div>
       </div>

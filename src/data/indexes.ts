@@ -3,13 +3,16 @@ import expeditionsData from '@/data/expeditions.json'
 import itemsData from '@/data/items.json'
 import jobsData from '@/data/jobs.json'
 import machinesData from '@/data/machines.json'
+import toolsData from '@/data/tools.json'
 import type {
   Creature,
   ContainerSource,
   Item,
   JobActivitySource,
+  Machine,
   RecipeUsage,
   SummoningReference,
+  Tool,
 } from '@/types'
 
 interface ExpeditionSource {
@@ -25,6 +28,16 @@ const creatures = creaturesData as Creature[]
 export const itemById = new Map<string, Item>()
 for (const item of items) {
   itemById.set(item.id, item)
+}
+
+export const toolById = new Map<string, Tool>()
+for (const tool of toolsData.tools as Tool[]) {
+  toolById.set(tool.id, tool)
+}
+
+export const machineById = new Map<string, Machine>()
+for (const machine of machinesData.machines as Machine[]) {
+  machineById.set(machine.id, machine)
 }
 
 export const jobActivityIndex = new Map<string, JobActivitySource[]>()

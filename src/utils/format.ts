@@ -1,4 +1,4 @@
-import { itemById } from '@/data/indexes'
+import { itemById, machineById, toolById } from '@/data/indexes'
 import type { ElementType, ItemType, PlannerMethodKind } from '@/types'
 
 export function typeColor(type: ElementType): string {
@@ -110,6 +110,14 @@ export function formatChance(chance: number): string {
 
 export function itemName(id: string): string {
   return itemById.get(id)?.name ?? toTitleCase(id.replace(/-/g, ' '))
+}
+
+export function toolName(id: string): string {
+  return toolById.get(id)?.name ?? toTitleCase(id.replace(/-/g, ' '))
+}
+
+export function machineName(id: string): string {
+  return machineById.get(id)?.name ?? toTitleCase(id.replace(/-/g, ' '))
 }
 
 export function toTitleCase(str: string): string {

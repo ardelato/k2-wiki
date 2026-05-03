@@ -26,7 +26,7 @@ import { useExpeditions } from '@/composables/useExpeditions'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { formatDuration, toTitleCase } from '@/utils/format'
+import { formatDuration, itemName, toTitleCase } from '@/utils/format'
 import { getLoopXpBonus, getRecommendedCreatures } from '@/utils/formulas'
 import { expeditionTierIcons, toolIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -463,7 +463,7 @@ function rowSelected(id: string): boolean {
                     getItemImage({ id: expedition.rewards[0].itemId })
                   "
                   :src="getItemImage({ id: expedition.rewards[0].itemId })"
-                  :alt="expedition.rewards[0].itemId"
+                  :alt="itemName(expedition.rewards[0].itemId)"
                   loading="lazy"
                   class="size-5 shrink-0 object-contain"
                 />

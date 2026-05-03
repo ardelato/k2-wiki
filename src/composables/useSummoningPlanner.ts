@@ -2,8 +2,7 @@ import { ref, computed, watch } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
-import { itemById } from '@/data/indexes'
-import { toTitleCase } from '@/utils/format'
+import { itemName as resolveItemName } from '@/utils/format'
 
 const STORAGE_KEY = 'summoning-planner-selection'
 
@@ -64,10 +63,9 @@ export function useSummoningPlanner() {
         if (existing) {
           existing.amount += cost.amount
         } else {
-          const item = itemById.get(cost.id)
           totals.set(cost.id, {
             itemId: cost.id,
-            itemName: item?.name ?? toTitleCase(cost.id),
+            itemName: resolveItemName(cost.id),
             amount: cost.amount,
           })
         }
