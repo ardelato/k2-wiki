@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  Bug,
   ChevronDown,
   ChevronsDownUp,
   ChevronsUpDown,
@@ -12,7 +13,7 @@ import {
   GanttChart,
   Network,
 } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
@@ -22,6 +23,7 @@ import SummoningCreatureFilter from '@/components/summoning-planner/SummoningCre
 import SummoningMaterialTree from '@/components/summoning-planner/SummoningMaterialTree.vue'
 import SummoningObjectiveCard from '@/components/summoning-planner/SummoningObjectiveCard.vue'
 import SummoningTimeline from '@/components/summoning-planner/SummoningTimeline.vue'
+import { computeInventoryBudgets, usePlannerModifiers } from '@/composables/useCraftPlanner'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
@@ -116,6 +118,14 @@ const viewTabs = [
 ]
 
 
+// --- Debug drawer state (dev only) ---
+const isDev = import.meta.env.DEV
+const debugDrawerOpen = ref(false)
+const SummoningDebugPanel = isDev
+  ? defineAsyncComponent(() => import('@/components/summoning-planner/SummoningDebugPanel.vue'))
+  : null
+
+
 // --- Group collapse state ---
 const collapsedGroups = ref(new Set<SourceGroup>())
 
@@ -180,6 +190,18 @@ const sortedCosts = computed(() => {
     return costs.toSorted((a, b) => b.amount - a.amount || a.itemName.localeCompare(b.itemName))
   }
   return costs // already alphabetical from composable
+})
+
+
+// --- Cross-tree inventory budgets (shared stock pool) ---
+const { mergedInventory, modifiers: plannerModifiers } = usePlannerModifiers()
+
+
+const inventoryBudgets = computed(() => {
+  const costs = sortedCosts.value
+  if (costs.length === 0) return {}
+  const targets = costs.map((c) => ({ itemId: c.itemId, quantity: c.amount }))
+  return computeInventoryBudgets(targets, mergedInventory.value, plannerModifiers.value)
 })
 
 
@@ -1646,6 +1668,23 @@ const flatGroupedCosts = computed(() => {
       </div>
     </div>
 
+    <!-- Debug drawer trigger (dev only) -->
+    <template v-if="isDev">
+      <button
+        v-if="aggregatedCosts.length > 0"
+        class="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-card px-3 py-2 text-xs font-medium text-amber-600 shadow-lg transition hover:bg-amber-500/10 dark:text-amber-400"
+        @click="debugDrawerOpen = true"
+      >
+        <Bug class="size-4" />
+        Debug
+      </button>
+      <SummoningDebugPanel
+        :open="debugDrawerOpen"
+        :tree-refs="treeRefs"
+        @close="debugDrawerOpen = false"
+      />
+    </template>
+
     <!-- Hidden trees for data (always rendered so summaries/schedules stay computed) -->
     <div v-if="aggregatedCosts.length > 0" class="hidden">
       <SummoningMaterialTree
@@ -1661,6 +1700,7 @@ const flatGroupedCosts = computed(() => {
         :owned-creatures="ownedCreaturesList"
         :creature-levels="collectionLevels"
         :expeditions="expeditions"
+        :inventory-budget="inventoryBudgets[cost.itemId]"
         @activate="activeTreeIndex = index"
       />
     </div>

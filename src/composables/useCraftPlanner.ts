@@ -964,6 +964,49 @@ export function buildPlannerGraph(
   }
 }
 
+/**
+ * Computes per-tree inventory budgets by simulating a shared stock pool across all targets.
+ * Each target is processed sequentially; after each, the consumed amounts are deducted from
+ * the shared pool so that cross-tree items are only counted once.
+ */
+export function computeInventoryBudgets(
+  targets: { itemId: string; quantity: number }[],
+  inventory: Record<string, number>,
+  modifiers: PlannerModifiers,
+): Record<string, Record<string, number>> {
+  const remainingStock = new Map<string, number>(Object.entries(inventory).filter(([, v]) => v > 0))
+  const budgets: Record<string, Record<string, number>> = {}
+
+  for (const target of targets) {
+    // Snapshot the current pool as this tree's budget
+    const currentInventory: Record<string, number> = {}
+    for (const [id, amount] of remainingStock.entries()) {
+      if (amount > 0) currentInventory[id] = amount
+    }
+    budgets[target.itemId] = currentInventory
+
+    // Build the graph to determine what this tree consumes
+    const graph = buildPlannerGraph(
+      target.itemId,
+      target.quantity,
+      currentInventory,
+      modifiers,
+      true,
+    )
+
+    // Deduct what this tree consumed from the shared pool
+    for (const node of Object.values(graph.nodesById)) {
+      const consumed = node.grossAmount - node.requiredAmount
+      if (consumed > 0) {
+        const current = remainingStock.get(node.itemId) ?? 0
+        remainingStock.set(node.itemId, Math.max(0, current - consumed))
+      }
+    }
+  }
+
+  return budgets
+}
+
 const resourceSortPriority = (r: string) =>
   r.startsWith('Machine:')
     ? 1.5
@@ -1181,6 +1224,10 @@ export function computeSchedule(
 interface CraftPlannerOptions {
   /** When true, inventory deduction applies to the root node too (used by summoning planner) */
   deductRootInventory?: boolean
+  /** When provided, overrides the internally-computed inventory (owned + queued) for graph building.
+   *  Used by summoning planner to pass a pre-partitioned inventory budget that accounts for
+   *  cross-tree demands against a shared stock pool. */
+  inventoryBudget?: Readonly<Ref<Record<string, number> | null>>
 }
 
 export function useCraftPlanner(
@@ -1224,7 +1271,7 @@ export function useCraftPlanner(
 
   const rawInventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
   const queuedAmounts = computed(() => baseQueuedAmounts.value)
-  const inventoryAmounts = computed(() => {
+  const mergedInventoryAmounts = computed(() => {
     const inv = rawInventoryAmounts.value
     const queued = queuedAmounts.value
     if (Object.keys(queued).length === 0) return inv
@@ -1236,6 +1283,9 @@ export function useCraftPlanner(
     }
     return merged
   })
+  const inventoryAmounts = computed(
+    () => options.inventoryBudget?.value ?? mergedInventoryAmounts.value,
+  )
   const gardenFlowers = computed(() => gardenOverrides.value ?? baseGarden.value)
   const awakenGatherUpgrades = computed(() => awakenGatherOverrides.value ?? baseAwakenGather.value)
   const awakenSpeedTiers = computed(() => awakenSpeedOverrides.value ?? baseAwakenSpeed.value)
@@ -1681,4 +1731,82 @@ export function useCraftPlanner(
     resetAllSettings,
     formatAmount,
   }
+}
+
+/**
+ * Lightweight composable that exposes the merged inventory (owned + queued) and planner modifiers
+ * without building a graph. Used by the summoning planner view to compute cross-tree inventory budgets.
+ */
+export function usePlannerModifiers() {
+  const {
+    inventoryAmounts: baseInventory,
+    queuedAmounts: baseQueuedAmounts,
+    gardenFlowers: baseGarden,
+    awakenGatherUpgrades: baseAwakenGather,
+    awakenSpeedTiers: baseAwakenSpeed,
+    jobTiers: baseJobTiers,
+    machineLevels: baseMachineLevels,
+    fabricationAllocations: baseFabricationAllocations,
+    awakenGoldLevel,
+    toolSpeedModes: baseToolSpeedModes,
+    toolLevels: baseToolLevels,
+  } = useGameConfig()
+
+  const { workstationTools, speedBonusPerLevel } = useTools()
+  const { ownedCreatureIds, isAwakened: isCreatureAwakened } = useCreatureCollection()
+
+  const fabricationSimulated = useLocalStorage<Record<string, number>>('fabrication-simulated', {})
+
+  const mergedInventory = computed(() => {
+    const inv = baseInventory.value
+    const queued = baseQueuedAmounts.value
+    if (Object.keys(queued).length === 0) return inv
+    const merged = { ...inv }
+    for (const stationItems of Object.values(queued)) {
+      for (const [id, amount] of Object.entries(stationItems)) {
+        if (amount > 0) merged[id] = (merged[id] ?? 0) + amount
+      }
+    }
+    return merged
+  })
+
+  const toolSpeedBonuses = computed(() => {
+    const bonuses: Record<string, number> = {}
+    for (const tool of workstationTools.value) {
+      if (baseToolSpeedModes.value[tool.skillId]) {
+        bonuses[tool.skillId] = ((baseToolLevels.value[tool.id] ?? 0) * speedBonusPerLevel) / 100
+      }
+    }
+    return bonuses
+  })
+
+  const awakenedCount = computed(() => {
+    let count = 0
+    for (const id of ownedCreatureIds.value) {
+      if (isCreatureAwakened(id)) count++
+    }
+    return count
+  })
+
+  const goldPerMinute = computed(() =>
+    computeGoldPerMinute(
+      awakenedCount.value,
+      awakenGoldLevel.value,
+      baseGarden.value['gold-flower'] ?? [],
+    ),
+  )
+
+  const modifiers = computed<PlannerModifiers>(() => ({
+    gardenFlowers: baseGarden.value,
+    awakenGatherUpgrades: baseAwakenGather.value,
+    awakenSpeedTiers: baseAwakenSpeed.value,
+    toolSpeedBonuses: toolSpeedBonuses.value,
+    jobTiers: baseJobTiers.value,
+    goldPerMinute: goldPerMinute.value,
+    machineLevels: baseMachineLevels.value,
+    fabricationAllocations: { ...baseFabricationAllocations.value, ...fabricationSimulated.value },
+    expeditionTier: 5,
+  }))
+
+  return { mergedInventory, modifiers }
 }

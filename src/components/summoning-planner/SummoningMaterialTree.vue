@@ -17,11 +17,13 @@ const props = defineProps<{
   ownedCreatures: Creature[]
   creatureLevels: Record<string, number>
   expeditions: Expedition[]
+  inventoryBudget?: Record<string, number> | null
 }>()
 
 
 const targetItemId = toRef(() => props.itemId)
 const targetQuantity = toRef(() => props.quantity)
+const inventoryBudgetRef = toRef(() => props.inventoryBudget ?? null)
 
 
 const {
@@ -34,7 +36,10 @@ const {
   flatQueuedAmounts,
   getActiveMethod,
   setPinnedMethod,
-} = useCraftPlanner(targetItemId, targetQuantity, { deductRootInventory: true })
+} = useCraftPlanner(targetItemId, targetQuantity, {
+  deductRootInventory: true,
+  inventoryBudget: inventoryBudgetRef,
+})
 
 
 function collapseToLeaves() {
