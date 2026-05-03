@@ -22,6 +22,7 @@ import SummoningCreatureFilter from '@/components/summoning-planner/SummoningCre
 import SummoningMaterialTree from '@/components/summoning-planner/SummoningMaterialTree.vue'
 import SummoningObjectiveCard from '@/components/summoning-planner/SummoningObjectiveCard.vue'
 import SummoningTimeline from '@/components/summoning-planner/SummoningTimeline.vue'
+import { computeInventoryBudgets, usePlannerModifiers } from '@/composables/useCraftPlanner'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
@@ -180,6 +181,18 @@ const sortedCosts = computed(() => {
     return costs.toSorted((a, b) => b.amount - a.amount || a.itemName.localeCompare(b.itemName))
   }
   return costs // already alphabetical from composable
+})
+
+
+// --- Cross-tree inventory budgets (shared stock pool) ---
+const { mergedInventory, modifiers: plannerModifiers } = usePlannerModifiers()
+
+
+const inventoryBudgets = computed(() => {
+  const costs = sortedCosts.value
+  if (costs.length === 0) return {}
+  const targets = costs.map((c) => ({ itemId: c.itemId, quantity: c.amount }))
+  return computeInventoryBudgets(targets, mergedInventory.value, plannerModifiers.value)
 })
 
 
@@ -1661,6 +1674,7 @@ const flatGroupedCosts = computed(() => {
         :owned-creatures="ownedCreaturesList"
         :creature-levels="collectionLevels"
         :expeditions="expeditions"
+        :inventory-budget="inventoryBudgets[cost.itemId]"
         @activate="activeTreeIndex = index"
       />
     </div>
