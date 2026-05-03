@@ -9,7 +9,7 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, CreatureStats, Jobs } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
+import { itemName, toTitleCase, typeColor, typeColorVar } from '@/utils/format'
 import {
   getBestExpeditionsForCreature,
   jobColors,
@@ -394,7 +394,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                         getItemImage({ id: entry.expedition.rewards[0].itemId })
                       "
                       :src="getItemImage({ id: entry.expedition.rewards[0].itemId })"
-                      :alt="toTitleCase(entry.expedition.rewards[0].itemId)"
+                      :alt="itemName(entry.expedition.rewards[0].itemId)"
                       class="size-5 shrink-0 object-contain"
                       loading="lazy"
                     />
