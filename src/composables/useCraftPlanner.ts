@@ -26,7 +26,12 @@ import type {
   PlannerTimeBreakdown,
   ScheduledTask,
 } from '@/types'
-import { formatChance, formatDuration, methodKindLabel, toTitleCase } from '@/utils/format'
+import {
+  formatChance,
+  formatDuration,
+  itemName as resolveItemName,
+  methodKindLabel,
+} from '@/utils/format'
 import { tierModifiers } from '@/utils/formulas'
 import { computeGoldPerMinute, goldToSeconds } from '@/utils/goldIncome'
 
@@ -69,7 +74,7 @@ const gardenSourcesByItem = new Map<string, GardenSource>(
     itemId,
     {
       flowerItemId,
-      flowerItemName: itemById.get(flowerItemId)?.name ?? toTitleCase(flowerItemId),
+      flowerItemName: resolveItemName(flowerItemId),
       cycleSeconds: 60,
       yieldPerCycle: 1,
     },
@@ -201,7 +206,7 @@ export function buildPlannerGraph(
       const fulfilledNode: PlannerNode = {
         id: nodeId,
         itemId,
-        itemName: item?.name ?? toTitleCase(itemId),
+        itemName: resolveItemName(itemId),
         itemType: item?.type ?? 'Gathered',
         requiredAmount: 0,
         grossAmount,
@@ -221,7 +226,7 @@ export function buildPlannerGraph(
       const unknownNode: PlannerNode = {
         id: nodeId,
         itemId,
-        itemName: toTitleCase(itemId),
+        itemName: resolveItemName(itemId),
         itemType: 'Gathered',
         requiredAmount,
         grossAmount,
@@ -1089,8 +1094,7 @@ export function computeSchedule(
     collectItems(root)
 
     for (const itemId of treeItemIds) {
-      const item = itemById.get(itemId)
-      const itemName = item?.name ?? itemId
+      const itemName = resolveItemName(itemId)
       const activeKinds = activeMethodKindByItem.get(itemId) ?? new Set()
 
       // Machine passive lanes (one per unique machine)

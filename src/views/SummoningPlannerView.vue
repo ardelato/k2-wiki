@@ -34,7 +34,7 @@ import { expeditionSourceIndex, itemById, jobActivityIndex } from '@/data/indexe
 import type { Expedition, PlannerNode } from '@/types'
 import { applyByProductCreditsToSchedule, computeByProductCredits } from '@/utils/byProductCredits'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { formatDuration, toTitleCase } from '@/utils/format'
+import { formatDuration, itemName, toTitleCase } from '@/utils/format'
 import {
   calculateDuration,
   calculatePartyScore,
@@ -928,7 +928,7 @@ function getNodeSource(
   }
   const flowerId = essenceFlowerMap[node.itemId]
   if (flowerId) {
-    const flowerName = itemById.get(flowerId)?.name ?? flowerId
+    const flowerName = itemName(flowerId)
     return { label: flowerName, icon: getItemImage({ id: flowerId }) ?? null }
   }
   return { label: '', icon: null }
