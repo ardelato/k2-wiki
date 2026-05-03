@@ -13,14 +13,13 @@ import {
   GanttChart,
   Network,
 } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import SummoningCreatureFilter from '@/components/summoning-planner/SummoningCreatureFilter.vue'
-import SummoningDebugPanel from '@/components/summoning-planner/SummoningDebugPanel.vue'
 import SummoningMaterialTree from '@/components/summoning-planner/SummoningMaterialTree.vue'
 import SummoningObjectiveCard from '@/components/summoning-planner/SummoningObjectiveCard.vue'
 import SummoningTimeline from '@/components/summoning-planner/SummoningTimeline.vue'
@@ -119,8 +118,12 @@ const viewTabs = [
 ]
 
 
-// --- Debug drawer state ---
+// --- Debug drawer state (dev only) ---
+const isDev = import.meta.env.DEV
 const debugDrawerOpen = ref(false)
+const SummoningDebugPanel = isDev
+  ? defineAsyncComponent(() => import('@/components/summoning-planner/SummoningDebugPanel.vue'))
+  : null
 
 
 // --- Group collapse state ---
@@ -1665,22 +1668,22 @@ const flatGroupedCosts = computed(() => {
       </div>
     </div>
 
-    <!-- Debug drawer trigger -->
-    <button
-      v-if="aggregatedCosts.length > 0"
-      class="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-card px-3 py-2 text-xs font-medium text-amber-600 shadow-lg transition hover:bg-amber-500/10 dark:text-amber-400"
-      @click="debugDrawerOpen = true"
-    >
-      <Bug class="size-4" />
-      Debug
-    </button>
-
-    <!-- Debug drawer -->
-    <SummoningDebugPanel
-      :open="debugDrawerOpen"
-      :tree-refs="treeRefs"
-      @close="debugDrawerOpen = false"
-    />
+    <!-- Debug drawer trigger (dev only) -->
+    <template v-if="isDev">
+      <button
+        v-if="aggregatedCosts.length > 0"
+        class="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-card px-3 py-2 text-xs font-medium text-amber-600 shadow-lg transition hover:bg-amber-500/10 dark:text-amber-400"
+        @click="debugDrawerOpen = true"
+      >
+        <Bug class="size-4" />
+        Debug
+      </button>
+      <SummoningDebugPanel
+        :open="debugDrawerOpen"
+        :tree-refs="treeRefs"
+        @close="debugDrawerOpen = false"
+      />
+    </template>
 
     <!-- Hidden trees for data (always rendered so summaries/schedules stay computed) -->
     <div v-if="aggregatedCosts.length > 0" class="hidden">
