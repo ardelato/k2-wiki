@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
 import { Menu, X } from 'lucide-vue-next'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
@@ -9,6 +9,13 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 const route = useRoute()
 const mobileMenuOpen = ref(false)
 const sidebarCollapsed = useLocalStorage('sidebar-collapsed', true)
+
+
+const showMoveBanner = computed(() => {
+  if (typeof window === 'undefined') return false
+  if (import.meta.env.DEV) return true
+  return /\.github\.io$/i.test(window.location.hostname)
+})
 
 
 // Close mobile menu on route change
@@ -53,6 +60,23 @@ watch(
         </button>
         <span class="text-sm font-semibold text-foreground">Koltera 2 Wiki</span>
       </header>
+
+      <div
+        v-if="showMoveBanner"
+        class="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-center text-sm text-amber-900 dark:text-amber-200 sm:px-6"
+        role="status"
+      >
+        <span class="mx-auto block max-w-app">
+          This wiki has moved to
+          <a
+            href="https://k2-wiki.pages.dev"
+            class="font-semibold underline underline-offset-2 hover:no-underline"
+          >
+            k2-wiki.pages.dev </a
+          >. The new domain may be blocked by some countries' ISPs &mdash; you can keep using this
+          GitHub-hosted version if it's unreachable.
+        </span>
+      </div>
 
       <main class="mx-auto w-full max-w-app flex-1 px-4 py-6 sm:px-6 lg:py-8">
         <RouterView />

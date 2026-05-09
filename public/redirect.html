@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta http-equiv="refresh" content="10;url=https://k2-wiki.pages.dev" />
+    <meta http-equiv="refresh" content="30;url=https://k2-wiki.pages.dev" />
     <title>K2 Wiki Has Moved</title>
     <style>
       body {
@@ -47,9 +47,45 @@
       p {
         color: hsl(220, 17%, 66%);
       }
+      .banner {
+        margin: 0 0 1.5rem;
+        padding: 0.85rem 1rem;
+        border-radius: 0.75rem;
+        background: hsl(38, 92%, 50%, 0.12);
+        border: 1px solid hsl(38, 92%, 50%, 0.4);
+        color: hsl(38, 92%, 80%);
+        font-size: 0.9rem;
+        line-height: 1.4;
+        text-align: left;
+      }
       .countdown {
         margin-top: 0.5rem;
         font-variant-numeric: tabular-nums;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 1.5rem;
+      }
+      .btn {
+        display: inline-block;
+        padding: 0.6rem 1.1rem;
+        border-radius: 0.6rem;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.95rem;
+        border: 1px solid transparent;
+      }
+      .btn-primary {
+        background: hsl(189, 82%, 56%);
+        color: hsl(225, 38%, 7%);
+      }
+      .btn-secondary {
+        background: transparent;
+        color: hsl(214, 32%, 92%);
+        border-color: hsl(214, 32%, 30%);
       }
     </style>
   </head>
@@ -57,20 +93,43 @@
     <div class="container">
       <img src="./redirect.webp" alt="K2 Wiki has moved to k2-wiki.pages.dev" />
       <h1>K2 Wiki has moved!</h1>
+      <p class="banner">
+        The wiki is now hosted at
+        <a href="https://k2-wiki.pages.dev">k2-wiki.pages.dev</a>, but
+        <strong>some countries' ISPs block <code>pages.dev</code></strong
+        >. If the new site doesn't load, you can keep using this GitHub-hosted version below.
+      </p>
       <p>
         Automatically redirecting to <a href="https://k2-wiki.pages.dev">k2-wiki.pages.dev</a>...
       </p>
-      <p class="countdown" id="countdown">Redirecting in 10 seconds</p>
+      <p class="countdown" id="countdown">Redirecting in 30 seconds</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://k2-wiki.pages.dev">Go to new site</a>
+        <a class="btn btn-secondary" id="stay-link" href="https://ardelato.github.io/k2-wiki/">
+          Continue using GitHub version
+        </a>
+      </div>
     </div>
     <script>
-      var seconds = 10
+      // Always point at the canonical GitHub Pages app, preserving query/hash for deep links.
+      var stayLink = document.getElementById('stay-link')
+      if (stayLink) {
+        stayLink.setAttribute(
+          'href',
+          'https://ardelato.github.io/k2-wiki/' + location.search + location.hash,
+        )
+        stayLink.addEventListener('click', function () {
+          clearInterval(timer)
+        })
+      }
+      var seconds = 30
       var el = document.getElementById('countdown')
       var timer = setInterval(function () {
         seconds--
         if (seconds <= 0) {
           clearInterval(timer)
-          var path = location.pathname.replace('/k2-wiki', '') || '/'
-          if (path.charAt(0) !== '/' || path.indexOf('//') === 0) {
+          var path = location.pathname.replace('/k2-wiki', '').replace(/\/redirect\.html$/, '/')
+          if (!path || path.charAt(0) !== '/' || path.indexOf('//') === 0) {
             path = '/'
           }
           window.location.replace(
