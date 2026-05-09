@@ -4,6 +4,7 @@ import { Clock3, Play, RefreshCw, Users, User, Zap } from 'lucide-vue-next'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import LevelPlannerCalculatePrompt from '@/components/level-planner/LevelPlannerCalculatePrompt.vue'
 import LevelPlannerResults from '@/components/level-planner/LevelPlannerResults.vue'
 import PartyCreatureFilter from '@/components/level-planner/PartyCreatureFilter.vue'
 import PartyExpeditionFilter from '@/components/level-planner/PartyExpeditionFilter.vue'
@@ -493,21 +494,14 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
       />
 
       <!-- Ready to calculate (no plan yet) -->
-      <PlannerEmptyState
+      <LevelPlannerCalculatePrompt
         v-else-if="creature && (!singleHasCalculated || !plan)"
-        title="Ready to plan."
-        subtitle="Choose your target level and expedition filters, then click Calculate to find the fastest leveling path."
-      >
-        <template #action>
-          <button
-            class="focus-ring inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
-            @click="singleCalculate"
-          >
-            <Play class="size-4" />
-            Calculate
-          </button>
-        </template>
-      </PlannerEmptyState>
+        :creature-name="creature.name"
+        :creature-image="getCreatureImage(creature)"
+        :from-level="startLevel"
+        :to-level="targetLevel"
+        @calculate="singleCalculate"
+      />
 
       <!-- Plan -->
       <LevelPlannerResults
