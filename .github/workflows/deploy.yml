@@ -27,7 +27,22 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: cp dist/index.html dist/404.html
+      - name: Reshape dist for /app/ + root redirect
+        run: |
+          set -euo pipefail
+          # The build is configured with base /k2-wiki/app/, so all asset URLs
+          # already point at /k2-wiki/app/...  Move the build output into an
+          # /app subfolder and place the migration page at the root.
+          mv dist dist-app
+          mkdir dist
+          mv dist-app dist/app
+          cp public/redirect.html dist/index.html
+          cp public/redirect.webp dist/redirect.webp
+          cp public/favicon.svg dist/favicon.svg
+          # GitHub Pages serves /k2-wiki/404.html on any miss under /k2-wiki/.
+          # Use the SPA index so deep links like /k2-wiki/app/items resolve
+          # client-side via Vue Router.
+          cp dist/app/index.html dist/404.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

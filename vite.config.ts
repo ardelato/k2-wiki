@@ -6,7 +6,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [vue()],
-  base: process.env.CF_PAGES === '1' ? '/' : '/k2-wiki/',
+  base: process.env.CF_PAGES === '1' ? '/' : '/k2-wiki/app/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
