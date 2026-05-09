@@ -66,6 +66,8 @@ const {
   resetAllOverrides: resetRouteOverrides,
   hasOverrides: hasRouteOverrides,
   overriddenFromLevels,
+  hasCalculated: singleHasCalculated,
+  calculate: singleCalculate,
 } = useLevelPlanner(creatureId, targetLevel, effectiveExpeditionTierSelections)
 
 
@@ -450,6 +452,14 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
             +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
           </PlannerBadge>
+          <button
+            v-if="plan && plan.steps.length > 0"
+            class="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+            @click="singleCalculate"
+          >
+            <RefreshCw class="size-3.5" />
+            Recalculate
+          </button>
         </template>
       </PlannerToolbar>
 
@@ -481,6 +491,23 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             : `${creature?.name} is already at level ${startLevel} — nothing left to grind.`
         "
       />
+
+      <!-- Ready to calculate (no plan yet) -->
+      <PlannerEmptyState
+        v-else-if="creature && (!singleHasCalculated || !plan)"
+        title="Ready to plan."
+        subtitle="Choose your target level and expedition filters, then click Calculate to find the fastest leveling path."
+      >
+        <template #action>
+          <button
+            class="focus-ring inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            @click="singleCalculate"
+          >
+            <Play class="size-4" />
+            Calculate
+          </button>
+        </template>
+      </PlannerEmptyState>
 
       <!-- Plan -->
       <LevelPlannerResults

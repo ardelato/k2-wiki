@@ -81,11 +81,6 @@ export function useLevelPlanner(
     stepOverrides.value = new Map()
   }
 
-  // Clear overrides when inputs change
-  watch([creatureId, targetLevel], () => {
-    if (hasOverrides.value) resetAllOverrides()
-  })
-
   /**
    * Owned non-target creatures eligible to boost the target via party expeditions.
    * The planner ranks candidates by per-expedition rating, so lower-level creatures
@@ -103,7 +98,11 @@ export function useLevelPlanner(
     return result
   })
 
+  // Calculate-on-demand: plan only computes after calculate() is called.
+  const hasCalculated = ref(false)
+
   const plan = computed<LevelingPlan | null>(() => {
+    if (!hasCalculated.value) return null
     if (!creature.value || isMaxLevel.value) return null
     return planLevelingPath({
       creature: creature.value,
@@ -117,6 +116,28 @@ export function useLevelPlanner(
       boosterCandidates: boosterCandidates.value.length > 0 ? boosterCandidates.value : undefined,
     })
   })
+
+  function calculate() {
+    resetAllOverrides()
+    // Toggle so the plan re-runs even when nothing else changed (Recalculate case)
+    hasCalculated.value = false
+    hasCalculated.value = true
+  }
+
+  // Invalidate the plan when key inputs change so the user must hit Calculate again.
+  watch(
+    [
+      creatureId,
+      targetLevel,
+      () => expeditionTierSelections?.value,
+      expeditionToolXpBonus,
+      boosterCandidates,
+    ],
+    () => {
+      hasCalculated.value = false
+    },
+    { deep: true },
+  )
 
   const overriddenFromLevels = computed(() => new Set(stepOverrides.value.keys()))
 
@@ -134,5 +155,7 @@ export function useLevelPlanner(
     resetAllOverrides,
     hasOverrides,
     overriddenFromLevels,
+    hasCalculated,
+    calculate,
   }
 }
