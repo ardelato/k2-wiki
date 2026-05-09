@@ -12,6 +12,7 @@ import {
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import LevelPlannerBoosterChip from '@/components/level-planner/LevelPlannerBoosterChip.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
@@ -362,6 +363,38 @@ function formatDelta(value: number): string {
               </div>
             </div>
 
+            <!-- Booster recommendations (single mode only) -->
+            <div
+              v-if="!partyMembers && step.boosters && step.boosters.length > 0"
+              class="mt-2 flex flex-wrap items-center gap-2"
+            >
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400">
+                <Users class="size-3" />
+                Bring:
+              </span>
+              <LevelPlannerBoosterChip
+                v-for="booster in step.boosters"
+                :key="booster.creature.id"
+                :creature="booster.creature"
+                @inspect="toggleCreature"
+              />
+              <span
+                v-if="
+                  step.boosterTimeSavings &&
+                  step.boosterTimeSavings > 0 &&
+                  step.timeSeconds + step.boosterTimeSavings > 0
+                "
+                class="ml-auto text-[11px] font-semibold"
+                style="color: var(--color-green)"
+              >
+                {{
+                  Math.round(
+                    (step.boosterTimeSavings / (step.timeSeconds + step.boosterTimeSavings)) * 100,
+                  )
+                }}% faster
+              </span>
+            </div>
+
             <!-- Time proportion bar -->
             <div class="mt-2 flex items-center gap-2">
               <div class="h-1 flex-1 overflow-hidden rounded-full bg-muted/30">
@@ -381,7 +414,7 @@ function formatDelta(value: number): string {
 
             <!-- Party tip -->
             <p
-              v-if="step.partyTip && !partyMembers"
+              v-if="step.partyTip && !partyMembers && !(step.boosters && step.boosters.length > 0)"
               class="mt-1.5 flex items-center gap-1 text-[11px] text-sky-400"
             >
               <Users class="size-3" />
@@ -425,7 +458,7 @@ function formatDelta(value: number): string {
                 <button
                   v-for="alt in step.alternatives"
                   :key="`${alt.expedition.id}-${alt.tier}`"
-                  class="focus-ring flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm transition hover:bg-muted/20"
+                  class="focus-ring flex w-full flex-col gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm transition hover:bg-muted/20"
                   @click.stop="
                     $emit(
                       'selectAlternative',
@@ -436,61 +469,83 @@ function formatDelta(value: number): string {
                     )
                   "
                 >
-                  <!-- Left: reward icon + name + tier -->
-                  <img
-                    v-if="
-                      alt.expedition.rewards.length > 0 &&
-                      getItemImage({ id: alt.expedition.rewards[0].itemId })
-                    "
-                    :src="getItemImage({ id: alt.expedition.rewards[0].itemId })"
-                    :alt="itemName(alt.expedition.rewards[0].itemId)"
-                    loading="lazy"
-                    class="size-4 shrink-0 object-contain"
-                  />
-                  <span class="min-w-0 truncate font-semibold text-foreground">
-                    {{ alt.expedition.name }}
-                  </span>
-                  <img
-                    v-if="alt.tier > 0"
-                    :src="expeditionTierIcons[alt.tier]"
-                    :alt="`Tier ${alt.tier}`"
-                    class="size-4 shrink-0 object-contain"
-                    loading="lazy"
-                  />
+                  <!-- Row 1: name + tier on left, time / xp chips on right -->
+                  <div class="flex w-full items-center gap-1.5">
+                    <img
+                      v-if="
+                        alt.expedition.rewards.length > 0 &&
+                        getItemImage({ id: alt.expedition.rewards[0].itemId })
+                      "
+                      :src="getItemImage({ id: alt.expedition.rewards[0].itemId })"
+                      :alt="itemName(alt.expedition.rewards[0].itemId)"
+                      loading="lazy"
+                      class="size-4 shrink-0 object-contain"
+                    />
+                    <span class="min-w-0 truncate font-semibold text-foreground">
+                      {{ alt.expedition.name }}
+                    </span>
+                    <img
+                      v-if="alt.tier > 0"
+                      :src="expeditionTierIcons[alt.tier]"
+                      :alt="`Tier ${alt.tier}`"
+                      class="size-4 shrink-0 object-contain"
+                      loading="lazy"
+                    />
 
-                  <!-- Right: time chip · xp/s chip -->
-                  <div class="ml-auto flex shrink-0 items-center gap-1.5">
+                    <div class="ml-auto flex shrink-0 items-center gap-1.5">
+                      <span
+                        class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/35 px-2 py-0.5 font-mono text-xs font-semibold"
+                        :style="{
+                          color:
+                            alt.timeDeltaPercent <= 0
+                              ? 'var(--color-green)'
+                              : 'var(--color-destructive)',
+                        }"
+                      >
+                        <Clock3 class="size-3" />
+                        {{ formatDuration(alt.timeSeconds) }}
+                        <span class="opacity-60">{{ formatDelta(alt.timeDeltaPercent) }}</span>
+                      </span>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/35 px-2 py-0.5 font-mono text-xs font-semibold"
+                        :style="{
+                          color:
+                            alt.xpPerMinuteDeltaPercent >= 0
+                              ? 'var(--color-green)'
+                              : 'var(--color-destructive)',
+                        }"
+                      >
+                        <Zap class="size-3" />
+                        {{
+                          (alt.xpPerMinute / 60).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
+                        }}
+                        <span class="opacity-60">{{
+                          formatDelta(alt.xpPerMinuteDeltaPercent)
+                        }}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Row 2: booster chips (only if this alternative would use boosters) -->
+                  <div
+                    v-if="alt.boosters && alt.boosters.length > 0"
+                    class="flex flex-wrap items-center gap-2 pl-5"
+                  >
                     <span
-                      class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/35 px-2 py-0.5 font-mono text-xs font-semibold"
-                      :style="{
-                        color:
-                          alt.timeDeltaPercent <= 0
-                            ? 'var(--color-green)'
-                            : 'var(--color-destructive)',
-                      }"
+                      class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400"
                     >
-                      <Clock3 class="size-3" />
-                      {{ formatDuration(alt.timeSeconds) }}
-                      <span class="opacity-60">{{ formatDelta(alt.timeDeltaPercent) }}</span>
+                      <Users class="size-3" />
+                      Bring:
                     </span>
-                    <span
-                      class="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/35 px-2 py-0.5 font-mono text-xs font-semibold"
-                      :style="{
-                        color:
-                          alt.xpPerMinuteDeltaPercent >= 0
-                            ? 'var(--color-green)'
-                            : 'var(--color-destructive)',
-                      }"
-                    >
-                      <Zap class="size-3" />
-                      {{
-                        (alt.xpPerMinute / 60).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })
-                      }}
-                      <span class="opacity-60">{{ formatDelta(alt.xpPerMinuteDeltaPercent) }}</span>
-                    </span>
+                    <LevelPlannerBoosterChip
+                      v-for="booster in alt.boosters"
+                      :key="booster.creature.id"
+                      :creature="booster.creature"
+                      @inspect="toggleCreature"
+                    />
                   </div>
                 </button>
               </div>

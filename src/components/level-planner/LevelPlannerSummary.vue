@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Clock3, Zap, Repeat, Layers, Flag, RotateCcw } from 'lucide-vue-next'
+import { Clock3, Zap, Repeat, Layers, Flag, RotateCcw, Users } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { formatDuration } from '@/utils/format'
@@ -29,6 +29,11 @@ const segments = computed(() =>
     biomeStatus: step.biomeStatus,
     toLevel: step.toLevel,
   })),
+)
+
+
+const boostedStepCount = computed(
+  () => props.plan.steps.filter((s) => s.boosters && s.boosters.length > 0).length,
 )
 
 
@@ -81,6 +86,10 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
       <span class="inline-flex items-center gap-1.5 text-purple-400">
         <Zap class="size-3.5" />
         {{ Math.round(plan.xpPerMinute) }} XP/min avg
+      </span>
+      <span v-if="boostedStepCount > 0" class="inline-flex items-center gap-1.5 text-sky-400">
+        <Users class="size-3.5" />
+        {{ boostedStepCount }} boosted step{{ boostedStepCount > 1 ? 's' : '' }}
       </span>
     </div>
 
