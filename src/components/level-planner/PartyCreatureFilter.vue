@@ -93,7 +93,8 @@ function chipState(id: string): ChipState {
 
 function handleTileClick(id: string) {
   if (props.selectMode) {
-    emit('select', id)
+    // Clicking the already-selected tile clears the selection
+    emit('select', id === props.selectedId ? '' : id)
   } else {
     emit('toggle', id)
   }
