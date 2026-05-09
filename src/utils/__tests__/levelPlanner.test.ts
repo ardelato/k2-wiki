@@ -461,6 +461,155 @@ describe('planLevelingPath — step overrides', () => {
   })
 })
 
+describe('planLevelingPath — booster support', () => {
+  test('omitting boosterCandidates produces identical results to before', () => {
+    const without = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 20,
+      isAwakened: false,
+    })
+    const empty = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 20,
+      isAwakened: false,
+      boosterCandidates: [],
+    })
+    expect(empty.totalTimeSeconds).toBe(without.totalTimeSeconds)
+    expect(empty.totalRuns).toBe(without.totalRuns)
+    expect(empty.steps.length).toBe(without.steps.length)
+    for (const step of empty.steps) {
+      expect(step.boosters).toBeUndefined()
+      expect(step.partySize).toBeUndefined()
+    }
+  })
+
+  test('a max-level booster reduces (or equals) total time vs solo', () => {
+    const booster = creatures.find((c) => c.id !== creature.id)
+    expect(booster).toBeDefined()
+    const solo = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 25,
+      isAwakened: false,
+    })
+    const boosted = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 25,
+      isAwakened: false,
+      boosterCandidates: [{ creature: booster!, level: 120 }],
+    })
+    expect(boosted.totalTimeSeconds).toBeLessThanOrEqual(solo.totalTimeSeconds)
+  })
+
+  test('steps populate boosters array and partySize > 1 when boosters help', () => {
+    const helpers = creatures.filter((c) => c.id !== creature.id).slice(0, 2)
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 30,
+      isAwakened: false,
+      boosterCandidates: helpers.map((c) => ({ creature: c, level: 120 })),
+    })
+    const boosted = plan.steps.filter((s) => s.boosters && s.boosters.length > 0)
+    if (boosted.length > 0) {
+      for (const step of boosted) {
+        expect(step.partySize).toBeDefined()
+        expect(step.partySize!).toBeGreaterThan(1)
+        expect(step.boosters!.length).toBeGreaterThan(0)
+        expect(step.boosterTimeSavings).toBeDefined()
+      }
+    }
+  })
+
+  test('partySize never exceeds expedition.maxPartySize', () => {
+    const helpers = creatures.filter((c) => c.id !== creature.id).slice(0, 5)
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 30,
+      isAwakened: false,
+      boosterCandidates: helpers.map((c) => ({ creature: c, level: 120 })),
+    })
+    for (const step of plan.steps) {
+      if (!step.partySize) continue
+      expect(step.partySize).toBeLessThanOrEqual(step.expedition.maxPartySize)
+    }
+  })
+
+  test('target creature is excluded from booster candidates', () => {
+    // Pass the target itself as a candidate — it must not appear in any step's boosters
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 30,
+      isAwakened: false,
+      boosterCandidates: [{ creature, level: 120 }],
+    })
+    for (const step of plan.steps) {
+      if (!step.boosters) continue
+      for (const b of step.boosters) {
+        expect(b.creature.id).not.toBe(creature.id)
+      }
+    }
+  })
+
+  test('alternatives are evaluated with boosters too (fair comparison)', () => {
+    const helpers = creatures.filter((c) => c.id !== creature.id).slice(0, 3)
+    const candidates = helpers.map((c) => ({ creature: c, level: 120 }))
+    const soloPlan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 30,
+      isAwakened: false,
+    })
+    const boostedPlan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 30,
+      isAwakened: false,
+      boosterCandidates: candidates,
+    })
+
+    // For each merged step that exists in both plans, alternative timeSeconds in the
+    // boosted plan must be <= the corresponding alternative in the solo plan (boosters
+    // can only make things faster or no different).
+    for (const boostedStep of boostedPlan.steps) {
+      if (!boostedStep.alternatives) continue
+      const soloStep = soloPlan.steps.find(
+        (s) => s.fromLevel === boostedStep.fromLevel && s.toLevel === boostedStep.toLevel,
+      )
+      if (!soloStep || !soloStep.alternatives) continue
+      for (const boostedAlt of boostedStep.alternatives) {
+        const soloAlt = soloStep.alternatives.find(
+          (a) => a.expedition.id === boostedAlt.expedition.id && a.tier === boostedAlt.tier,
+        )
+        if (!soloAlt) continue
+        expect(boostedAlt.timeSeconds).toBeLessThanOrEqual(soloAlt.timeSeconds)
+      }
+    }
+  })
+
+  test('awakening steps have no boosters', () => {
+    const helper = creatures.find((c) => c.id !== creature.id)
+    const plan = planLevelingPath({
+      creature,
+      startLevel: 1,
+      targetLevel: 120,
+      isAwakened: false,
+      boosterCandidates: [{ creature: helper!, level: 120 }],
+    })
+    const awakeningSteps = plan.steps.filter((s) => s.isAwakeningStep)
+    expect(awakeningSteps.length).toBeGreaterThan(0)
+    for (const step of awakeningSteps) {
+      expect(step.boosters).toBeUndefined()
+      expect(step.partySize).toBeUndefined()
+    }
+  })
+})
+
 describe('planLevelingPath — prestige mode', () => {
   test('prestige plan starts with an awakening step', () => {
     const plan = planLevelingPath({
