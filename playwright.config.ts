@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test'
 
-const basePath = process.env.CF_PAGES === '1' ? '/' : '/k2-wiki/'
+const basePath = process.env.CF_PAGES === '1' ? '/' : '/k2-wiki/app/'
 
 export default defineConfig({
   testDir: './e2e',
