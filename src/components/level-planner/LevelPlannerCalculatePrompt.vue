@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { Play } from 'lucide-vue-next'
 
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
+import type { Creature } from '@/types'
+
 defineProps<{
   creatureName: string
   creatureImage?: string
+  /** When provided, the avatar becomes right-clickable to open the creature drawer */
+  creature?: Creature | null
   fromLevel: number
   toLevel: number
 }>()
@@ -12,14 +19,25 @@ defineProps<{
 defineEmits<{
   calculate: []
 }>()
+
+
+const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 </script>
 
 <template>
   <div class="surface-card space-y-4 px-4 py-4">
     <!-- Creature title — matches LevelPlannerSummary layout -->
     <div class="flex items-center gap-3">
+      <RightClickHint v-if="creatureImage && creature" @contextmenu="toggleCreature(creature)">
+        <img
+          :src="creatureImage"
+          :alt="creatureName"
+          class="size-14 rounded-xl border border-border object-cover sm:size-16"
+          loading="lazy"
+        />
+      </RightClickHint>
       <img
-        v-if="creatureImage"
+        v-else-if="creatureImage"
         :src="creatureImage"
         :alt="creatureName"
         class="size-14 rounded-xl border border-border object-cover sm:size-16"
@@ -48,4 +66,5 @@ defineEmits<{
       </button>
     </div>
   </div>
+  <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
 </template>
