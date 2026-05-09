@@ -10,6 +10,18 @@ import {
   PRE_AWAKEN_MAX,
 } from '@/utils/formulas'
 
+export interface BoosterCandidate {
+  creature: Creature
+  level: number
+}
+
+export interface BoosterInfo {
+  creature: Creature
+  level: number
+  /** Rating this booster contributes to the specific expedition+biome */
+  rating: number
+}
+
 interface LevelPlannerInput {
   creature: Creature
   startLevel: number
@@ -21,6 +33,8 @@ interface LevelPlannerInput {
   expeditionTierSelections?: Record<string, number[]>
   /** Force specific expedition+tier for a level range (keyed by fromLevel of merged step) */
   stepOverrides?: Map<number, { expeditionId: string; tier: number; toLevel: number }>
+  /** Owned max-level creatures available to boost the target via party expeditions */
+  boosterCandidates?: BoosterCandidate[]
 }
 
 export interface AlternativeRoute {
@@ -39,6 +53,10 @@ export interface AlternativeRoute {
   timeDeltaPercent: number
   /** Relative XP/min difference vs the chosen step (negative = worse) */
   xpPerMinuteDeltaPercent: number
+  /** Boosters this alternative would bring (sampled at the first level of the range) */
+  boosters?: BoosterInfo[]
+  /** Effective party size for this alternative (1 = solo) */
+  partySize?: number
 }
 
 export interface PlanStep {
@@ -59,6 +77,12 @@ export interface PlanStep {
   partyTip?: string
   isAwakeningStep?: boolean
   alternatives?: AlternativeRoute[]
+  /** Recommended booster creatures to bring along (max-level owned) */
+  boosters?: BoosterInfo[]
+  /** Effective party size when running with boosters (1 = solo) */
+  partySize?: number
+  /** Seconds saved over the level range vs running solo */
+  boosterTimeSavings?: number
 }
 
 export interface LevelingPlan {
@@ -107,6 +131,10 @@ interface EvalResult {
   xpPerMinute: number
   runsForLevel: number
   timeForLevel: number
+  partySize: number
+  boosters: BoosterInfo[]
+  /** Solo-equivalent timeForLevel for comparison (always present, equals timeForLevel when partySize=1) */
+  soloTimeForLevel: number
 }
 
 type EvaluateComboFn = (
@@ -154,6 +182,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const hasTierRestrictions = Object.keys(tierSelections).length > 0
   const allTiers = [1, 2, 3, 4, 5]
   const stepOverrides = settings.stepOverrides
+  const boosterCandidates = settings.boosterCandidates ?? []
 
   const candidates: ExpeditionWithBiome[] = expeditions
     .filter((exp) => !hasTierRestrictions || (tierSelections[exp.id] ?? allTiers).length > 0)
@@ -163,7 +192,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     }))
 
   /**
-   * Evaluate a single expedition+tier for a creature at a specific level.
+   * Evaluate a single expedition+tier for a creature at a specific level (solo).
    * Reads swordXpMultiplier from the enclosing planLevelingPath scope.
    */
   function evaluateCombo(
@@ -186,7 +215,109 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     const runsForLevel = Math.ceil(xpNeeded / xpPerRun)
     const timeForLevel = runsForLevel * duration
 
-    return { expedition, biome, tier, xpPerRun, duration, xpPerMinute, runsForLevel, timeForLevel }
+    return {
+      expedition,
+      biome,
+      tier,
+      xpPerRun,
+      duration,
+      xpPerMinute,
+      runsForLevel,
+      timeForLevel,
+      partySize: 1,
+      boosters: [],
+      soloTimeForLevel: timeForLevel,
+    }
+  }
+
+  /**
+   * Find the highest-rated booster candidates for a given expedition+biome.
+   * Excludes the target creature by ID. Returns up to maxBoosters sorted by rating desc.
+   * Memoized per expedition: ratings depend only on expedition+biome+candidates+maxBoosters,
+   * none of which vary across the planning loop for a single call.
+   */
+  const boosterMemo = new Map<string, BoosterInfo[]>()
+  function findBestBoosters(
+    expedition: Expedition,
+    biome: Biome | undefined,
+    maxBoosters: number,
+  ): BoosterInfo[] {
+    if (maxBoosters <= 0 || boosterCandidates.length === 0) return []
+    const cached = boosterMemo.get(expedition.id)
+    if (cached) return cached
+    const infos: BoosterInfo[] = []
+    for (const cand of boosterCandidates) {
+      if (cand.creature.id === creature.id) continue
+      const rating = calculateCreatureRating(cand.creature, expedition, cand.level, biome)
+      if (rating <= 0) continue
+      infos.push({ creature: cand.creature, level: cand.level, rating })
+    }
+    infos.sort((a, b) => b.rating - a.rating)
+    const top = infos.slice(0, maxBoosters)
+    boosterMemo.set(expedition.id, top)
+    return top
+  }
+
+  /**
+   * Evaluate solo and all viable booster configurations; return whichever
+   * minimizes timeForLevel. Boosters increase party score (shorter duration)
+   * but split XP per game-accurate partySize division.
+   */
+  function evaluateComboWithBoosters(
+    expedition: Expedition,
+    biome: Biome | undefined,
+    tier: number,
+    level: number,
+    loopCount: number,
+  ): EvalResult | null {
+    const solo = evaluateCombo(expedition, biome, tier, level, loopCount)
+    if (!solo) return null
+
+    const maxPartySize = expedition.maxPartySize ?? 1
+    if (maxPartySize <= 1 || boosterCandidates.length === 0) return solo
+
+    const available = findBestBoosters(expedition, biome, maxPartySize - 1)
+    if (available.length === 0) return solo
+
+    const targetRating = calculateCreatureRating(creature, expedition, level, biome)
+    const xpNeeded = xpForLevel(level + 1) - xpForLevel(level)
+    let best: EvalResult = solo
+
+    for (let count = 1; count <= available.length; count++) {
+      const partySize = count + 1
+      const chosenBoosters = available.slice(0, count)
+      const boosterRatingSum = chosenBoosters.reduce((s, b) => s + b.rating, 0)
+      const combinedScore = targetRating + boosterRatingSum
+      const duration = calculateDuration(combinedScore, expedition, tier)
+      const xpPerRun = Math.floor(
+        calculateExpeditionXp(expedition, tier, loopCount, partySize) * swordXpMultiplier,
+      )
+      if (xpPerRun <= 0 || duration <= 0) continue
+      const runsForLevel = Math.ceil(xpNeeded / xpPerRun)
+      const timeForLevel = runsForLevel * duration
+      const xpPerMinute = (xpPerRun / duration) * 60
+
+      if (
+        timeForLevel < best.timeForLevel ||
+        (timeForLevel === best.timeForLevel && xpPerMinute > best.xpPerMinute)
+      ) {
+        best = {
+          expedition,
+          biome,
+          tier,
+          xpPerRun,
+          duration,
+          xpPerMinute,
+          runsForLevel,
+          timeForLevel,
+          partySize,
+          boosters: chosenBoosters,
+          soloTimeForLevel: solo.timeForLevel,
+        }
+      }
+    }
+
+    return best
   }
 
   /**
@@ -220,7 +351,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       if (currentCombo) {
         const cand = candidates.find((c) => c.expedition.id === currentCombo!.expeditionId)
         if (cand) {
-          currentResult = evaluateCombo(
+          currentResult = evaluateComboWithBoosters(
             cand.expedition,
             cand.biome,
             currentCombo.tier,
@@ -238,7 +369,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
       for (const { expedition, biome } of candidates) {
         const tiers = tierSelections[expedition.id] ?? allTiers
         for (const tier of tiers) {
-          const result = evaluateCombo(expedition, biome, tier, level, 0)
+          const result = evaluateComboWithBoosters(expedition, biome, tier, level, 0)
           if (!result) continue
 
           allFreshResults.push(result)
@@ -281,7 +412,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
           // First level of override — start fresh at loop count 0
           const cand = candidates.find((c) => c.expedition.id === activeOverride!.expeditionId)
           chosen = cand
-            ? evaluateCombo(cand.expedition, cand.biome, activeOverride!.tier, level, 0)
+            ? evaluateComboWithBoosters(cand.expedition, cand.biome, activeOverride!.tier, level, 0)
             : (bestFresh ?? currentResult)
         }
       } else if (!currentResult) {
@@ -336,6 +467,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
         ? getBiomeStatus(creature, chosen.biome)
         : ('neutral' as const)
 
+      const usingBoosters = chosen.partySize > 1 && chosen.boosters.length > 0
       rawSteps.push({
         expedition: chosen.expedition,
         tier: chosen.tier,
@@ -351,6 +483,11 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
         biomeName: chosen.biome?.name ?? chosen.expedition.biome,
         traitMatch: creature.trait === chosen.expedition.trait,
         biomeStatus,
+        boosters: usingBoosters ? chosen.boosters : undefined,
+        partySize: usingBoosters ? chosen.partySize : undefined,
+        boosterTimeSavings: usingBoosters
+          ? Math.max(0, chosen.soloTimeForLevel - chosen.timeForLevel)
+          : undefined,
       })
 
       loopCount += chosen.runsForLevel
@@ -380,12 +517,20 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     planLevelRange(1, targetLevel, rawSteps, null, 0, levelAlternatives)
   }
 
-  // Merge consecutive steps using the same expedition+tier, aggregating alternatives
-  const steps = mergeStepsWithAlternatives(rawSteps, levelAlternatives, evaluateCombo, creature)
+  // Merge consecutive steps using the same expedition+tier, aggregating alternatives.
+  // Use the booster-aware evaluator so each alternative reflects the best partySize at
+  // every level — otherwise a chosen route with boosters would always look unfairly fast.
+  const steps = mergeStepsWithAlternatives(
+    rawSteps,
+    levelAlternatives,
+    evaluateComboWithBoosters,
+    creature,
+  )
 
-  // Add party tips to merged steps
+  // Add party tips to merged steps (skip when concrete boosters were already chosen)
   for (const step of steps) {
     if (step.expedition.maxPartySize <= 1) continue
+    if (step.boosters && step.boosters.length > 0) continue
 
     const biome = biomeMap.get(step.expedition.biome)
     let partyTime = 0
@@ -451,6 +596,10 @@ function mergeStepsWithAlternatives(
       current.xpPerMinute =
         current.timeSeconds > 0 ? (currentXpEarned / current.timeSeconds) * 60 : 0
       current.endXpPerMinute = step.xpPerMinute
+      // Accumulate booster time savings; preserve first step's booster lineup
+      if (step.boosterTimeSavings) {
+        current.boosterTimeSavings = (current.boosterTimeSavings ?? 0) + step.boosterTimeSavings
+      }
       currentLevelRange.push(step.fromLevel)
     } else {
       attachAlternatives(current, currentLevelRange, levelAlternatives, evaluateCombo, creature)
@@ -508,12 +657,18 @@ function attachAlternatives(
     let totalXpEarned = 0
     let loopCount = 0
     let valid = true
+    let firstBoosters: BoosterInfo[] = []
+    let firstPartySize = 1
 
     for (let level = step.fromLevel; level < step.toLevel; level++) {
       const result = evaluateCombo(combo.expedition, combo.biome, combo.tier, level, loopCount)
       if (!result) {
         valid = false
         break
+      }
+      if (level === step.fromLevel) {
+        firstBoosters = result.boosters
+        firstPartySize = result.partySize
       }
       totalTime += result.timeForLevel
       totalRuns += result.runsForLevel
@@ -529,6 +684,8 @@ function attachAlternatives(
 
     const biomeStatus = combo.biome ? getBiomeStatus(creature, combo.biome) : ('neutral' as const)
 
+    const useBoosters = firstPartySize > 1 && firstBoosters.length > 0
+
     alternatives.push({
       expedition: combo.expedition,
       tier: combo.tier,
@@ -540,6 +697,8 @@ function attachAlternatives(
       timeSeconds: totalTime,
       timeDeltaPercent,
       xpPerMinuteDeltaPercent,
+      boosters: useBoosters ? firstBoosters : undefined,
+      partySize: useBoosters ? firstPartySize : undefined,
     })
   }
 

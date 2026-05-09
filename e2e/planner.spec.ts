@@ -267,6 +267,9 @@ test.describe('level up - single mode planning', () => {
     // Heading should show creature name
     await expect(page.locator('h1', { hasText: 'Moss Leveling' })).toBeVisible()
 
+    // Single-mode plan is gated behind an explicit Calculate button
+    await page.getByRole('button', { name: 'Calculate' }).first().click()
+
     // Summary should show steps, runs, XP/min
     await expect(page.getByText(/\d+ step/).first()).toBeVisible()
     await expect(page.getByText(/\d+ runs/).first()).toBeVisible()
@@ -276,6 +279,7 @@ test.describe('level up - single mode planning', () => {
   test('timeline steps show expedition names and level ranges', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
     await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // At least one step should show an expedition name
     // Steps have numbered nodes (1, 2, 3...) and expedition details
@@ -285,6 +289,7 @@ test.describe('level up - single mode planning', () => {
   test('target level preset 70 changes the plan', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=120')
     await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Get step count at target 120
     const stepsText120 = await page
@@ -292,9 +297,10 @@ test.describe('level up - single mode planning', () => {
       .first()
       .textContent()
 
-    // Switch to target 70
+    // Switch to target 70 — invalidates the plan, so click Calculate again
     // There are two sets of preset buttons (single + party), find the one in single mode
     await page.getByRole('button', { name: '70', exact: true }).first().click()
+    await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Wait for plan to recalculate
     await page
@@ -331,6 +337,7 @@ test.describe('level up - step interaction', () => {
     await seedCreatures(page)
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
     await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Find the first step card button with aria-expanded
     const stepButton = page.locator('button[aria-expanded="false"]').first()
@@ -350,6 +357,7 @@ test.describe('level up - step interaction', () => {
     })
     await page.goto('./planner?tab=levelup&creature=moss&target=120')
     await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Awakening step should show "Awaken Creature" text
     await expect(page.getByText('Awaken Creature')).toBeVisible()

@@ -4,6 +4,7 @@ import { Clock3, Play, RefreshCw, Users, User, Zap } from 'lucide-vue-next'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import LevelPlannerCalculatePrompt from '@/components/level-planner/LevelPlannerCalculatePrompt.vue'
 import LevelPlannerResults from '@/components/level-planner/LevelPlannerResults.vue'
 import PartyCreatureFilter from '@/components/level-planner/PartyCreatureFilter.vue'
 import PartyExpeditionFilter from '@/components/level-planner/PartyExpeditionFilter.vue'
@@ -66,6 +67,8 @@ const {
   resetAllOverrides: resetRouteOverrides,
   hasOverrides: hasRouteOverrides,
   overriddenFromLevels,
+  hasCalculated: singleHasCalculated,
+  calculate: singleCalculate,
 } = useLevelPlanner(creatureId, targetLevel, effectiveExpeditionTierSelections)
 
 
@@ -450,6 +453,14 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
             +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
           </PlannerBadge>
+          <button
+            v-if="plan && plan.steps.length > 0"
+            class="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+            @click="singleCalculate"
+          >
+            <RefreshCw class="size-3.5" />
+            Recalculate
+          </button>
         </template>
       </PlannerToolbar>
 
@@ -482,12 +493,24 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
         "
       />
 
+      <!-- Ready to calculate (no plan yet) -->
+      <LevelPlannerCalculatePrompt
+        v-else-if="creature && (!singleHasCalculated || !plan)"
+        :creature-name="creature.name"
+        :creature-image="getCreatureImage(creature)"
+        :creature="creature"
+        :from-level="startLevel"
+        :to-level="targetLevel"
+        @calculate="singleCalculate"
+      />
+
       <!-- Plan -->
       <LevelPlannerResults
         v-else-if="plan && plan.steps.length > 0"
         :plan="plan"
         :creature-name="creature?.name ?? ''"
         :creature-image="creature ? getCreatureImage(creature) : undefined"
+        :creature="creature"
         :overridden-from-levels="overriddenFromLevels"
         :has-route-overrides="hasRouteOverrides"
         @select-alternative="selectAlternative"

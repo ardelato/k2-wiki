@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
+import type { Creature } from '@/types'
 import type { LevelingPlan } from '@/utils/levelPlanner'
 
 import LevelPlannerSummary from './LevelPlannerSummary.vue'
@@ -10,6 +11,7 @@ const props = defineProps<{
   plan: LevelingPlan
   creatureName: string
   creatureImage?: string
+  creature?: Creature | null
   overriddenFromLevels?: Set<number>
   hasRouteOverrides?: boolean
 }>()
@@ -51,6 +53,7 @@ const timePercents = computed(() =>
       :to-level="toLevel"
       :creature-name="creatureName"
       :creature-image="creatureImage"
+      :creature="creature"
       :has-route-overrides="hasRouteOverrides"
       @reset-all-overrides="emit('resetAllOverrides')"
     />
