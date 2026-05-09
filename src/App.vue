@@ -12,7 +12,6 @@ const sidebarCollapsed = useLocalStorage('sidebar-collapsed', true)
 
 
 const showMoveBanner = computed(() => {
-  if (typeof window === 'undefined') return false
   if (import.meta.env.DEV) return true
   return /\.github\.io$/i.test(window.location.hostname)
 })

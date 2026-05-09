@@ -114,34 +114,25 @@
       </div>
     </div>
     <script>
-      // Always point at the canonical GitHub Pages app, preserving query/hash for deep links.
-      var stayLink = document.getElementById('stay-link')
-      if (stayLink) {
-        stayLink.setAttribute(
-          'href',
-          'https://ardelato.github.io/k2-wiki/app/' + location.search + location.hash,
-        )
-        stayLink.addEventListener('click', function () {
-          clearInterval(timer)
-        })
-      }
       var seconds = 30
-      var el = document.getElementById('countdown')
+      var countdownEl = document.getElementById('countdown')
       var timer = setInterval(function () {
         seconds--
         if (seconds <= 0) {
           clearInterval(timer)
-          var path = location.pathname.replace('/k2-wiki', '').replace(/\/redirect\.html$/, '/')
-          if (!path || path.charAt(0) !== '/' || path.indexOf('//') === 0) {
-            path = '/'
-          }
-          window.location.replace(
-            'https://k2-wiki.pages.dev' + path + location.search + location.hash,
-          )
+          window.location.replace('https://k2-wiki.pages.dev/' + location.search + location.hash)
         } else {
-          el.textContent = 'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '')
+          countdownEl.textContent =
+            'Redirecting in ' + seconds + ' second' + (seconds !== 1 ? 's' : '')
         }
       }, 1000)
+
+      // Preserve query/hash when bouncing into the GitHub-hosted app, and stop the timer.
+      var stayLink = document.getElementById('stay-link')
+      stayLink.href = 'https://ardelato.github.io/k2-wiki/app/' + location.search + location.hash
+      stayLink.addEventListener('click', function () {
+        clearInterval(timer)
+      })
     </script>
   </body>
 </html>
