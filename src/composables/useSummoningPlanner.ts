@@ -25,6 +25,10 @@ function saveSelection(ids: Set<string>) {
   }
 }
 
+export function clearSummoningPlannerSelection() {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 interface AggregatedCost {
   itemId: string
   itemName: string
