@@ -67,6 +67,18 @@ export const router = createRouter({
       meta: { title: 'Fabrication' },
     },
     {
+      path: '/garden',
+      name: 'garden',
+      component: () => import('../views/GardenView.vue'),
+      meta: { title: 'Garden' },
+    },
+    {
+      path: '/awaken',
+      name: 'awaken',
+      component: () => import('../views/AwakenView.vue'),
+      meta: { title: 'Awaken Tree' },
+    },
+    {
       path: '/configs',
       name: 'configs',
       component: () => import('../views/ConfigsView.vue'),
