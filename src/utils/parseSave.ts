@@ -1,6 +1,6 @@
 import creaturesData from '@/data/creatures.json'
 import { defaultAwakenGatherUpgrades, defaultAwakenSpeedTiers } from '@/data/defaults'
-import type { GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
+import type { GardenCell, AwakenGatherUpgrade } from '@/types'
 
 import { levelFromXp, getSkillLevel } from './formulas'
 
@@ -40,7 +40,8 @@ export interface SaveConfig {
   helpers: string[]
   machines: string[]
   inventory: Record<string, number>
-  gardenFlowers: Record<string, GardenFlowerEntry[]>
+  collectedItems: string[]
+  gardenLayout: (GardenCell | null)[]
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
   jobTiers: Record<string, number>
@@ -91,10 +92,14 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     Array.isArray(save.inventory) ? (save.inventory as SaveInventoryItem[]) : [],
   )
 
+  const collections = save.collections as { items?: unknown } | undefined
+  const collectedItems = Array.isArray(collections?.items)
+    ? (collections!.items as unknown[]).filter((x): x is string => typeof x === 'string')
+    : []
+
   const garden = save.garden as { flowers?: SaveFlower[] } | undefined
-  const gardenFlowers = aggregateGardenFlowers(
-    Array.isArray(garden?.flowers) ? garden!.flowers : [],
-  )
+  const saveFlowers = Array.isArray(garden?.flowers) ? garden!.flowers : []
+  const gardenLayout = buildGardenLayout(saveFlowers)
 
   const upgrades = Array.isArray(save.purchasedUpgrades) ? (save.purchasedUpgrades as string[]) : []
   const { awakenGatherUpgrades, awakenSpeedTiers, awakenGoldLevel } = parseAwakenUpgrades(upgrades)
@@ -132,7 +137,8 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     helpers,
     machines,
     inventory,
-    gardenFlowers,
+    collectedItems,
+    gardenLayout,
     awakenGatherUpgrades,
     awakenSpeedTiers,
     jobTiers,
@@ -219,33 +225,20 @@ function parseInventory(inventory: SaveInventoryItem[]): Record<string, number> 
   return result
 }
 
-function aggregateGardenFlowers(flowers: SaveFlower[]): Record<string, GardenFlowerEntry[]> {
-  const result: Record<string, GardenFlowerEntry[]> = {
-    'fire-flower': [],
-    'wind-flower': [],
-    'earth-flower': [],
-    'water-flower': [],
-  }
-
-  // Group by flowerId + level, count occurrences
-  const groups = new Map<string, Map<number, number>>()
+function buildGardenLayout(flowers: SaveFlower[]): (GardenCell | null)[] {
+  const layout: (GardenCell | null)[] = Array(25).fill(null)
   for (const f of flowers) {
-    if (!(f.flowerId in result)) continue
-    const levelMap = groups.get(f.flowerId) ?? new Map<number, number>()
-    levelMap.set(f.level, (levelMap.get(f.level) ?? 0) + 1)
-    groups.set(f.flowerId, levelMap)
+    if (typeof f?.flowerId !== 'string' || !f.flowerId) continue
+    if (typeof f?.level !== 'number') continue
+    if (!Number.isInteger(f.x) || !Number.isInteger(f.y)) continue
+    if (f.x < 0 || f.x >= 5 || f.y < 0 || f.y >= 5) continue
+    const index = f.y * 5 + f.x
+    layout[index] = { flowerId: f.flowerId, level: f.level }
   }
-
-  for (const [flowerId, levelMap] of groups) {
-    result[flowerId] = [...levelMap.entries()]
-      .map(([level, count]) => ({ level, count }))
-      .toSorted((a, b) => a.level - b.level)
-  }
-
-  return result
+  return layout
 }
 
-function parseAwakenUpgrades(upgrades: string[]): {
+export function parseAwakenUpgrades(upgrades: string[]): {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
   awakenGoldLevel: number

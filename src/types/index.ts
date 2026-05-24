@@ -300,6 +300,11 @@ export interface GardenFlowerEntry {
   level: number
 }
 
+export interface GardenCell {
+  flowerId: string
+  level: number
+}
+
 export interface AwakenGatherUpgrade {
   yieldBonus: number // 0, 1, or 2 (Yield I = +1, Yield II = +1 more)
   durationTier: number // 0–4, each tier = -5% activity duration
