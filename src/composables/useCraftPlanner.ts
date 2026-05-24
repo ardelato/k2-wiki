@@ -1,6 +1,7 @@
 import { useLocalStorage } from '@vueuse/core'
 import { computed, ref, type Ref } from 'vue'
 
+import { useAwakenSimulation } from '@/composables/useAwakenSimulation'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useTools } from '@/composables/useTools'
@@ -1242,15 +1243,18 @@ export function useCraftPlanner(
     queuedAmounts: baseQueuedAmounts,
     queuedTimes: baseQueuedTimes,
     gardenFlowers: baseGarden,
-    awakenGatherUpgrades: baseAwakenGather,
-    awakenSpeedTiers: baseAwakenSpeed,
     jobTiers: baseJobTiers,
     machineLevels: baseMachineLevels,
     fabricationAllocations: baseFabricationAllocations,
-    awakenGoldLevel,
     toolSpeedModes: baseToolSpeedModes,
     toolLevels: baseToolLevels,
   } = useGameConfig()
+
+  const {
+    effectiveAwakenGoldLevel: awakenGoldLevel,
+    effectiveAwakenGatherUpgrades: baseAwakenGather,
+    effectiveAwakenSpeedTiers: baseAwakenSpeed,
+  } = useAwakenSimulation()
 
   const { workstationTools, speedBonusPerLevel } = useTools()
   const { ownedCreatureIds, isAwakened: isCreatureAwakened } = useCreatureCollection()
@@ -1742,15 +1746,18 @@ export function usePlannerModifiers() {
     inventoryAmounts: baseInventory,
     queuedAmounts: baseQueuedAmounts,
     gardenFlowers: baseGarden,
-    awakenGatherUpgrades: baseAwakenGather,
-    awakenSpeedTiers: baseAwakenSpeed,
     jobTiers: baseJobTiers,
     machineLevels: baseMachineLevels,
     fabricationAllocations: baseFabricationAllocations,
-    awakenGoldLevel,
     toolSpeedModes: baseToolSpeedModes,
     toolLevels: baseToolLevels,
   } = useGameConfig()
+
+  const {
+    effectiveAwakenGoldLevel: awakenGoldLevel,
+    effectiveAwakenGatherUpgrades: baseAwakenGather,
+    effectiveAwakenSpeedTiers: baseAwakenSpeed,
+  } = useAwakenSimulation()
 
   const { workstationTools, speedBonusPerLevel } = useTools()
   const { ownedCreatureIds, isAwakened: isCreatureAwakened } = useCreatureCollection()
