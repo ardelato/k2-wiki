@@ -116,6 +116,18 @@ const queuedTimes = useLocalStorage<Record<string, number>>('config-queued-times
 const awakenGoldLevel = useLocalStorage<number>('config-awaken-gold-level', 0)
 const skillLevels = useLocalStorage<Record<string, number>>('config-skill-levels', {})
 
+// Dungeon state lives across multiple localStorage keys read by useDungeons.
+// Writes go through this helper so the `storage` event fires in the same
+// tab — useLocalStorage refs in useDungeons listen for it and stay in sync.
+function writeDungeonKey(key: string, value: string | null) {
+  const oldValue = localStorage.getItem(key)
+  if (value === null) localStorage.removeItem(key)
+  else localStorage.setItem(key, value)
+  window.dispatchEvent(
+    new StorageEvent('storage', { key, oldValue, newValue: value, storageArea: localStorage }),
+  )
+}
+
 export function useGameConfig() {
   const playerLevel = computed(() => getPlayerLevel(skillLevels.value))
   const expeditionCreatureIds = computed(() => {
@@ -382,18 +394,6 @@ export function useGameConfig() {
     resetQueuedAmounts()
     resetSkillLevels()
     resetDungeonParty()
-  }
-
-  // Dungeon state lives across multiple localStorage keys read by useDungeons.
-  // Writes go through this helper so the `storage` event fires in the same
-  // tab — useLocalStorage refs in useDungeons listen for it and stay in sync.
-  function writeDungeonKey(key: string, value: string | null) {
-    const oldValue = localStorage.getItem(key)
-    if (value === null) localStorage.removeItem(key)
-    else localStorage.setItem(key, value)
-    window.dispatchEvent(
-      new StorageEvent('storage', { key, oldValue, newValue: value, storageArea: localStorage }),
-    )
   }
 
   function applyDungeonStateFromSave(d: {
