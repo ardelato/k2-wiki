@@ -1800,7 +1800,6 @@ const get: Upgrade[] = [
     prerequisites: ['awaken-gold-iv'],
   },
 ] satisfies Upgrade[]
-export type UpgradeID = (typeof get)[number]['id']
 
 /**
  * Lookup Function
