@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 
+import { useAwakenSimulation } from '@/composables/useAwakenSimulation'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { computeGoldPerMinute } from '@/utils/goldIncome'
@@ -14,7 +15,8 @@ interface GoldIncomeBreakdown {
 
 export function useGoldIncome() {
   const { ownedCreatureIds, isAwakened } = useCreatureCollection()
-  const { awakenGoldLevel, gardenFlowers } = useGameConfig()
+  const { gardenFlowers } = useGameConfig()
+  const { effectiveAwakenGoldLevel } = useAwakenSimulation()
 
   const awakenedCount = computed(() => {
     let count = 0
@@ -27,7 +29,11 @@ export function useGoldIncome() {
   const goldFlowerEntries = computed(() => gardenFlowers.value['gold-flower'] ?? [])
 
   const goldPerMinute = computed(() =>
-    computeGoldPerMinute(awakenedCount.value, awakenGoldLevel.value, goldFlowerEntries.value),
+    computeGoldPerMinute(
+      awakenedCount.value,
+      effectiveAwakenGoldLevel.value,
+      goldFlowerEntries.value,
+    ),
   )
 
   const breakdown = computed<GoldIncomeBreakdown>(() => {
@@ -35,7 +41,7 @@ export function useGoldIncome() {
     const creatureGold = goldPerMinute.value - flowerGold
     return {
       awakenedCount: awakenedCount.value,
-      awakenGoldLevel: awakenGoldLevel.value,
+      awakenGoldLevel: effectiveAwakenGoldLevel.value,
       creatureGoldPerMin: creatureGold,
       flowerGoldPerMin: flowerGold,
       totalGoldPerMin: goldPerMinute.value,

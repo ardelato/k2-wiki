@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import {
-  Upload,
-  AlertCircle,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Pencil,
-  RotateCcw,
-  Minus,
-  Plus,
-  X,
-} from 'lucide-vue-next'
-import { ref, computed, watch, nextTick, toRaw } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
+import { Upload, AlertCircle, Check, Info, RotateCcw } from 'lucide-vue-next'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-import LevelPlannerCreaturePicker from '@/components/level-planner/LevelPlannerCreaturePicker.vue'
+import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import AssignmentZone from '@/components/configs/AssignmentZone.vue'
+import HeroStatsSection from '@/components/configs/HeroStatsSection.vue'
+import InventoryGridSection from '@/components/configs/InventoryGridSection.vue'
+import WorkstationQueuesSection from '@/components/configs/WorkstationQueuesSection.vue'
+import AppTooltip from '@/components/shared/AppTooltip.vue'
+import RightClickHint from '@/components/shared/RightClickHint.vue'
+import SectionEyebrow from '@/components/shared/SectionEyebrow.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
+import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
-import { useTools } from '@/composables/useTools'
+import { clearSummoningPlannerSelection } from '@/composables/useSummoningPlanner'
 import expeditionsData from '@/data/expeditions.json'
-import type { Expedition, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
+import { items as allItems } from '@/data/indexes'
+import type { Expedition } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { decryptSave } from '@/utils/decrypt'
 import {
@@ -27,21 +26,19 @@ import {
   getMaxUnlockedTier,
   TIER_UNLOCK_REQUIREMENTS,
 } from '@/utils/expeditionUnlocks'
-import { formatDuration, itemName, machineName, toTitleCase, toolName } from '@/utils/format'
-import { levelFromXp, getPlayerLevel, getPlayerLevelXpBonus, SKILLING_IDS } from '@/utils/formulas'
+import { itemName } from '@/utils/format'
+import { levelFromXp, getPlayerLevel, SKILLING_IDS } from '@/utils/formulas'
 import {
   sourceIcons,
   sanctuaryIcon,
   helpersIcon,
   machinesIcon,
-  upgradesIcon,
-  toolIcons,
+  dungeonsIcon,
   jobIcons,
   expeditionTierIcons,
 } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractSaveConfig, type SaveConfig } from '@/utils/parseSave'
-import { jobTierLabel } from '@/utils/sanctuaryConstants'
 
 const allExpeditions = (expeditionsData as Expedition[]).toSorted((a, b) => {
   const diff = a.requiredExpeditionCompletions - b.requiredExpeditionCompletions
@@ -57,21 +54,22 @@ const {
   sanctuaryCreatureIds,
   helperCreatureIds,
   machineCreatureIds,
-  jobTiers,
   inventoryAmounts,
-  gardenFlowers,
+  collectedItems,
+  setCollectedItems,
+  resetCollectedItems,
+  setGardenLayout,
+  setGardenSaveSnapshot,
+  resetGarden,
   awakenGatherUpgrades,
   awakenSpeedTiers,
   setSanctuaryCreatures,
   setHelperCreatures,
   setMachineCreatures,
   expeditionCompletions,
+  expeditionParties,
   setExpeditionCompletions,
   setExpeditionToolXpBonus,
-  toolLevels,
-  toolSpeedModes,
-  machineLevels,
-  fabricationAllocations,
   setToolLevels,
   setToolSpeedModes,
   resetToolLevels,
@@ -80,7 +78,6 @@ const {
   resetMachines,
   setFabricationAllocations,
   resetFabrication,
-  awakenGoldLevel,
   setAwakenGoldLevel,
   skillLevels,
   playerLevel,
@@ -96,15 +93,20 @@ const {
   setExpeditionCreatureLevels,
   setExpeditionLoopCounts,
   resetExpeditionSetup,
+  dungeonParty,
   setDungeonParty,
   resetDungeonParty,
+  applyDungeonStateFromSave,
+  resetDungeonStorage,
+  resetAwaken,
 } = useGameConfig()
 
 
-const { getToolById, speedBonusPerLevel } = useTools()
+const { selectedCreature, drawerOpen, toggleCreatureById, closeDrawer } = useCreatureDrawer()
 
 
 const MACHINES_MAX = 9
+const DUNGEON_MAX = 3
 
 
 // State
@@ -113,96 +115,39 @@ const isDragging = ref(false)
 const saveConfig = ref<SaveConfig | null>(null)
 
 
-// Per-section edit mode
-type EditableSection = 'exclusions' | 'garden' | 'awaken' | 'expeditions'
-const editingSection = ref<EditableSection | null>(null)
+// Save metadata (persisted so it survives reloads)
+const saveFileName = useLocalStorage<string>('config-save-filename', '')
+const savedAtMs = useLocalStorage<number>('config-save-imported-at', 0)
 
 
-let sectionSnapshot: unknown = null
+// Live clock for relative-time display; refreshed every minute so the
+// "imported X ago" string stays current without a page reload.
+const nowMs = ref(Date.now())
+let nowMsTimer: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  nowMsTimer = setInterval(() => {
+    nowMs.value = Date.now()
+  }, 60_000)
+})
+onUnmounted(() => {
+  if (nowMsTimer !== null) clearInterval(nowMsTimer)
+})
 
 
-function startEditing(section: EditableSection) {
-  // Cancel any other section first
-  if (editingSection.value && editingSection.value !== section) {
-    cancelEditing()
+const importedAgo = computed(() => {
+  if (!savedAtMs.value) return ''
+  const seconds = Math.max(0, Math.floor((nowMs.value - savedAtMs.value) / 1000))
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) {
+    const remMin = minutes % 60
+    return remMin ? `${hours}h ${remMin}m ago` : `${hours}h ago`
   }
-  switch (section) {
-    case 'exclusions':
-      sectionSnapshot = {
-        sanctuaryCreatureIds: structuredClone(toRaw(sanctuaryCreatureIds.value)),
-        helperCreatureIds: structuredClone(toRaw(helperCreatureIds.value)),
-        machineCreatureIds: structuredClone(toRaw(machineCreatureIds.value)),
-      }
-      break
-    case 'garden':
-      sectionSnapshot = structuredClone(toRaw(gardenFlowers.value))
-      break
-    case 'awaken':
-      sectionSnapshot = {
-        awakenGatherUpgrades: JSON.parse(JSON.stringify(awakenGatherUpgrades.value)),
-        awakenSpeedTiers: JSON.parse(JSON.stringify(awakenSpeedTiers.value)),
-        awakenGoldLevel: awakenGoldLevel.value,
-      }
-      break
-    case 'expeditions':
-      sectionSnapshot = structuredClone(toRaw(expeditionCompletions.value))
-      break
-  }
-  editingSection.value = section
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, [section]: false }
-}
-
-
-function finishEditing() {
-  sectionSnapshot = null
-  editingSection.value = null
-}
-
-
-function cancelEditing() {
-  if (sectionSnapshot && editingSection.value) {
-    switch (editingSection.value) {
-      case 'exclusions': {
-        const snap = sectionSnapshot as {
-          sanctuaryCreatureIds: string[]
-          helperCreatureIds: string[]
-          machineCreatureIds: string[]
-        }
-        setSanctuaryCreatures(snap.sanctuaryCreatureIds)
-        setHelperCreatures(snap.helperCreatureIds)
-        setMachineCreatures(snap.machineCreatureIds)
-        exclusionPickerValue.value = ''
-        break
-      }
-      case 'garden':
-        gardenFlowers.value = sectionSnapshot as Record<string, GardenFlowerEntry[]>
-        break
-      case 'awaken': {
-        const snap = sectionSnapshot as {
-          awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
-          awakenSpeedTiers: Record<string, number>
-          awakenGoldLevel: number
-        }
-        awakenGatherUpgrades.value = snap.awakenGatherUpgrades
-        awakenSpeedTiers.value = snap.awakenSpeedTiers
-        setAwakenGoldLevel(snap.awakenGoldLevel)
-        break
-      }
-      case 'expeditions':
-        expeditionCompletions.value = sectionSnapshot as Record<string, Record<number, number>>
-        break
-    }
-  }
-  sectionSnapshot = null
-  editingSection.value = null
-}
-
-
-// Section collapse state
-const sectionsCollapsed = ref<Record<string, boolean>>({})
-function toggleSection(key: string) {
-  sectionsCollapsed.value[key] = !sectionsCollapsed.value[key]
-}
+  const days = Math.floor(hours / 24)
+  return days === 1 ? 'yesterday' : `${days}d ago`
+})
 
 
 // Applied state tracking
@@ -273,50 +218,11 @@ const previewCreatures = computed<PreviewCreature[]>(() => {
 })
 
 
-const creatureStats = computed(() => {
-  const total = previewCreatures.value.length
-  const newCount = previewCreatures.value.filter((c) => c.isNew).length
-  const changed = previewCreatures.value.filter((c) => c.levelChanged || c.awakenedChanged).length
-  return { total, newCount, changed }
-})
-
-
-const creatureCollectionHasDiff = computed(() => {
-  return creatureStats.value.newCount > 0 || creatureStats.value.changed > 0
-})
-
-
-const groupedByTier = computed(() => {
-  const groups = new Map<number, PreviewCreature[]>()
-  for (const c of previewCreatures.value) {
-    const list = groups.get(c.tier) ?? []
-    list.push(c)
-    groups.set(c.tier, list)
-  }
-  return [...groups.entries()].toSorted(([a], [b]) => a - b)
-})
-
-
 // --- Save Exclusion Preview ---
 const sanctuaryPreview = computed(() => {
   if (!saveConfig.value) return []
   const currentSet = new Set(sanctuaryCreatureIds.value)
   return saveConfig.value.sanctuary
-    .map((id) => {
-      const c = creatureMap.value.get(id)
-      return c ? { ...c, isNew: !currentSet.has(id) } : null
-    })
-    .filter(
-      (c): c is { id: string; name: string; image: string; tier: number; isNew: boolean } =>
-        c != null,
-    )
-})
-
-
-const helperPreview = computed(() => {
-  if (!saveConfig.value) return []
-  const currentSet = new Set(helperCreatureIds.value)
-  return saveConfig.value.helpers
     .map((id) => {
       const c = creatureMap.value.get(id)
       return c ? { ...c, isNew: !currentSet.has(id) } : null
@@ -343,93 +249,15 @@ const helperHasDiff = computed(
 )
 
 
-const machinePreview = computed(() => {
-  if (!saveConfig.value) return []
-  const currentSet = new Set(machineCreatureIds.value)
-  return saveConfig.value.machines
-    .map((id) => {
-      const c = creatureMap.value.get(id)
-      return c ? { ...c, isNew: !currentSet.has(id) } : null
-    })
-    .filter(
-      (c): c is { id: string; name: string; image: string; tier: number; isNew: boolean } =>
-        c != null,
-    )
-})
-
-
 const machineHasDiff = computed(
   () => !!saveConfig.value && hasSortedDiff(machineCreatureIds.value, saveConfig.value.machines),
 )
 
 
-const exclusionsHaveDiff = computed(
-  () => sanctuaryHasDiff.value || helperHasDiff.value || machineHasDiff.value,
-)
-
-
-const inventoryHasDiff = computed(() => {
+const dungeonHasDiff = computed(() => {
   if (!saveConfig.value) return false
-  return JSON.stringify(inventoryAmounts.value) !== JSON.stringify(saveConfig.value.inventory)
-})
-
-
-const queuedHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return JSON.stringify(queuedAmounts.value) !== JSON.stringify(saveConfig.value.queuedAmounts)
-})
-
-
-const gardenHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return JSON.stringify(gardenFlowers.value) !== JSON.stringify(saveConfig.value.gardenFlowers)
-})
-
-
-const awakenHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return (
-    JSON.stringify(awakenGatherUpgrades.value) !==
-      JSON.stringify(saveConfig.value.awakenGatherUpgrades) ||
-    JSON.stringify(awakenSpeedTiers.value) !== JSON.stringify(saveConfig.value.awakenSpeedTiers) ||
-    awakenGoldLevel.value !== saveConfig.value.awakenGoldLevel
-  )
-})
-
-
-const jobTiersHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return JSON.stringify(jobTiers.value) !== JSON.stringify(saveConfig.value.jobTiers)
-})
-
-
-// jobTiers is derived from sanctuaryCreatureIds — no apply needed
-
-
-const expeditionCompletionsHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return (
-    JSON.stringify(expeditionCompletions.value) !==
-    JSON.stringify(saveConfig.value.expeditionCompletions)
-  )
-})
-
-
-const toolLevelsHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return JSON.stringify(toolLevels.value) !== JSON.stringify(saveConfig.value.toolLevels)
-})
-
-
-const machineLevelsHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return JSON.stringify(machineLevels.value) !== JSON.stringify(saveConfig.value.machineLevels)
-})
-
-
-const skillLevelsHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return JSON.stringify(skillLevels.value) !== JSON.stringify(saveConfig.value.skillLevels)
+  const saveParty = saveConfig.value.currentDungeon?.party ?? []
+  return hasSortedDiff(dungeonParty.value, saveParty)
 })
 
 
@@ -470,30 +298,275 @@ const skillGroups = [
 ]
 
 
-const fabricationHasDiff = computed(() => {
-  if (!saveConfig.value) return false
-  return (
-    JSON.stringify(fabricationAllocations.value) !==
-    JSON.stringify(saveConfig.value.fabricationAllocations)
-  )
+// --- Snapshot hero: creature collection summary ---
+const collectionSummary = computed(() => {
+  // When a save is loaded and creatures haven't been applied yet, preview
+  // the save's counts so the snapshot reflects what `Apply` would set.
+  // Otherwise read from the persisted collection.
+  const showSavePreview = !!saveConfig.value && !appliedSections.value.creatures
+  const previewOwned = new Map<string, boolean>()
+  if (showSavePreview) {
+    for (const c of previewCreatures.value) previewOwned.set(c.id, c.awakened)
+  }
+
+  let owned = 0
+  let awakened = 0
+  const byTier = new Map<number, { owned: number; total: number; awakened: number }>()
+  const total = creatures.value.length
+
+  for (const c of creatures.value) {
+    const tierBucket = byTier.get(c.tier) ?? { owned: 0, total: 0, awakened: 0 }
+    tierBucket.total += 1
+    const ownedHere = showSavePreview ? previewOwned.has(c.id) : isOwned(c.id)
+    const awakenedHere = showSavePreview ? (previewOwned.get(c.id) ?? false) : isAwakened(c.id)
+    if (ownedHere) {
+      tierBucket.owned += 1
+      owned += 1
+      if (awakenedHere) {
+        tierBucket.awakened += 1
+        awakened += 1
+      }
+    }
+    byTier.set(c.tier, tierBucket)
+  }
+  const tiers = [...byTier.entries()]
+    .toSorted(([a], [b]) => a - b)
+    .map(([tier, b]) => ({ tier, ...b }))
+  return { owned, total, awakened, tiers }
+})
+
+
+// --- Snapshot hero: idle creatures (owned but not assigned anywhere) ---
+const assignedCreatureIds = computed(() => {
+  const set = new Set<string>()
+  for (const id of sanctuaryCreatureIds.value) set.add(id)
+  for (const id of helperCreatureIds.value) set.add(id)
+  for (const id of machineCreatureIds.value) set.add(id)
+  for (const id of dungeonParty.value) set.add(id)
+  for (const ids of Object.values(expeditionParties.value ?? {})) {
+    for (const id of ids) set.add(id)
+  }
+  return set
+})
+
+
+const idleCreatures = computed(() => {
+  const assigned = assignedCreatureIds.value
+  return creatures.value
+    .filter((c) => isOwned(c.id) && !assigned.has(c.id))
+    .toSorted((a, b) => a.tier - b.tier)
+})
+
+
+// --- Expedition frontiers: what to unlock next ---
+const expeditionFrontiers = computed(() => {
+  const items = expeditionDisplay.value.items
+
+  // Next expedition to unlock (first locked one in the sorted list)
+  const nextExpItem = items.find((it) => !it.unlocked)
+  const totalRunsCompleted = (() => {
+    const completions = saveConfig.value
+      ? saveConfig.value.expeditionCompletions
+      : expeditionCompletions.value
+    return getTotalCompletedExpeditions(completions)
+  })()
+  const nextExp = nextExpItem
+    ? {
+        name: nextExpItem.expedition.name,
+        rewardItemId: nextExpItem.expedition.rewards[0]?.itemId,
+        have: totalRunsCompleted,
+        need: nextExpItem.expedition.requiredExpeditionCompletions,
+        remaining: Math.max(
+          0,
+          nextExpItem.expedition.requiredExpeditionCompletions - totalRunsCompleted,
+        ),
+        pct: Math.min(
+          100,
+          Math.round(
+            (totalRunsCompleted / nextExpItem.expedition.requiredExpeditionCompletions) * 100,
+          ),
+        ),
+      }
+    : null
+
+  // Tier-up frontiers: unlocked expeditions with a locked next tier, closest to ready
+  const completions = saveConfig.value
+    ? saveConfig.value.expeditionCompletions
+    : expeditionCompletions.value
+  const tierUps = items
+    .filter((it) => it.unlocked)
+    .map((it) => {
+      const lockedTier = it.tiers.find((t) => !t.unlocked)
+      if (!lockedTier) return null
+      const required = TIER_UNLOCK_REQUIREMENTS[lockedTier.tier] ?? 0
+      const prevTierCompletions = completions[it.expedition.id]?.[lockedTier.tier - 1] ?? 0
+      const have = prevTierCompletions
+      const need = required
+      const remaining = lockedTier.remaining
+      const pct = need ? Math.min(100, Math.round((have / need) * 100)) : 0
+      return {
+        name: it.expedition.name,
+        rewardItemId: it.expedition.rewards[0]?.itemId,
+        fromTier: lockedTier.tier - 1,
+        toTier: lockedTier.tier,
+        have,
+        need,
+        remaining,
+        pct,
+      }
+    })
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+    .toSorted((a, b) => b.pct - a.pct)
+    .slice(0, 2)
+
+  return { nextExp, tierUps }
+})
+
+
+// --- Expedition ladder: compact per-row data for the mockup-faithful list ---
+interface ExpeditionLadderRow {
+  id: string
+  name: string
+  rewardItemId: string | undefined
+  requiredExpeditionCompletions: number
+  tiers: { tier: number; cleared: boolean; unlocked: boolean; completions: number }[]
+  maxTier: number
+  nextTier: number
+  pct: number
+  have: number
+  need: number
+  remaining: number
+  runs: number
+  locked: boolean
+  maxed: boolean
+}
+
+
+const expeditionLadder = computed<ExpeditionLadderRow[]>(() => {
+  const completions = saveConfig.value
+    ? saveConfig.value.expeditionCompletions
+    : expeditionCompletions.value
+  const totalRuns = getTotalCompletedExpeditions(completions)
+  return allExpeditions.map((e) => {
+    const unlocked = totalRuns >= e.requiredExpeditionCompletions
+    const expCompletions = completions[e.id] ?? {}
+    const tierEntries = [1, 2, 3, 4, 5].map((t) => {
+      const cleared = (expCompletions[t] ?? 0) > 0
+      const prevCompletions = expCompletions[t - 1] ?? 0
+      const tierUnlocked =
+        unlocked && (t === 1 || prevCompletions >= (TIER_UNLOCK_REQUIREMENTS[t] ?? 0))
+      return {
+        tier: t,
+        completions: expCompletions[t] ?? 0,
+        cleared,
+        unlocked: tierUnlocked,
+      }
+    })
+    // maxTier is the highest *unlocked* tier (not necessarily run yet) — once
+    // the threshold for the next tier is met, we conceptually move to it even
+    // before the player has done a single run there.
+    const maxTier = unlocked
+      ? Math.max(0, ...tierEntries.filter((t) => t.unlocked).map((t) => t.tier))
+      : 0
+    const nextTier = Math.min(5, maxTier + 1)
+    const need = maxTier > 0 && maxTier < 5 ? (TIER_UNLOCK_REQUIREMENTS[nextTier] ?? 0) : 0
+    const have = maxTier > 0 ? (expCompletions[maxTier] ?? 0) : 0
+    const remaining = Math.max(0, need - have)
+    const pct = need ? Math.min(100, Math.round((have / need) * 100)) : 0
+    const runs = tierEntries.reduce((s, t) => s + t.completions, 0)
+    const locked = !unlocked
+    const maxed = maxTier === 5
+    return {
+      id: e.id,
+      name: e.name,
+      rewardItemId: e.rewards[0]?.itemId,
+      requiredExpeditionCompletions: e.requiredExpeditionCompletions,
+      tiers: tierEntries,
+      maxTier,
+      nextTier,
+      pct,
+      have,
+      need,
+      remaining,
+      runs,
+      locked,
+      maxed,
+    }
+  })
+})
+
+
+const expeditionLadderColumns = computed(() => {
+  const rows = expeditionLadder.value
+  const mid = Math.ceil(rows.length / 2)
+  return [rows.slice(0, mid), rows.slice(mid)]
+})
+
+
+const expeditionPartiesAssigned = computed(() => {
+  // Match the source used by expeditionPartiesList so the slot counter stays
+  // in sync with the preview-vs-persisted behaviour.
+  let count = 0
+  for (const exp of expeditionPartiesList.value) {
+    for (const slot of exp.slots) {
+      if (slot) count += 1
+    }
+  }
+  return count
+})
+
+
+// Expeditions × creatures-on-party — for the Assignments card row.
+// Mirrors /expeditions' resolution pattern (creatures.find by id) so the same
+// localStorage state renders identically here.
+interface AssignmentExpeditionSlot {
+  id: string
+  name: string
+  image: string
+  tier: number
+}
+const expeditionPartiesList = computed(() => {
+  // Mirror the Sanctuary/Helpers/Machines swap: when a save is loaded and the
+  // expedition setup hasn't been applied yet, preview the save's party data so
+  // the user can see what `Apply` would set. Otherwise show the persisted ids.
+  const saveParties = saveConfig.value?.currentExpedition?.parties
+  const showSavePreview = !!saveConfig.value && !!saveParties && Object.keys(saveParties).length > 0
+  const parties = showSavePreview ? saveParties : (expeditionParties.value ?? {})
+  return allExpeditions.map((e) => {
+    const partyIds = (parties[e.id] ?? []) as string[]
+    const maxSlots = Math.max(3, e.maxPartySize ?? 3)
+    const slots: (AssignmentExpeditionSlot | null)[] = []
+    for (let i = 0; i < maxSlots; i++) {
+      const id = partyIds[i]
+      if (!id) {
+        slots.push(null)
+        continue
+      }
+      const meta = creatures.value.find((c) => c.id === id)
+      slots.push(
+        meta
+          ? { id: meta.id, name: meta.name, image: meta.image, tier: meta.tier }
+          : { id, name: id, image: '', tier: 0 },
+      )
+    }
+    return {
+      id: e.id,
+      name: e.name,
+      rewardItemId: e.rewards[0]?.itemId,
+      slots,
+    }
+  })
 })
 
 
 const expeditionDisplay = computed(() => {
-  const completions =
-    saveConfig.value && editingSection.value !== 'expeditions'
-      ? saveConfig.value.expeditionCompletions
-      : expeditionCompletions.value
+  const completions = saveConfig.value
+    ? saveConfig.value.expeditionCompletions
+    : expeditionCompletions.value
   const totalCompletions = getTotalCompletedExpeditions(completions)
   const unlockedCount = allExpeditions.filter(
     (e) => totalCompletions >= e.requiredExpeditionCompletions,
   ).length
-
-  // Find the next locked expedition's requirement to show "N more needed"
-  const nextLocked = allExpeditions.find((e) => totalCompletions < e.requiredExpeditionCompletions)
-  const completionsUntilNext = nextLocked
-    ? nextLocked.requiredExpeditionCompletions - totalCompletions
-    : 0
 
   const items = allExpeditions.map((expedition) => {
     const unlocked = totalCompletions >= expedition.requiredExpeditionCompletions
@@ -514,97 +587,50 @@ const expeditionDisplay = computed(() => {
     0,
   )
 
-  return { items, unlockedCount, completionsUntilNext, totalTiersUnlocked }
+  return { items, unlockedCount, totalTiersUnlocked }
 })
 
 
-// Unified display computeds: always same shape with optional save
-const awakenGatherDisplay = computed(() => {
-  const saveGather = saveConfig.value?.awakenGatherUpgrades
-  return Object.entries(awakenGatherUpgrades.value).map(([job, upgrade]) => ({
-    job,
-    current: upgrade,
-    save: saveGather?.[job] ?? null,
-    changed: saveGather
-      ? upgrade.yieldBonus !== saveGather[job]?.yieldBonus ||
-        upgrade.durationTier !== saveGather[job]?.durationTier
-      : false,
-  }))
-})
+// --- Inventory codex grid (full items.json order, placeholders for unowned) ---
+const itemPositionById = new Map(allItems.map((item, index) => [item.id, index]))
 
 
-const awakenSpeedDisplay = computed(() => {
-  const saveSpeed = saveConfig.value?.awakenSpeedTiers
-  return Object.entries(awakenSpeedTiers.value).map(([ws, current]) => ({
-    workstation: ws,
-    current,
-    save: saveSpeed?.[ws] ?? null,
-    changed: saveSpeed ? current !== saveSpeed[ws] : false,
-  }))
-})
-
-
-const jobTiersDisplay = computed(() => {
-  const saveTiers = saveConfig.value?.jobTiers
-  return Object.entries(jobTiers.value).map(([job, current]) => ({
-    job,
-    current,
-    save: saveTiers?.[job] ?? null,
-    changed: saveTiers ? current !== saveTiers[job] : false,
-  }))
-})
-
-
-// --- Planner Diffs (only when save loaded) ---
-const inventoryDiff = computed(() => {
-  if (!saveConfig.value) return []
-  const saveInv = saveConfig.value.inventory
-  const allKeys = new Set([...Object.keys(saveInv), ...Object.keys(inventoryAmounts.value)])
-  return [...allKeys]
-    .map((id) => ({
-      id,
-      name: itemName(id),
-      current: inventoryAmounts.value[id] ?? 0,
-      save: saveInv[id] ?? 0,
-    }))
-    .filter((d) => d.current !== d.save)
-    .toSorted((a, b) => a.name.localeCompare(b.name))
-})
-
-
-const inventoryList = computed(() =>
-  Object.entries(inventoryAmounts.value)
-    .filter(([, amount]) => amount > 0)
-    .map(([id, amount]) => ({ id, name: itemName(id), amount }))
-    .toSorted((a, b) => a.name.localeCompare(b.name)),
-)
-
-
-function flattenQueued(nested: Record<string, Record<string, number>>): Record<string, number> {
-  const flat: Record<string, number> = {}
-  for (const items of Object.values(nested)) {
-    for (const [id, amount] of Object.entries(items)) {
-      if (amount > 0) flat[id] = (flat[id] ?? 0) + amount
-    }
-  }
-  return flat
+interface InventoryGridEntry {
+  id: string
+  name: string
+  image?: string
+  amount: number
+  owned: boolean
 }
 
 
-const queuedDiff = computed(() => {
-  if (!saveConfig.value) return []
-  const saveFlat = flattenQueued(saveConfig.value.queuedAmounts)
-  const currentFlat = flattenQueued(queuedAmounts.value)
-  const allKeys = new Set([...Object.keys(saveFlat), ...Object.keys(currentFlat)])
-  return [...allKeys]
-    .map((id) => ({
-      id,
-      name: itemName(id),
-      current: currentFlat[id] ?? 0,
-      save: saveFlat[id] ?? 0,
-    }))
-    .filter((d) => d.current !== d.save)
-    .toSorted((a, b) => a.name.localeCompare(b.name))
+const inventoryGridItems = computed<InventoryGridEntry[]>(() => {
+  const collectedSet = new Set(collectedItems.value)
+  const entries: InventoryGridEntry[] = allItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    image: item.image,
+    amount: inventoryAmounts.value[item.id] ?? 0,
+    owned: collectedSet.has(item.id) || (inventoryAmounts.value[item.id] ?? 0) > 0,
+  }))
+  // Collected ids not in items.json (defensive — append at end)
+  for (const id of collectedItems.value) {
+    if (!itemPositionById.has(id)) {
+      entries.push({
+        id,
+        name: itemName(id),
+        amount: inventoryAmounts.value[id] ?? 0,
+        owned: true,
+      })
+    }
+  }
+  // Inventory ids not in items.json and not in collections (defensive)
+  for (const [id, amount] of Object.entries(inventoryAmounts.value)) {
+    if (amount > 0 && !itemPositionById.has(id) && !collectedSet.has(id)) {
+      entries.push({ id, name: itemName(id), amount, owned: true })
+    }
+  }
+  return entries
 })
 
 
@@ -627,46 +653,6 @@ const queuedByStation = computed(() =>
 )
 
 
-interface GardenTierDiff {
-  level: number
-  current: number
-  save: number
-  changed: boolean
-}
-
-
-interface GardenFlowerDiff {
-  id: string
-  name: string
-  current: GardenFlowerEntry[]
-  save: GardenFlowerEntry[]
-  tiers: GardenTierDiff[]
-}
-
-
-const gardenDiff = computed<GardenFlowerDiff[]>(() => {
-  if (!saveConfig.value) return []
-  const saveGarden = saveConfig.value.gardenFlowers
-  const flowerIds = ['fire-flower', 'wind-flower', 'earth-flower', 'water-flower']
-  return flowerIds.map((id) => {
-    const current = gardenFlowers.value[id] ?? []
-    const save = saveGarden[id] ?? []
-    // Merge all levels from both current and save
-    const levelSet = new Set<number>()
-    for (const e of current) levelSet.add(e.level)
-    for (const e of save) levelSet.add(e.level)
-    const tiers = [...levelSet]
-      .toSorted((a, b) => a - b)
-      .map((level) => {
-        const cur = current.find((e) => e.level === level)?.count ?? 0
-        const sav = save.find((e) => e.level === level)?.count ?? 0
-        return { level, current: cur, save: sav, changed: cur !== sav }
-      })
-    return { id, name: toTitleCase(id), current, save, tiers }
-  })
-})
-
-
 // --- File Processing ---
 async function processFile(file: File) {
   try {
@@ -682,9 +668,22 @@ async function processFile(file: File) {
     }
 
 
-    saveConfig.value = extractSaveConfig(save)
+    const parsed = extractSaveConfig(save)
+    saveConfig.value = parsed
+    // Garden is managed on its own dedicated page (no manual Apply button
+    // here), so apply the imported positional layout straight into the live
+    // config. The aggregated `gardenFlowers` map updates via the layout
+    // watcher in useGameConfig.
+    setGardenLayout(parsed.gardenLayout)
+    // Keep a snapshot so the Garden page's Reset can revert to the imported
+    // save instead of wiping it.
+    setGardenSaveSnapshot(parsed.gardenLayout)
     appliedSections.value = {}
     errorMessage.value = ''
+    saveFileName.value = file.name
+    savedAtMs.value = Date.now()
+    nowMs.value = Date.now()
+    applyAll()
   } catch (e) {
     errorMessage.value = e instanceof Error ? e.message : 'Failed to process save file'
     saveConfig.value = null
@@ -706,559 +705,238 @@ function onDrop(event: DragEvent) {
 }
 
 
-// --- Auto-collapse sections that match save ---
-watch(saveConfig, () => {
+function applyAll() {
   if (!saveConfig.value) return
-  nextTick(() => {
-    if (!creatureCollectionHasDiff.value) sectionsCollapsed.value.creatures = true
-    if (!exclusionsHaveDiff.value) sectionsCollapsed.value.exclusions = true
-    if (!inventoryHasDiff.value) sectionsCollapsed.value.inventory = true
-    if (!queuedHasDiff.value) sectionsCollapsed.value.queued = true
-    if (!gardenHasDiff.value) sectionsCollapsed.value.garden = true
-    if (!awakenHasDiff.value) sectionsCollapsed.value.awaken = true
-    if (!jobTiersHasDiff.value) sectionsCollapsed.value.jobTiers = true
-    if (!expeditionCompletionsHasDiff.value) sectionsCollapsed.value.expeditions = true
-    if (!toolLevelsHasDiff.value) sectionsCollapsed.value.tools = true
-    if (!skillLevelsHasDiff.value) sectionsCollapsed.value.skills = true
-    if (!machineLevelsHasDiff.value) sectionsCollapsed.value.machineDetails = true
-    if (!fabricationHasDiff.value) sectionsCollapsed.value.fabrication = true
-  })
-})
+  const save = saveConfig.value
 
 
-// --- Apply Functions ---
-function applyCreatureCollection() {
   resetCollection()
   for (const c of previewCreatures.value) {
     setOwned(c.id, true)
     setLevel(c.id, c.level)
     setAwakened(c.id, c.awakened)
   }
-  appliedSections.value = { ...appliedSections.value, creatures: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, creatures: true }
-}
 
 
-function applyExclusions() {
-  if (!saveConfig.value) return
-  setSanctuaryCreatures(saveConfig.value.sanctuary)
-  setHelperCreatures(saveConfig.value.helpers)
-  setMachineCreatures(saveConfig.value.machines)
-  appliedSections.value = { ...appliedSections.value, exclusions: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, exclusions: true }
-}
+  setSanctuaryCreatures(save.sanctuary)
+  setHelperCreatures(save.helpers)
+  setMachineCreatures(save.machines)
+  setDungeonParty(save.currentDungeon?.party ?? [])
 
 
-function applyInventory() {
-  if (!saveConfig.value) return
-  inventoryAmounts.value = { ...saveConfig.value.inventory }
-  appliedSections.value = { ...appliedSections.value, inventory: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, inventory: true }
-}
+  inventoryAmounts.value = { ...save.inventory }
+  setCollectedItems([...save.collectedItems])
 
 
-function applyQueued() {
-  if (!saveConfig.value) return
-  setQueuedAmounts({ ...saveConfig.value.queuedAmounts })
-  setQueuedTimes({ ...saveConfig.value.queuedTimes })
-  appliedSections.value = { ...appliedSections.value, queued: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, queued: true }
-}
+  setQueuedAmounts({ ...save.queuedAmounts })
+  setQueuedTimes({ ...save.queuedTimes })
 
 
-function applyGarden() {
-  if (!saveConfig.value) return
-  gardenFlowers.value = { ...saveConfig.value.gardenFlowers }
-  appliedSections.value = { ...appliedSections.value, garden: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, garden: true }
-}
+  awakenGatherUpgrades.value = { ...save.awakenGatherUpgrades }
+  awakenSpeedTiers.value = { ...save.awakenSpeedTiers }
+  setAwakenGoldLevel(save.awakenGoldLevel)
 
 
-function applyAwaken() {
-  if (!saveConfig.value) return
-  awakenGatherUpgrades.value = { ...saveConfig.value.awakenGatherUpgrades }
-  awakenSpeedTiers.value = { ...saveConfig.value.awakenSpeedTiers }
-  setAwakenGoldLevel(saveConfig.value.awakenGoldLevel)
-  appliedSections.value = { ...appliedSections.value, awaken: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, awaken: true }
-}
+  setExpeditionToolXpBonus(((save.tools?.sword || 0) * 5) / 100 + 1)
+  setToolLevels({ ...save.toolLevels })
+  setToolSpeedModes({ ...save.toolSpeedModes })
 
 
-function applyTools() {
-  if (!saveConfig.value) return
-  setExpeditionToolXpBonus(((saveConfig.value?.tools?.sword || 0) * 5) / 100 + 1)
-  setToolLevels({ ...saveConfig.value.toolLevels })
-  setToolSpeedModes({ ...saveConfig.value.toolSpeedModes })
-  appliedSections.value = { ...appliedSections.value, tools: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, tools: true }
-}
+  setSkillLevels({ ...save.skillLevels })
 
 
-function applySkillLevels() {
-  if (!saveConfig.value) return
-  setSkillLevels({ ...saveConfig.value.skillLevels })
-  appliedSections.value = { ...appliedSections.value, skills: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, skills: true }
-}
+  setMachineLevels({ ...save.machineLevels })
+  setMachineRecipes({ ...save.machineRecipes })
 
 
-function applyMachineDetails() {
-  if (!saveConfig.value) return
-  setMachineLevels({ ...saveConfig.value.machineLevels })
-  setMachineRecipes({ ...saveConfig.value.machineRecipes })
-  appliedSections.value = { ...appliedSections.value, machineDetails: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, machineDetails: true }
-}
+  setFabricationAllocations({ ...save.fabricationAllocations })
 
 
-function applyFabrication() {
-  if (!saveConfig.value) return
-  setFabricationAllocations({ ...saveConfig.value.fabricationAllocations })
-  appliedSections.value = { ...appliedSections.value, fabrication: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, fabrication: true }
-}
+  setExpeditionCompletions({ ...save.expeditionCompletions })
 
 
-function applyExpeditionCompletions() {
-  if (!saveConfig.value) return
-  setExpeditionCompletions({ ...saveConfig.value.expeditionCompletions })
-  appliedSections.value = { ...appliedSections.value, expeditions: true }
-  sectionsCollapsed.value = { ...sectionsCollapsed.value, expeditions: true }
-}
+  setExpeditionParties({ ...save.currentExpedition.parties })
+  setExpeditionCreatureLevels({ ...save.currentExpedition.levels })
+  setExpeditionTiers({ ...save.currentExpedition.tiers })
+  setExpeditionLoopCounts({ ...save.currentExpedition.loopCounts })
 
 
-function applyExpedition() {
-  if (!saveConfig.value) return
-  setExpeditionParties({ ...saveConfig.value.currentExpedition.parties })
-  setExpeditionCreatureLevels({ ...saveConfig.value.currentExpedition.levels })
-  setExpeditionTiers({ ...saveConfig.value.currentExpedition.tiers })
-  setExpeditionLoopCounts({ ...saveConfig.value.currentExpedition.loopCounts })
-}
+  if (save.currentDungeon) applyDungeonStateFromSave(save.currentDungeon)
 
 
-function applyDungeon() {
-  if (!saveConfig.value?.currentDungeon) return
-  const d = saveConfig.value.currentDungeon
-  setDungeonParty(d.party)
-  localStorage.setItem('dungeon-creature-levels', JSON.stringify(d.levels))
-  localStorage.setItem('dungeon-tier', String(d.tier))
-  localStorage.setItem('dungeon-focus', d.focus)
-  if (d.gatheringSkill) {
-    localStorage.setItem('dungeon-sub-focus', d.gatheringSkill)
+  appliedSections.value = {
+    creatures: true,
+    exclusions: true,
+    inventory: true,
+    queued: true,
+    awaken: true,
+    tools: true,
+    skills: true,
+    machineDetails: true,
+    fabrication: true,
+    expeditions: true,
   }
-}
-
-
-function applyAll() {
-  applyCreatureCollection()
-  applyExclusions()
-  applyInventory()
-  applyQueued()
-  applyGarden()
-  applyAwaken()
-  applyTools()
-  applySkillLevels()
-  applyMachineDetails()
-  applyFabrication()
-  applyExpeditionCompletions()
-  applyExpedition()
-  applyDungeon()
-}
-
-
-// --- Reset Functions ---
-function resetExclusions() {
-  setSanctuaryCreatures([])
-  setHelperCreatures([])
-  setMachineCreatures([])
-}
-
-
-function resetInventory() {
-  inventoryAmounts.value = {}
-}
-
-
-function resetGarden() {
-  gardenFlowers.value = {
-    'fire-flower': [],
-    'wind-flower': [],
-    'earth-flower': [],
-    'water-flower': [],
-  }
-}
-
-
-function resetAwaken() {
-  awakenGatherUpgrades.value = {
-    Chopping: { yieldBonus: 0, durationTier: 0 },
-    Mining: { yieldBonus: 0, durationTier: 0 },
-    Digging: { yieldBonus: 0, durationTier: 0 },
-    Exploring: { yieldBonus: 0, durationTier: 0 },
-    Fishing: { yieldBonus: 0, durationTier: 0 },
-    Farming: { yieldBonus: 0, durationTier: 0 },
-  }
-  awakenSpeedTiers.value = { Furnace: 0, Stove: 0, Workbench: 0 }
-}
-
-
-function resetExpeditions() {
-  expeditionCompletions.value = {}
-  resetExpeditionSetup()
-}
-
-
-function toggleExpeditionTier(expeditionId: string, tier: number) {
-  // Build desired max tiers from current derived state
-  const desiredTiers: Record<string, number> = {}
-  const currentTotal = getTotalCompletedExpeditions(expeditionCompletions.value)
-
-
-  for (const exp of allExpeditions) {
-    if (currentTotal >= exp.requiredExpeditionCompletions) {
-      desiredTiers[exp.id] = getMaxUnlockedTier(exp.id, expeditionCompletions.value)
-    }
-  }
-
-
-  // Apply toggle
-  const currentMax = desiredTiers[expeditionId] ?? 0
-  if (tier <= currentMax) {
-    // Unchecking: set max to tier - 1 (0 means fully remove)
-    if (tier <= 1) {
-      delete desiredTiers[expeditionId]
-    } else {
-      desiredTiers[expeditionId] = tier - 1
-    }
-  } else {
-    // Checking: unlock up to this tier, and ensure prior expeditions are unlocked
-    desiredTiers[expeditionId] = tier
-    for (const exp of allExpeditions) {
-      if (exp.id === expeditionId) break
-      if (!desiredTiers[exp.id]) desiredTiers[exp.id] = 1
-    }
-  }
-
-
-  // Recompute minimum completions from desired tiers
-  const completions: Record<string, Record<number, number>> = {}
-
-
-  for (const [expId, maxTier] of Object.entries(desiredTiers)) {
-    if (maxTier <= 0) continue
-    completions[expId] = {}
-    for (let t = 1; t < maxTier; t++) {
-      completions[expId][t] = TIER_UNLOCK_REQUIREMENTS[t + 1]
-    }
-  }
-
-
-  // Ensure total meets requirements for each desired expedition (processed in order)
-  for (const exp of allExpeditions) {
-    if (!desiredTiers[exp.id]) continue
-    const total = getTotalCompletedExpeditions(completions)
-    if (total < exp.requiredExpeditionCompletions) {
-      const deficit = exp.requiredExpeditionCompletions - total
-      const firstExpId = allExpeditions[0].id
-      if (!completions[firstExpId]) completions[firstExpId] = {}
-      completions[firstExpId][1] = (completions[firstExpId][1] ?? 0) + deficit
-    }
-  }
-
-
-  expeditionCompletions.value = completions
 }
 
 
 function resetAll() {
-  resetExclusions()
-  resetInventory()
+  setSanctuaryCreatures([])
+  setHelperCreatures([])
+  setMachineCreatures([])
+  inventoryAmounts.value = {}
+  resetCollectedItems()
   resetQueuedAmounts()
-  resetGarden()
   resetAwaken()
   setAwakenGoldLevel(0)
   resetToolLevels()
   setExpeditionToolXpBonus(1)
   resetMachines()
   resetFabrication()
-  resetExpeditions()
+  expeditionCompletions.value = {}
+  resetExpeditionSetup()
   resetSkillLevels()
   resetCollection()
   resetDungeonParty()
-  localStorage.removeItem('dungeon-creature-levels')
-  localStorage.removeItem('summoning-planner-selection')
+  resetGarden()
+  resetDungeonStorage()
+  clearSummoningPlannerSelection()
+  saveConfig.value = null
+  saveFileName.value = ''
+  savedAtMs.value = 0
+  appliedSections.value = {}
 }
-
-
-function totalFlowerCount(entries: GardenFlowerEntry[]): number {
-  return entries.reduce((sum, e) => sum + e.count, 0)
-}
-
-
-function totalYieldPerCycle(entries: GardenFlowerEntry[]): number {
-  return entries.reduce((sum, e) => sum + e.count * e.level, 0)
-}
-
-
-// Exclusion editing
-const exclusionPickerValue = ref('')
-const activeExclusionSlot = ref<{
-  type: 'sanctuary' | 'helpers' | 'machines'
-  index: number
-} | null>(null)
 
 
 const SANCTUARY_MAX = 8
 const HELPERS_MAX = 6
 
 
-const excludedCreatureIdSet = computed(
-  () =>
-    new Set([
-      ...sanctuaryCreatureIds.value,
-      ...helperCreatureIds.value,
-      ...machineCreatureIds.value,
-    ]),
-)
+type AssignmentSlot = {
+  id: string
+  name: string
+  image: string
+  tier: number
+  isNew?: boolean
+} | null
 
 
-const sanctuarySlots = computed(() => {
-  const slots: ({ id: string; name: string; image: string; tier: number } | null)[] = []
-  for (let i = 0; i < SANCTUARY_MAX; i++) {
-    const id = sanctuaryCreatureIds.value[i]
-    slots.push(id ? (creatureMap.value.get(id) ?? null) : null)
+// Pick the right source of truth for each slot:
+// - When a save is loaded and the section hasn't been applied yet, show the
+//   save's creatures so the user can see what `Apply` will set. Mark slots
+//   that aren't in the current state with `isNew` for a "NEW" overlay.
+// - Otherwise show what's currently persisted.
+function buildDisplaySlots(
+  capacity: number,
+  currentIds: string[],
+  saveIds: string[] | null,
+  showSave: boolean,
+): AssignmentSlot[] {
+  const slots: AssignmentSlot[] = []
+  const currentSet = new Set(currentIds)
+  const sourceIds = showSave && saveIds ? saveIds : currentIds
+  for (let i = 0; i < capacity; i++) {
+    const id = sourceIds[i]
+    if (!id) {
+      slots.push(null)
+      continue
+    }
+    const meta = creatureMap.value.get(id)
+    if (!meta) {
+      slots.push(null)
+      continue
+    }
+    const isNew = showSave && !currentSet.has(id)
+    slots.push({ ...meta, isNew })
   }
   return slots
-})
-
-
-const helperSlots = computed(() => {
-  const slots: ({ id: string; name: string; image: string; tier: number } | null)[] = []
-  for (let i = 0; i < HELPERS_MAX; i++) {
-    const id = helperCreatureIds.value[i]
-    slots.push(id ? (creatureMap.value.get(id) ?? null) : null)
-  }
-  return slots
-})
-
-
-const machineSlots = computed(() => {
-  const slots: ({ id: string; name: string; image: string; tier: number } | null)[] = []
-  for (let i = 0; i < MACHINES_MAX; i++) {
-    const id = machineCreatureIds.value[i]
-    slots.push(id ? (creatureMap.value.get(id) ?? null) : null)
-  }
-  return slots
-})
-
-
-function setActiveExclusionSlot(type: 'sanctuary' | 'helpers' | 'machines', index: number) {
-  if (activeExclusionSlot.value?.type === type && activeExclusionSlot.value?.index === index) {
-    activeExclusionSlot.value = null
-  } else {
-    activeExclusionSlot.value = { type, index }
-  }
 }
 
 
-function removeFromSanctuary(index: number) {
-  const ids = [...sanctuaryCreatureIds.value]
-  ids.splice(index, 1)
-  setSanctuaryCreatures(ids)
-}
-
-
-function removeFromHelpers(index: number) {
-  const ids = [...helperCreatureIds.value]
-  ids.splice(index, 1)
-  setHelperCreatures(ids)
-}
-
-
-function removeFromMachine(index: number) {
-  const ids = [...machineCreatureIds.value]
-  ids.splice(index, 1)
-  setMachineCreatures(ids)
-}
-
-
-function assignExclusionCreature(creatureId: string) {
-  if (!activeExclusionSlot.value) return
-  const { type, index } = activeExclusionSlot.value
-  if (type === 'sanctuary') {
-    const ids = [...sanctuaryCreatureIds.value]
-    // Pad with empty strings if needed, then set at index
-    while (ids.length < index) ids.push('')
-    if (index < ids.length) {
-      ids[index] = creatureId
-    } else {
-      ids.push(creatureId)
-    }
-    setSanctuaryCreatures(ids.filter(Boolean))
-  } else if (type === 'helpers') {
-    const ids = [...helperCreatureIds.value]
-    while (ids.length < index) ids.push('')
-    if (index < ids.length) {
-      ids[index] = creatureId
-    } else {
-      ids.push(creatureId)
-    }
-    setHelperCreatures(ids.filter(Boolean))
-  } else if (type === 'machines') {
-    const ids = [...machineCreatureIds.value]
-    while (ids.length < index) ids.push('')
-    if (index < ids.length) {
-      ids[index] = creatureId
-    } else {
-      ids.push(creatureId)
-    }
-    setMachineCreatures(ids.filter(Boolean))
-  }
-  activeExclusionSlot.value = null
-  exclusionPickerValue.value = ''
-}
-
-
-// Garden helpers (matching PlannerSettings pattern)
-const gardenFlowerTypes = [
-  { id: 'fire-flower', name: 'Fire Flower' },
-  { id: 'wind-flower', name: 'Wind Flower' },
-  { id: 'earth-flower', name: 'Earth Flower' },
-  { id: 'water-flower', name: 'Water Flower' },
-]
-const gardenLevels = [1, 2, 3, 4, 5, 6]
-
-
-const gardenTotalFlowerCount = computed(() =>
-  Object.values(gardenFlowers.value).reduce(
-    (sum, entries) => sum + entries.reduce((s, e) => s + e.count, 0),
-    0,
+const sanctuarySlots = computed<AssignmentSlot[]>(() =>
+  buildDisplaySlots(
+    SANCTUARY_MAX,
+    sanctuaryCreatureIds.value,
+    saveConfig.value?.sanctuary ?? null,
+    !!saveConfig.value && !appliedSections.value.exclusions && sanctuaryHasDiff.value,
   ),
 )
-const gardenRemainingSlots = computed(() => 25 - gardenTotalFlowerCount.value)
 
 
-function gardenFlowerYield(flowerId: string): number {
-  return (gardenFlowers.value[flowerId] ?? []).reduce((sum, e) => sum + e.count * e.level, 0)
-}
-
-
-function gardenFlowerCount(flowerId: string): number {
-  return (gardenFlowers.value[flowerId] ?? []).reduce((sum, e) => sum + e.count, 0)
-}
-
-
-function gardenCountAtLevel(flowerId: string, level: number): number {
-  return (gardenFlowers.value[flowerId] ?? []).find((e) => e.level === level)?.count ?? 0
-}
-
-
-function gardenSetCountAtLevel(flowerId: string, level: number, event: Event) {
-  const parsed = Number((event.target as HTMLInputElement).value)
-  const entries = (gardenFlowers.value[flowerId] ?? []).filter((e) => e.level !== level)
-  const currentCount = gardenCountAtLevel(flowerId, level)
-  const maxAllowed = currentCount + gardenRemainingSlots.value
-  const clamped = Math.max(
-    0,
-    Math.min(maxAllowed, Number.isFinite(parsed) ? Math.round(parsed) : 0),
-  )
-  if (clamped > 0) entries.push({ count: clamped, level })
-  entries.sort((a, b) => a.level - b.level)
-  gardenFlowers.value = { ...gardenFlowers.value, [flowerId]: entries }
-}
-
-
-function gardenStepCountAtLevel(flowerId: string, level: number, delta: number) {
-  const current = gardenCountAtLevel(flowerId, level)
-  const maxAllowed = current + gardenRemainingSlots.value
-  const next = Math.max(0, Math.min(maxAllowed, current + delta))
-  const entries = (gardenFlowers.value[flowerId] ?? []).filter((e) => e.level !== level)
-  if (next > 0) entries.push({ count: next, level })
-  entries.sort((a, b) => a.level - b.level)
-  gardenFlowers.value = { ...gardenFlowers.value, [flowerId]: entries }
-}
-
-
-const activeGardenFlowers = computed(() =>
-  Object.entries(gardenFlowers.value)
-    .filter(([, entries]) => entries.some((e) => e.count > 0))
-    .map(([flowerId, entries]) => {
-      const activeEntries = entries.filter((e) => e.count > 0).toSorted((a, b) => a.level - b.level)
-      const totalCount = activeEntries.reduce((s, e) => s + e.count, 0)
-      const yieldPerMin = activeEntries.reduce((s, e) => s + e.count * e.level, 0)
-      return {
-        flowerId,
-        flowerName: toTitleCase(flowerId),
-        totalCount,
-        yieldPerMin,
-        entries: activeEntries,
-      }
-    }),
+const helperSlots = computed<AssignmentSlot[]>(() =>
+  buildDisplaySlots(
+    HELPERS_MAX,
+    helperCreatureIds.value,
+    saveConfig.value?.helpers ?? null,
+    !!saveConfig.value && !appliedSections.value.exclusions && helperHasDiff.value,
+  ),
 )
 
 
-// Awaken editing
-function updateAwakenGatherYield(job: string, delta: number) {
-  const current = awakenGatherUpgrades.value[job] ?? { yieldBonus: 0, durationTier: 0 }
-  awakenGatherUpgrades.value = {
-    ...awakenGatherUpgrades.value,
-    [job]: { ...current, yieldBonus: Math.max(0, Math.min(2, current.yieldBonus + delta)) },
-  }
-}
+const machineSlots = computed<AssignmentSlot[]>(() =>
+  buildDisplaySlots(
+    MACHINES_MAX,
+    machineCreatureIds.value,
+    saveConfig.value?.machines ?? null,
+    !!saveConfig.value && !appliedSections.value.exclusions && machineHasDiff.value,
+  ),
+)
 
 
-function updateAwakenGatherDuration(job: string, delta: number) {
-  const current = awakenGatherUpgrades.value[job] ?? { yieldBonus: 0, durationTier: 0 }
-  awakenGatherUpgrades.value = {
-    ...awakenGatherUpgrades.value,
-    [job]: { ...current, durationTier: Math.max(0, Math.min(4, current.durationTier + delta)) },
-  }
-}
-
-
-function updateAwakenSpeed(ws: string, delta: number) {
-  awakenSpeedTiers.value = {
-    ...awakenSpeedTiers.value,
-    [ws]: Math.max(0, Math.min(4, (awakenSpeedTiers.value[ws] ?? 0) + delta)),
-  }
-}
+const dungeonSlots = computed<AssignmentSlot[]>(() =>
+  buildDisplaySlots(
+    DUNGEON_MAX,
+    dungeonParty.value,
+    saveConfig.value?.currentDungeon?.party ?? null,
+    !!saveConfig.value && !appliedSections.value.exclusions && dungeonHasDiff.value,
+  ),
+)
 </script>
 
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex items-start justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-extrabold">Configs</h1>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Manage creature exclusions, inventory, and planner settings. Upload a save file to import
-          from your game.
-        </p>
+    <!-- Snapshot header: title + save metadata strip + actions -->
+    <header class="space-y-3">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="min-w-0">
+          <SectionEyebrow class="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <template v-if="saveFileName">
+              <Check class="size-3.5 text-emerald-400" />
+              <span class="text-emerald-400">Save synced</span>
+              <span class="text-muted-foreground/60">·</span>
+              <span class="font-mono normal-case tracking-normal text-muted-foreground/80">
+                {{ saveFileName }}
+              </span>
+              <span v-if="importedAgo" class="text-muted-foreground/60">·</span>
+              <span v-if="importedAgo" class="normal-case tracking-normal">
+                imported {{ importedAgo }}
+              </span>
+            </template>
+            <template v-else>
+              <Upload class="size-3.5" />
+              <span>No save loaded</span>
+            </template>
+          </SectionEyebrow>
+          <h1 class="mt-2 text-3xl font-extrabold tracking-tight">Game Snapshot</h1>
+          <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
+            The data the wiki's planners and calculators use for your account. Import a save to
+            populate it, reset to clear.
+          </p>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <button
+            class="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+            @click="resetAll"
+          >
+            <RotateCcw class="size-3.5" />
+            Reset all
+          </button>
+        </div>
       </div>
-      <button
-        class="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-        @click="resetAll"
-      >
-        <RotateCcw class="size-3.5" />
-        Reset All
-      </button>
-    </div>
 
-    <!-- Save File Upload -->
-    <section class="rounded-xl border border-border bg-card/50 p-4">
-      <h2 class="mb-3 text-base font-bold">Save File Import</h2>
-
-      <!-- Error -->
-      <div
-        v-if="errorMessage"
-        class="mb-3 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2"
-      >
-        <AlertCircle class="size-4 shrink-0 text-red-400" />
-        <p class="text-sm text-red-300">{{ errorMessage }}</p>
-      </div>
-
+      <!-- Drop-zone shown only until a save has been imported (cleared by Reset all). -->
       <label
-        class="flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-6 transition"
+        v-if="!saveConfig && !saveFileName"
+        class="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed p-6 transition"
         :class="
           isDragging
             ? 'border-primary bg-primary/10'
@@ -1271,1786 +949,242 @@ function updateAwakenSpeed(ws: string, delta: number) {
       >
         <Upload class="size-8 text-muted-foreground" />
         <span class="text-sm font-medium text-muted-foreground">
-          {{
-            saveConfig ? 'Upload a different save file' : 'Drop save file here or click to browse'
-          }}
+          Drop save file here or click to browse
         </span>
         <input type="file" accept=".json" class="hidden" @change="onFileSelect" />
       </label>
 
-      <!-- Apply All (only when save loaded) -->
-      <div v-if="saveConfig" class="mt-3 flex items-center gap-3">
-        <button
-          class="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
-          @click="applyAll"
-        >
-          Apply All From Save
-        </button>
-        <span class="text-xs text-muted-foreground">
-          {{ creatureStats.total }} creatures, {{ Object.keys(saveConfig.inventory).length }} items
-        </span>
-      </div>
-    </section>
-
-    <!-- Section: Creature Collection (only when save loaded) -->
-    <section v-if="saveConfig" class="rounded-xl border border-border bg-card/50 p-4">
-      <div class="flex items-center justify-between">
-        <button class="flex items-center gap-2" @click="toggleSection('creatures')">
-          <component
-            :is="sectionsCollapsed.creatures ? ChevronDown : ChevronUp"
-            class="size-4 text-muted-foreground"
-          />
-          <h2 class="text-base font-bold">Creature Collection</h2>
-        </button>
-        <div class="flex items-center gap-2">
-          <div class="flex flex-wrap gap-2 text-xs">
-            <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
-              {{ creatureStats.total }} creatures
-            </span>
-            <span
-              v-if="creatureStats.newCount"
-              class="rounded-md bg-emerald-500/15 px-2 py-1 font-medium text-emerald-400"
-            >
-              +{{ creatureStats.newCount }} new
-            </span>
-            <span
-              v-if="creatureStats.changed"
-              class="rounded-md bg-amber-500/15 px-2 py-1 font-medium text-amber-400"
-            >
-              {{ creatureStats.changed }} updated
-            </span>
-          </div>
-          <button
-            v-if="!appliedSections.creatures && creatureCollectionHasDiff"
-            class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-            @click="applyCreatureCollection"
-          >
-            Apply
-          </button>
-          <span
-            v-else-if="!appliedSections.creatures && !creatureCollectionHasDiff"
-            class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-          >
-            <Check class="size-3.5" /> Matches Save
-          </span>
-          <span
-            v-else-if="appliedSections.creatures"
-            class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-          >
-            <Check class="size-3.5" /> Applied
-          </span>
-        </div>
-      </div>
-
       <div
-        v-if="!sectionsCollapsed.creatures && creatureCollectionHasDiff"
-        class="mt-3 max-h-[40vh] space-y-3 overflow-y-auto pr-1"
+        v-if="errorMessage"
+        class="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2"
       >
-        <div v-for="[tier, group] in groupedByTier" :key="tier">
-          <h3
-            class="sticky top-0 z-10 mb-1.5 border-b border-border/50 bg-card py-1 text-xs font-bold uppercase tracking-wider text-muted-foreground"
-          >
-            Tier {{ tier + 1 }}
-          </h3>
-          <div class="space-y-0.5">
-            <div
-              v-for="c in group"
-              :key="c.id"
-              class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm"
-              :class="{
-                'bg-emerald-500/10': c.isNew,
-                'bg-amber-500/10': (c.levelChanged || c.awakenedChanged) && !c.isNew,
-              }"
-            >
-              <img
-                v-if="getCreatureImage(c)"
-                :src="getCreatureImage(c)"
-                :alt="c.name"
-                class="size-7 rounded object-cover"
-                loading="lazy"
-              />
-              <div v-else class="size-7 rounded bg-muted" />
-              <span class="flex-1 font-medium" :class="c.awakened ? 'text-pink-400' : ''">
-                {{ c.name }}
-              </span>
-              <span
-                v-if="c.awakened"
-                class="text-xs"
-                :class="c.awakenedChanged ? 'font-semibold text-pink-300' : 'text-pink-400/70'"
-              >
-                ★ Awakened
-              </span>
-              <span class="tabular-nums text-muted-foreground">
-                <template v-if="c.levelChanged">
-                  <span class="text-muted-foreground/60">{{ c.oldLevel }}</span>
-                  <span class="mx-0.5">&rarr;</span>
-                </template>
-                Lv.{{ c.level }}
-              </span>
-              <span v-if="c.isNew" class="text-xs font-semibold text-emerald-400">NEW</span>
-              <Check
-                v-else-if="!c.levelChanged && !c.awakenedChanged"
-                class="size-3.5 text-muted-foreground/50"
-              />
-            </div>
-          </div>
-        </div>
+        <AlertCircle class="size-4 shrink-0 text-red-400" />
+        <p class="text-sm text-red-300">{{ errorMessage }}</p>
       </div>
-    </section>
+    </header>
 
-    <!-- Section: Creature Exclusions -->
+    <!-- Hero stats: Creatures Collected + Player Level -->
+    <HeroStatsSection
+      :collection-summary="collectionSummary"
+      :display-player-level="displayPlayerLevel"
+      :skill-groups="skillGroups"
+      :display-skill-level="displaySkillLevel"
+    />
+
+    <!-- Section: Creature Assignments (renamed from Exclusions) -->
     <section class="rounded-xl border border-border bg-card/50 p-4">
-      <div class="flex items-center justify-between">
-        <button class="flex items-center gap-2" @click="toggleSection('exclusions')">
-          <component
-            :is="sectionsCollapsed.exclusions ? ChevronDown : ChevronUp"
-            class="size-4 text-muted-foreground"
-          />
-          <h2 class="text-base font-bold">Creature Exclusions</h2>
-        </button>
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-2">
+          <div class="text-left">
+            <div class="flex items-center gap-1.5">
+              <h2 class="text-base font-bold">Creature Assignments</h2>
+              <AppTooltip
+                text='Assigned creatures are reserved by the planner across all pages. Toggle "Show Excluded" where available to temporarily include them.'
+              >
+                <Info class="size-3.5 text-muted-foreground/70 hover:text-foreground" />
+              </AppTooltip>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
           <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-            {{ sanctuaryCreatureIds.length + helperCreatureIds.length + machineCreatureIds.length }}
-            excluded
-          </span>
-          <button
-            v-if="saveConfig && !appliedSections.exclusions && exclusionsHaveDiff"
-            class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-            @click="applyExclusions"
-          >
-            Apply from Save
-          </button>
-          <span
-            v-else-if="saveConfig && !appliedSections.exclusions && !exclusionsHaveDiff"
-            class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-          >
-            <Check class="size-3.5" /> Matches Save
+            {{ assignedCreatureIds.size }} assigned
           </span>
           <span
-            v-else-if="appliedSections.exclusions"
-            class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
+            v-if="idleCreatures.length"
+            class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium text-muted-foreground"
           >
-            <Check class="size-3.5" /> Applied
+            {{ idleCreatures.length }} idle
           </span>
-          <button
-            v-if="
-              editingSection === 'exclusions' &&
-              sanctuaryCreatureIds.length + helperCreatureIds.length + machineCreatureIds.length > 0
-            "
-            class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-            @click="resetExclusions"
-          >
-            <RotateCcw class="size-3" />
-          </button>
-          <template v-if="editingSection !== 'exclusions'">
-            <button
-              class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
-              @click="startEditing('exclusions')"
-            >
-              <Pencil class="size-3.5" />
-              Edit
-            </button>
-          </template>
-          <template v-else>
-            <button
-              class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition"
-              @click="finishEditing"
-            >
-              Done
-            </button>
-            <button
-              class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
-              @click="cancelEditing"
-            >
-              Cancel
-            </button>
-          </template>
         </div>
       </div>
 
-      <div v-if="!sectionsCollapsed.exclusions" class="mt-3 space-y-4">
-        <!-- Sanctuary Slots -->
-        <div class="space-y-2">
-          <h3
-            class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
-          >
-            <img :src="sanctuaryIcon" alt="" class="size-4" loading="lazy" />
-            <template v-if="saveConfig && !appliedSections.exclusions && sanctuaryHasDiff">
-              Sanctuary ({{ sanctuaryCreatureIds.length }} &rarr; {{ sanctuaryPreview.length }})
-            </template>
-            <template v-else>
-              Sanctuary ({{ sanctuaryCreatureIds.length }}/{{ SANCTUARY_MAX }})
-            </template>
-          </h3>
-          <div class="flex flex-wrap gap-2">
-            <div
-              v-for="(slot, index) in sanctuarySlots"
-              :key="index"
-              class="relative size-16 overflow-hidden rounded-lg border transition"
-              :class="[
-                slot
-                  ? 'border-border bg-card/50'
-                  : editingSection === 'exclusions' &&
-                      activeExclusionSlot?.type === 'sanctuary' &&
-                      activeExclusionSlot?.index === index
-                    ? 'border-dashed border-primary bg-primary/10'
-                    : editingSection === 'exclusions'
-                      ? 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45'
-                      : 'border-dashed border-border/50 bg-muted/20',
-              ]"
-              @click="
-                editingSection === 'exclusions' && !slot
-                  ? setActiveExclusionSlot('sanctuary', index)
-                  : undefined
-              "
-            >
-              <template v-if="slot">
-                <img
-                  v-if="getCreatureImage(slot)"
-                  :src="getCreatureImage(slot)"
-                  :alt="slot.name"
-                  class="size-full object-cover"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="flex size-full items-center justify-center bg-muted text-xs font-bold"
-                >
-                  {{ slot.name.charAt(0) }}
-                </div>
-                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
-                  <p class="truncate text-center text-[9px] font-semibold text-white">
-                    {{ slot.name }}
-                  </p>
-                </div>
-                <button
-                  v-if="editingSection === 'exclusions'"
-                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
-                  @click.stop="removeFromSanctuary(index)"
-                >
-                  <X class="size-3" />
-                </button>
-              </template>
-              <template v-else>
-                <div class="flex size-full flex-col items-center justify-center gap-1">
-                  <Plus
-                    v-if="editingSection === 'exclusions'"
-                    class="size-4 text-muted-foreground/50"
-                  />
-                  <span
-                    v-if="
-                      editingSection === 'exclusions' &&
-                      activeExclusionSlot?.type === 'sanctuary' &&
-                      activeExclusionSlot?.index === index
-                    "
-                    class="text-[9px] text-primary"
-                    >Select</span
-                  >
-                </div>
-              </template>
-            </div>
-          </div>
-          <div
-            v-if="saveConfig && !appliedSections.exclusions"
-            class="mt-1.5 flex items-center gap-2"
-          >
-            <span class="text-[10px] font-semibold text-accent">&rarr;</span>
-            <template v-if="sanctuaryHasDiff">
-              <div class="flex flex-wrap gap-2">
-                <div
-                  v-for="c in sanctuaryPreview"
-                  :key="c.id"
-                  class="relative size-[60px] overflow-hidden rounded-lg border"
-                  :class="
-                    c.isNew
-                      ? 'border-emerald-400/50 ring-1 ring-emerald-400/20'
-                      : 'border-accent/30'
-                  "
-                >
-                  <img
-                    v-if="getCreatureImage(c)"
-                    :src="getCreatureImage(c)"
-                    :alt="c.name"
-                    class="size-full object-cover"
-                    loading="lazy"
-                  />
-                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
-                    <p class="truncate text-center text-[8px] font-semibold text-white">
-                      {{ c.name }}
-                    </p>
-                  </div>
-                  <span
-                    v-if="c.isNew"
-                    class="absolute left-0.5 top-0.5 rounded bg-emerald-500/80 px-0.5 text-[7px] font-bold uppercase text-white"
-                    >new</span
-                  >
-                </div>
-                <span v-if="sanctuaryPreview.length === 0" class="text-[10px] text-muted-foreground"
-                  >None</span
-                >
-              </div>
-            </template>
-            <span v-else class="text-[10px] text-emerald-400">No changes</span>
-          </div>
-        </div>
-
-        <!-- Helper Slots -->
-        <div class="space-y-2">
-          <h3
-            class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
-          >
-            <img :src="helpersIcon" alt="" class="size-4" loading="lazy" />
-            Helpers ({{ helperCreatureIds.length }}/{{ HELPERS_MAX }})
-          </h3>
-          <div class="flex flex-wrap gap-2">
-            <div
-              v-for="(slot, index) in helperSlots"
-              :key="index"
-              class="relative size-16 overflow-hidden rounded-lg border transition"
-              :class="[
-                slot
-                  ? 'border-border bg-card/50'
-                  : editingSection === 'exclusions' &&
-                      activeExclusionSlot?.type === 'helpers' &&
-                      activeExclusionSlot?.index === index
-                    ? 'border-dashed border-primary bg-primary/10'
-                    : editingSection === 'exclusions'
-                      ? 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45'
-                      : 'border-dashed border-border/50 bg-muted/20',
-              ]"
-              @click="
-                editingSection === 'exclusions' && !slot
-                  ? setActiveExclusionSlot('helpers', index)
-                  : undefined
-              "
-            >
-              <template v-if="slot">
-                <img
-                  v-if="getCreatureImage(slot)"
-                  :src="getCreatureImage(slot)"
-                  :alt="slot.name"
-                  class="size-full object-cover"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="flex size-full items-center justify-center bg-muted text-xs font-bold"
-                >
-                  {{ slot.name.charAt(0) }}
-                </div>
-                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
-                  <p class="truncate text-center text-[9px] font-semibold text-white">
-                    {{ slot.name }}
-                  </p>
-                </div>
-                <button
-                  v-if="editingSection === 'exclusions'"
-                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
-                  @click.stop="removeFromHelpers(index)"
-                >
-                  <X class="size-3" />
-                </button>
-              </template>
-              <template v-else>
-                <div class="flex size-full flex-col items-center justify-center gap-1">
-                  <Plus
-                    v-if="editingSection === 'exclusions'"
-                    class="size-4 text-muted-foreground/50"
-                  />
-                  <span
-                    v-if="
-                      editingSection === 'exclusions' &&
-                      activeExclusionSlot?.type === 'helpers' &&
-                      activeExclusionSlot?.index === index
-                    "
-                    class="text-[9px] text-primary"
-                    >Select</span
-                  >
-                </div>
-              </template>
-            </div>
-          </div>
-          <div
-            v-if="saveConfig && !appliedSections.exclusions"
-            class="mt-1.5 flex items-center gap-2"
-          >
-            <span class="text-[10px] font-semibold text-accent">&rarr;</span>
-            <template v-if="helperHasDiff">
-              <div class="flex flex-wrap gap-2">
-                <div
-                  v-for="c in helperPreview"
-                  :key="c.id"
-                  class="relative size-[60px] overflow-hidden rounded-lg border"
-                  :class="
-                    c.isNew
-                      ? 'border-emerald-400/50 ring-1 ring-emerald-400/20'
-                      : 'border-accent/30'
-                  "
-                >
-                  <img
-                    v-if="getCreatureImage(c)"
-                    :src="getCreatureImage(c)"
-                    :alt="c.name"
-                    class="size-full object-cover"
-                    loading="lazy"
-                  />
-                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
-                    <p class="truncate text-center text-[8px] font-semibold text-white">
-                      {{ c.name }}
-                    </p>
-                  </div>
-                  <span
-                    v-if="c.isNew"
-                    class="absolute left-0.5 top-0.5 rounded bg-emerald-500/80 px-0.5 text-[7px] font-bold uppercase text-white"
-                    >new</span
-                  >
-                </div>
-                <span v-if="helperPreview.length === 0" class="text-[10px] text-muted-foreground"
-                  >None</span
-                >
-              </div>
-            </template>
-            <span v-else class="text-[10px] text-emerald-400">No changes</span>
-          </div>
-        </div>
-
-        <!-- Machine Slots -->
-        <div class="space-y-2">
-          <h3
-            class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
-          >
-            <img :src="machinesIcon" alt="" class="size-4" loading="lazy" />
-            <template v-if="saveConfig && !appliedSections.exclusions && machineHasDiff">
-              Machines ({{ machineCreatureIds.length }} &rarr; {{ saveConfig.machines.length }})
-            </template>
-            <template v-else>
-              Machines ({{ machineCreatureIds.length }}/{{ MACHINES_MAX }})
-            </template>
-          </h3>
-          <div class="flex flex-wrap gap-2">
-            <div
-              v-for="(slot, index) in machineSlots"
-              :key="index"
-              class="relative size-16 overflow-hidden rounded-lg border transition"
-              :class="[
-                slot
-                  ? 'border-border bg-card/50'
-                  : editingSection === 'exclusions' &&
-                      activeExclusionSlot?.type === 'machines' &&
-                      activeExclusionSlot?.index === index
-                    ? 'border-dashed border-primary bg-primary/10'
-                    : editingSection === 'exclusions'
-                      ? 'cursor-pointer border-dashed border-border/50 bg-muted/20 hover:border-accent/45'
-                      : 'border-dashed border-border/50 bg-muted/20',
-              ]"
-              @click="
-                editingSection === 'exclusions' && !slot
-                  ? setActiveExclusionSlot('machines', index)
-                  : undefined
-              "
-            >
-              <template v-if="slot">
-                <img
-                  v-if="getCreatureImage(slot)"
-                  :src="getCreatureImage(slot)"
-                  :alt="slot.name"
-                  class="size-full object-cover"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="flex size-full items-center justify-center bg-muted text-xs font-bold"
-                >
-                  {{ slot.name.charAt(0) }}
-                </div>
-                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
-                  <p class="truncate text-center text-[9px] font-semibold text-white">
-                    {{ slot.name }}
-                  </p>
-                </div>
-                <button
-                  v-if="editingSection === 'exclusions'"
-                  class="focus-ring absolute right-0 top-0 rounded-bl rounded-tr-lg bg-black/70 p-0.5 text-white/80 transition hover:bg-destructive hover:text-white"
-                  @click.stop="removeFromMachine(index)"
-                >
-                  <X class="size-3" />
-                </button>
-              </template>
-              <template v-else>
-                <div class="flex size-full flex-col items-center justify-center gap-1">
-                  <Plus
-                    v-if="editingSection === 'exclusions'"
-                    class="size-4 text-muted-foreground/50"
-                  />
-                  <span
-                    v-if="
-                      editingSection === 'exclusions' &&
-                      activeExclusionSlot?.type === 'machines' &&
-                      activeExclusionSlot?.index === index
-                    "
-                    class="text-[9px] text-primary"
-                    >Select</span
-                  >
-                </div>
-              </template>
-            </div>
-          </div>
-          <div
-            v-if="saveConfig && !appliedSections.exclusions"
-            class="mt-1.5 flex items-center gap-2"
-          >
-            <span class="text-[10px] font-semibold text-accent">&rarr;</span>
-            <template v-if="machineHasDiff">
-              <div class="flex flex-wrap gap-2">
-                <div
-                  v-for="c in machinePreview"
-                  :key="c.id"
-                  class="relative size-[60px] overflow-hidden rounded-lg border"
-                  :class="
-                    c.isNew
-                      ? 'border-emerald-400/50 ring-1 ring-emerald-400/20'
-                      : 'border-accent/30'
-                  "
-                >
-                  <img
-                    v-if="getCreatureImage(c)"
-                    :src="getCreatureImage(c)"
-                    :alt="c.name"
-                    class="size-full object-cover"
-                    loading="lazy"
-                  />
-                  <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-0.5">
-                    <p class="truncate text-center text-[8px] font-semibold text-white">
-                      {{ c.name }}
-                    </p>
-                  </div>
-                  <span
-                    v-if="c.isNew"
-                    class="absolute left-0.5 top-0.5 rounded bg-emerald-500/80 px-0.5 text-[7px] font-bold uppercase text-white"
-                    >new</span
-                  >
-                </div>
-                <span v-if="machinePreview.length === 0" class="text-[10px] text-muted-foreground"
-                  >None</span
-                >
-              </div>
-            </template>
-            <span v-else class="text-[10px] text-emerald-400">No changes</span>
-          </div>
-        </div>
-
-        <!-- Creature Picker (editing only, when a slot is active) -->
-        <div v-if="editingSection === 'exclusions' && activeExclusionSlot">
-          <LevelPlannerCreaturePicker
-            :model-value="exclusionPickerValue"
-            :owned-only="true"
-            :exclude-ids="excludedCreatureIdSet"
-            @update:model-value="assignExclusionCreature($event)"
+      <div class="mt-3 space-y-3">
+        <!-- 4 zones in a row -->
+        <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <AssignmentZone
+            :icon="sanctuaryIcon"
+            label="Sanctuary"
+            :slots="sanctuarySlots"
+            :current-count="sanctuaryCreatureIds.length"
+            :max="SANCTUARY_MAX"
+            :show-diff="!!saveConfig && !appliedSections.exclusions && sanctuaryHasDiff"
+            :target-count="sanctuaryPreview.length"
+            @context-menu="toggleCreatureById"
+          />
+          <AssignmentZone
+            :icon="helpersIcon"
+            label="Helpers"
+            :slots="helperSlots"
+            :current-count="helperCreatureIds.length"
+            :max="HELPERS_MAX"
+            :show-diff="!!saveConfig && !appliedSections.exclusions && helperHasDiff"
+            :target-count="saveConfig?.helpers.length"
+            @context-menu="toggleCreatureById"
+          />
+          <AssignmentZone
+            :icon="machinesIcon"
+            label="Machines"
+            :slots="machineSlots"
+            :current-count="machineCreatureIds.length"
+            :max="MACHINES_MAX"
+            :show-diff="!!saveConfig && !appliedSections.exclusions && machineHasDiff"
+            :target-count="saveConfig?.machines.length"
+            @context-menu="toggleCreatureById"
+          />
+          <AssignmentZone
+            :icon="dungeonsIcon"
+            label="Dungeons"
+            :slots="dungeonSlots"
+            :current-count="dungeonParty.length"
+            :max="DUNGEON_MAX"
+            :show-diff="!!saveConfig && !appliedSections.exclusions && dungeonHasDiff"
+            :target-count="saveConfig?.currentDungeon?.party.length ?? 0"
+            @context-menu="toggleCreatureById"
           />
         </div>
+        <!-- /4-zone grid -->
 
-        <p class="text-xs text-muted-foreground">
-          Excluded creatures won't appear in expedition recommendations. Use the "Show Excluded"
-          filter on the Expeditions page to temporarily include them.
-        </p>
+        <!-- Expeditions assignment row: 20 expeditions × up to 3 slots -->
+        <div class="bg-bg/40 rounded-xl border border-border/60 p-3">
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <SectionEyebrow as="h3" class="flex items-center gap-1.5">
+              <img :src="sourceIcons.Expeditions" alt="" class="size-3.5" loading="lazy" />
+              Expeditions
+            </SectionEyebrow>
+            <span class="font-mono text-[10px] text-muted-foreground">
+              {{ expeditionPartiesAssigned }}/{{ expeditionPartiesList.length * 3 }} slots filled
+            </span>
+          </div>
+          <div
+            v-if="expeditionPartiesAssigned === 0"
+            class="rounded-md border border-dashed border-border/50 px-3 py-2 text-[11px] text-muted-foreground"
+          >
+            No creatures currently assigned to any expedition. Head to
+            <RouterLink
+              to="/expeditions"
+              class="font-mono text-primary underline underline-offset-2"
+            >
+              /expeditions
+            </RouterLink>
+            to set up parties.
+          </div>
+          <div v-else class="grid grid-cols-2 gap-x-3 gap-y-1.5 md:grid-cols-3 xl:grid-cols-4">
+            <div
+              v-for="exp in expeditionPartiesList.filter((e) => !e.slots.every((s) => !s))"
+              :key="exp.id"
+              class="flex flex-col gap-1.5 rounded-md bg-muted/20 px-2 py-2"
+            >
+              <div class="flex items-center gap-1.5">
+                <img
+                  v-if="exp.rewardItemId && getItemImage({ id: exp.rewardItemId })"
+                  :src="getItemImage({ id: exp.rewardItemId })"
+                  :alt="itemName(exp.rewardItemId)"
+                  class="size-4 shrink-0 object-contain"
+                  loading="lazy"
+                />
+                <span class="flex-1 truncate text-[11px] font-semibold">
+                  {{ exp.name }}
+                </span>
+              </div>
+              <div class="flex gap-1">
+                <template v-for="(slot, i) in exp.slots" :key="i">
+                  <div
+                    v-if="slot"
+                    class="relative size-14 overflow-hidden rounded-md border border-border bg-card"
+                    :title="slot.name"
+                  >
+                    <RightClickHint @contextmenu="toggleCreatureById(slot.id)">
+                      <img
+                        v-if="getCreatureImage(slot)"
+                        :src="getCreatureImage(slot)"
+                        :alt="slot.name"
+                        class="size-full object-cover"
+                        loading="lazy"
+                      />
+                      <div
+                        v-else
+                        class="flex size-full items-center justify-center bg-muted text-[10px] font-bold uppercase"
+                      >
+                        {{ slot.name.charAt(0) }}
+                      </div>
+                      <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-px">
+                        <p
+                          class="truncate text-center text-[9px] font-bold leading-tight text-white"
+                        >
+                          {{ slot.name }}
+                        </p>
+                      </div>
+                    </RightClickHint>
+                  </div>
+                  <div
+                    v-else
+                    class="size-14 rounded-md border border-dashed border-border/50 bg-muted/20"
+                  />
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Idle creatures container -->
+        <div v-if="idleCreatures.length" class="bg-bg/40 rounded-xl border border-border/60 p-3">
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <SectionEyebrow as="h3" class="flex items-center gap-1.5"> Idle </SectionEyebrow>
+            <span class="font-mono text-[10px] text-muted-foreground">
+              {{ idleCreatures.length }} unassigned
+            </span>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <div
+              v-for="c in idleCreatures"
+              :key="c.id"
+              class="relative size-14 shrink-0 overflow-hidden rounded-md border border-border bg-card/50"
+              :title="c.name"
+            >
+              <RightClickHint @contextmenu="toggleCreatureById(c.id)">
+                <img
+                  v-if="getCreatureImage(c)"
+                  :src="getCreatureImage(c)"
+                  :alt="c.name"
+                  class="size-full object-cover"
+                  loading="lazy"
+                />
+                <div
+                  v-else
+                  class="flex size-full items-center justify-center bg-muted text-xs font-bold"
+                >
+                  {{ c.name.charAt(0) }}
+                </div>
+                <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-px">
+                  <p class="truncate text-center text-[9px] font-bold leading-tight text-white">
+                    {{ c.name }}
+                  </p>
+                </div>
+              </RightClickHint>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Section: Planner Settings -->
+    <!-- Section: Inventory codex -->
+    <InventoryGridSection :items="inventoryGridItems" />
+
+    <!-- Section: Planner snapshot cards -->
     <section class="space-y-4">
-      <h2 class="text-base font-bold">Planner Settings</h2>
-
-      <!-- Inventory -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('inventory')">
-            <component
-              :is="sectionsCollapsed.inventory ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Inventory</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-              {{ Object.keys(inventoryAmounts).length }} items
-            </span>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.inventory && inventoryHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyInventory"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.inventory && !inventoryHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.inventory"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-            <button
-              v-if="Object.keys(inventoryAmounts).length > 0"
-              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-              @click="resetInventory"
-            >
-              <RotateCcw class="size-3" />
-            </button>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.inventory" class="mt-3">
-          <!-- Save Diff -->
-          <div
-            v-if="saveConfig && inventoryDiff.length > 0"
-            class="max-h-60 space-y-0.5 overflow-y-auto pr-1"
-          >
-            <div
-              v-for="d in inventoryDiff"
-              :key="d.id"
-              class="flex items-center justify-between rounded-lg bg-amber-500/10 px-2 py-1.5 text-sm"
-            >
-              <div class="flex items-center gap-2">
-                <img
-                  v-if="getItemImage({ id: d.id })"
-                  :src="getItemImage({ id: d.id })"
-                  :alt="d.name"
-                  class="size-5 object-contain"
-                  loading="lazy"
-                />
-                <span class="font-medium">{{ d.name }}</span>
-              </div>
-              <span class="tabular-nums text-muted-foreground">
-                <span class="text-muted-foreground/60">{{ d.current.toLocaleString() }}</span>
-                <span class="mx-1">&rarr;</span>
-                <span class="text-foreground">{{ d.save.toLocaleString() }}</span>
-              </span>
-            </div>
-          </div>
-          <p
-            v-else-if="saveConfig && Object.keys(saveConfig.inventory).length === 0"
-            class="text-sm text-muted-foreground"
-          >
-            No inventory found in save file.
-          </p>
-          <p v-else-if="saveConfig" class="text-sm text-muted-foreground">
-            Inventory matches save file ({{ Object.keys(saveConfig.inventory).length }} items).
-          </p>
-          <p
-            v-else-if="Object.keys(inventoryAmounts).length === 0"
-            class="text-sm text-muted-foreground"
-          >
-            No inventory configured. Upload a save or set amounts in the Planner.
-          </p>
-          <p v-else class="text-sm text-muted-foreground">
-            {{ Object.keys(inventoryAmounts).length }} items tracked. Upload a save file to compare.
-          </p>
-
-          <!-- Full inventory list -->
-          <div
-            v-if="inventoryList.length > 0"
-            class="mt-3 max-h-72 space-y-0.5 overflow-y-auto rounded-lg border border-border/50 pr-1"
-          >
-            <div
-              v-for="item in inventoryList"
-              :key="item.id"
-              class="flex items-center justify-between px-2 py-1.5 text-sm odd:bg-muted/20"
-            >
-              <div class="flex items-center gap-2">
-                <img
-                  v-if="getItemImage({ id: item.id })"
-                  :src="getItemImage({ id: item.id })"
-                  :alt="item.name"
-                  class="size-5 object-contain"
-                  loading="lazy"
-                />
-                <span class="font-medium">{{ item.name }}</span>
-              </div>
-              <span class="tabular-nums text-foreground">{{ item.amount.toLocaleString() }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Workstation Queues -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('queued')">
-            <component
-              :is="sectionsCollapsed.queued ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Workstation Queues</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-              {{ queuedStationCount }} items
-            </span>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.queued && queuedHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyQueued"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.queued && !queuedHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.queued"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-            <button
-              v-if="queuedStationCount > 0"
-              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-              @click="resetQueuedAmounts"
-            >
-              <RotateCcw class="size-3" />
-            </button>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.queued" class="mt-3 space-y-3">
-          <!-- Save Diff -->
-          <div v-if="saveConfig && queuedDiff.length > 0">
-            <p class="mb-1 text-xs font-medium text-muted-foreground">Save changes</p>
-            <div class="max-h-40 space-y-0.5 overflow-y-auto pr-1">
-              <div
-                v-for="d in queuedDiff"
-                :key="'diff-' + d.id"
-                class="flex items-center justify-between rounded-lg bg-amber-500/10 px-2 py-1.5 text-sm"
-              >
-                <div class="flex items-center gap-2">
-                  <img
-                    v-if="getItemImage({ id: d.id })"
-                    :src="getItemImage({ id: d.id })"
-                    :alt="d.name"
-                    class="size-5 object-contain"
-                    loading="lazy"
-                  />
-                  <span class="font-medium">{{ d.name }}</span>
-                </div>
-                <span class="tabular-nums text-muted-foreground">
-                  <span class="text-muted-foreground/60">{{ d.current.toLocaleString() }}</span>
-                  <span class="mx-1">&rarr;</span>
-                  <span class="text-foreground">{{ d.save.toLocaleString() }}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-          <p
-            v-else-if="saveConfig && queuedDiff.length === 0 && queuedByStation.length > 0"
-            class="text-sm text-muted-foreground"
-          >
-            Queued items match save file.
-          </p>
-          <p
-            v-else-if="saveConfig && queuedByStation.length === 0"
-            class="text-sm text-muted-foreground"
-          >
-            No queued recipes found in save file.
-          </p>
-
-          <!-- Current queued items grouped by workstation -->
-          <div v-if="queuedByStation.length > 0" class="space-y-2">
-            <div v-for="group in queuedByStation" :key="group.station">
-              <div class="mb-1 flex items-center gap-2">
-                <p class="text-xs font-medium text-muted-foreground">{{ group.station }}</p>
-                <span
-                  v-if="queuedTimes[group.station]"
-                  class="rounded-md bg-muted/50 px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground"
-                >
-                  {{ formatDuration(queuedTimes[group.station]) }}
-                </span>
-              </div>
-              <div class="space-y-0.5">
-                <div
-                  v-for="item in group.items"
-                  :key="item.id"
-                  class="flex items-center justify-between rounded-lg bg-muted/30 px-2 py-1.5 text-sm"
-                >
-                  <div class="flex items-center gap-2">
-                    <img
-                      v-if="getItemImage({ id: item.id })"
-                      :src="getItemImage({ id: item.id })"
-                      :alt="item.name"
-                      class="size-5 object-contain"
-                      loading="lazy"
-                    />
-                    <span class="font-medium">{{ item.name }}</span>
-                  </div>
-                  <span class="tabular-nums text-foreground">
-                    {{ item.amount.toLocaleString() }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <p v-else-if="!saveConfig" class="text-sm text-muted-foreground">
-            No queued recipes configured. Upload a save to import workstation queues.
-          </p>
-        </div>
-      </div>
-
-      <!-- Garden -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('garden')">
-            <component
-              :is="sectionsCollapsed.garden ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Garden</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.garden && gardenHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyGarden"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.garden && !gardenHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.garden"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-            <button
-              v-if="editingSection === 'garden'"
-              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-              @click="resetGarden"
-            >
-              <RotateCcw class="size-3" />
-            </button>
-            <template v-if="editingSection !== 'garden'">
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
-                @click="startEditing('garden')"
-              >
-                <Pencil class="size-3.5" />
-                Edit
-              </button>
-            </template>
-            <template v-else>
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
-                @click="cancelEditing"
-              >
-                Cancel
-              </button>
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition"
-                @click="finishEditing"
-              >
-                Done
-              </button>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.garden" class="mt-3 space-y-3">
-          <!-- Edit mode: PlannerSettings grid pattern -->
-          <template v-if="editingSection === 'garden'">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-muted-foreground"
-                >{{ gardenTotalFlowerCount }} / 25 flowers placed</span
-              >
-              <span
-                class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground"
-              >
-                {{ gardenRemainingSlots }} slots left
-              </span>
-            </div>
-            <div
-              v-for="flower in gardenFlowerTypes"
-              :key="flower.id"
-              class="rounded-xl border border-border/40 bg-background/30 px-3 py-2.5"
-            >
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/70"
-                >
-                  <img
-                    v-if="getItemImage({ id: flower.id })"
-                    :src="getItemImage({ id: flower.id })"
-                    :alt="flower.name"
-                    class="size-5 object-contain"
-                    loading="lazy"
-                  />
-                </div>
-                <span class="min-w-0 flex-1 text-sm font-semibold text-foreground">{{
-                  flower.name
-                }}</span>
-                <span class="text-[10px] font-semibold text-muted-foreground">
-                  {{ gardenFlowerCount(flower.id) }} flower{{
-                    gardenFlowerCount(flower.id) === 1 ? '' : 's'
-                  }}
-                </span>
-                <span
-                  class="w-14 text-right text-xs font-semibold"
-                  :style="{ color: gardenFlowerYield(flower.id) > 0 ? 'var(--color-green)' : '' }"
-                >
-                  {{ gardenFlowerYield(flower.id) }}/min
-                </span>
-              </div>
-              <div class="mt-2 grid grid-cols-6 gap-1.5">
-                <div v-for="lv in gardenLevels" :key="lv" class="flex flex-col items-center gap-1">
-                  <span class="text-[10px] font-bold text-muted-foreground">Lv{{ lv }}</span>
-                  <div
-                    class="inline-flex items-center overflow-hidden rounded-lg border"
-                    :class="
-                      gardenCountAtLevel(flower.id, lv) > 0
-                        ? 'border-primary/40'
-                        : 'border-border/70'
-                    "
-                  >
-                    <button
-                      class="focus-ring flex h-7 w-6 items-center justify-center text-[11px] font-bold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-                      :disabled="gardenCountAtLevel(flower.id, lv) <= 0"
-                      @click="gardenStepCountAtLevel(flower.id, lv, -1)"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      inputmode="numeric"
-                      :value="gardenCountAtLevel(flower.id, lv)"
-                      class="focus-ring h-7 w-8 border-x bg-background/80 px-0.5 text-center text-xs font-semibold text-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                      :class="
-                        gardenCountAtLevel(flower.id, lv) > 0
-                          ? 'border-primary/30'
-                          : 'border-border/50'
-                      "
-                      @change="gardenSetCountAtLevel(flower.id, lv, $event)"
-                      @blur="gardenSetCountAtLevel(flower.id, lv, $event)"
-                    />
-                    <button
-                      class="focus-ring flex h-7 w-6 items-center justify-center text-[11px] font-bold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-                      :disabled="
-                        gardenRemainingSlots <= 0 && gardenCountAtLevel(flower.id, lv) === 0
-                      "
-                      @click="gardenStepCountAtLevel(flower.id, lv, 1)"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </template>
-
-          <!-- Read-only mode: Active Modifiers pattern -->
-          <template v-else>
-            <!-- When save loaded and not applied: show all flowers with inline diff -->
-            <template v-if="saveConfig && !appliedSections.garden">
-              <template v-for="f in gardenDiff" :key="f.id">
-                <div
-                  v-if="totalFlowerCount(f.save) > 0 || totalFlowerCount(f.current) > 0"
-                  class="rounded-lg border border-border/40 bg-background/30 px-3 py-2"
-                  :class="
-                    JSON.stringify(f.current) !== JSON.stringify(f.save)
-                      ? 'border-amber-500/30 bg-amber-500/5'
-                      : ''
-                  "
-                >
-                  <div class="flex items-center gap-2">
-                    <img
-                      v-if="getItemImage({ id: f.id })"
-                      :src="getItemImage({ id: f.id })"
-                      :alt="f.name"
-                      class="size-5 object-contain"
-                      loading="lazy"
-                    />
-                    <span class="min-w-0 text-sm font-semibold text-foreground">{{ f.name }}</span>
-                    <span class="ml-auto shrink-0 text-[11px] tabular-nums text-muted-foreground">
-                      {{ totalFlowerCount(f.current) }}
-                      <template v-if="totalFlowerCount(f.current) !== totalFlowerCount(f.save)">
-                        <span class="mx-0.5">&rarr;</span>
-                        <span class="text-accent">{{ totalFlowerCount(f.save) }}</span>
-                      </template>
-                      flower{{ totalFlowerCount(f.current) === 1 ? '' : 's' }}
-                    </span>
-                    <span
-                      class="shrink-0 font-mono text-sm font-semibold tabular-nums"
-                      style="color: rgb(163, 230, 53)"
-                    >
-                      {{ totalYieldPerCycle(f.current) }}
-                      <template v-if="totalYieldPerCycle(f.current) !== totalYieldPerCycle(f.save)">
-                        <span class="mx-0.5 text-muted-foreground">&rarr;</span>
-                        <span class="text-accent">{{ totalYieldPerCycle(f.save) }}</span>
-                      </template>
-                      /min
-                    </span>
-                  </div>
-                  <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    <template v-if="f.tiers.length > 0">
-                      <span
-                        v-for="tier in f.tiers"
-                        :key="tier.level"
-                        class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold"
-                        :class="
-                          tier.changed
-                            ? 'border-amber-500/40 bg-amber-500/10'
-                            : tier.level >= 4
-                              ? 'border-lime-700/40 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/10 dark:text-lime-300'
-                              : tier.level >= 2
-                                ? 'border-lime-700/25 bg-lime-50 text-lime-700 dark:border-lime-400/25 dark:bg-lime-400/5 dark:text-lime-300/80'
-                                : 'border-border/50 bg-background/50 text-muted-foreground'
-                        "
-                      >
-                        <template v-if="tier.changed">
-                          <span class="text-muted-foreground">{{ tier.current }}×</span>
-                          <span class="text-muted-foreground">&rarr;</span>
-                          <span class="font-bold text-accent">{{ tier.save }}×</span>
-                        </template>
-                        <span v-else class="font-bold">{{ tier.current }}×</span>
-                        <span>Lv{{ tier.level }}</span>
-                      </span>
-                    </template>
-                    <span v-else class="text-[11px] text-muted-foreground">None</span>
-                  </div>
-                </div>
-              </template>
-            </template>
-            <!-- No save (or applied): show active flowers only -->
-            <template v-else>
-              <template v-if="activeGardenFlowers.length > 0">
-                <div
-                  v-for="flower in activeGardenFlowers"
-                  :key="flower.flowerId"
-                  class="rounded-lg border border-border/40 bg-background/30 px-3 py-2"
-                >
-                  <div class="flex items-center gap-2">
-                    <img
-                      v-if="getItemImage({ id: flower.flowerId })"
-                      :src="getItemImage({ id: flower.flowerId })"
-                      :alt="flower.flowerName"
-                      class="size-5 object-contain"
-                      loading="lazy"
-                    />
-                    <span class="min-w-0 text-sm font-semibold text-foreground">{{
-                      flower.flowerName
-                    }}</span>
-                    <span class="ml-auto shrink-0 text-[11px] text-muted-foreground">
-                      {{ flower.totalCount }} flower{{ flower.totalCount === 1 ? '' : 's' }}
-                    </span>
-                    <span
-                      class="shrink-0 font-mono text-sm font-semibold"
-                      style="color: rgb(163, 230, 53)"
-                    >
-                      {{ flower.yieldPerMin }}/min
-                    </span>
-                  </div>
-                  <div class="mt-1.5 flex flex-wrap gap-1.5">
-                    <span
-                      v-for="entry in flower.entries"
-                      :key="entry.level"
-                      class="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-semibold"
-                      :class="
-                        entry.level >= 4
-                          ? 'border-lime-700/40 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/10 dark:text-lime-300'
-                          : entry.level >= 2
-                            ? 'border-lime-700/25 bg-lime-50 text-lime-700 dark:border-lime-400/25 dark:bg-lime-400/5 dark:text-lime-300/80'
-                            : 'border-border/50 bg-background/50 text-muted-foreground'
-                      "
-                    >
-                      <span class="font-bold">{{ entry.count }}×</span>
-                      <span>Lv{{ entry.level }}</span>
-                    </span>
-                  </div>
-                </div>
-              </template>
-              <p v-else class="text-sm text-muted-foreground">No garden flowers configured.</p>
-            </template>
-          </template>
-        </div>
-      </div>
-
-      <!-- Awaken Tree -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('awaken')">
-            <component
-              :is="sectionsCollapsed.awaken ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <img :src="upgradesIcon" alt="" class="size-4" loading="lazy" />
-            <h3 class="text-sm font-bold">Awaken Tree</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.awaken && awakenHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyAwaken"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.awaken && !awakenHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.awaken"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-            <button
-              v-if="editingSection === 'awaken'"
-              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-              @click="resetAwaken"
-            >
-              <RotateCcw class="size-3" />
-            </button>
-            <template v-if="editingSection !== 'awaken'">
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
-                @click="startEditing('awaken')"
-              >
-                <Pencil class="size-3.5" />
-                Edit
-              </button>
-            </template>
-            <template v-else>
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
-                @click="cancelEditing"
-              >
-                Cancel
-              </button>
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition"
-                @click="finishEditing"
-              >
-                Done
-              </button>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.awaken" class="mt-3 space-y-4">
-          <!-- Gather Upgrades -->
-          <div>
-            <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Gather Upgrades
-            </h4>
-            <div class="space-y-1">
-              <div
-                v-for="g in awakenGatherDisplay"
-                :key="g.job"
-                class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-                :class="g.changed ? 'bg-amber-500/10' : ''"
-              >
-                <div class="flex items-center gap-2">
-                  <img
-                    v-if="sourceIcons[g.job]"
-                    :src="sourceIcons[g.job]"
-                    alt=""
-                    class="size-5 object-contain"
-                    loading="lazy"
-                  />
-                  <span class="font-medium">{{ g.job }}</span>
-                </div>
-                <div class="flex items-center gap-4 text-xs tabular-nums">
-                  <template v-if="editingSection === 'awaken'">
-                    <!-- Yield -->
-                    <div class="flex items-center gap-1">
-                      <span class="text-muted-foreground">Yield</span>
-                      <button
-                        class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                        :disabled="g.current.yieldBonus <= 0"
-                        @click="updateAwakenGatherYield(g.job, -1)"
-                      >
-                        <Minus class="size-3" />
-                      </button>
-                      <span class="w-6 text-center font-semibold">+{{ g.current.yieldBonus }}</span>
-                      <button
-                        class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                        :disabled="g.current.yieldBonus >= 2"
-                        @click="updateAwakenGatherYield(g.job, 1)"
-                      >
-                        <Plus class="size-3" />
-                      </button>
-                    </div>
-                    <!-- Duration -->
-                    <div class="flex items-center gap-1">
-                      <span class="text-muted-foreground">Duration</span>
-                      <button
-                        class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                        :disabled="g.current.durationTier <= 0"
-                        @click="updateAwakenGatherDuration(g.job, -1)"
-                      >
-                        <Minus class="size-3" />
-                      </button>
-                      <span class="w-10 text-center font-semibold"
-                        >-{{ g.current.durationTier * 5 }}%</span
-                      >
-                      <button
-                        class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                        :disabled="g.current.durationTier >= 4"
-                        @click="updateAwakenGatherDuration(g.job, 1)"
-                      >
-                        <Plus class="size-3" />
-                      </button>
-                    </div>
-                  </template>
-                  <span v-else class="font-medium">
-                    Yield +{{ g.current.yieldBonus }}, Duration -{{ g.current.durationTier * 5 }}%
-                  </span>
-                  <!-- Save diff arrow if save loaded -->
-                  <template v-if="g.save && g.changed && !appliedSections.awaken">
-                    <span class="text-muted-foreground">&rarr;</span>
-                    <span class="text-[11px] text-accent">
-                      +{{ g.save.yieldBonus }}, -{{ g.save.durationTier * 5 }}%
-                    </span>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gold Upgrades -->
-          <div>
-            <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Gold Upgrades
-            </h4>
-            <div class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm">
-              <div class="flex items-center gap-2">
-                <img
-                  v-if="getItemImage({ id: 'gold' })"
-                  :src="getItemImage({ id: 'gold' })"
-                  alt="Gold"
-                  class="size-5 object-contain"
-                />
-                <span class="font-medium">Awaken Gold</span>
-              </div>
-              <div class="flex items-center gap-4 text-xs tabular-nums">
-                <div v-if="editingSection === 'awaken'" class="flex items-center gap-1">
-                  <span class="text-muted-foreground">Level</span>
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="awakenGoldLevel <= 0"
-                    @click="setAwakenGoldLevel(awakenGoldLevel - 1)"
-                  >
-                    <Minus class="size-3" />
-                  </button>
-                  <span class="w-6 text-center font-semibold">{{ awakenGoldLevel }}</span>
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="awakenGoldLevel >= 5"
-                    @click="setAwakenGoldLevel(awakenGoldLevel + 1)"
-                  >
-                    <Plus class="size-3" />
-                  </button>
-                </div>
-                <span v-else class="font-medium">+{{ awakenGoldLevel }} gold/min per creature</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Speed Upgrades -->
-          <div>
-            <h4 class="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Speed Upgrades
-            </h4>
-            <div class="space-y-1">
-              <div
-                v-for="s in awakenSpeedDisplay"
-                :key="s.workstation"
-                class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-                :class="s.changed ? 'bg-amber-500/10' : ''"
-              >
-                <div class="flex items-center gap-2">
-                  <img
-                    v-if="sourceIcons[s.workstation]"
-                    :src="sourceIcons[s.workstation]"
-                    alt=""
-                    class="size-5 object-contain"
-                    loading="lazy"
-                  />
-                  <span class="font-medium">{{ s.workstation }}</span>
-                </div>
-                <div class="flex items-center gap-4 text-xs tabular-nums">
-                  <div v-if="editingSection === 'awaken'" class="flex items-center gap-1">
-                    <span class="text-muted-foreground">Speed</span>
-                    <button
-                      class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                      :disabled="s.current <= 0"
-                      @click="updateAwakenSpeed(s.workstation, -1)"
-                    >
-                      <Minus class="size-3" />
-                    </button>
-                    <span class="w-10 text-center font-semibold">+{{ s.current * 10 }}%</span>
-                    <button
-                      class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                      :disabled="s.current >= 4"
-                      @click="updateAwakenSpeed(s.workstation, 1)"
-                    >
-                      <Plus class="size-3" />
-                    </button>
-                  </div>
-                  <span v-else class="font-medium">Speed +{{ s.current * 10 }}%</span>
-                  <template v-if="s.save !== null && s.changed && !appliedSections.awaken">
-                    <span class="text-muted-foreground">&rarr;</span>
-                    <span class="text-[11px] text-accent">+{{ s.save * 10 }}%</span>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Job Tiers -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('jobTiers')">
-            <component
-              :is="sectionsCollapsed.jobTiers ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Job Tiers</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <template v-if="saveConfig">
-              <span
-                v-if="!jobTiersHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.jobTiers" class="mt-3 space-y-1">
-          <p class="mb-2 text-[11px] text-muted-foreground">
-            Automatically calculated from sanctuary creatures.
-          </p>
-          <div
-            v-for="j in jobTiersDisplay"
-            :key="j.job"
-            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-            :class="j.changed ? 'bg-amber-500/10' : ''"
-          >
-            <div class="flex items-center gap-2">
-              <img
-                v-if="sourceIcons[j.job]"
-                :src="sourceIcons[j.job]"
-                alt=""
-                class="size-5 object-contain"
-                loading="lazy"
-              />
-              <span class="font-medium">{{ j.job }}</span>
-            </div>
-            <div class="flex items-center gap-4 text-xs tabular-nums">
-              <span class="font-medium">Tier {{ j.current }} · {{ jobTierLabel(j.current) }}</span>
-              <template v-if="j.save !== null && j.changed">
-                <span class="text-muted-foreground">&rarr;</span>
-                <span class="text-[11px] text-accent"
-                  >Tier {{ j.save }} · {{ jobTierLabel(j.save!) }}</span
-                >
-              </template>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tools -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('tools')">
-            <component
-              :is="sectionsCollapsed.tools ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Tools</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-              {{ Object.keys(toolLevels).length }} configured
-            </span>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.tools && toolLevelsHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyTools"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.tools && !toolLevelsHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.tools"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.tools" class="mt-3 space-y-1">
-          <div
-            v-for="[toolId, level] in Object.entries(
-              saveConfig ? saveConfig.toolLevels : toolLevels,
-            )"
-            :key="toolId"
-            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-          >
-            <span class="flex items-center gap-2 font-medium">
-              <img
-                v-if="toolIcons[toolId]"
-                :src="toolIcons[toolId]"
-                alt=""
-                class="size-5"
-                loading="lazy"
-              />
-              {{ toolName(toolId) }}
-            </span>
-            <span class="flex items-center gap-2">
-              <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
-              <span
-                v-if="getToolById(toolId)?.category === 'workstation'"
-                class="cursor-pointer rounded px-1.5 py-0.5 text-xs font-semibold transition"
-                :class="
-                  toolSpeedModes[getToolById(toolId)!.skillId]
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'bg-muted/50 text-muted-foreground hover:text-foreground'
-                "
-                :title="
-                  toolSpeedModes[getToolById(toolId)!.skillId]
-                    ? 'Speed Mode — click to switch to XP mode'
-                    : 'XP Mode — click to switch to Speed mode'
-                "
-                @click="
-                  setToolSpeedModes({
-                    ...toolSpeedModes,
-                    [getToolById(toolId)!.skillId]: !toolSpeedModes[getToolById(toolId)!.skillId],
-                  })
-                "
-              >
-                {{
-                  toolSpeedModes[getToolById(toolId)!.skillId]
-                    ? `+${(level as number) * speedBonusPerLevel}% Spd`
-                    : `+${(level as number) * 5}% XP`
-                }}
-              </span>
-              <span v-else class="text-xs text-muted-foreground">
-                +{{ (level as number) * 5 }}% XP
-              </span>
-            </span>
-          </div>
-          <div
-            v-if="Object.keys(saveConfig ? saveConfig.toolLevels : toolLevels).length === 0"
-            class="py-2 text-center text-xs text-muted-foreground"
-          >
-            No tool data available
-          </div>
-        </div>
-      </div>
-
-      <!-- Skill Levels & Player Level -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('skills')">
-            <component
-              :is="sectionsCollapsed.skills ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Skill Levels</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-              Player Lvl {{ displayPlayerLevel }}
-            </span>
-            <span
-              class="rounded-md bg-emerald-500/15 px-2 py-1 text-xs font-medium text-emerald-400"
-            >
-              +{{ getPlayerLevelXpBonus(displayPlayerLevel).toFixed(2) }}% XP
-            </span>
-            <button
-              class="focus-ring rounded-lg border border-border px-2 py-1.5 text-muted-foreground transition hover:text-foreground"
-              title="Reset Skill Levels"
-              @click="resetSkillLevels"
-            >
-              <RotateCcw class="size-3.5" />
-            </button>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.skills && skillLevelsHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applySkillLevels"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.skills && !skillLevelsHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.skills"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.skills" class="mt-3 space-y-3">
-          <div v-for="group in skillGroups" :key="group.label" class="space-y-1">
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {{ group.label }}
-            </h4>
-            <div
-              v-for="skill in group.skills"
-              :key="skill.id"
-              class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-            >
-              <span class="flex items-center gap-2 font-medium">
-                <img v-if="skill.icon" :src="skill.icon" alt="" class="size-5" loading="lazy" />
-                {{ skill.id }}
-              </span>
-              <div class="flex items-center gap-2">
-                <span class="text-xs tabular-nums text-muted-foreground"> Level </span>
-                <div
-                  class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
-                >
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="displaySkillLevel(skill.id) <= 1"
-                    @click="
-                      setSkillLevels({
-                        ...skillLevels,
-                        [skill.id]: Math.max(1, displaySkillLevel(skill.id) - 1),
-                      })
-                    "
-                  >
-                    <Minus class="size-3" />
-                  </button>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
-                    :value="displaySkillLevel(skill.id)"
-                    @blur="
-                      (e) => {
-                        const v = Math.max(
-                          1,
-                          Math.min(99, parseInt((e.target as HTMLInputElement).value) || 1),
-                        )
-                        setSkillLevels({ ...skillLevels, [skill.id]: v })
-                      }
-                    "
-                  />
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="displaySkillLevel(skill.id) >= 99"
-                    @click="
-                      setSkillLevels({
-                        ...skillLevels,
-                        [skill.id]: Math.min(99, displaySkillLevel(skill.id) + 1),
-                      })
-                    "
-                  >
-                    <Plus class="size-3" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Machine Levels -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('machineDetails')">
-            <component
-              :is="sectionsCollapsed.machineDetails ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Machine Levels</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-              {{ Object.keys(machineLevels).length }} machines
-            </span>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.machineDetails && machineLevelsHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyMachineDetails"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.machineDetails && !machineLevelsHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.machineDetails"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.machineDetails" class="mt-3 space-y-1">
-          <div
-            v-for="[machineId, level] in Object.entries(
-              saveConfig ? saveConfig.machineLevels : machineLevels,
-            )"
-            :key="machineId"
-            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-          >
-            <span class="flex items-center gap-2 font-medium">
-              <img
-                v-if="sourceIcons[machineName(machineId)]"
-                :src="sourceIcons[machineName(machineId)]"
-                alt=""
-                class="size-5"
-                loading="lazy"
-              />
-              {{ machineName(machineId) }}
-            </span>
-            <span class="text-xs tabular-nums text-muted-foreground"> Level {{ level }}/10 </span>
-          </div>
-          <div
-            v-if="Object.keys(saveConfig ? saveConfig.machineLevels : machineLevels).length === 0"
-            class="py-2 text-center text-xs text-muted-foreground"
-          >
-            No machine level data available
-          </div>
-        </div>
-      </div>
-
-      <!-- Fabrication -->
-      <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('fabrication')">
-            <component
-              :is="sectionsCollapsed.fabrication ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Fabrication</h3>
-          </button>
-          <div class="flex items-center gap-2">
-            <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-              {{
-                Object.values(
-                  saveConfig ? saveConfig.fabricationAllocations : fabricationAllocations,
-                ).reduce((s, n) => s + n, 0)
-              }}
-              points allocated
-            </span>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.fabrication && fabricationHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyFabrication"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.fabrication && !fabricationHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.fabrication"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-          </div>
-        </div>
-
-        <div v-if="!sectionsCollapsed.fabrication" class="mt-3 space-y-1">
-          <div
-            v-for="[itemId, amount] in Object.entries(
-              saveConfig ? saveConfig.fabricationAllocations : fabricationAllocations,
-            ).filter(([, a]) => a > 0)"
-            :key="itemId"
-            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-          >
-            <div class="flex items-center gap-2">
-              <img
-                v-if="getItemImage({ id: itemId })"
-                :src="getItemImage({ id: itemId })!"
-                alt=""
-                class="size-4"
-                loading="lazy"
-              />
-              <span class="font-medium">{{ itemName(itemId) }}</span>
-            </div>
-            <span class="text-xs tabular-nums text-muted-foreground">
-              {{ amount }}/5 points &middot; {{ amount }} per cycle
-            </span>
-          </div>
-          <div
-            v-if="
-              Object.keys(saveConfig ? saveConfig.fabricationAllocations : fabricationAllocations)
-                .length === 0
-            "
-            class="py-2 text-center text-xs text-muted-foreground"
-          >
-            No fabrication data available
-          </div>
-        </div>
-      </div>
-
+      <!-- Expeditions ladder (mockup order) -->
       <!-- Expeditions -->
       <div class="rounded-xl border border-border bg-card/50 p-4">
-        <div class="flex items-center justify-between">
-          <button class="flex items-center gap-2" @click="toggleSection('expeditions')">
-            <component
-              :is="sectionsCollapsed.expeditions ? ChevronDown : ChevronUp"
-              class="size-4 text-muted-foreground"
-            />
-            <h3 class="text-sm font-bold">Expeditions</h3>
-          </button>
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h3 class="text-sm font-bold">Expeditions</h3>
+              <AppTooltip text="Any expedition run counts toward unlocking the next expedition.">
+                <Info class="size-3.5 text-muted-foreground/70 hover:text-foreground" />
+              </AppTooltip>
+            </div>
+          </div>
           <div class="flex items-center gap-2">
             <div class="flex flex-wrap gap-2 text-xs">
               <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
@@ -3059,118 +1193,263 @@ function updateAwakenSpeed(ws: string, delta: number) {
               <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
                 {{ expeditionDisplay.totalTiersUnlocked }}/{{ allExpeditions.length * 5 }} tiers
               </span>
-              <span
-                v-if="expeditionDisplay.completionsUntilNext > 0"
-                class="rounded-md bg-amber-500/15 px-2 py-1 font-medium text-amber-400"
-              >
-                {{ expeditionDisplay.completionsUntilNext }} until next
-              </span>
             </div>
-            <template v-if="saveConfig">
-              <button
-                v-if="!appliedSections.expeditions && expeditionCompletionsHasDiff"
-                class="focus-ring rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
-                @click="applyExpeditionCompletions"
-              >
-                Apply
-              </button>
-              <span
-                v-else-if="!appliedSections.expeditions && !expeditionCompletionsHasDiff"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Matches Save
-              </span>
-              <span
-                v-else-if="appliedSections.expeditions"
-                class="inline-flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-400"
-              >
-                <Check class="size-3.5" /> Applied
-              </span>
-            </template>
-            <button
-              v-if="editingSection === 'expeditions'"
-              class="focus-ring rounded-lg border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
-              @click="resetExpeditions"
-            >
-              <RotateCcw class="size-3" />
-            </button>
-            <template v-if="editingSection !== 'expeditions'">
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
-                @click="startEditing('expeditions')"
-              >
-                <Pencil class="size-3.5" />
-                Edit
-              </button>
-            </template>
-            <template v-else>
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
-                @click="cancelEditing"
-              >
-                Cancel
-              </button>
-              <button
-                class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-primary bg-primary px-4 text-sm font-semibold text-primary-foreground transition"
-                @click="finishEditing"
-              >
-                Done
-              </button>
-            </template>
           </div>
         </div>
 
-        <div v-if="!sectionsCollapsed.expeditions" class="mt-3 space-y-1">
+        <div class="mt-3 space-y-3">
+          <!-- Up Next frontier cards -->
           <div
-            v-for="item in expeditionDisplay.items"
-            :key="item.expedition.id"
-            class="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm"
-            :class="item.unlocked ? '' : 'opacity-50'"
+            v-if="expeditionFrontiers.nextExp || expeditionFrontiers.tierUps.length"
+            class="space-y-2"
           >
-            <div class="flex items-center gap-2">
-              <img
-                v-if="
-                  item.expedition.rewards.length > 0 &&
-                  getItemImage({ id: item.expedition.rewards[0].itemId })
-                "
-                :src="getItemImage({ id: item.expedition.rewards[0].itemId })"
-                :alt="itemName(item.expedition.rewards[0].itemId)"
-                loading="lazy"
-                class="size-5 shrink-0 object-contain"
-              />
-              <span class="font-medium">{{ item.expedition.name }}</span>
-              <span class="text-[11px] text-muted-foreground">
-                ({{ item.expedition.requiredExpeditionCompletions }} req.)
-              </span>
+            <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
+              Up next
             </div>
-            <div class="flex items-center gap-1 text-xs tabular-nums">
-              <component
-                :is="editingSection === 'expeditions' ? 'button' : 'span'"
-                v-for="t in item.tiers"
-                :key="t.tier"
-                class="inline-flex flex-col items-center justify-center rounded-md px-1.5 py-1"
-                :class="[
-                  item.unlocked && t.unlocked ? 'bg-emerald-500/15' : 'opacity-40 grayscale',
-                  editingSection === 'expeditions'
-                    ? 'cursor-pointer transition hover:ring-1 hover:ring-foreground/20'
-                    : '',
-                ]"
-                @click="
-                  editingSection === 'expeditions' &&
-                  toggleExpeditionTier(item.expedition.id, t.tier)
-                "
+            <div class="grid gap-2 md:grid-cols-3">
+              <div
+                v-if="expeditionFrontiers.nextExp"
+                class="overflow-hidden rounded-xl border border-accent/35 bg-card/60 p-3.5"
               >
-                <img
-                  :src="expeditionTierIcons[t.tier]"
-                  :alt="`Tier ${t.tier}`"
-                  class="size-7 object-contain"
-                  loading="lazy"
-                />
-              </component>
+                <div class="flex items-stretch gap-3">
+                  <div
+                    class="flex size-14 shrink-0 items-center justify-center rounded-lg bg-amber-400/10"
+                  >
+                    <img
+                      v-if="
+                        expeditionFrontiers.nextExp.rewardItemId &&
+                        getItemImage({ id: expeditionFrontiers.nextExp.rewardItemId })
+                      "
+                      :src="getItemImage({ id: expeditionFrontiers.nextExp.rewardItemId })"
+                      :alt="expeditionFrontiers.nextExp.rewardItemId"
+                      class="size-9 object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="mb-2 flex items-center gap-2">
+                      <span class="min-w-0 truncate text-sm font-semibold text-foreground">
+                        {{ expeditionFrontiers.nextExp.name }}
+                      </span>
+                      <span
+                        class="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300"
+                      >
+                        Next
+                      </span>
+                    </div>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-border/30">
+                      <div
+                        class="h-full rounded-full bg-amber-400 transition-all"
+                        :style="{ width: `${expeditionFrontiers.nextExp.pct}%` }"
+                      />
+                    </div>
+                    <div class="mt-1.5 flex items-baseline justify-between gap-2">
+                      <span class="font-mono text-xs font-semibold">
+                        <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
+                        <span class="text-foreground">{{ expeditionFrontiers.nextExp.have }}</span>
+                        <span class="text-muted-foreground/50">
+                          / {{ expeditionFrontiers.nextExp.need }}
+                        </span>
+                        <span class="text-[10px] font-normal text-muted-foreground/50">
+                          Total
+                        </span>
+                      </span>
+                      <span
+                        class="font-mono text-xs font-semibold text-amber-700 dark:text-amber-400"
+                      >
+                        <span
+                          class="text-[10px] font-normal text-amber-700/70 dark:text-amber-400/60"
+                          >Need
+                        </span>
+                        {{ expeditionFrontiers.nextExp.remaining }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-for="f in expeditionFrontiers.tierUps"
+                :key="f.name"
+                class="overflow-hidden rounded-xl border border-border bg-card/60 p-3.5"
+              >
+                <div class="flex items-stretch gap-3">
+                  <div
+                    class="flex size-14 shrink-0 items-center justify-center rounded-lg bg-amber-400/10"
+                  >
+                    <img
+                      v-if="f.rewardItemId && getItemImage({ id: f.rewardItemId })"
+                      :src="getItemImage({ id: f.rewardItemId })"
+                      :alt="f.rewardItemId"
+                      class="size-9 object-contain"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="mb-2 flex items-center gap-2">
+                      <span class="min-w-0 truncate text-sm font-semibold text-foreground">
+                        {{ f.name }}
+                      </span>
+                      <span
+                        class="ml-auto flex shrink-0 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300"
+                      >
+                        <img
+                          :src="expeditionTierIcons[f.fromTier]"
+                          :alt="`Tier ${f.fromTier}`"
+                          class="size-3.5 object-contain"
+                          loading="lazy"
+                        />
+                        <span>→</span>
+                        <img
+                          :src="expeditionTierIcons[f.toTier]"
+                          :alt="`Tier ${f.toTier}`"
+                          class="size-3.5 object-contain"
+                          loading="lazy"
+                        />
+                      </span>
+                    </div>
+                    <div class="h-1.5 overflow-hidden rounded-full bg-border/30">
+                      <div
+                        class="h-full rounded-full bg-amber-400 transition-all"
+                        :style="{ width: `${f.pct}%` }"
+                      />
+                    </div>
+                    <div class="mt-1.5 flex items-baseline justify-between gap-2">
+                      <span class="font-mono text-xs font-semibold">
+                        <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
+                        <span class="text-foreground">{{ f.have }}</span>
+                        <span class="text-muted-foreground/50"> / {{ f.need }} </span>
+                        <span class="text-[10px] font-normal text-muted-foreground/50"> Loops</span>
+                      </span>
+                      <span
+                        class="font-mono text-xs font-semibold text-amber-700 dark:text-amber-400"
+                      >
+                        <span
+                          class="text-[10px] font-normal text-amber-700/70 dark:text-amber-400/60"
+                          >Need
+                        </span>
+                        {{ f.remaining }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact 2-col ladder -->
+          <div class="mt-2 grid grid-cols-1 gap-x-6 gap-y-0.5 md:grid-cols-2">
+            <div v-for="(col, ci) in expeditionLadderColumns" :key="ci" class="space-y-0.5">
+              <div class="grid grid-cols-[1fr_auto_auto_auto] items-end gap-3 px-2 pb-0.5">
+                <span />
+                <div class="flex gap-0.5">
+                  <span class="w-4 text-center font-mono text-[9px] text-muted-foreground/60" />
+                  <span
+                    v-for="t in [2, 3, 4, 5]"
+                    :key="t"
+                    class="w-4 text-center font-mono text-[9px] text-muted-foreground/60"
+                  >
+                    {{ TIER_UNLOCK_REQUIREMENTS[t] }}
+                  </span>
+                </div>
+                <span class="w-[92px]" />
+                <span class="w-16" />
+              </div>
+              <div
+                v-for="row in col"
+                :key="row.id"
+                class="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 rounded-md px-2 py-1.5"
+                :class="row.locked ? 'opacity-40' : ''"
+              >
+                <div class="flex min-w-0 items-center gap-1.5">
+                  <img
+                    v-if="row.rewardItemId && getItemImage({ id: row.rewardItemId })"
+                    :src="getItemImage({ id: row.rewardItemId })"
+                    :alt="itemName(row.rewardItemId)"
+                    class="size-4 shrink-0 object-contain"
+                    loading="lazy"
+                  />
+                  <span
+                    class="truncate text-[12px] font-semibold"
+                    :class="row.locked ? 'italic text-muted-foreground' : ''"
+                  >
+                    {{ row.name }}
+                    <span
+                      v-if="row.requiredExpeditionCompletions > 0"
+                      class="ml-0.5 font-mono text-[10px] font-normal text-muted-foreground/70"
+                    >
+                      ({{ row.requiredExpeditionCompletions }})
+                    </span>
+                  </span>
+                </div>
+                <div class="flex gap-0.5">
+                  <img
+                    v-for="t in row.tiers"
+                    :key="t.tier"
+                    :src="expeditionTierIcons[t.tier]"
+                    :alt="`Tier ${t.tier}`"
+                    class="size-4 object-contain"
+                    :class="t.cleared ? '' : t.unlocked ? 'opacity-70' : 'opacity-30 grayscale'"
+                    loading="lazy"
+                  />
+                </div>
+                <span
+                  class="flex w-[92px] items-center justify-end gap-1 font-mono text-[10px] font-bold"
+                  :class="
+                    row.maxed
+                      ? 'text-pink-400'
+                      : row.locked
+                        ? 'text-muted-foreground/40'
+                        : 'text-muted-foreground'
+                  "
+                >
+                  <template v-if="row.locked">locked</template>
+                  <template v-else-if="row.maxed">
+                    <img
+                      :src="expeditionTierIcons[5]"
+                      alt="Tier 5"
+                      class="size-3.5 object-contain"
+                      loading="lazy"
+                    />
+                    <span>MAXED</span>
+                  </template>
+                  <template v-else>
+                    <img
+                      :src="expeditionTierIcons[row.maxTier]"
+                      :alt="`Tier ${row.maxTier}`"
+                      class="size-3.5 object-contain"
+                      loading="lazy"
+                    />
+                    <span>{{ row.have }}/{{ row.need }}</span>
+                    <span>→</span>
+                    <img
+                      :src="expeditionTierIcons[row.nextTier]"
+                      :alt="`Tier ${row.nextTier}`"
+                      class="size-3.5 object-contain"
+                      loading="lazy"
+                    />
+                  </template>
+                </span>
+                <span
+                  class="w-16 text-right font-mono text-[10px] tabular-nums text-muted-foreground/70"
+                >
+                  <template v-if="row.runs > 0">{{ row.runs }} runs</template>
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Workstation Queues: pipeline visualization -->
+      <WorkstationQueuesSection
+        :queued-station-count="queuedStationCount"
+        :queued-by-station="queuedByStation"
+        :queued-times="queuedTimes"
+        :save-file-name="saveFileName"
+      />
     </section>
+
+    <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />
   </div>
 </template>

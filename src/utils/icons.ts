@@ -10,6 +10,7 @@ import farmingIcon from '@/assets/icons/farming.webp'
 import fishingPoleIcon from '@/assets/icons/fishing-pole.webp'
 import fishingIcon from '@/assets/icons/fishing.webp'
 import furnaceIcon from '@/assets/icons/furnace.webp'
+import gardenIcon from '@/assets/icons/garden.webp'
 import helpersIcon from '@/assets/icons/helpers.webp'
 import itemGridIcon from '@/assets/icons/item-grid.webp'
 import macheteIcon from '@/assets/icons/machete.webp'
@@ -34,6 +35,7 @@ import twigItemIcon from '@/assets/items/twig.webp'
 export {
   dungeonsIcon,
   expeditionsIcon,
+  gardenIcon,
   helpersIcon,
   itemGridIcon,
   machinesIcon,

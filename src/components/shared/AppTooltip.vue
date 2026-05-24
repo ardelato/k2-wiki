@@ -2,7 +2,7 @@
 import { nextTick, ref, type CSSProperties } from 'vue'
 
 const props = defineProps<{
-  text: string
+  text?: string
   position?: 'top' | 'right' | 'bottom' | 'left'
   disabled?: boolean
 }>()
@@ -96,10 +96,10 @@ function hide() {
         v-if="visible"
         ref="tooltipRef"
         :style="style"
-        class="pointer-events-none z-50 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-card-foreground shadow-lg"
+        class="pointer-events-none z-50 max-w-xs rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium leading-snug text-card-foreground shadow-lg"
         role="tooltip"
       >
-        {{ text }}
+        <slot name="content">{{ text }}</slot>
       </span>
     </Transition>
   </Teleport>

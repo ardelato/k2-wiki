@@ -23,6 +23,7 @@ import {
   SKILLING_IDS,
   traitAbbreviations,
   xpForLevel,
+  xpForSkillLevel,
 } from '@/utils/formulas'
 
 const creatures = creaturesData as Creature[]
@@ -1028,6 +1029,31 @@ describe('getSkillLevel', () => {
 
   test('caps at 99', () => {
     expect(getSkillLevel(999_999_999)).toBe(99)
+  })
+})
+
+describe('xpForSkillLevel', () => {
+  test('returns 0 for level 1 and below', () => {
+    expect(xpForSkillLevel(1)).toBe(0)
+    expect(xpForSkillLevel(0)).toBe(0)
+    expect(xpForSkillLevel(-5)).toBe(0)
+  })
+
+  test('returns the canonical XP thresholds from the table', () => {
+    expect(xpForSkillLevel(2)).toBe(83)
+    expect(xpForSkillLevel(5)).toBe(388)
+    expect(xpForSkillLevel(10)).toBe(1154)
+    expect(xpForSkillLevel(99)).toBe(13034431)
+  })
+
+  test('round-trips with getSkillLevel: xpForSkillLevel(n) yields level n', () => {
+    for (let level = 2; level <= 99; level++) {
+      expect(getSkillLevel(xpForSkillLevel(level))).toBe(level)
+    }
+  })
+
+  test('clamps level > 99 to the level-99 threshold', () => {
+    expect(xpForSkillLevel(150)).toBe(xpForSkillLevel(99))
   })
 })
 

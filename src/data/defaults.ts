@@ -21,5 +21,6 @@ export function defaultGardenFlowers(): Record<string, GardenFlowerEntry[]> {
     'wind-flower': [],
     'earth-flower': [],
     'water-flower': [],
+    'gold-flower': [],
   }
 }

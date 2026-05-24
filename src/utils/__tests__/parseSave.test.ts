@@ -1,4 +1,4 @@
-import { extractSaveConfig } from '@/utils/parseSave'
+import { extractSaveConfig, parseAwakenUpgrades } from '@/utils/parseSave'
 
 function baseSave(): Record<string, unknown> {
   return {
@@ -192,6 +192,114 @@ describe('parseSave — skillLevels', () => {
 
     const config = extractSaveConfig(save)
     expect(config.skillLevels).toEqual({ Chopping: 5 })
+  })
+})
+
+describe('parseSave — collectedItems', () => {
+  test('parses collections.items into a string array', () => {
+    const save = baseSave()
+    save.collections = { items: ['twig', 'pine-log', 'copper-ore'] }
+    const config = extractSaveConfig(save)
+    expect(config.collectedItems).toEqual(['twig', 'pine-log', 'copper-ore'])
+  })
+
+  test('filters non-string entries', () => {
+    const save = baseSave()
+    save.collections = { items: ['twig', 42, null, 'pine-log'] }
+    const config = extractSaveConfig(save)
+    expect(config.collectedItems).toEqual(['twig', 'pine-log'])
+  })
+
+  test('returns empty array when collections is missing', () => {
+    const save = baseSave()
+    delete save.collections
+    const config = extractSaveConfig(save)
+    expect(config.collectedItems).toEqual([])
+  })
+
+  test('returns empty array when collections.items is not an array', () => {
+    const save = baseSave()
+    save.collections = { items: 'oops' }
+    const config = extractSaveConfig(save)
+    expect(config.collectedItems).toEqual([])
+  })
+})
+
+describe('parseSave — gardenLayout', () => {
+  test('places flowers at their (x, y) positions in a 25-cell layout', () => {
+    const save = baseSave()
+    save.garden = {
+      flowers: [
+        { flowerId: 'fire-flower', level: 3, x: 0, y: 0 },
+        { flowerId: 'gold-flower', level: 5, x: 4, y: 4 },
+        { flowerId: 'wind-flower', level: 1, x: 2, y: 1 },
+      ],
+    }
+    const config = extractSaveConfig(save)
+    expect(config.gardenLayout).toHaveLength(25)
+    expect(config.gardenLayout[0]).toEqual({ flowerId: 'fire-flower', level: 3 })
+    // y*5 + x → (1*5 + 2) = 7
+    expect(config.gardenLayout[7]).toEqual({ flowerId: 'wind-flower', level: 1 })
+    expect(config.gardenLayout[24]).toEqual({ flowerId: 'gold-flower', level: 5 })
+  })
+
+  test('drops flowers outside the 5×5 grid', () => {
+    const save = baseSave()
+    save.garden = {
+      flowers: [
+        { flowerId: 'fire-flower', level: 1, x: -1, y: 0 },
+        { flowerId: 'fire-flower', level: 1, x: 0, y: 5 },
+        { flowerId: 'fire-flower', level: 1, x: 5, y: 0 },
+      ],
+    }
+    const config = extractSaveConfig(save)
+    expect(config.gardenLayout.every((c) => c === null)).toBe(true)
+  })
+
+  test('returns an empty 25-cell layout when garden is missing', () => {
+    const save = baseSave()
+    delete save.garden
+    const config = extractSaveConfig(save)
+    expect(config.gardenLayout).toHaveLength(25)
+    expect(config.gardenLayout.every((c) => c === null)).toBe(true)
+  })
+})
+
+describe('parseAwakenUpgrades (exported)', () => {
+  test('returns defaults when given an empty list', () => {
+    const result = parseAwakenUpgrades([])
+    expect(result.awakenGoldLevel).toBe(0)
+    expect(result.awakenSpeedTiers['Furnace']).toBe(0)
+    expect(result.awakenGatherUpgrades['Chopping']).toEqual({ yieldBonus: 0, durationTier: 0 })
+  })
+
+  test('parses awaken-gold tier as the highest matched roman numeral', () => {
+    const result = parseAwakenUpgrades(['awaken-gold-i', 'awaken-gold-ii', 'awaken-gold-iii'])
+    expect(result.awakenGoldLevel).toBe(3)
+  })
+
+  test('accumulates yield-i and yield-ii into yieldBonus 2', () => {
+    const result = parseAwakenUpgrades(['chopping-yield-i', 'chopping-yield-ii'])
+    expect(result.awakenGatherUpgrades['Chopping'].yieldBonus).toBe(2)
+  })
+
+  test('uses the highest tier for duration upgrades', () => {
+    const result = parseAwakenUpgrades([
+      'mining-duration-i',
+      'mining-duration-ii',
+      'mining-duration-iii',
+    ])
+    expect(result.awakenGatherUpgrades['Mining'].durationTier).toBe(3)
+  })
+
+  test('parses workstation speed tiers', () => {
+    const result = parseAwakenUpgrades(['furnace-speed-i', 'furnace-speed-ii'])
+    expect(result.awakenSpeedTiers['Furnace']).toBe(2)
+  })
+
+  test('ignores unknown upgrade ids', () => {
+    const result = parseAwakenUpgrades(['not-an-upgrade', 'random'])
+    expect(result.awakenGoldLevel).toBe(0)
   })
 })
 

@@ -1,3 +1,6 @@
+import { useLocalStorage } from '@vueuse/core'
+import { nextTick } from 'vue'
+
 import { useGameConfig } from '@/composables/useGameConfig'
 
 describe('useGameConfig', () => {
@@ -238,6 +241,180 @@ describe('useGameConfig', () => {
     setDungeonParty(['pudge', 'finn'])
     resetDungeonParty()
     expect(dungeonParty.value).toEqual([])
+  })
+
+  test('setCollectedItems stores ids and resetCollectedItems clears them', () => {
+    const { collectedItems, setCollectedItems, resetCollectedItems } = useGameConfig()
+    setCollectedItems(['twig', 'pine-log'])
+    expect(collectedItems.value).toEqual(['twig', 'pine-log'])
+    resetCollectedItems()
+    expect(collectedItems.value).toEqual([])
+  })
+
+  test('setGardenCell writes the layout slot and aggregates into gardenFlowers', async () => {
+    const { gardenLayout, gardenFlowers, setGardenCell } = useGameConfig()
+    setGardenCell(0, { flowerId: 'fire-flower', level: 3 })
+    setGardenCell(1, { flowerId: 'fire-flower', level: 3 })
+    setGardenCell(2, { flowerId: 'gold-flower', level: 1 })
+    await nextTick()
+
+    expect(gardenLayout.value[0]).toEqual({ flowerId: 'fire-flower', level: 3 })
+    expect(gardenLayout.value[2]).toEqual({ flowerId: 'gold-flower', level: 1 })
+    expect(gardenFlowers.value['fire-flower']).toEqual([{ level: 3, count: 2 }])
+    expect(gardenFlowers.value['gold-flower']).toEqual([{ level: 1, count: 1 }])
+  })
+
+  test('setGardenCell ignores out-of-range indices', () => {
+    const { gardenLayout, setGardenCell } = useGameConfig()
+    setGardenCell(-1, { flowerId: 'fire-flower', level: 1 })
+    setGardenCell(25, { flowerId: 'fire-flower', level: 1 })
+    expect(gardenLayout.value.every((c) => c === null)).toBe(true)
+  })
+
+  test('setGardenLayout truncates to 25 slots and pads with null', () => {
+    const { gardenLayout, setGardenLayout } = useGameConfig()
+    const tooMany = Array.from({ length: 30 }, () => ({ flowerId: 'fire-flower', level: 1 }))
+    setGardenLayout(tooMany)
+    expect(gardenLayout.value).toHaveLength(25)
+    expect(gardenLayout.value.every((c) => c?.flowerId === 'fire-flower')).toBe(true)
+
+    setGardenLayout([{ flowerId: 'wind-flower', level: 2 }])
+    expect(gardenLayout.value[0]).toEqual({ flowerId: 'wind-flower', level: 2 })
+    expect(gardenLayout.value[1]).toBeNull()
+  })
+
+  test('setGardenFlowerEntries updates layout (legacy API still works)', async () => {
+    const { gardenLayout, gardenFlowers, setGardenFlowerEntries } = useGameConfig()
+    setGardenFlowerEntries('fire-flower', [
+      { level: 5, count: 2 },
+      { level: 1, count: 1 },
+    ])
+    await nextTick()
+    // 3 fire flowers placed, layout sorted by level desc
+    const occupied = gardenLayout.value.filter((c) => c !== null)
+    expect(occupied).toHaveLength(3)
+    expect(occupied[0]?.level).toBe(5)
+    expect(occupied[1]?.level).toBe(5)
+    expect(occupied[2]?.level).toBe(1)
+    expect(gardenFlowers.value['fire-flower']).toEqual([
+      { level: 1, count: 1 },
+      { level: 5, count: 2 },
+    ])
+  })
+
+  test('setGardenSaveSnapshot enables hasGardenSaveSnapshot and revert restores layout', () => {
+    const {
+      setGardenCell,
+      setGardenSaveSnapshot,
+      hasGardenSaveSnapshot,
+      hasGardenChanges,
+      revertGardenToSaveSnapshot,
+      gardenLayout,
+    } = useGameConfig()
+
+    setGardenCell(0, { flowerId: 'fire-flower', level: 2 })
+    setGardenSaveSnapshot(gardenLayout.value)
+    expect(hasGardenSaveSnapshot.value).toBe(true)
+    expect(hasGardenChanges.value).toBe(false)
+
+    setGardenCell(1, { flowerId: 'gold-flower', level: 1 })
+    expect(hasGardenChanges.value).toBe(true)
+
+    revertGardenToSaveSnapshot()
+    expect(gardenLayout.value[0]).toEqual({ flowerId: 'fire-flower', level: 2 })
+    expect(gardenLayout.value[1]).toBeNull()
+    expect(hasGardenChanges.value).toBe(false)
+  })
+
+  test('hasGardenChanges (no snapshot) is true once any cell is occupied', () => {
+    const { hasGardenChanges, setGardenCell } = useGameConfig()
+    expect(hasGardenChanges.value).toBe(false)
+    setGardenCell(0, { flowerId: 'fire-flower', level: 1 })
+    expect(hasGardenChanges.value).toBe(true)
+  })
+
+  test('resetGarden clears layout, aggregated flowers, and the save snapshot', () => {
+    const {
+      gardenLayout,
+      gardenFlowers,
+      gardenLayoutFromSave,
+      setGardenCell,
+      setGardenSaveSnapshot,
+      resetGarden,
+    } = useGameConfig()
+
+    setGardenCell(0, { flowerId: 'fire-flower', level: 2 })
+    setGardenSaveSnapshot(gardenLayout.value)
+    resetGarden()
+
+    expect(gardenLayout.value.every((c) => c === null)).toBe(true)
+    expect(gardenFlowers.value['fire-flower']).toEqual([])
+    expect(gardenLayoutFromSave.value).toBeNull()
+  })
+
+  test('applyDungeonStateFromSave writes party and dungeon localStorage keys', () => {
+    const { applyDungeonStateFromSave, dungeonParty } = useGameConfig()
+    applyDungeonStateFromSave({
+      party: ['pudge', 'finn'],
+      levels: { pudge: 10, finn: 12 },
+      tier: 3,
+      focus: 'combat',
+      gatheringSkill: null,
+    })
+
+    expect(dungeonParty.value).toEqual(['pudge', 'finn'])
+    expect(JSON.parse(localStorage.getItem('dungeon-creature-levels') ?? '{}')).toEqual({
+      pudge: 10,
+      finn: 12,
+    })
+    expect(localStorage.getItem('dungeon-tier')).toBe('3')
+    expect(localStorage.getItem('dungeon-focus')).toBe('combat')
+    // No gatheringSkill → key should not be written for this call
+    expect(localStorage.getItem('dungeon-sub-focus')).toBeNull()
+  })
+
+  test('applyDungeonStateFromSave writes sub-focus when gatheringSkill is present', () => {
+    const { applyDungeonStateFromSave } = useGameConfig()
+    applyDungeonStateFromSave({
+      party: ['kroko'],
+      levels: { kroko: 5 },
+      tier: 2,
+      focus: 'gathering',
+      gatheringSkill: 'Mining',
+    })
+    expect(localStorage.getItem('dungeon-sub-focus')).toBe('Mining')
+  })
+
+  test('resetDungeonStorage clears dungeon-creature-levels', () => {
+    localStorage.setItem('dungeon-creature-levels', JSON.stringify({ pudge: 10 }))
+    const { resetDungeonStorage } = useGameConfig()
+    resetDungeonStorage()
+    expect(localStorage.getItem('dungeon-creature-levels')).toBeNull()
+  })
+
+  test('applyDungeonStateFromSave notifies same-tab useLocalStorage consumers', async () => {
+    // Same-tab vueuse refs only sync via the storage event. The composable's
+    // writeDungeonKey dispatches it manually so a ref like useDungeons's
+    // selectedTier updates without a reload.
+    const tierRef = useLocalStorage<number>('dungeon-tier', 1)
+    expect(tierRef.value).toBe(1)
+    const { applyDungeonStateFromSave } = useGameConfig()
+    applyDungeonStateFromSave({
+      party: [],
+      levels: {},
+      tier: 5,
+      focus: 'combat',
+      gatheringSkill: null,
+    })
+    await nextTick()
+    expect(tierRef.value).toBe(5)
+  })
+
+  test('resetGameConfig clears collectedItems', () => {
+    const { collectedItems, setCollectedItems, resetGameConfig } = useGameConfig()
+    setCollectedItems(['twig'])
+    resetGameConfig()
+    expect(collectedItems.value).toEqual([])
   })
 
   test('resetGameConfig clears every settable field back to defaults', () => {

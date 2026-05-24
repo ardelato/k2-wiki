@@ -1,634 +1,197 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { test, expect, type Page, type Locator } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const fixturePath = path.join(__dirname, 'fixtures', 'save.json')
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./configs')
   await page.evaluate(() => localStorage.clear())
   await page.goto('./configs')
-  await page.locator('h1', { hasText: 'Configs' }).waitFor()
+  await page.locator('h1', { hasText: 'Game Snapshot' }).waitFor()
 })
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-/** Seed creature-collection so the exclusion picker has owned creatures */
-async function seedOwnedCreatures(page: Page) {
-  const creatures: Record<string, { owned: boolean; level: number; awakened: boolean }> = {}
-  for (const id of ['moss', 'scoots', 'slick', 'chroma', 'sunny']) {
-    creatures[id] = { owned: true, level: 10, awakened: false }
-  }
-  await page.evaluate(
-    (data) => localStorage.setItem('creature-collection', JSON.stringify(data)),
-    creatures,
-  )
-  await page.goto('./configs')
-  await page.locator('h1', { hasText: 'Configs' }).waitFor()
-}
-
-/**
- * Locate a config subsection by its heading text.
- * Each subsection is a div.rounded-xl or section containing the heading.
- * We find the heading then walk up to the nearest rounded-xl container.
- */
-function configSection(page: Page, headingText: string): Locator {
-  return page
-    .locator('section.rounded-xl, div.rounded-xl')
-    .filter({ has: page.locator('h2, h3').filter({ hasText: headingText }) })
-    .first()
-}
-
-/** Assign a creature to the first empty sanctuary slot via the picker */
-async function assignSanctuaryCreature(page: Page, creatureName: string) {
-  const sec = configSection(page, 'Creature Exclusions')
-  const emptySlot = sec.locator('.size-16.border-dashed').first()
-  await emptySlot.click()
-  await expect(sec.getByText('Select', { exact: true })).toBeVisible()
-
-  // Open the creature picker dropdown (Teleported to body)
-  await page.getByText('Choose a creature').click()
-  await page.getByPlaceholder('Search creatures...').fill(creatureName)
-  await page.getByRole('button', { name: creatureName }).first().dispatchEvent('click')
+/** Upload the fixture save. The new ConfigsView auto-applies on drop, so we
+ *  just wait for the drop-zone to disappear (it's gated on `!saveConfig`). */
+async function uploadSave(page: Page) {
+  const fileInput = page.locator('input[type="file"][accept=".json"]')
+  await fileInput.setInputFiles(fixturePath)
+  await expect(page.getByText('Drop save file here or click to browse')).toBeHidden()
 }
 
 // ── Page rendering ──────────────────────────────────────────────────
 
 test.describe('page rendering', () => {
-  test('renders header and Reset All button', async ({ page }) => {
-    await expect(page.locator('h1', { hasText: 'Configs' })).toBeVisible()
-    await expect(page.getByText('Manage creature exclusions')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Reset All' })).toBeVisible()
+  test('renders header, subtitle, and Reset all button', async ({ page }) => {
+    await expect(page.locator('h1', { hasText: 'Game Snapshot' })).toBeVisible()
+    await expect(
+      page.getByText("The data the wiki's planners and calculators use for your account", {
+        exact: false,
+      }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Reset all' })).toBeVisible()
   })
 
-  test('all config sections are visible', async ({ page }) => {
-    await expect(page.locator('h2', { hasText: 'Save File Import' })).toBeVisible()
-    await expect(page.locator('h2', { hasText: 'Creature Exclusions' })).toBeVisible()
+  test('drop zone is visible until a save is imported', async ({ page }) => {
+    await expect(page.getByText('Drop save file here or click to browse')).toBeVisible()
+    await expect(page.getByText('No save loaded')).toBeVisible()
+  })
+
+  test('Creature Assignments section is visible', async ({ page }) => {
+    await expect(page.locator('h2', { hasText: 'Creature Assignments' })).toBeVisible()
+  })
+
+  test('Inventory, Expeditions, and Workstation Queues sections are visible', async ({ page }) => {
     await expect(page.locator('h3', { hasText: 'Inventory' })).toBeVisible()
-    await expect(page.locator('h3', { hasText: 'Garden' })).toBeVisible()
-    await expect(page.locator('h3', { hasText: 'Awaken Tree' })).toBeVisible()
-    await expect(page.locator('h3', { hasText: 'Job Tiers' })).toBeVisible()
-    await expect(page.locator('h3', { hasText: 'Expeditions' })).toBeVisible()
+    await expect(page.locator('h3', { hasText: 'Expeditions' }).first()).toBeVisible()
+    await expect(page.locator('h3', { hasText: 'Workstation Queues' })).toBeVisible()
   })
 
-  test('Creature Collection section is hidden without save file', async ({ page }) => {
-    await expect(page.locator('h2', { hasText: 'Creature Collection' })).toBeHidden()
+  test('Garden and Awaken Tree no longer live on the configs page', async ({ page }) => {
+    // Both moved to their own dedicated pages (/garden, /awaken). The configs
+    // page should not render them as editable sections anymore.
+    await expect(page.locator('h2, h3').filter({ hasText: /^Garden$/ })).toHaveCount(0)
+    await expect(page.locator('h2, h3').filter({ hasText: /^Awaken Tree$/ })).toHaveCount(0)
   })
 })
 
-// ── Creature exclusions — edit lifecycle ─────────────────────────────
+// ── Save file import — auto-apply on drop ───────────────────────────
 
-test.describe('creature exclusions - edit lifecycle', () => {
-  test.beforeEach(async ({ page }) => {
-    await seedOwnedCreatures(page)
+test.describe('save file import', () => {
+  test('uploading a save hides the drop zone', async ({ page }) => {
+    await uploadSave(page)
+    await expect(page.getByText('Drop save file here or click to browse')).toBeHidden()
+    await expect(page.getByText('No save loaded')).toBeHidden()
   })
 
-  test('clicking Edit shows Done and Cancel buttons', async ({ page }) => {
-    const sec = configSection(page, 'Creature Exclusions')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    await expect(sec.getByRole('button', { name: 'Done' })).toBeVisible()
-    await expect(sec.getByRole('button', { name: 'Cancel' })).toBeVisible()
-    await expect(sec.getByRole('button', { name: 'Edit' })).toBeHidden()
+  test('uploading a save shows the imported-at indicator', async ({ page }) => {
+    await uploadSave(page)
+    // `importedAgo` formats sub-minute timestamps as "just now", longer gaps as
+    // "5m ago", etc. — match both.
+    await expect(page.getByText(/imported (just now|.+ ago|yesterday)/)).toBeVisible()
   })
 
-  test('Cancel exits edit mode without changes', async ({ page }) => {
-    const sec = configSection(page, 'Creature Exclusions')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-    await sec.getByRole('button', { name: 'Cancel' }).click()
-
-    await expect(sec.getByRole('button', { name: 'Edit' })).toBeVisible()
-    await expect(sec.getByText('0 excluded')).toBeVisible()
+  test('uploading a save populates dungeon-party localStorage', async ({ page }) => {
+    await uploadSave(page)
+    const dungeonParty = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('dungeon-party') ?? '[]'),
+    )
+    expect(Array.isArray(dungeonParty)).toBe(true)
   })
 
-  test('Done persists creature assignment across reload', async ({ page }) => {
-    const sec = configSection(page, 'Creature Exclusions')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-    await assignSanctuaryCreature(page, 'Moss')
-    await sec.getByRole('button', { name: 'Done' }).click()
+  test('uploading a save populates sanctuary creatures from the save', async ({ page }) => {
+    await uploadSave(page)
+    const sanctuary = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('config-sanctuary-creatures') ?? '[]'),
+    )
+    // The fixture save has 3 sanctuary creatures
+    expect(sanctuary.length).toBeGreaterThan(0)
+  })
 
+  test('uploading a save populates the garden layout and snapshot', async ({ page }) => {
+    await uploadSave(page)
+    const layout = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('config-garden-layout') ?? 'null'),
+    )
+    const snapshot = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('config-garden-layout-from-save') ?? 'null'),
+    )
+    expect(Array.isArray(layout)).toBe(true)
+    expect(Array.isArray(snapshot)).toBe(true)
+  })
+
+  test('save data persists across reload', async ({ page }) => {
+    await uploadSave(page)
     await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-    await expect(page.getByText('1 excluded')).toBeVisible()
+    await page.locator('h1', { hasText: 'Game Snapshot' }).waitFor()
+
+    // Drop zone stays hidden because the imported snapshot persists.
+    await expect(page.getByText('Drop save file here or click to browse')).toBeHidden()
+    await expect(page.getByText(/imported (just now|.+ ago|yesterday)/)).toBeVisible()
   })
 
-  test('Cancel reverts creature assignment', async ({ page }) => {
-    const sec = configSection(page, 'Creature Exclusions')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-    await assignSanctuaryCreature(page, 'Moss')
+  test('applying a save updates the beastiary with summoned creatures', async ({ page }) => {
+    await uploadSave(page)
+    await page.goto('./')
+    await page.locator('img[alt="Not summoned"]').first().waitFor()
 
-    await expect(sec.locator('img[alt="Moss"]').first()).toBeVisible()
-
-    await sec.getByRole('button', { name: 'Cancel' }).click()
-    await expect(sec.getByText('0 excluded')).toBeVisible()
-  })
-})
-
-// ── Creature exclusions — slot interaction ───────────────────────────
-
-test.describe('creature exclusions - slot interaction', () => {
-  test.beforeEach(async ({ page }) => {
-    await seedOwnedCreatures(page)
-    await configSection(page, 'Creature Exclusions').getByRole('button', { name: 'Edit' }).click()
+    // Fixture: 5 owned creatures — 4 summoned + 1 awakened
+    await expect(page.locator('img[alt="Summoned"]')).toHaveCount(4)
+    await expect(page.locator('img[alt="Awakened"]')).toHaveCount(1)
   })
 
-  test('clicking empty slot shows Select text and creature picker', async ({ page }) => {
-    const sec = configSection(page, 'Creature Exclusions')
-    await sec.locator('.size-16.border-dashed').first().click()
+  test('applying a save excludes assigned creatures from the expedition list', async ({ page }) => {
+    await uploadSave(page)
+    await page.goto('./expeditions')
+    await page.getByText('Expedition Training').first().click()
+    await expect(page.locator('h3', { hasText: 'Expedition Training' })).toBeVisible()
 
-    await expect(sec.getByText('Select', { exact: true })).toBeVisible()
-    await expect(page.getByText('Choose a creature')).toBeVisible()
-  })
+    await page.getByText('Summoned Only').click()
 
-  test('picking a creature fills the slot', async ({ page }) => {
-    await assignSanctuaryCreature(page, 'Moss')
+    const creatureCards = page.locator('button', { has: page.locator('img[alt$="artwork"]') })
+    const countWithoutExcluded = await creatureCards.count()
 
-    const sec = configSection(page, 'Creature Exclusions')
-    await expect(sec.locator('img[alt="Moss"]').first()).toBeVisible()
-  })
+    await page.getByText('Show Excluded').click()
+    const countWithExcluded = await creatureCards.count()
 
-  test('remove button clears a filled slot', async ({ page }) => {
-    await assignSanctuaryCreature(page, 'Moss')
-
-    const sec = configSection(page, 'Creature Exclusions')
-    const filledSlot = sec.locator('.size-16').filter({ has: page.locator('img[alt="Moss"]') })
-    await filledSlot.locator('button').click()
-
-    await expect(sec.locator('img[alt="Moss"]')).toBeHidden()
-  })
-
-  test('excluded count badge updates', async ({ page }) => {
-    await expect(page.getByText('0 excluded')).toBeVisible()
-
-    await assignSanctuaryCreature(page, 'Moss')
-    await expect(page.getByText('1 excluded')).toBeVisible()
+    expect(countWithExcluded).toBeGreaterThan(countWithoutExcluded)
   })
 })
 
-// ── Garden editing ──────────────────────────────────────────────────
-
-test.describe('garden editing', () => {
-  test('default shows no flowers configured', async ({ page }) => {
-    await expect(page.getByText('No garden flowers configured.')).toBeVisible()
-  })
-
-  test('Edit shows flower types with +/- controls', async ({ page }) => {
-    const sec = configSection(page, 'Garden')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    await expect(sec.getByText('Fire Flower')).toBeVisible()
-    await expect(sec.getByText('Wind Flower')).toBeVisible()
-    await expect(sec.getByText('Earth Flower')).toBeVisible()
-    await expect(sec.getByText('Water Flower')).toBeVisible()
-    await expect(sec.getByText('0 / 25 flowers placed')).toBeVisible()
-    await expect(sec.getByText('25 slots left')).toBeVisible()
-  })
-
-  test('incrementing flower count updates totals', async ({ page }) => {
-    const sec = configSection(page, 'Garden')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    // Find Fire Flower container, then its Lv1 column's + button
-    const fireContainer = sec.locator('div.rounded-xl').filter({ hasText: 'Fire Flower' }).first()
-    const lv1Col = fireContainer.locator('.grid-cols-6 > div').first()
-    await lv1Col.getByRole('button', { name: '+' }).click()
-    await lv1Col.getByRole('button', { name: '+' }).click()
-    await lv1Col.getByRole('button', { name: '+' }).click()
-
-    await expect(sec.getByText('3 / 25 flowers placed')).toBeVisible()
-    await expect(sec.getByText('22 slots left')).toBeVisible()
-  })
-
-  test('Done persists garden changes', async ({ page }) => {
-    const sec = configSection(page, 'Garden')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    const fireContainer = sec.locator('div.rounded-xl').filter({ hasText: 'Fire Flower' }).first()
-    const lv1Col = fireContainer.locator('.grid-cols-6 > div').first()
-    await lv1Col.getByRole('button', { name: '+' }).click()
-    await lv1Col.getByRole('button', { name: '+' }).click()
-
-    await sec.getByRole('button', { name: 'Done' }).click()
-
-    await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-
-    // Read-only view shows level badge "2×" and "Lv1"
-    const gardenSec = configSection(page, 'Garden')
-    await expect(gardenSec.getByText('2×')).toBeVisible()
-    await expect(gardenSec.getByText('Lv1')).toBeVisible()
-  })
-
-  test('Cancel reverts garden changes', async ({ page }) => {
-    const sec = configSection(page, 'Garden')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    const fireContainer = sec.locator('div.rounded-xl').filter({ hasText: 'Fire Flower' }).first()
-    const lv1Col = fireContainer.locator('.grid-cols-6 > div').first()
-    await lv1Col.getByRole('button', { name: '+' }).click()
-
-    await sec.getByRole('button', { name: 'Cancel' }).click()
-    await expect(page.getByText('No garden flowers configured.')).toBeVisible()
-  })
-})
-
-// ── Awaken tree editing ─────────────────────────────────────────────
-
-test.describe('awaken tree editing', () => {
-  test('default read-only shows zero values', async ({ page }) => {
-    await expect(page.getByText('Yield +0, Duration -0%').first()).toBeVisible()
-    await expect(page.getByText('Speed +0%').first()).toBeVisible()
-  })
-
-  test('Edit shows +/- steppers for yield, duration, and speed', async ({ page }) => {
-    const sec = configSection(page, 'Awaken Tree')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    await expect(sec.getByText('Yield').first()).toBeVisible()
-    await expect(sec.getByText('Duration').first()).toBeVisible()
-    await expect(sec.getByText('Speed').first()).toBeVisible()
-  })
-
-  test('incrementing yield and duration updates display', async ({ page }) => {
-    const sec = configSection(page, 'Awaken Tree')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    // Chopping row: find the row containing "Chopping" text
-    const choppingRow = sec
-      .locator('div.flex.items-center.justify-between')
-      .filter({ hasText: 'Chopping' })
-      .first()
-
-    // Yield + button: the row has Yield label followed by - and + buttons
-    const yieldControls = choppingRow
-      .locator('div.flex.items-center.gap-1')
-      .filter({ hasText: 'Yield' })
-      .first()
-    await yieldControls.locator('button').last().click()
-    await expect(yieldControls.getByText('+1')).toBeVisible()
-
-    // Duration + button
-    const durationControls = choppingRow
-      .locator('div.flex.items-center.gap-1')
-      .filter({ hasText: 'Duration' })
-      .first()
-    await durationControls.locator('button').last().click()
-    await expect(durationControls.getByText('-5%')).toBeVisible()
-  })
-
-  test('incrementing speed updates workstation display', async ({ page }) => {
-    const sec = configSection(page, 'Awaken Tree')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    const furnaceRow = sec
-      .locator('div.flex.items-center.justify-between')
-      .filter({ hasText: 'Furnace' })
-      .first()
-    const speedControls = furnaceRow
-      .locator('div.flex.items-center.gap-1')
-      .filter({ hasText: 'Speed' })
-      .first()
-    await speedControls.locator('button').last().click()
-    await expect(speedControls.getByText('+10%')).toBeVisible()
-  })
-
-  test('Done persists and Cancel reverts awaken changes', async ({ page }) => {
-    const sec = configSection(page, 'Awaken Tree')
-    await sec.getByRole('button', { name: 'Edit' }).click()
-
-    const choppingRow = sec
-      .locator('div.flex.items-center.justify-between')
-      .filter({ hasText: 'Chopping' })
-      .first()
-    const yieldControls = choppingRow
-      .locator('div.flex.items-center.gap-1')
-      .filter({ hasText: 'Yield' })
-      .first()
-    await yieldControls.locator('button').last().click()
-
-    await sec.getByRole('button', { name: 'Done' }).click()
-
-    await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-    await expect(page.getByText('Yield +1, Duration -0%').first()).toBeVisible()
-
-    // Edit again, change, and cancel
-    const sec2 = configSection(page, 'Awaken Tree')
-    await sec2.getByRole('button', { name: 'Edit' }).click()
-    const choppingRow2 = sec2
-      .locator('div.flex.items-center.justify-between')
-      .filter({ hasText: 'Chopping' })
-      .first()
-    const yieldControls2 = choppingRow2
-      .locator('div.flex.items-center.gap-1')
-      .filter({ hasText: 'Yield' })
-      .first()
-    await yieldControls2.locator('button').last().click()
-
-    await sec2.getByRole('button', { name: 'Cancel' }).click()
-    await expect(page.getByText('Yield +1, Duration -0%').first()).toBeVisible()
-  })
-})
-
-// ── Section collapse/expand ─────────────────────────────────────────
-
-test.describe('section collapse/expand', () => {
-  test('clicking section header toggles content visibility', async ({ page }) => {
-    await expect(page.getByText('No garden flowers configured.')).toBeVisible()
-
-    // Collapse — click the heading button
-    await page.locator('h3', { hasText: 'Garden' }).click()
-    await expect(page.getByText('No garden flowers configured.')).toBeHidden()
-
-    // Expand
-    await page.locator('h3', { hasText: 'Garden' }).click()
-    await expect(page.getByText('No garden flowers configured.')).toBeVisible()
-  })
-})
-
-// ── Reset All ───────────────────────────────────────────────────────
+// ── Reset all ───────────────────────────────────────────────────────
 
 test.describe('reset all', () => {
-  test('Reset All clears all configured data', async ({ page }) => {
+  test('Reset all wipes seeded state and brings back the drop zone', async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem('config-sanctuary-creatures', JSON.stringify(['moss', 'scoots']))
-      localStorage.setItem(
-        'config-garden-flowers',
-        JSON.stringify({
-          'fire-flower': [{ level: 1, count: 5 }],
-          'wind-flower': [],
-          'earth-flower': [],
-          'water-flower': [],
-        }),
-      )
-      localStorage.setItem(
-        'config-awaken-gather',
-        JSON.stringify({
-          Chopping: { yieldBonus: 1, durationTier: 2 },
-          Mining: { yieldBonus: 0, durationTier: 0 },
-          Digging: { yieldBonus: 0, durationTier: 0 },
-          Exploring: { yieldBonus: 0, durationTier: 0 },
-          Fishing: { yieldBonus: 0, durationTier: 0 },
-          Farming: { yieldBonus: 0, durationTier: 0 },
-        }),
-      )
       localStorage.setItem(
         'expedition-parties',
         JSON.stringify({ 'expedition-type-1': ['moss', 'scoots'] }),
       )
       localStorage.setItem('expedition-tiers', JSON.stringify({ 'expedition-type-1': 2 }))
-      localStorage.setItem('expedition-creature-levels', JSON.stringify({ moss: 50, scoots: 30 }))
-      localStorage.setItem('expedition-loop-counts', JSON.stringify({ 'expedition-type-1': 5 }))
     })
     await page.goto('./configs')
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
+    await page.locator('h1', { hasText: 'Game Snapshot' }).waitFor()
 
-    await expect(page.getByText('2 excluded')).toBeVisible()
+    await page.getByRole('button', { name: 'Reset all' }).click()
 
-    await page.getByRole('button', { name: 'Reset All' }).click()
+    // Drop zone reappears once the save snapshot is cleared.
+    await expect(page.getByText('Drop save file here or click to browse')).toBeVisible()
 
-    await expect(page.getByText('0 excluded')).toBeVisible()
-    await expect(page.getByText('No garden flowers configured.')).toBeVisible()
-    await expect(page.getByText('Yield +0, Duration -0%').first()).toBeVisible()
-
-    // Verify expedition setup keys are cleared (useLocalStorage writes the
-    // default value rather than removing the key, so we check for empty objects)
     const expeditionKeys = await page.evaluate(() => ({
       parties: JSON.parse(localStorage.getItem('expedition-parties') ?? '{}'),
       tiers: JSON.parse(localStorage.getItem('expedition-tiers') ?? '{}'),
-      levels: JSON.parse(localStorage.getItem('expedition-creature-levels') ?? '{}'),
-      loopCounts: JSON.parse(localStorage.getItem('expedition-loop-counts') ?? '{}'),
     }))
     expect(expeditionKeys.parties).toEqual({})
     expect(expeditionKeys.tiers).toEqual({})
-    expect(expeditionKeys.levels).toEqual({})
-    expect(expeditionKeys.loopCounts).toEqual({})
+  })
+
+  test('Reset all after importing a save clears the imported indicator', async ({ page }) => {
+    await uploadSave(page)
+    await expect(page.getByText(/imported (just now|.+ ago|yesterday)/)).toBeVisible()
+
+    await page.getByRole('button', { name: 'Reset all' }).click()
+
+    await expect(page.getByText('No save loaded')).toBeVisible()
+    await expect(page.getByText('Drop save file here or click to browse')).toBeVisible()
   })
 })
 
-// ── Save file import ────────────────────────────────────────────────
+// ── Expeditions ladder ─────────────────────────────────────────────
 
-test.describe('save file import', () => {
-  const fixturePath = path.join(__dirname, 'fixtures', 'save.json')
-
-  async function uploadSave(page: Page) {
-    const fileInput = page.locator('input[type="file"][accept=".json"]')
-    await fileInput.setInputFiles(fixturePath)
-    await page.getByRole('button', { name: 'Apply All From Save' }).waitFor()
-  }
-
-  test('uploading save file shows Apply All button with counts', async ({ page }) => {
-    await uploadSave(page)
-
-    await expect(page.getByRole('button', { name: 'Apply All From Save' })).toBeVisible()
-    // The count text is "N creatures, N items" in a single span
-    await expect(page.getByText(/\d+ creatures, \d+ items/)).toBeVisible()
+test.describe('expeditions ladder', () => {
+  test('renders aggregate unlock and tier badges', async ({ page }) => {
+    // The ladder shows aggregate counts ("X/Y unlocked", "X/Y tiers") even
+    // without any seeded completion data — both default to "0/N".
+    await expect(page.getByText(/\d+\/\d+ unlocked/)).toBeVisible()
+    await expect(page.getByText(/\d+\/\d+ tiers/)).toBeVisible()
   })
 
-  test('uploading save file reveals Creature Collection section', async ({ page }) => {
-    await uploadSave(page)
-
-    await expect(page.locator('h2', { hasText: 'Creature Collection' })).toBeVisible()
-  })
-
-  test('creature collection shows new creatures from save', async ({ page }) => {
-    await uploadSave(page)
-
-    // All creatures are new since localStorage was cleared
-    await expect(page.getByText(/\+\d+ new/)).toBeVisible()
-  })
-
-  test('per-section Apply buttons appear for sections with diffs', async ({ page }) => {
-    await uploadSave(page)
-
-    // Exclusions should show "Apply from Save"
-    const exclusionSec = configSection(page, 'Creature Exclusions')
-    await expect(exclusionSec.getByRole('button', { name: 'Apply from Save' })).toBeVisible()
-  })
-
-  test('Apply All imports all data and shows Applied badges', async ({ page }) => {
-    await uploadSave(page)
-
-    await page.getByRole('button', { name: 'Apply All From Save' }).click()
-
-    // Creature Collection should show "Applied"
-    await expect(page.getByText('Applied').first()).toBeVisible()
-
-    // Exclusions should now have creatures (sanctuary 3 + helpers 1 + machines 1 = 5)
-    await expect(page.getByText('5 excluded')).toBeVisible()
-  })
-
-  test('applying creatures persists across reload', async ({ page }) => {
-    await uploadSave(page)
-    await page.getByRole('button', { name: 'Apply All From Save' }).click()
-
-    await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-
-    // Exclusions should persist
-    await expect(page.getByText('5 excluded')).toBeVisible()
-
-    // Awaken values should persist (chopping: yield +2, duration -5%)
-    await expect(page.getByText('Yield +2, Duration -5%').first()).toBeVisible()
-  })
-
-  test('applying save updates beastiary with summoned creatures and levels', async ({ page }) => {
-    await uploadSave(page)
-    await page.getByRole('button', { name: 'Apply All From Save' }).click()
-
-    // Navigate to beastiary (root route)
-    await page.goto('./')
-    await page.locator('img[alt="Not summoned"]').first().waitFor()
-
-    // Save has 5 creatures — 4 summoned + 1 awakened (Moss)
-    await expect(page.locator('img[alt="Summoned"]')).toHaveCount(4)
-    await expect(page.locator('img[alt="Awakened"]')).toHaveCount(1)
-    // Remaining 115 should be not summoned
-    await expect(page.locator('img[alt="Not summoned"]')).toHaveCount(115)
-  })
-
-  test('applying save excludes creatures from expedition list', async ({ page }) => {
-    await uploadSave(page)
-    await page.getByRole('button', { name: 'Apply All From Save' }).click()
-
-    // Navigate to expeditions
-    await page.goto('./expeditions')
-    await page.getByText('Expedition Training').first().waitFor()
-
-    // Select first expedition to show creature panel
-    await page.getByText('Expedition Training').first().click()
-    await expect(page.locator('h3', { hasText: 'Expedition Training' })).toBeVisible()
-
-    // Toggle to show all creatures (not just summoned)
-    await page.getByText('Summoned Only').click()
-
-    // The save has 5 creatures excluded (3 sanctuary + 1 helper + 1 machine)
-    // Count creature cards (buttons with artwork images)
-    const creatureCards = page.locator('button', { has: page.locator('img[alt$="artwork"]') })
-    const countWithoutExcluded = await creatureCards.count()
-
-    // Toggle "Show Excluded" to include them
-    await page.getByText('Show Excluded').click()
-    const countWithExcluded = await creatureCards.count()
-
-    // With excluded shown, there should be more creatures
-    expect(countWithExcluded).toBeGreaterThan(countWithoutExcluded)
-  })
-
-  test('individual section Apply imports only that section', async ({ page }) => {
-    await uploadSave(page)
-
-    // Apply only Creature Collection (not Apply All)
-    const creatureSec = configSection(page, 'Creature Collection')
-    await creatureSec.getByRole('button', { name: 'Apply' }).click()
-
-    // Creature Collection should show "Applied"
-    await expect(creatureSec.getByText('Applied')).toBeVisible()
-
-    // Exclusions should still show "Apply from Save" (not applied yet)
-    const exclusionSec = configSection(page, 'Creature Exclusions')
-    await expect(exclusionSec.getByRole('button', { name: 'Apply from Save' })).toBeVisible()
-  })
-
-  test('applying inventory section shows Applied badge', async ({ page }) => {
-    await uploadSave(page)
-
-    // Expand inventory if collapsed
-    const inventorySec = configSection(page, 'Inventory')
-    await inventorySec.getByRole('button', { name: 'Apply' }).click()
-
-    await expect(inventorySec.getByText('Applied')).toBeVisible()
-  })
-
-  test('section shows Matches Save when data already matches', async ({ page }) => {
-    // Apply save first
-    await uploadSave(page)
-    await page.getByRole('button', { name: 'Apply All From Save' }).click()
-
-    // Reload to clear in-memory appliedSections state, then re-upload
-    await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-    await uploadSave(page)
-
-    // Exclusions should show "Matches Save" since data now matches
-    const exclusionSec = configSection(page, 'Creature Exclusions')
-    await expect(exclusionSec.getByText('Matches Save')).toBeVisible()
-  })
-})
-
-// ── Expeditions section — display and editing ───────────────────────
-
-/** Locate the expeditions config section (starts expanded by default) */
-async function expeditionsSection(page: Page) {
-  const sec = page
-    .locator('div.rounded-xl')
-    .filter({ has: page.locator('h3', { hasText: 'Expeditions' }) })
-    .first()
-  await expect(sec.getByText('Expedition Training').first()).toBeVisible()
-  return sec
-}
-
-test.describe('expeditions section', () => {
-  test('shows expedition list with skull tier icons', async ({ page }) => {
-    const sec = await expeditionsSection(page)
-
-    await expect(sec.getByText('Expedition Training').first()).toBeVisible()
-    await expect(sec.locator('img[alt="Tier 1"]').first()).toBeVisible()
-  })
-
-  test('Edit button enables tier toggling', async ({ page }) => {
-    const sec = await expeditionsSection(page)
-
-    await sec.getByRole('button', { name: 'Edit', exact: true }).click()
-    await expect(sec.getByRole('button', { name: 'Done', exact: true })).toBeVisible()
-    await expect(sec.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible()
-  })
-
-  test('Cancel reverts expedition tier changes', async ({ page }) => {
-    // Seed some expedition completions
-    await page.evaluate(() => {
-      localStorage.setItem(
-        'config-expedition-completions',
-        JSON.stringify({ 'expedition-type-1': { 1: 10 } }),
-      )
-    })
-    await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-
-    const sec = await expeditionsSection(page)
-
-    // Enter edit mode and click a tier icon to toggle
-    await sec.getByRole('button', { name: 'Edit', exact: true }).click()
-    await sec.locator('img[alt="Tier 1"]').first().click()
-
-    // Cancel should revert
-    await sec.getByRole('button', { name: 'Cancel', exact: true }).click()
-    await expect(sec.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
-  })
-
-  test('Done persists expedition changes after reload', async ({ page }) => {
-    const sec = await expeditionsSection(page)
-
-    await sec.getByRole('button', { name: 'Edit', exact: true }).click()
-    await sec.locator('img[alt="Tier 1"]').first().click()
-
-    await sec.getByRole('button', { name: 'Done', exact: true }).click()
-    await expect(sec.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
-
-    // Verify persists after reload
-    await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
-    await expect(
-      page
-        .locator('div.rounded-xl')
-        .filter({ has: page.locator('h3', { hasText: 'Expeditions' }) })
-        .first(),
-    ).toBeVisible()
-  })
-
-  test('shows unlocked/locked status with completion data', async ({ page }) => {
-    // Seed completion data directly
+  test('completion data updates the unlocked-count badge', async ({ page }) => {
     await page.evaluate(() => {
       localStorage.setItem(
         'config-expedition-completions',
@@ -639,16 +202,12 @@ test.describe('expeditions section', () => {
       )
     })
     await page.reload()
-    await page.locator('h1', { hasText: 'Configs' }).waitFor()
+    await page.locator('h1', { hasText: 'Game Snapshot' }).waitFor()
 
-    const sec = page
-      .locator('div.rounded-xl')
-      .filter({ has: page.locator('h3', { hasText: 'Expeditions' }) })
-      .first()
-
-    // Should show unlocked count badge
-    await expect(sec.getByText(/\d+\/\d+ unlocked/)).toBeVisible()
-    // Should show tier count badge
-    await expect(sec.getByText(/\d+\/\d+ tiers/)).toBeVisible()
+    // At least one expedition should now read as unlocked.
+    const unlockedBadge = page.getByText(/\d+\/\d+ unlocked/)
+    await expect(unlockedBadge).toBeVisible()
+    const badgeText = await unlockedBadge.textContent()
+    expect(badgeText).toMatch(/^[1-9]\d*\/\d+ unlocked/)
   })
 })

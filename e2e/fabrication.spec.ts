@@ -41,8 +41,8 @@ test.describe('fabrication page', () => {
     await expect(page.getByText('1 points')).toBeVisible()
 
     await minusButtons.first().click()
-    // Summary bar should disappear
-    await expect(page.getByText('0 points allocated')).not.toBeVisible()
+    // Summary bar stays mounted; the total falls back to 0
+    await expect(page.getByText('0 points')).toBeVisible()
   })
 
   test('multiple allocations sum correctly', async ({ page }) => {
@@ -59,10 +59,50 @@ test.describe('fabrication page', () => {
     await expect(summaryBar.getByText('1/min · 60/hr')).toBeVisible()
   })
 
-  test('empty state shows when no allocations', async ({ page }) => {
-    await expect(
-      page.getByText('Use the +/- buttons above to simulate fabrication allocations'),
-    ).toBeVisible()
+  test('summary bar is mounted even with zero allocations', async ({ page }) => {
+    // The "Reset" button is always rendered so the layout doesn't reflow when
+    // simulation deltas appear; it's just made `invisible` until there are
+    // changes to revert.
+    const resetBtn = page.locator('button').filter({ hasText: 'Reset' })
+    await expect(resetBtn).not.toBeVisible()
+    await expect(page.getByText('0 points')).toBeVisible()
+  })
+
+  test('Reset becomes visible once an allocation is added and clears it', async ({ page }) => {
+    const plusButtons = page.locator('button:has(svg.lucide-plus)')
+    await plusButtons.first().click()
+
+    const resetBtn = page.getByRole('button', { name: 'Reset' })
+    await expect(resetBtn).toBeVisible()
+    await resetBtn.click()
+    await expect(page.getByText('+1 simulated')).not.toBeVisible()
+  })
+
+  test('unallocated prestige-points badge shows when save inventory has prestige-points', async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      localStorage.setItem('config-inventory', JSON.stringify({ 'prestige-points': 5 }))
+    })
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+
+    await expect(page.getByText('5 unallocated')).toBeVisible()
+  })
+
+  test('unallocated badge reflects simulated allocations', async ({ page }) => {
+    await page.evaluate(() => {
+      localStorage.setItem('config-inventory', JSON.stringify({ 'prestige-points': 5 }))
+    })
+    await page.reload()
+    await page.waitForLoadState('networkidle')
+
+    const plusButtons = page.locator('button:has(svg.lucide-plus)')
+    await plusButtons.first().click()
+    await plusButtons.first().click()
+
+    // 5 saved + 0 removed − 2 added = 3 unallocated
+    await expect(page.getByText('3 unallocated')).toBeVisible()
   })
 
   test('simulated chip shows when adding points', async ({ page }) => {

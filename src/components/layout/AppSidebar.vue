@@ -5,6 +5,7 @@ import {
   ChevronsRight,
   Cog,
   Compass,
+  Flower2,
   Swords,
   Fence,
   FileCog,
@@ -15,6 +16,7 @@ import {
   Sparkles,
   Sun,
   SunMoon,
+  TreePine,
   Wrench,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
@@ -70,9 +72,11 @@ const navGroups = [
   {
     label: 'Progression',
     items: [
-      { label: 'Machines', to: '/machines', icon: Cog },
-      { label: 'Tools', to: '/tools', icon: Wrench },
+      { label: 'Garden', to: '/garden', icon: Flower2 },
+      { label: 'Awaken Tree', to: '/awaken', icon: TreePine },
       { label: 'Fabrication', to: '/fabrication', icon: Sparkles },
+      { label: 'Tools', to: '/tools', icon: Wrench },
+      { label: 'Machines', to: '/machines', icon: Cog },
     ],
   },
   {

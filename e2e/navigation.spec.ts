@@ -28,7 +28,23 @@ test.describe('sidebar navigation', () => {
     await expect(page.getByRole('link', { name: 'Tools' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Fabrication' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Planner' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Garden' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Awaken Tree' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Configs' })).toBeVisible()
+  })
+
+  test('Garden link navigates to /garden', async ({ page }) => {
+    await page.getByRole('button', { name: 'Toggle sidebar' }).click()
+    await page.getByRole('link', { name: 'Garden' }).click()
+    await expect(page).toHaveURL(/\/garden/)
+    await expect(page.getByRole('heading', { name: 'Garden', level: 1 })).toBeVisible()
+  })
+
+  test('Awaken Tree link navigates to /awaken', async ({ page }) => {
+    await page.getByRole('button', { name: 'Toggle sidebar' }).click()
+    await page.getByRole('link', { name: 'Awaken Tree' }).click()
+    await expect(page).toHaveURL(/\/awaken/)
+    await expect(page.getByRole('heading', { name: 'Awaken Tree', level: 1 })).toBeVisible()
   })
 
   test('clicking nav item navigates to correct page', async ({ page }) => {

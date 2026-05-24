@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
-import { Minus, Plus, Sparkles } from 'lucide-vue-next'
+import { Minus, Plus } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { useGameConfig } from '@/composables/useGameConfig'
@@ -19,7 +19,7 @@ const GATHER_SOURCES = ['chopping', 'mining', 'digging', 'exploring', 'fishing',
 
 // fabricationAllocations = immutable save baseline (only changed by save import in ConfigsView)
 // simulatedAllocations = user's manual adjustments on this page (separate localStorage)
-const { fabricationAllocations } = useGameConfig()
+const { fabricationAllocations, inventoryAmounts } = useGameConfig()
 const simulatedAllocations = useLocalStorage<Record<string, number>>('fabrication-simulated', {})
 
 
@@ -134,6 +134,12 @@ const removedPoints = computed(() => {
 })
 
 
+const savedUnallocated = computed(() => inventoryAmounts.value['prestige-points'] ?? 0)
+const unallocatedPoints = computed(
+  () => savedUnallocated.value + removedPoints.value - addedPoints.value,
+)
+
+
 const totalPerHour = computed(() => totalPoints.value * CYCLES_PER_HOUR)
 const totalPerMin = computed(
   () => +(totalPoints.value / (FABRICATION_INTERVAL_SECONDS / 60)).toFixed(1),
@@ -147,16 +153,16 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
   <div class="space-y-8">
     <div>
       <h1 class="text-2xl font-bold">Fabrication</h1>
-      <p class="mt-1 text-sm text-muted-foreground">
+      <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
         Allocate prestige points to passively generate gathering items. Each point produces
         <strong class="text-foreground">1 item every 3 minutes ({{ CYCLES_PER_HOUR }}/hr)</strong>,
-        up to {{ MAX_ALLOCATION_PER_ITEM }} points per item.
+        up to {{ MAX_ALLOCATION_PER_ITEM }} points per item. Use the +/- buttons to simulate
+        allocations.
       </p>
     </div>
 
     <!-- Summary bar -->
     <div
-      v-if="totalPoints > 0"
       class="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-sm"
     >
       <div class="flex items-center gap-3">
@@ -165,7 +171,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
           <span class="font-semibold">{{ totalPoints }} points</span>
         </div>
         <div
-          v-if="savePoints > 0 || addedPoints > 0 || removedPoints > 0"
+          v-if="savePoints > 0 || addedPoints > 0 || removedPoints > 0 || savedUnallocated > 0"
           class="flex items-center gap-2 text-xs text-muted-foreground"
         >
           <span
@@ -173,6 +179,21 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             class="rounded-full bg-primary/15 px-2 py-0.5 font-medium text-primary"
           >
             {{ savePoints }} from save
+          </span>
+          <span
+            v-if="savedUnallocated > 0"
+            :class="
+              unallocatedPoints < 0
+                ? 'rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400'
+                : 'rounded-full bg-muted px-2 py-0.5 font-medium text-foreground'
+            "
+            :title="
+              unallocatedPoints < 0
+                ? `Simulated allocations exceed your unspent prestige points by ${Math.abs(unallocatedPoints)}`
+                : 'Unspent prestige points in your save inventory (updates with simulated changes)'
+            "
+          >
+            {{ unallocatedPoints }} unallocated
           </span>
           <span
             v-if="addedPoints > 0"
@@ -190,8 +211,8 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
       </div>
       <div class="flex items-center gap-2">
         <button
-          v-if="hasSimulatedChanges"
           class="rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
+          :class="{ 'pointer-events-none invisible': !hasSimulatedChanges }"
           @click="resetToSave"
         >
           Reset
@@ -300,25 +321,5 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
         </div>
       </div>
     </div>
-
-    <!-- Empty state -->
-    <section
-      v-if="totalPoints === 0"
-      class="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-center"
-    >
-      <Sparkles class="size-8 text-muted-foreground/50" />
-      <div>
-        <p class="font-medium text-muted-foreground">
-          Use the +/- buttons above to simulate fabrication allocations
-        </p>
-        <p class="mt-1 text-sm text-muted-foreground/70">
-          Upload your save file in
-          <RouterLink to="/configs" class="text-primary underline underline-offset-2">
-            Configs
-          </RouterLink>
-          to auto-fill your current allocations.
-        </p>
-      </div>
-    </section>
   </div>
 </template>
