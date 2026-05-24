@@ -454,6 +454,13 @@ export function getSkillLevel(xp: number): number {
   return Math.min(level, 99)
 }
 
+/** Minimum cumulative XP required to reach a given skill level (1–99). */
+export function xpForSkillLevel(level: number): number {
+  if (level <= 1) return 0
+  const idx = Math.min(level, 99) - 2
+  return skillingXpTable[idx]
+}
+
 /** All 9 skill IDs that contribute to player level (6 gathering + 3 workstation). */
 export const SKILLING_IDS = [
   'Chopping',
