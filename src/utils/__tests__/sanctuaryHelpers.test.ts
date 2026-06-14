@@ -56,7 +56,7 @@ describe('tierIncrementalLabel', () => {
   })
 
   test('tier 1 shows XP increase', () => {
-    expect(tierIncrementalLabel(1)).toBe('+20% XP')
+    expect(tierIncrementalLabel(1)).toBe('+40% XP')
   })
 
   test('tier 2 shows duration reduction', () => {
@@ -64,7 +64,7 @@ describe('tierIncrementalLabel', () => {
   })
 
   test('tier 3 shows XP increase', () => {
-    expect(tierIncrementalLabel(3)).toBe('+20% XP')
+    expect(tierIncrementalLabel(3)).toBe('+80% XP')
   })
 
   test('tier 4 shows duration reduction', () => {

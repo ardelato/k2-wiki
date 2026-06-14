@@ -14,13 +14,16 @@ export const TIER_THRESHOLDS = [0.1, 0.3, 0.5, 0.7, 0.9]
 export const TIER_THRESHOLDS_RAW = TIER_THRESHOLDS.map((t) => t * SCORE_DIVISOR)
 export const MAX_TIER = TIER_THRESHOLDS.length
 
+// Cumulative totals per tier, derived from the game's incremental
+// SANCTUARY_JOB_TIER_BENEFITS (configs/sanctuary.ts):
+// Tier 1 +40% XP, Tier 2 -10% dur, Tier 3 +80% XP, Tier 4 -10% dur, Tier 5 +1 yield.
 export const JOB_TIER_BENEFITS = [
   { xpBonus: 0, durationReduction: 0, yieldBonus: 0 },
-  { xpBonus: 20, durationReduction: 0, yieldBonus: 0 },
-  { xpBonus: 20, durationReduction: 10, yieldBonus: 0 },
+  { xpBonus: 40, durationReduction: 0, yieldBonus: 0 },
   { xpBonus: 40, durationReduction: 10, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 20, yieldBonus: 0 },
-  { xpBonus: 40, durationReduction: 20, yieldBonus: 1 },
+  { xpBonus: 120, durationReduction: 10, yieldBonus: 0 },
+  { xpBonus: 120, durationReduction: 20, yieldBonus: 0 },
+  { xpBonus: 120, durationReduction: 20, yieldBonus: 1 },
 ]
 
 export function jobTierLabel(tier: number, shortDuration = false): string {

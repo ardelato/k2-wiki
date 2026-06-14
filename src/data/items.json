@@ -768,7 +768,7 @@
     "name": "Snow",
     "type": "Gathered",
     "sources": ["exploring"],
-    "description": "Found while Digging.",
+    "description": "Found while Exploring.",
     "recipes": []
   },
   {

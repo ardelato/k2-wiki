@@ -283,7 +283,7 @@
         "name": "Willow Tree",
         "description": "",
         "levelRequirement": 60,
-        "xpRate": 26,
+        "xpRate": 30,
         "duration": 20,
         "output": [
           {
@@ -317,7 +317,7 @@
         "name": "Runic Tree",
         "description": "",
         "levelRequirement": 70,
-        "xpRate": 36,
+        "xpRate": 50,
         "duration": 25,
         "output": [
           {
@@ -351,7 +351,7 @@
         "name": "Elder Tree",
         "description": "",
         "levelRequirement": 80,
-        "xpRate": 60,
+        "xpRate": 90,
         "duration": 35,
         "output": [
           {
@@ -385,7 +385,7 @@
         "name": "Arcanum Tree",
         "description": "",
         "levelRequirement": 90,
-        "xpRate": 120,
+        "xpRate": 220,
         "duration": 45,
         "output": [
           {
@@ -700,7 +700,7 @@
         "name": "Old Foundations",
         "description": "",
         "levelRequirement": 60,
-        "xpRate": 26,
+        "xpRate": 30,
         "duration": 20,
         "output": [
           {
@@ -734,7 +734,7 @@
         "name": "Runic Debris",
         "description": "",
         "levelRequirement": 70,
-        "xpRate": 36,
+        "xpRate": 50,
         "duration": 25,
         "output": [
           {
@@ -768,7 +768,7 @@
         "name": "Ember Pits",
         "description": "",
         "levelRequirement": 80,
-        "xpRate": 60,
+        "xpRate": 90,
         "duration": 35,
         "output": [
           {
@@ -802,7 +802,7 @@
         "name": "Vault Rubble",
         "description": "",
         "levelRequirement": 90,
-        "xpRate": 120,
+        "xpRate": 220,
         "duration": 45,
         "output": [
           {
@@ -1117,7 +1117,7 @@
         "name": "Swamp",
         "description": "",
         "levelRequirement": 60,
-        "xpRate": 26,
+        "xpRate": 30,
         "duration": 20,
         "output": [
           {
@@ -1151,7 +1151,7 @@
         "name": "Caverns",
         "description": "",
         "levelRequirement": 70,
-        "xpRate": 36,
+        "xpRate": 50,
         "duration": 25,
         "output": [
           {
@@ -1185,7 +1185,7 @@
         "name": "Tundra",
         "description": "",
         "levelRequirement": 80,
-        "xpRate": 60,
+        "xpRate": 90,
         "duration": 35,
         "output": [
           {
@@ -1219,7 +1219,7 @@
         "name": "Ancient Site",
         "description": "",
         "levelRequirement": 90,
-        "xpRate": 120,
+        "xpRate": 220,
         "duration": 45,
         "output": [
           {
@@ -1534,7 +1534,7 @@
         "name": "Onion Seeds",
         "description": "",
         "levelRequirement": 60,
-        "xpRate": 26,
+        "xpRate": 30,
         "duration": 20,
         "output": [
           {
@@ -1568,7 +1568,7 @@
         "name": "Pepper Seeds",
         "description": "",
         "levelRequirement": 70,
-        "xpRate": 36,
+        "xpRate": 50,
         "duration": 25,
         "output": [
           {
@@ -1602,7 +1602,7 @@
         "name": "Pineapple Seeds",
         "description": "",
         "levelRequirement": 80,
-        "xpRate": 60,
+        "xpRate": 90,
         "duration": 35,
         "output": [
           {
@@ -1636,7 +1636,7 @@
         "name": "Mango Seeds",
         "description": "",
         "levelRequirement": 90,
-        "xpRate": 120,
+        "xpRate": 220,
         "duration": 45,
         "output": [
           {
@@ -1951,7 +1951,7 @@
         "name": "Rock Coast",
         "description": "",
         "levelRequirement": 60,
-        "xpRate": 26,
+        "xpRate": 30,
         "duration": 20,
         "output": [
           {
@@ -1985,7 +1985,7 @@
         "name": "Coastal Waters",
         "description": "",
         "levelRequirement": 70,
-        "xpRate": 36,
+        "xpRate": 50,
         "duration": 25,
         "output": [
           {
@@ -2019,7 +2019,7 @@
         "name": "Deep Ocean",
         "description": "",
         "levelRequirement": 80,
-        "xpRate": 60,
+        "xpRate": 90,
         "duration": 35,
         "output": [
           {
@@ -2053,7 +2053,7 @@
         "name": "Molten Lake",
         "description": "",
         "levelRequirement": 90,
-        "xpRate": 120,
+        "xpRate": 220,
         "duration": 45,
         "output": [
           {
@@ -2368,7 +2368,7 @@
         "name": "Adamantite Ore",
         "description": "",
         "levelRequirement": 60,
-        "xpRate": 26,
+        "xpRate": 30,
         "duration": 20,
         "output": [
           {
@@ -2402,7 +2402,7 @@
         "name": "Runic Ore",
         "description": "",
         "levelRequirement": 70,
-        "xpRate": 36,
+        "xpRate": 50,
         "duration": 25,
         "output": [
           {
@@ -2436,7 +2436,7 @@
         "name": "Solarite Ore",
         "description": "",
         "levelRequirement": 80,
-        "xpRate": 60,
+        "xpRate": 90,
         "duration": 35,
         "output": [
           {
@@ -2470,7 +2470,7 @@
         "name": "Arcanum Ore",
         "description": "",
         "levelRequirement": 90,
-        "xpRate": 120,
+        "xpRate": 220,
         "duration": 45,
         "output": [
           {

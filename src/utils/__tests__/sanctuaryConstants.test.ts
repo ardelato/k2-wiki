@@ -82,15 +82,15 @@ describe('jobTierLabel', () => {
   })
 
   test('tier 1 shows XP bonus only', () => {
-    expect(jobTierLabel(1)).toBe('+20% XP')
+    expect(jobTierLabel(1)).toBe('+40% XP')
   })
 
   test('tier 2 shows XP and Duration', () => {
-    expect(jobTierLabel(2)).toBe('+20% XP, -10% Duration')
+    expect(jobTierLabel(2)).toBe('+40% XP, -10% Duration')
   })
 
   test('short duration flag abbreviates Duration to Dur', () => {
-    expect(jobTierLabel(2, true)).toBe('+20% XP, -10% Dur')
+    expect(jobTierLabel(2, true)).toBe('+40% XP, -10% Dur')
   })
 
   test('max tier shows all three bonuses', () => {
