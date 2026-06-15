@@ -1174,5 +1174,14 @@
     "awakenGatherYield": "Awaken yield bonus for {jobId} would increase {itemName} gather yield",
     "awakenSpeed": "Awaken speed tier for {workstation} would reduce craft time by ~5%",
     "fabricationPoints": "Allocate {count} more fabrication points to {itemName} for faster passive production"
+  },
+  "localeNotice": {
+    "shownIn": "Shown in {language}",
+    "viewInEnglish": "View in English",
+    "dismiss": "Dismiss"
+  },
+  "localeHint": {
+    "message": "Now available in more languages",
+    "gotIt": "Got it"
   }
 }

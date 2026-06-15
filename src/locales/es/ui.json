@@ -1174,5 +1174,14 @@
     "awakenGatherYield": "La bonificación de rendimiento de Awaken para {jobId} aumentaría el rendimiento de recolección de {itemName}",
     "awakenSpeed": "El nivel de velocidad de Awaken para {workstation} reduciría el tiempo de fabricación en ~5%",
     "fabricationPoints": "Asigna {count} puntos de fabrication más a {itemName} para una producción pasiva más rápida"
+  },
+  "localeNotice": {
+    "shownIn": "Mostrado en {language}",
+    "viewInEnglish": "View in English",
+    "dismiss": "Descartar"
+  },
+  "localeHint": {
+    "message": "Ahora disponible en más idiomas",
+    "gotIt": "Entendido"
   }
 }

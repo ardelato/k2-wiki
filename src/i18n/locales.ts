@@ -9,7 +9,7 @@ export const SUPPORTED_LOCALES = [
 
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]['code']
 
-const STORAGE_KEY = 'k2-wiki-locale'
+export const STORAGE_KEY = 'k2-wiki-locale'
 const LOCALE_CODES = SUPPORTED_LOCALES.map((l) => l.code) as readonly string[]
 
 function isSupported(code: string): code is SupportedLocale {
@@ -26,8 +26,17 @@ function matchBrowserLocale(): SupportedLocale {
   return 'en'
 }
 
-export function detectLocale(): SupportedLocale {
+/** The user's saved locale preference, or null if they haven't chosen one. */
+export function getStoredLocale(): SupportedLocale | null {
   const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
-  if (stored && isSupported(stored)) return stored
-  return matchBrowserLocale()
+  return stored && isSupported(stored) ? stored : null
+}
+
+/** Persist a locale as the user's explicit choice. */
+export function storeLocale(code: SupportedLocale): void {
+  if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_KEY, code)
+}
+
+export function detectLocale(): SupportedLocale {
+  return getStoredLocale() ?? matchBrowserLocale()
 }

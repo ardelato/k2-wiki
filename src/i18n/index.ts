@@ -2,7 +2,7 @@ import { createI18n } from 'vue-i18n'
 
 import en from '@/locales/en/ui.json'
 
-import { detectLocale, type SupportedLocale } from './locales'
+import { detectLocale, getStoredLocale, type SupportedLocale } from './locales'
 
 const i18n = createI18n({
   legacy: false,
@@ -10,6 +10,15 @@ const i18n = createI18n({
   fallbackLocale: 'en',
   messages: { en },
 })
+
+/**
+ * True when the active locale came from the browser rather than a saved choice,
+ * and isn't English — i.e. the user was auto-switched into a translated UI.
+ * Snapshotted at boot, before useLocale persists the active locale on mount
+ * (which would otherwise erase the "no stored preference" signal).
+ */
+export const localeAutoDetected =
+  getStoredLocale() === null && (i18n.global.locale.value as string) !== 'en'
 
 export function t(key: string, named?: Record<string, unknown>): string {
   return i18n.global.t(key, named ?? {})

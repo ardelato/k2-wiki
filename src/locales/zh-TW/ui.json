@@ -1174,5 +1174,14 @@
     "awakenGatherYield": "{jobId} 的 Awaken 產量加成可提升 {itemName} 的採集產量",
     "awakenSpeed": "{workstation} 的 Awaken 速度階級可使製作時間減少約 5%",
     "fabricationPoints": "再為 {itemName} 分配 {count} 點 fabrication 點數以加快被動產出"
+  },
+  "localeNotice": {
+    "shownIn": "以 {language} 顯示",
+    "viewInEnglish": "View in English",
+    "dismiss": "關閉"
+  },
+  "localeHint": {
+    "message": "現已支援多種語言",
+    "gotIt": "知道了"
   }
 }

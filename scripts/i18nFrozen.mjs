@@ -74,6 +74,10 @@ export const FROZEN = {
 
     // Tool-name bonus badge — "Sword" is a game tool name, keep English.
     'levelPlanner.badges.swordBonus',
+
+    // First-run auto-switch notice: the "View in English" escape hatch must stay
+    // English so a user auto-switched into a language they don't read can exit.
+    'localeNotice.viewInEnglish',
   ],
 
   // Any key whose English value is EXACTLY one of these (case-sensitive) is

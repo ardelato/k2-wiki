@@ -1174,5 +1174,14 @@
     "awakenGatherYield": "{jobId} için Awaken verim bonusu, {itemName} toplama verimini artırır",
     "awakenSpeed": "{workstation} için Awaken hız kademesi, üretim süresini ~5% azaltır",
     "fabricationPoints": "Daha hızlı pasif üretim için {itemName} öğesine {count} fabrication puanı daha atayın"
+  },
+  "localeNotice": {
+    "shownIn": "{language} dilinde gösteriliyor",
+    "viewInEnglish": "View in English",
+    "dismiss": "Kapat"
+  },
+  "localeHint": {
+    "message": "Artık daha fazla dilde mevcut",
+    "gotIt": "Anladım"
   }
 }

@@ -1174,5 +1174,14 @@
     "awakenGatherYield": "Le bonus de rendement Awaken pour {jobId} augmenterait le rendement de collecte de {itemName}",
     "awakenSpeed": "Le palier de vitesse Awaken pour {workstation} réduirait le temps de fabrication de ~5%",
     "fabricationPoints": "Attribuez {count} points de fabrication supplémentaires à {itemName} pour une production passive plus rapide"
+  },
+  "localeNotice": {
+    "shownIn": "Affiché en {language}",
+    "viewInEnglish": "View in English",
+    "dismiss": "Ignorer"
+  },
+  "localeHint": {
+    "message": "Désormais disponible en plusieurs langues",
+    "gotIt": "Compris"
   }
 }

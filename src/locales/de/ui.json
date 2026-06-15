@@ -1174,5 +1174,14 @@
     "awakenGatherYield": "Awaken-Ertragsbonus für {jobId} würde den {itemName}-Sammelertrag erhöhen",
     "awakenSpeed": "Awaken-Geschwindigkeitsstufe für {workstation} würde die Herstellungszeit um ~5% verringern",
     "fabricationPoints": "{count} weitere Fabrication-Punkte {itemName} zuweisen für schnellere passive Produktion"
+  },
+  "localeNotice": {
+    "shownIn": "Angezeigt auf {language}",
+    "viewInEnglish": "View in English",
+    "dismiss": "Schließen"
+  },
+  "localeHint": {
+    "message": "Jetzt in weiteren Sprachen verfügbar",
+    "gotIt": "Verstanden"
   }
 }
