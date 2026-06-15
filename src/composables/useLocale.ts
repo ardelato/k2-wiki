@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { loadLocaleMessages } from '@/i18n'
 import { SUPPORTED_LOCALES, type SupportedLocale } from '@/i18n/locales'
 
-export { SUPPORTED_LOCALES, type SupportedLocale, detectLocale } from '@/i18n/locales'
+export { type SupportedLocale } from '@/i18n/locales'
 
 export function useLocale() {
   const { locale } = useI18n()

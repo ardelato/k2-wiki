@@ -14,7 +14,7 @@
 // src/i18n/__tests__/frozen-locales.test.ts (guard). To freeze another term,
 // add its path (or value) here — nothing else to change.
 
-export const FROZEN = {
+const FROZEN = {
   // Exact dotted key paths (a trailing ".*" freezes the whole section).
   paths: [
     // Creature stats — players read these on the creature screen in-game.
