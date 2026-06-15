@@ -234,7 +234,7 @@
       "increaseCreatureLevel": "Augmenter le niveau de la créature",
       "creatureLevel": "Niveau de la créature",
       "planLeveling": "Planifier la montée",
-      "stats": "Stats",
+      "stats": "Statistiques",
       "jobLevels": "Niveaux de travail",
       "bestExpeditions": "Meilleures expéditions",
       "traitMatch": "· Trait ✓",
@@ -621,7 +621,7 @@
     },
     "currency": "Monnaie",
     "altButton": "Alt",
-    "runs": "runs",
+    "runs": "passages",
     "debug": "Débogage",
     "tabs": {
       "list": "Liste",
@@ -915,7 +915,7 @@
       "subtitle": "Plan de montée",
       "resetRoutes": "Réinitialiser les routes",
       "steps": "étape(s)",
-      "runs": "runs",
+      "runs": "passages",
       "xpPerMin": "XP/min moy",
       "boostedSteps": "étape(s) boostée(s)",
       "advantage": "Avantage",
@@ -977,7 +977,7 @@
       "noData": "Aucune donnée de chronologie disponible.",
       "total": "Total :",
       "duration": "Durée",
-      "runs": "Runs",
+      "runs": "Passages",
       "loopBonus": "Bonus de boucle",
       "party": "Party",
       "loopStreak": "Série de boucles",
@@ -1003,7 +1003,7 @@
     },
     "partySummary": {
       "creatureCount": "{planned}/{input} créature(s)",
-      "runs": "{total} runs",
+      "runs": "{total} passages",
       "expeditions": "{count} expéditions",
       "swaps": "{count} changement(s)",
       "incompleteWarning": "Plan incomplet : {n} créature(s) n'atteint/atteignent pas encore le niveau cible.",
@@ -1024,7 +1024,7 @@
       "swapsPerHr": "Changements/h",
       "avgPct": "Moy %",
       "computing": "Calcul en cours…",
-      "runs": "runs",
+      "runs": "passages",
       "swaps": "changements"
     }
   },
@@ -1067,8 +1067,8 @@
     "expeditionPlan": {
       "title": "Sources d'expédition",
       "fastest": "Le plus rapide",
-      "runsPerDuration": "{n} runs × {duration}/run",
-      "perRun": "x{n}/run"
+      "runsPerDuration": "{n} passages × {duration}/passage",
+      "perRun": "x{n}/passage"
     },
     "materialTree": {
       "leafItem": "Objet terminal — aucune sous-dépendance.",
