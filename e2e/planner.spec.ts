@@ -33,7 +33,7 @@ test.describe('page rendering and item selection', () => {
 
   test('item picker selects item and shows planner', async ({ page }) => {
     // Click the item picker trigger button
-    await page.locator('button[aria-haspopup="listbox"]').click()
+    await page.locator('main button[aria-haspopup="listbox"]').click()
 
     // Search and select
     await page.getByPlaceholder('Search planner items').fill('Planks')
@@ -234,18 +234,18 @@ async function seedCreatures(page: Page) {
 // ── Level Up — single mode rendering ────────────────────────────────
 
 test.describe('level up - single mode rendering', () => {
-  test('default shows Level Up Planner heading and mode toggle', async ({ page }) => {
+  test('default shows Level Up heading and mode toggle', async ({ page }) => {
     await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
+    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
 
-    await expect(page.locator('h1', { hasText: 'Level Up Planner' })).toBeVisible()
+    await expect(page.locator('h1', { hasText: 'Level Up' })).toBeVisible()
     await expect(page.getByText('Single', { exact: true })).toBeVisible()
     await expect(page.getByText('Party', { exact: true })).toBeVisible()
   })
 
   test('empty state shows choose a creature prompt', async ({ page }) => {
     await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
+    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
 
     await expect(page.getByText('Choose a creature to begin planning.')).toBeVisible()
   })
@@ -262,10 +262,10 @@ test.describe('level up - single mode planning', () => {
 
   test('selecting creature via URL shows leveling plan', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Heading should show creature name
-    await expect(page.locator('h1', { hasText: 'Moss Leveling' })).toBeVisible()
+    await expect(page.locator('h1', { hasText: 'Moss' })).toBeVisible()
 
     // Single-mode plan is gated behind an explicit Calculate button
     await page.getByRole('button', { name: 'Calculate' }).first().click()
@@ -278,7 +278,7 @@ test.describe('level up - single mode planning', () => {
 
   test('timeline steps show expedition names and level ranges', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
     await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // At least one step should show an expedition name
@@ -288,7 +288,7 @@ test.describe('level up - single mode planning', () => {
 
   test('target level preset 70 changes the plan', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
     await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Get step count at target 120
@@ -336,7 +336,7 @@ test.describe('level up - step interaction', () => {
   test('clicking a step card expands it to show details', async ({ page }) => {
     await seedCreatures(page)
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
     await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Find the first step card button with aria-expanded
@@ -356,7 +356,7 @@ test.describe('level up - step interaction', () => {
       )
     })
     await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
     await page.getByRole('button', { name: 'Calculate' }).first().click()
 
     // Awakening step should show "Awaken Creature" text
@@ -372,7 +372,7 @@ test.describe('level up - party mode rendering', () => {
     await page.evaluate(() => localStorage.clear())
     await seedCreatures(page)
     await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up Planner' }).waitFor()
+    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
   })
 
   test('switching to Party mode shows creature filter and Calculate button', async ({ page }) => {
@@ -431,7 +431,7 @@ test.describe('level up - expedition filter', () => {
 
   test('expedition filter is visible in single mode', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Collapsible header should show expedition count
     await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
@@ -440,7 +440,7 @@ test.describe('level up - expedition filter', () => {
 
   test('expanding expedition filter shows list with tier skull icons', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Click to expand
     await page.getByText('Expeditions', { exact: true }).first().click()
@@ -452,14 +452,14 @@ test.describe('level up - expedition filter', () => {
 
   test('expedition filter is visible in party mode', async ({ page }) => {
     await page.goto('./planner?tab=levelup&mode=party')
-    await page.getByText('Party Level Up').waitFor()
+    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
 
     await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
   })
 
   test('Include All button toggles all expeditions', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Expand
     await page.getByText('Expeditions', { exact: true }).first().click()
@@ -473,7 +473,7 @@ test.describe('level up - expedition filter', () => {
 
   test('expedition filter persists after page refresh', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Expand and toggle Include All
     await page.getByText('Expeditions', { exact: true }).first().click()
@@ -482,7 +482,7 @@ test.describe('level up - expedition filter', () => {
 
     // Refresh
     await page.reload()
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Should still show as filtered
     await expect(page.getByText('20 of 20 included')).toBeVisible()
@@ -490,7 +490,7 @@ test.describe('level up - expedition filter', () => {
 
   test('Reset button clears overrides', async ({ page }) => {
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss Leveling' }).waitFor()
+    await page.locator('h1', { hasText: 'Moss' }).waitFor()
 
     // Locate the expedition filter section
     const expSection = page.locator('.surface-card', { hasText: 'Expeditions' }).first()

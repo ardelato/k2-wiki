@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import type { Expedition } from '@/types'
 import { toTitleCase } from '@/utils/format'
+
+const { t } = useI18n()
+
 
 defineProps<{
   expeditions: Expedition[]
@@ -19,14 +24,14 @@ const emit = defineEmits<{
 <template>
   <div class="list-panel">
     <div class="list-header">
-      <span class="list-title">Expeditions</span>
+      <span class="list-title">{{ t('expeditions.title') }}</span>
       <div class="sort-btns">
         <button
           class="sort-btn"
           :class="{ active: sortField === 'rating' }"
           @click="emit('sort', 'rating')"
         >
-          Rating
+          {{ t('expeditions.detail.rating') }}
           <svg
             v-if="sortField === 'rating'"
             viewBox="0 0 16 16"
@@ -43,7 +48,7 @@ const emit = defineEmits<{
           :class="{ active: sortField === 'time' }"
           @click="emit('sort', 'time')"
         >
-          Time
+          {{ t('expeditions.sort.time') }}
           <svg
             v-if="sortField === 'time'"
             viewBox="0 0 16 16"
@@ -76,7 +81,7 @@ const emit = defineEmits<{
         </div>
       </div>
 
-      <div v-if="expeditions.length === 0" class="empty">No expeditions found.</div>
+      <div v-if="expeditions.length === 0" class="empty">{{ t('expeditions.listNoFound') }}</div>
     </div>
   </div>
 </template>

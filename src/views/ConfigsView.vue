@@ -2,6 +2,7 @@
 import { useLocalStorage } from '@vueuse/core'
 import { Upload, AlertCircle, Check, Info, RotateCcw } from 'lucide-vue-next'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import AssignmentZone from '@/components/configs/AssignmentZone.vue'
@@ -45,6 +46,9 @@ const allExpeditions = (expeditionsData as Expedition[]).toSorted((a, b) => {
   if (diff !== 0) return diff
   return a.baseRating - b.baseRating
 })
+
+
+const { t } = useI18n()
 
 
 const { creatures } = useCreatures()
@@ -137,16 +141,18 @@ onUnmounted(() => {
 const importedAgo = computed(() => {
   if (!savedAtMs.value) return ''
   const seconds = Math.max(0, Math.floor((nowMs.value - savedAtMs.value) / 1000))
-  if (seconds < 60) return 'just now'
+  if (seconds < 60) return t('configs.snapshot.justNow')
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
+  if (minutes < 60) return t('configs.snapshot.minutesAgo', { n: minutes })
   const hours = Math.floor(minutes / 60)
   if (hours < 24) {
     const remMin = minutes % 60
-    return remMin ? `${hours}h ${remMin}m ago` : `${hours}h ago`
+    return remMin
+      ? t('configs.snapshot.hoursMinutesAgo', { h: hours, m: remMin })
+      : t('configs.snapshot.hoursAgo', { n: hours })
   }
   const days = Math.floor(hours / 24)
-  return days === 1 ? 'yesterday' : `${days}d ago`
+  return days === 1 ? t('configs.snapshot.yesterday') : t('configs.snapshot.daysAgo', { n: days })
 })
 
 
@@ -685,7 +691,7 @@ async function processFile(file: File) {
     nowMs.value = Date.now()
     applyAll()
   } catch (e) {
-    errorMessage.value = e instanceof Error ? e.message : 'Failed to process save file'
+    errorMessage.value = e instanceof Error ? e.message : t('configs.saveFileImport.processError')
     saveConfig.value = null
   }
 }
@@ -901,25 +907,26 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
           <SectionEyebrow class="flex flex-wrap items-center gap-x-2 gap-y-1">
             <template v-if="saveFileName">
               <Check class="size-3.5 text-emerald-400" />
-              <span class="text-emerald-400">Save synced</span>
+              <span class="text-emerald-400">{{ t('configs.snapshot.saveSynced') }}</span>
               <span class="text-muted-foreground/60">·</span>
               <span class="font-mono normal-case tracking-normal text-muted-foreground/80">
                 {{ saveFileName }}
               </span>
               <span v-if="importedAgo" class="text-muted-foreground/60">·</span>
               <span v-if="importedAgo" class="normal-case tracking-normal">
-                imported {{ importedAgo }}
+                {{ t('configs.snapshot.imported', { ago: importedAgo }) }}
               </span>
             </template>
             <template v-else>
               <Upload class="size-3.5" />
-              <span>No save loaded</span>
+              <span>{{ t('configs.snapshot.noSaveLoaded') }}</span>
             </template>
           </SectionEyebrow>
-          <h1 class="mt-2 text-3xl font-extrabold tracking-tight">Game Snapshot</h1>
+          <h1 class="mt-2 text-3xl font-extrabold tracking-tight">
+            {{ t('configs.snapshot.title') }}
+          </h1>
           <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
-            The data the wiki's planners and calculators use for your account. Import a save to
-            populate it, reset to clear.
+            {{ t('configs.snapshot.description') }}
           </p>
         </div>
         <div class="flex shrink-0 items-center gap-2">
@@ -928,7 +935,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
             @click="resetAll"
           >
             <RotateCcw class="size-3.5" />
-            Reset all
+            {{ t('configs.resetAll') }}
           </button>
         </div>
       </div>
@@ -949,7 +956,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
       >
         <Upload class="size-8 text-muted-foreground" />
         <span class="text-sm font-medium text-muted-foreground">
-          Drop save file here or click to browse
+          {{ t('configs.saveFileImport.dropHint') }}
         </span>
         <input type="file" accept=".json" class="hidden" @change="onFileSelect" />
       </label>
@@ -977,10 +984,8 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
         <div class="flex items-center gap-2">
           <div class="text-left">
             <div class="flex items-center gap-1.5">
-              <h2 class="text-base font-bold">Creature Assignments</h2>
-              <AppTooltip
-                text='Assigned creatures are reserved by the planner across all pages. Toggle "Show Excluded" where available to temporarily include them.'
-              >
+              <h2 class="text-base font-bold">{{ t('configs.assignments.title') }}</h2>
+              <AppTooltip :text="t('configs.assignments.tooltip')">
                 <Info class="size-3.5 text-muted-foreground/70 hover:text-foreground" />
               </AppTooltip>
             </div>
@@ -988,13 +993,13 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-            {{ assignedCreatureIds.size }} assigned
+            {{ t('configs.assignments.assigned', { n: assignedCreatureIds.size }) }}
           </span>
           <span
             v-if="idleCreatures.length"
             class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium text-muted-foreground"
           >
-            {{ idleCreatures.length }} idle
+            {{ t('configs.assignments.idle', { n: idleCreatures.length }) }}
           </span>
         </div>
       </div>
@@ -1004,7 +1009,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
         <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <AssignmentZone
             :icon="sanctuaryIcon"
-            label="Sanctuary"
+            :label="t('configs.zones.sanctuary')"
             :slots="sanctuarySlots"
             :current-count="sanctuaryCreatureIds.length"
             :max="SANCTUARY_MAX"
@@ -1014,7 +1019,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
           />
           <AssignmentZone
             :icon="helpersIcon"
-            label="Helpers"
+            :label="t('configs.zones.helpers')"
             :slots="helperSlots"
             :current-count="helperCreatureIds.length"
             :max="HELPERS_MAX"
@@ -1024,7 +1029,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
           />
           <AssignmentZone
             :icon="machinesIcon"
-            label="Machines"
+            :label="t('configs.zones.machines')"
             :slots="machineSlots"
             :current-count="machineCreatureIds.length"
             :max="MACHINES_MAX"
@@ -1034,7 +1039,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
           />
           <AssignmentZone
             :icon="dungeonsIcon"
-            label="Dungeons"
+            :label="t('configs.zones.dungeons')"
             :slots="dungeonSlots"
             :current-count="dungeonParty.length"
             :max="DUNGEON_MAX"
@@ -1050,24 +1055,31 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
           <div class="mb-2 flex items-center justify-between gap-2">
             <SectionEyebrow as="h3" class="flex items-center gap-1.5">
               <img :src="sourceIcons.Expeditions" alt="" class="size-3.5" loading="lazy" />
-              Expeditions
+              {{ t('configs.zones.expeditions') }}
             </SectionEyebrow>
             <span class="font-mono text-[10px] text-muted-foreground">
-              {{ expeditionPartiesAssigned }}/{{ expeditionPartiesList.length * 3 }} slots filled
+              {{
+                t('configs.assignments.slotsFilled', {
+                  filled: expeditionPartiesAssigned,
+                  total: expeditionPartiesList.length * 3,
+                })
+              }}
             </span>
           </div>
           <div
             v-if="expeditionPartiesAssigned === 0"
             class="rounded-md border border-dashed border-border/50 px-3 py-2 text-[11px] text-muted-foreground"
           >
-            No creatures currently assigned to any expedition. Head to
-            <RouterLink
-              to="/expeditions"
-              class="font-mono text-primary underline underline-offset-2"
-            >
-              /expeditions
-            </RouterLink>
-            to set up parties.
+            <i18n-t keypath="configs.assignments.noExpeditionAssignments" tag="span">
+              <template #link>
+                <RouterLink
+                  to="/expeditions"
+                  class="font-mono text-primary underline underline-offset-2"
+                >
+                  /expeditions
+                </RouterLink>
+              </template>
+            </i18n-t>
           </div>
           <div v-else class="grid grid-cols-2 gap-x-3 gap-y-1.5 md:grid-cols-3 xl:grid-cols-4">
             <div
@@ -1130,9 +1142,11 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
         <!-- Idle creatures container -->
         <div v-if="idleCreatures.length" class="bg-bg/40 rounded-xl border border-border/60 p-3">
           <div class="mb-2 flex items-center justify-between gap-2">
-            <SectionEyebrow as="h3" class="flex items-center gap-1.5"> Idle </SectionEyebrow>
+            <SectionEyebrow as="h3" class="flex items-center gap-1.5">
+              {{ t('configs.assignments.idleLabel') }}
+            </SectionEyebrow>
             <span class="font-mono text-[10px] text-muted-foreground">
-              {{ idleCreatures.length }} unassigned
+              {{ t('configs.assignments.unassigned', { n: idleCreatures.length }) }}
             </span>
           </div>
           <div class="flex flex-wrap gap-1.5">
@@ -1179,8 +1193,8 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
         <div class="flex items-start justify-between gap-2">
           <div>
             <div class="flex items-center gap-1.5">
-              <h3 class="text-sm font-bold">Expeditions</h3>
-              <AppTooltip text="Any expedition run counts toward unlocking the next expedition.">
+              <h3 class="text-sm font-bold">{{ t('configs.zones.expeditions') }}</h3>
+              <AppTooltip :text="t('configs.expeditionsCard.tooltip')">
                 <Info class="size-3.5 text-muted-foreground/70 hover:text-foreground" />
               </AppTooltip>
             </div>
@@ -1188,10 +1202,20 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
           <div class="flex items-center gap-2">
             <div class="flex flex-wrap gap-2 text-xs">
               <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
-                {{ expeditionDisplay.unlockedCount }}/{{ allExpeditions.length }} unlocked
+                {{
+                  t('configs.expeditions.unlocked', {
+                    count: expeditionDisplay.unlockedCount,
+                    total: allExpeditions.length,
+                  })
+                }}
               </span>
               <span class="rounded-md bg-muted/50 px-2 py-1 font-medium">
-                {{ expeditionDisplay.totalTiersUnlocked }}/{{ allExpeditions.length * 5 }} tiers
+                {{
+                  t('configs.expeditions.tiers', {
+                    count: expeditionDisplay.totalTiersUnlocked,
+                    total: allExpeditions.length * 5,
+                  })
+                }}
               </span>
             </div>
           </div>
@@ -1204,7 +1228,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
             class="space-y-2"
           >
             <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/80">
-              Up next
+              {{ t('configs.expeditionsCard.upNext') }}
             </div>
             <div class="grid gap-2 md:grid-cols-3">
               <div
@@ -1234,7 +1258,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                       <span
                         class="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300"
                       >
-                        Next
+                        {{ t('configs.expeditionsCard.next') }}
                       </span>
                     </div>
                     <div class="h-1.5 overflow-hidden rounded-full bg-border/30">
@@ -1245,13 +1269,15 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                     </div>
                     <div class="mt-1.5 flex items-baseline justify-between gap-2">
                       <span class="font-mono text-xs font-semibold">
-                        <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
+                        <span class="text-[10px] font-normal text-muted-foreground/50"
+                          >{{ t('configs.expeditionsCard.have') }}
+                        </span>
                         <span class="text-foreground">{{ expeditionFrontiers.nextExp.have }}</span>
                         <span class="text-muted-foreground/50">
                           / {{ expeditionFrontiers.nextExp.need }}
                         </span>
                         <span class="text-[10px] font-normal text-muted-foreground/50">
-                          Total
+                          {{ t('configs.expeditionsCard.total') }}
                         </span>
                       </span>
                       <span
@@ -1259,7 +1285,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                       >
                         <span
                           class="text-[10px] font-normal text-amber-700/70 dark:text-amber-400/60"
-                          >Need
+                          >{{ t('configs.expeditionsCard.need') }}
                         </span>
                         {{ expeditionFrontiers.nextExp.remaining }}
                       </span>
@@ -1316,17 +1342,21 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                     </div>
                     <div class="mt-1.5 flex items-baseline justify-between gap-2">
                       <span class="font-mono text-xs font-semibold">
-                        <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
+                        <span class="text-[10px] font-normal text-muted-foreground/50"
+                          >{{ t('configs.expeditionsCard.have') }}
+                        </span>
                         <span class="text-foreground">{{ f.have }}</span>
                         <span class="text-muted-foreground/50"> / {{ f.need }} </span>
-                        <span class="text-[10px] font-normal text-muted-foreground/50"> Loops</span>
+                        <span class="text-[10px] font-normal text-muted-foreground/50">
+                          {{ t('configs.expeditionsCard.loops') }}</span
+                        >
                       </span>
                       <span
                         class="font-mono text-xs font-semibold text-amber-700 dark:text-amber-400"
                       >
                         <span
                           class="text-[10px] font-normal text-amber-700/70 dark:text-amber-400/60"
-                          >Need
+                          >{{ t('configs.expeditionsCard.need') }}
                         </span>
                         {{ f.remaining }}
                       </span>
@@ -1403,7 +1433,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                         : 'text-muted-foreground'
                   "
                 >
-                  <template v-if="row.locked">locked</template>
+                  <template v-if="row.locked">{{ t('configs.ladder.locked') }}</template>
                   <template v-else-if="row.maxed">
                     <img
                       :src="expeditionTierIcons[5]"
@@ -1411,7 +1441,7 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                       class="size-3.5 object-contain"
                       loading="lazy"
                     />
-                    <span>MAXED</span>
+                    <span>{{ t('configs.ladder.maxed') }}</span>
                   </template>
                   <template v-else>
                     <img
@@ -1433,7 +1463,9 @@ const dungeonSlots = computed<AssignmentSlot[]>(() =>
                 <span
                   class="w-16 text-right font-mono text-[10px] tabular-nums text-muted-foreground/70"
                 >
-                  <template v-if="row.runs > 0">{{ row.runs }} runs</template>
+                  <template v-if="row.runs > 0">{{
+                    t('configs.ladder.runs', { n: row.runs }, row.runs)
+                  }}</template>
                 </span>
               </div>
             </div>

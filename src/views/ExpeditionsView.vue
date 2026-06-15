@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref, watch, watchEffect } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
@@ -26,10 +27,13 @@ import { useExpeditions } from '@/composables/useExpeditions'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, ExpeditionStatWeights } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
-import { formatDuration, itemName, toTitleCase } from '@/utils/format'
+import { formatDecimal, formatDuration, itemName, toTitleCase } from '@/utils/format'
 import { getLoopXpBonus, getRecommendedCreatures } from '@/utils/formulas'
 import { expeditionTierIcons, toolIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const route = useRoute()
 const router = useRouter()
@@ -138,7 +142,7 @@ function handleImport() {
   if (success) {
     modalMode.value = null
   } else {
-    importError.value = 'Invalid JSON format'
+    importError.value = t('expeditions.invalidJson')
   }
 }
 
@@ -174,7 +178,7 @@ async function pasteFromClipboard() {
     }
     importError.value = ''
   } catch {
-    importError.value = 'Unable to read clipboard'
+    importError.value = t('expeditions.unableClipboard')
   }
 }
 
@@ -199,7 +203,7 @@ function handleFileUpload(event: Event) {
 
 
 function handleReset() {
-  if (window.confirm('Reset all expedition parties and creature levels?')) {
+  if (window.confirm(t('expeditions.resetConfirm'))) {
     resetAllExpeditions()
     autoFilledCreatures.clear()
     for (const [id, level] of Object.entries(collectionLevels.value)) {
@@ -365,7 +369,7 @@ function rowSelected(id: string): boolean {
           "
           @click="mobileSection = 'list'"
         >
-          List
+          {{ t('expeditions.list') }}
         </button>
         <button
           class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
@@ -376,7 +380,7 @@ function rowSelected(id: string): boolean {
           "
           @click="mobileSection = 'details'"
         >
-          Details
+          {{ t('expeditions.details') }}
         </button>
         <button
           class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
@@ -387,7 +391,7 @@ function rowSelected(id: string): boolean {
           "
           @click="mobileSection = 'creature'"
         >
-          Creature
+          {{ t('expeditions.creature') }}
         </button>
       </div>
     </div>
@@ -402,39 +406,43 @@ function rowSelected(id: string): boolean {
       >
         <div class="flex items-center justify-between gap-2 border-b border-border/70 px-4 py-3">
           <div class="flex min-w-0 flex-wrap items-center gap-1.5">
-            <h2 class="text-base font-bold">Expeditions</h2>
+            <h2 class="text-base font-bold">{{ t('expeditions.title') }}</h2>
             <span
               v-if="totalXpPerSecond > 0"
               class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
             >
-              {{ totalXpPerSecond.toFixed(2) }} XP/s
+              {{ formatDecimal(totalXpPerSecond) }} {{ t('expeditions.xpPerSecondSuffix') }}
             </span>
             <span
               v-if="expeditionToolXpBonus > 1"
               class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
             >
               <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
-              +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
+              {{
+                t('levelPlanner.badges.swordBonus', {
+                  pct: Math.round((expeditionToolXpBonus - 1) * 100),
+                })
+              }}
             </span>
           </div>
           <div class="flex shrink-0 items-center gap-2">
             <button
               class="focus-ring rounded-lg p-1.5 text-muted-foreground transition hover:text-foreground"
-              title="Import"
+              :title="t('expeditions.import')"
               @click="openImportModal"
             >
               <FileUp class="size-5" />
             </button>
             <button
               class="focus-ring rounded-lg p-1.5 text-muted-foreground transition hover:text-foreground"
-              title="Export"
+              :title="t('expeditions.export')"
               @click="openExportModal"
             >
               <FileDown class="size-5" />
             </button>
             <button
               class="focus-ring rounded-lg p-1.5 text-muted-foreground transition hover:text-destructive"
-              title="Reset All"
+              :title="t('expeditions.resetAll')"
               @click="handleReset"
             >
               <RotateCcw class="size-5" />
@@ -546,10 +554,12 @@ function rowSelected(id: string): boolean {
                         : 'text-amber-700 dark:text-amber-400'
                     "
                   >
-                    {{ expeditionEvaluations[expedition.id]!.partyXpPerSecond.toFixed(2) }} XP/s
+                    {{ formatDecimal(expeditionEvaluations[expedition.id]!.partyXpPerSecond) }}
+                    {{ t('expeditions.xpPerSecondSuffix') }}
                   </span>
                   <span class="font-mono text-muted-foreground">
-                    ({{ expeditionEvaluations[expedition.id]!.xpPerSecond.toFixed(2) }}/ea)
+                    ({{ formatDecimal(expeditionEvaluations[expedition.id]!.xpPerSecond)
+                    }}{{ t('expeditions.perEachSuffix') }})
                   </span>
                 </div>
               </div>
@@ -560,7 +570,7 @@ function rowSelected(id: string): boolean {
             v-if="filteredExpeditions.length === 0"
             class="px-4 py-8 text-center text-sm text-muted-foreground"
           >
-            No expeditions match your filters.
+            {{ t('expeditions.noMatch') }}
           </div>
         </div>
       </section>
@@ -624,7 +634,11 @@ function rowSelected(id: string): boolean {
           <div class="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-2xl">
             <div class="mb-4 flex items-center justify-between">
               <h3 class="text-lg font-bold">
-                {{ modalMode === 'export' ? 'Export Setup' : 'Import Setup' }}
+                {{
+                  modalMode === 'export'
+                    ? t('expeditions.exportSetup')
+                    : t('expeditions.importSetup')
+                }}
               </h3>
               <button
                 class="focus-ring rounded-lg p-1.5 text-muted-foreground hover:text-foreground"
@@ -649,14 +663,14 @@ function rowSelected(id: string): boolean {
                 >
                   <Check v-if="copied" class="size-3 text-emerald-700 dark:text-emerald-400" />
                   <Copy v-else class="size-3" />
-                  {{ copied ? 'Copied' : 'Copy' }}
+                  {{ copied ? t('expeditions.copied') : t('expeditions.copy') }}
                 </button>
                 <button
                   class="focus-ring inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
                   @click="downloadExport"
                 >
                   <Download class="size-3" />
-                  Download
+                  {{ t('expeditions.download') }}
                 </button>
               </div>
             </template>
@@ -667,7 +681,7 @@ function rowSelected(id: string): boolean {
                 v-model="modalText"
                 ref="importTextarea"
                 class="focus-ring max-h-[70vh] min-h-[20rem] w-full resize-none overflow-y-auto rounded-lg border border-input bg-background/70 p-3 font-mono text-xs"
-                placeholder="Paste exported JSON here..."
+                :placeholder="t('expeditions.pastePlaceholder')"
               />
               <p v-if="importError" class="mt-1 text-xs text-destructive">{{ importError }}</p>
               <div class="mt-3 flex justify-end gap-2">
@@ -676,13 +690,13 @@ function rowSelected(id: string): boolean {
                   @click="pasteFromClipboard"
                 >
                   <ClipboardPaste class="size-4" />
-                  Paste
+                  {{ t('expeditions.paste') }}
                 </button>
                 <label
                   class="focus-ring inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-muted/35 px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
                 >
                   <FolderOpen class="size-4" />
-                  Open File
+                  {{ t('expeditions.openFile') }}
                   <input
                     type="file"
                     accept=".json,application/json"
@@ -695,7 +709,7 @@ function rowSelected(id: string): boolean {
                   @click="handleImport"
                 >
                   <Check class="size-4" />
-                  Import
+                  {{ t('expeditions.import') }}
                 </button>
               </div>
             </template>

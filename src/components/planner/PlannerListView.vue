@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type { PlannerMethod, PlannerMethodKind, PlannerNode } from '@/types'
 import { methodKindColor, methodKindLabel } from '@/utils/format'
+
+const { t } = useI18n()
+
 
 import PlannerListGroup from './PlannerListGroup.vue'
 import PlannerListRow from './PlannerListRow.vue'
@@ -165,9 +169,11 @@ defineExpose({ collapseAll, expandAll })
     </PlannerListGroup>
   </div>
   <div v-else class="flex flex-col items-center justify-center gap-2 py-12 text-center">
-    <p class="text-sm font-semibold text-emerald-500">All materials in stock</p>
+    <p class="text-sm font-semibold text-emerald-500">
+      {{ t('plannerComponents.listView.allInStock') }}
+    </p>
     <p class="text-xs text-muted-foreground">
-      Everything needed is already available. Switch to Tree view to see the full breakdown.
+      {{ t('plannerComponents.listView.allAvailable') }}
     </p>
   </div>
 </template>

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type { PartyLevelingPlan, PlannerStrategy } from '@/types'
+
+const { t } = useI18n()
 import { formatDuration } from '@/utils/format'
 import { deriveTimeSeries } from '@/utils/strategyChartData'
 
@@ -32,8 +35,16 @@ const secondarySeries = computed(() =>
 )
 
 
-const primaryLabel = computed(() => (props.strategy === 'optimal' ? 'Optimal' : 'Hands-Free'))
-const secondaryLabel = computed(() => (props.strategy === 'optimal' ? 'Hands-Free' : 'Optimal'))
+const primaryLabel = computed(() =>
+  props.strategy === 'optimal'
+    ? t('levelPlanner.controls.optimal')
+    : t('levelPlanner.controls.handsFree'),
+)
+const secondaryLabel = computed(() =>
+  props.strategy === 'optimal'
+    ? t('levelPlanner.controls.handsFree')
+    : t('levelPlanner.controls.optimal'),
+)
 
 
 const primaryColor = computed(() =>
@@ -54,8 +65,10 @@ const secondaryColor = computed(() =>
         <span class="inline-block size-2 rounded-full" :style="{ backgroundColor: primaryColor }" />
         <span class="font-semibold">{{ primaryLabel }}</span>
         <span class="text-muted-foreground">
-          {{ formatDuration(props.plan.totalTimeSeconds) }} &middot; {{ props.plan.totalRuns }} runs
-          &middot; {{ props.plan.steps.filter((s) => s.wasReconfigured).length }} swaps
+          {{ formatDuration(props.plan.totalTimeSeconds) }} &middot; {{ props.plan.totalRuns }}
+          {{ t('levelPlannerComponents.strategyComparison.runs') }} &middot;
+          {{ props.plan.steps.filter((s) => s.wasReconfigured).length }}
+          {{ t('levelPlannerComponents.strategyComparison.swaps') }}
         </span>
       </div>
       <div
@@ -69,8 +82,10 @@ const secondaryColor = computed(() =>
         <span class="font-semibold">{{ secondaryLabel }}</span>
         <span class="text-muted-foreground">
           {{ formatDuration(props.otherPlan.totalTimeSeconds) }} &middot;
-          {{ props.otherPlan.totalRuns }} runs &middot;
-          {{ props.otherPlan.steps.filter((s) => s.wasReconfigured).length }} swaps
+          {{ props.otherPlan.totalRuns }}
+          {{ t('levelPlannerComponents.strategyComparison.runs') }} &middot;
+          {{ props.otherPlan.steps.filter((s) => s.wasReconfigured).length }}
+          {{ t('levelPlannerComponents.strategyComparison.swaps') }}
         </span>
       </div>
       <div
@@ -82,14 +97,16 @@ const secondaryColor = computed(() =>
           :style="{ backgroundColor: secondaryColor }"
         />
         <span class="font-semibold">{{ secondaryLabel }}</span>
-        <span class="animate-pulse text-muted-foreground">Computing...</span>
+        <span class="animate-pulse text-muted-foreground">{{
+          t('levelPlannerComponents.strategyComparison.computing')
+        }}</span>
       </div>
     </div>
 
     <!-- Charts -->
     <StrategyChart
-      title="XP Rate (XP/sec)"
-      y-label="XP/sec"
+      :title="t('levelPlannerComponents.strategyComparison.xpRate')"
+      :y-label="t('levelPlannerComponents.strategyComparison.xpPerSec')"
       :primary-series="primarySeries.xpRate"
       :secondary-series="secondarySeries?.xpRate ?? null"
       :primary-label="primaryLabel"
@@ -101,8 +118,8 @@ const secondaryColor = computed(() =>
     />
 
     <StrategyChart
-      title="Swap Rate"
-      y-label="Swaps/hr"
+      :title="t('levelPlannerComponents.strategyComparison.swapRate')"
+      :y-label="t('levelPlannerComponents.strategyComparison.swapsPerHr')"
       :primary-series="primarySeries.swapRate"
       :secondary-series="secondarySeries?.swapRate ?? null"
       :primary-label="primaryLabel"
@@ -115,8 +132,8 @@ const secondaryColor = computed(() =>
     />
 
     <StrategyChart
-      title="Leveling Progress"
-      y-label="Avg %"
+      :title="t('levelPlannerComponents.strategyComparison.levelingProgress')"
+      :y-label="t('levelPlannerComponents.strategyComparison.avgPct')"
       :primary-series="primarySeries.levelingProgress"
       :secondary-series="secondarySeries?.levelingProgress ?? null"
       :primary-label="primaryLabel"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 export interface ActiveFilter {
   key: string
@@ -8,6 +9,9 @@ export interface ActiveFilter {
   color?: string
   image?: string
 }
+
+
+const { t } = useI18n()
 
 
 defineProps<{
@@ -45,7 +49,7 @@ defineEmits<{
       class="pill focus-ring active:scale-[0.96]"
       @click="$emit('clear-all')"
     >
-      Clear all
+      {{ t('shared.activeFilters.clearAll') }}
     </button>
   </div>
 </template>

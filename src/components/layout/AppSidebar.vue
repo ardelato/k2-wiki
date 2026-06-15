@@ -20,9 +20,11 @@ import {
   Wrench,
 } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
 import SteamIcon from '@/components/icons/SteamIcon.vue'
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { useTheme } from '@/composables/useTheme'
 import meta from '@/data/meta.json'
@@ -39,6 +41,7 @@ const emit = defineEmits<{
 
 
 const route = useRoute()
+const { t } = useI18n()
 const { preference, cycle } = useTheme()
 
 
@@ -52,41 +55,41 @@ function isActive(path: string) {
 
 
 const themeLabel = computed(() => {
-  if (preference.value === 'system') return 'Theme: System'
-  if (preference.value === 'light') return 'Theme: Light'
-  return 'Theme: Dark'
+  if (preference.value === 'system') return t('settings.themeSystem')
+  if (preference.value === 'light') return t('settings.themeLight')
+  return t('settings.themeDark')
 })
 
 
-const navGroups = [
+const navGroups = computed(() => [
   {
-    label: 'Reference',
+    label: t('nav.reference'),
     items: [
-      { label: 'Beastiary', to: '/', icon: BookOpen },
-      { label: 'Items', to: '/items', icon: Package },
-      { label: 'Dungeons', to: '/dungeons', icon: Swords },
-      { label: 'Expeditions', to: '/expeditions', icon: Compass },
-      { label: 'Sanctuary', to: '/sanctuary', icon: Fence },
+      { label: t('nav.beastiary'), to: '/', icon: BookOpen },
+      { label: t('nav.items'), to: '/items', icon: Package },
+      { label: t('nav.dungeons'), to: '/dungeons', icon: Swords },
+      { label: t('nav.expeditions'), to: '/expeditions', icon: Compass },
+      { label: t('nav.sanctuary'), to: '/sanctuary', icon: Fence },
     ],
   },
   {
-    label: 'Progression',
+    label: t('nav.progression'),
     items: [
-      { label: 'Garden', to: '/garden', icon: Flower2 },
-      { label: 'Awaken Tree', to: '/awaken', icon: TreePine },
-      { label: 'Fabrication', to: '/fabrication', icon: Sparkles },
-      { label: 'Tools', to: '/tools', icon: Wrench },
-      { label: 'Machines', to: '/machines', icon: Cog },
+      { label: t('nav.garden'), to: '/garden', icon: Flower2 },
+      { label: t('nav.awakenTree'), to: '/awaken', icon: TreePine },
+      { label: t('nav.fabrication'), to: '/fabrication', icon: Sparkles },
+      { label: t('nav.tools'), to: '/tools', icon: Wrench },
+      { label: t('nav.machines'), to: '/machines', icon: Cog },
     ],
   },
   {
-    label: 'Utilities',
+    label: t('nav.utilities'),
     items: [
-      { label: 'Planner', to: '/planner', icon: GitBranch },
-      { label: 'Configs', to: '/configs', icon: FileCog },
+      { label: t('nav.planner'), to: '/planner', icon: GitBranch },
+      { label: t('nav.configs'), to: '/configs', icon: FileCog },
     ],
   },
-]
+])
 </script>
 
 <template>
@@ -96,7 +99,7 @@ const navGroups = [
       <RouterLink
         to="/"
         class="focus-ring inline-flex items-center rounded-lg px-1 py-1 text-foreground"
-        :title="props.collapsed ? 'Koltera 2 Wiki' : undefined"
+        :title="props.collapsed ? t('common.koltera2Wiki') : undefined"
         @click="emit('navigate')"
       >
         <template v-if="!props.collapsed">
@@ -104,35 +107,42 @@ const navGroups = [
             <span
               class="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground"
             >
-              Koltera 2
+              {{ t('common.koltera2') }}
               <span
                 v-if="meta.gameVersion === meta.latestGameVersion"
                 class="rounded-full bg-primary px-1.5 py-0.5 text-[0.5625rem] font-semibold leading-none text-primary-foreground"
-                :title="`Content is based on game version ${meta.gameVersion}`"
+                :title="t('meta.gameVersionTooltip', { v: meta.gameVersion })"
                 >v{{ meta.gameVersion }}</span
               >
               <span
                 v-else
                 class="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[0.5625rem] font-semibold leading-none text-amber-600 dark:text-amber-400"
-                title="Wiki update in progress"
+                :title="t('meta.wikiUpdateInProgress')"
                 >v{{ meta.gameVersion }} · game is v{{ meta.latestGameVersion }}</span
               >
             </span>
-            <span class="block text-base font-extrabold text-foreground">Wiki</span>
+            <span class="block text-base font-extrabold text-foreground">{{
+              t('common.wiki')
+            }}</span>
           </span>
         </template>
         <span v-else class="flex flex-col items-center gap-1">
-          <span class="text-base font-extrabold text-foreground">K2</span>
+          <span class="text-base font-extrabold text-foreground">{{ t('common.k2') }}</span>
           <span
             v-if="meta.gameVersion === meta.latestGameVersion"
             class="rounded-full bg-primary px-1.5 py-0.5 text-[0.5rem] font-semibold leading-none text-primary-foreground"
-            :title="`Content is based on game version ${meta.gameVersion}`"
+            :title="t('meta.gameVersionTooltip', { v: meta.gameVersion })"
             >v{{ meta.gameVersion }}</span
           >
           <span
             v-else
             class="rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[0.5rem] font-semibold leading-none text-amber-600 dark:text-amber-400"
-            :title="`Wiki: v${meta.gameVersion} · Game: v${meta.latestGameVersion}`"
+            :title="
+              t('meta.versionMismatch', {
+                wikiVersion: meta.gameVersion,
+                gameVersion: meta.latestGameVersion,
+              })
+            "
             >v{{ meta.gameVersion }}</span
           >
         </span>
@@ -183,49 +193,55 @@ const navGroups = [
         :class="props.collapsed ? 'flex-col gap-0.5' : 'justify-between'"
       >
         <div class="flex items-center" :class="props.collapsed ? 'flex-col gap-0.5' : 'gap-0.5'">
-          <AppTooltip text="GitHub" :position="props.collapsed ? 'right' : 'top'">
+          <AppTooltip :text="t('settings.github')" :position="props.collapsed ? 'right' : 'top'">
             <a
               href="https://github.com/ardelato/k2-wiki"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="GitHub repository"
+              :aria-label="t('settings.githubRepo')"
               class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
             >
               <Github class="size-4" />
             </a>
           </AppTooltip>
-          <AppTooltip text="Steam" :position="props.collapsed ? 'right' : 'top'">
+          <AppTooltip :text="t('settings.steam')" :position="props.collapsed ? 'right' : 'top'">
             <a
               href="https://store.steampowered.com/app/2834700/Koltera_2/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Koltera 2 on Steam"
+              :aria-label="t('settings.koltera2Steam')"
               class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
             >
               <SteamIcon class="size-4" />
             </a>
           </AppTooltip>
         </div>
-        <AppTooltip :text="themeLabel" :position="props.collapsed ? 'right' : 'top'">
-          <button
-            aria-label="Toggle theme"
-            class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
-            @click="cycle"
-          >
-            <SunMoon v-if="preference === 'system'" class="size-4" />
-            <Sun v-else-if="preference === 'light'" class="size-4" />
-            <Moon v-else class="size-4" />
-          </button>
-        </AppTooltip>
+
+        <div class="flex items-center" :class="props.collapsed ? 'flex-col gap-0.5' : 'gap-0.5'">
+          <!-- Language switcher -->
+          <LanguageSwitcher :collapsed="props.collapsed" />
+
+          <AppTooltip :text="themeLabel" :position="props.collapsed ? 'right' : 'top'">
+            <button
+              :aria-label="t('settings.toggleTheme')"
+              class="focus-ring rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
+              @click="cycle"
+            >
+              <SunMoon v-if="preference === 'system'" class="size-4" />
+              <Sun v-else-if="preference === 'light'" class="size-4" />
+              <Moon v-else class="size-4" />
+            </button>
+          </AppTooltip>
+        </div>
       </div>
 
       <!-- Collapse toggle -->
       <AppTooltip
-        :text="props.collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+        :text="props.collapsed ? t('settings.expandSidebar') : t('settings.collapseSidebar')"
         :position="props.collapsed ? 'right' : 'top'"
       >
         <button
-          aria-label="Toggle sidebar"
+          :aria-label="t('settings.toggleSidebar')"
           class="focus-ring mt-1 flex w-full items-center justify-center rounded-lg p-1.5 text-muted-foreground transition hover:bg-muted/80 hover:text-foreground"
           @click="emit('toggle-collapse')"
         >

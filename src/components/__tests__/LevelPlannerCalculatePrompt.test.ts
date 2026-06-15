@@ -34,7 +34,8 @@ describe('LevelPlannerCalculatePrompt', () => {
   test('renders the creature header and the LVL range', () => {
     const wrapper = mount(LevelPlannerCalculatePrompt, { props: baseProps })
     expect(wrapper.text()).toContain('Target')
-    expect(wrapper.text()).toContain('LVL 1')
+    // Case-insensitive: the level abbreviation may render "Lvl" or "LVL".
+    expect(wrapper.text().toUpperCase()).toContain('LVL 1')
     expect(wrapper.text()).toContain('120')
     expect(wrapper.text().toLowerCase()).toContain('calculate')
   })

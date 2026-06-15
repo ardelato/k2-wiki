@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Info, Minus, Trash2 } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { useGameConfig } from '@/composables/useGameConfig'
@@ -17,6 +18,9 @@ const {
   hasGardenChanges,
   revertGardenToSaveSnapshot,
 } = useGameConfig()
+
+
+const { t } = useI18n()
 
 
 function resetGardenView() {
@@ -57,7 +61,7 @@ const FLOWERS: FlowerMeta[] = [
     color: '8 84% 58%',
     yieldOf: 'Raw Fire Essence',
     yieldId: 'raw-fire-essence',
-    unit: 'essence/min',
+    unit: 'essence',
   },
   {
     id: 'wind-flower',
@@ -65,7 +69,7 @@ const FLOWERS: FlowerMeta[] = [
     color: '210 8% 70%',
     yieldOf: 'Raw Wind Essence',
     yieldId: 'raw-wind-essence',
-    unit: 'essence/min',
+    unit: 'essence',
   },
   {
     id: 'earth-flower',
@@ -73,7 +77,7 @@ const FLOWERS: FlowerMeta[] = [
     color: '154 72% 45%',
     yieldOf: 'Raw Earth Essence',
     yieldId: 'raw-earth-essence',
-    unit: 'essence/min',
+    unit: 'essence',
   },
   {
     id: 'water-flower',
@@ -81,7 +85,7 @@ const FLOWERS: FlowerMeta[] = [
     color: '198 88% 56%',
     yieldOf: 'Raw Water Essence',
     yieldId: 'raw-water-essence',
-    unit: 'essence/min',
+    unit: 'essence',
   },
   {
     id: 'gold-flower',
@@ -89,7 +93,7 @@ const FLOWERS: FlowerMeta[] = [
     color: '45 90% 55%',
     yieldOf: 'Gold',
     yieldId: 'gold',
-    unit: 'g/min',
+    unit: 'g',
   },
 ]
 
@@ -320,8 +324,7 @@ watch(
     <div>
       <h1 class="text-2xl font-bold">Garden</h1>
       <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Every {{ CYCLE_SECONDS }}s each flower yields its level in essence (or gold). Click a plot
-        to plant from the merchant or level up with fertilizer.
+        {{ t('gardenView.intro', { seconds: CYCLE_SECONDS }) }}
       </p>
     </div>
 
@@ -332,26 +335,28 @@ watch(
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-1.5">
           <img :src="gardenIcon" alt="Garden" class="size-5 object-contain" loading="lazy" />
-          <span class="font-semibold"> {{ totalPlantedCount }} of {{ GRID_SIZE }} planted </span>
+          <span class="font-semibold">
+            {{ t('gardenView.planted', { count: totalPlantedCount, total: GRID_SIZE }) }}
+          </span>
         </div>
         <div class="flex items-center gap-2 text-xs">
           <span
             v-if="hasGardenSaveSnapshot && diffCounts.planted > 0"
             class="rounded-full bg-primary/15 px-2 py-0.5 font-medium text-primary"
           >
-            {{ diffCounts.planted }} from save
+            {{ t('gardenView.fromSave', { n: diffCounts.planted }) }}
           </span>
           <span
             v-if="diffCounts.added > 0"
             class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
           >
-            +{{ diffCounts.added }} simulated
+            {{ t('gardenView.simulated', { n: diffCounts.added }) }}
           </span>
           <span
             v-if="diffCounts.removed > 0"
             class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
           >
-            −{{ diffCounts.removed }} removed
+            {{ t('gardenView.removed', { n: diffCounts.removed }) }}
           </span>
         </div>
       </div>
@@ -360,22 +365,28 @@ watch(
           class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
           :class="{ 'pointer-events-none invisible': !hasGardenChanges }"
           :title="
-            hasGardenSaveSnapshot
-              ? 'Revert to the layout from your imported save'
-              : 'Clear the garden bed'
+            hasGardenSaveSnapshot ? t('gardenView.revertTitle') : t('gardenView.clearBedTitle')
           "
           @click="resetGardenView"
         >
-          Reset
+          {{ t('common.reset') }}
         </button>
         <span
           v-if="totalPlantedCount > 0 || fertilizerToReachCurrent > 0"
           class="inline-flex items-center gap-2 font-mono text-[11px] text-primary"
         >
-          Total:
+          {{ t('gardenView.total') }}
           <AppTooltip
             v-if="totalPlantedCount > 0"
-            :text="`${totalPlantedCount} flower${totalPlantedCount === 1 ? '' : 's'} × ${FLOWER_BUY_VALUE.toLocaleString()}g each`"
+            :text="
+              t('gardenView.totalGoldTooltip', {
+                flowers:
+                  totalPlantedCount === 1
+                    ? t('gardenView.flowerCount', { n: totalPlantedCount })
+                    : t('gardenView.flowersCount', { n: totalPlantedCount }),
+                cost: FLOWER_BUY_VALUE.toLocaleString(),
+              })
+            "
           >
             <span
               class="inline-flex items-center gap-1 font-semibold"
@@ -394,8 +405,8 @@ watch(
             v-if="fertilizerToReachCurrent > 0"
             :text="
               fertilizerToMaxAll > 0
-                ? `+${fertilizerToMaxAll} fertilizer to max everything`
-                : `Fertilizer used so far`
+                ? t('gardenView.fertilizerToMax', { n: fertilizerToMaxAll })
+                : t('gardenView.fertilizerUsed')
             "
             :disabled="fertilizerToMaxAll === 0"
           >
@@ -422,23 +433,23 @@ watch(
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <img :src="gardenIcon" alt="Garden" class="size-4 object-contain" loading="lazy" />
-              <h2 class="text-sm font-extrabold">Garden bed</h2>
+              <h2 class="text-sm font-extrabold">{{ t('gardenView.gardenBed') }}</h2>
             </div>
             <span
               class="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
             >
               <img
                 :src="getItemImage({ id: ROCK_ITEM_ID })"
-                alt="Rock"
+                :alt="t('gardenView.rockAlt')"
                 class="size-3 object-contain"
                 loading="lazy"
               />
-              Clear bed
+              {{ t('gardenView.clearBed') }}
               <AppTooltip>
                 <Info class="size-3 text-muted-foreground/70 hover:text-foreground" />
                 <template #content>
                   <span class="normal-case tracking-normal">
-                    Clearing all 25 plots costs
+                    {{ t('gardenView.clearBedCostLead') }}
                     <span class="inline-flex items-center gap-1 align-middle">
                       <img
                         :src="getItemImage({ id: GOLD_ITEM_ID })"
@@ -453,7 +464,7 @@ watch(
                         {{ fullBedClearCost.toLocaleString() }}
                       </span>
                     </span>
-                    in total. First rock
+                    {{ t('gardenView.clearBedCostFirstRock') }}
                     <span class="inline-flex items-center gap-1 align-middle">
                       <img
                         :src="getItemImage({ id: GOLD_ITEM_ID })"
@@ -467,7 +478,7 @@ watch(
                       >
                         {{ rockCostAt(0).toLocaleString() }}
                       </span> </span
-                    >, 25th rock
+                    >{{ t('gardenView.clearBedCostLastRock') }}
                     <span class="inline-flex items-center gap-1 align-middle">
                       <img
                         :src="getItemImage({ id: GOLD_ITEM_ID })"
@@ -481,7 +492,7 @@ watch(
                       >
                         {{ rockCostAt(GRID_SIZE - 1).toLocaleString() }}
                       </span> </span
-                    >.
+                    >{{ t('gardenView.clearBedCostEnd') }}
                   </span>
                 </template>
               </AppTooltip>
@@ -503,7 +514,12 @@ watch(
                 :style="{
                   borderColor: `hsl(${FLOWER_BY_ID.get(v.cell.flowerId)?.color} / 0.55)`,
                 }"
-                :aria-label="`${FLOWER_BY_ID.get(v.cell.flowerId)?.name} flower at level ${v.cell.level}`"
+                :aria-label="
+                  t('gardenView.cellAria', {
+                    name: FLOWER_BY_ID.get(v.cell.flowerId)?.name,
+                    level: v.cell.level,
+                  })
+                "
                 @click="selectCell(i)"
               >
                 <img
@@ -516,7 +532,7 @@ watch(
                   class="garden-cell-level absolute bottom-0 right-0 py-0.5 pl-1.5 pr-1 font-mono text-[9px] font-bold tabular-nums leading-none"
                   style="clip-path: polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)"
                 >
-                  Lv{{ v.cell.level }}
+                  {{ t('gardenView.levelBadge', { n: v.cell.level }) }}
                 </span>
               </button>
 
@@ -526,7 +542,7 @@ watch(
                 type="button"
                 class="garden-cell-empty focus-ring aspect-square rounded-md border border-dashed transition"
                 :class="selectedIndex === i ? 'garden-cell-empty-selected ring-2' : ''"
-                aria-label="Empty plot"
+                :aria-label="t('gardenView.emptyPlot')"
                 @click="selectCell(i)"
               />
             </template>
@@ -539,7 +555,7 @@ watch(
             v-if="!selectedVisualCell"
             class="flex h-full min-h-[13rem] items-center justify-center text-center text-sm text-muted-foreground"
           >
-            Select a plot to plant, level up, or remove a flower.
+            {{ t('gardenView.selectPrompt') }}
           </div>
 
           <!-- Empty plot selected -->
@@ -549,20 +565,22 @@ watch(
                 class="garden-thumb-empty flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-dashed"
               >
                 <span class="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-                  Empty
+                  {{ t('gardenView.empty') }}
                 </span>
               </div>
               <div class="min-w-0 flex-1">
-                <div class="text-sm font-extrabold leading-tight">Plant a flower</div>
+                <div class="text-sm font-extrabold leading-tight">
+                  {{ t('gardenView.plantAFlower') }}
+                </div>
                 <div class="font-mono text-[10px] text-muted-foreground">
-                  Pick a flower below to plant.
+                  {{ t('gardenView.pickFlowerBelow') }}
                 </div>
               </div>
             </div>
             <div
               class="flex h-9 items-center justify-center gap-1 rounded-lg border border-border bg-muted/60 px-3 font-mono text-[10px] text-muted-foreground dark:border-border/60 dark:bg-muted/20"
             >
-              <span>Buying from the merchant costs</span>
+              <span>{{ t('gardenView.merchantCostLead') }}</span>
               <span class="inline-flex items-center gap-1 align-middle">
                 <img
                   :src="getItemImage({ id: GOLD_ITEM_ID })"
@@ -577,7 +595,7 @@ watch(
                   {{ FLOWER_BUY_VALUE.toLocaleString() }}
                 </span>
               </span>
-              <span>per flower</span>
+              <span>{{ t('gardenView.perFlower') }}</span>
             </div>
             <div class="grid grid-cols-5 gap-1">
               <button
@@ -585,7 +603,7 @@ watch(
                 :key="flower.id"
                 class="focus-ring group relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded border bg-card/70 transition hover:bg-card"
                 :style="{ borderColor: `hsl(${flower.color} / 0.5)` }"
-                :aria-label="`Plant ${flower.name} Flower`"
+                :aria-label="t('gardenView.plantAria', { name: flower.name })"
                 @click="plantInSelected(flower.id)"
               >
                 <img
@@ -616,10 +634,17 @@ watch(
               </div>
               <div class="min-w-0 flex-1">
                 <div class="text-sm font-extrabold leading-tight">
-                  {{ selectedFlowerMeta?.name }} Flower
+                  {{ t('gardenView.flowerName', { name: selectedFlowerMeta?.name }) }}
                 </div>
                 <div class="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
-                  <span>Level {{ selectedVisualCell.cell.level }}/{{ MAX_LEVEL }}</span>
+                  <span>
+                    {{
+                      t('gardenView.levelOf', {
+                        level: selectedVisualCell.cell.level,
+                        max: MAX_LEVEL,
+                      })
+                    }}
+                  </span>
                   <span>·</span>
                   <span class="tabular-nums">{{ selectedVisualCell.cell.level }}</span>
                   <img
@@ -629,22 +654,20 @@ watch(
                     class="size-3 object-contain"
                     loading="lazy"
                   />
-                  <span>{{ selectedFlowerMeta?.unit }}</span>
+                  <span>{{ selectedFlowerMeta?.unit }}{{ t('common.perMin') }}</span>
                 </div>
               </div>
               <AppTooltip position="left">
                 <button
                   class="focus-ring inline-flex size-8 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
-                  aria-label="Remove flower from bed"
+                  :aria-label="t('gardenView.removeAria')"
                   @click="removeCell(selectedVisualCell.layoutIndex)"
                 >
                   <Trash2 class="size-4" />
                 </button>
                 <template #content>
                   <span class="block max-w-[16rem] text-[11px] font-medium leading-snug">
-                    In-game, removing a flower returns it to your inventory — you don't lose the
-                    flower itself. You do lose all of its level-ups, which means the fertilizer
-                    spent leveling it up is gone too.
+                    {{ t('gardenView.removeTooltip') }}
                   </span>
                 </template>
               </AppTooltip>
@@ -661,7 +684,7 @@ watch(
               <div
                 class="flex h-9 flex-1 items-center justify-center rounded-lg border border-border bg-muted/70 font-mono text-sm font-extrabold tabular-nums dark:border-border/60 dark:bg-muted/30"
               >
-                Lv {{ selectedVisualCell.cell.level }}
+                {{ t('gardenView.levelInline', { n: selectedVisualCell.cell.level }) }}
               </div>
               <button
                 class="focus-ring h-9 flex-1 rounded-lg bg-primary text-xs font-extrabold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40"
@@ -685,7 +708,7 @@ watch(
                       {{ fertilizerForLevelUp(selectedVisualCell.cell.level) }}
                     </span>
                   </span>
-                  <span v-else>Max</span>
+                  <span v-else>{{ t('gardenView.max') }}</span>
                 </span>
               </button>
             </div>
@@ -706,7 +729,7 @@ watch(
                       ? `hsl(${flower.color} / 0.1)`
                       : 'transparent',
                 }"
-                :aria-label="`Change to ${flower.name} Flower`"
+                :aria-label="t('gardenView.changeAria', { name: flower.name })"
                 @click="changeCellFlower(selectedVisualCell.layoutIndex, flower.id)"
               >
                 <img
@@ -725,7 +748,7 @@ watch(
       <div class="space-y-4">
         <div class="rounded-2xl border border-border bg-card/50 p-4">
           <div class="mb-3 flex items-center">
-            <h2 class="text-sm font-extrabold">Flowers</h2>
+            <h2 class="text-sm font-extrabold">{{ t('gardenView.flowersHeading') }}</h2>
           </div>
           <div class="space-y-2">
             <div
@@ -754,13 +777,13 @@ watch(
                 </div>
                 <div class="min-w-0 flex-1">
                   <div class="text-[13px] font-extrabold leading-tight">
-                    {{ flower.name }} Flower
+                    {{ t('gardenView.flowerName', { name: flower.name }) }}
                   </div>
                   <div
                     class="mt-0.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground"
                   >
                     <span class="tabular-nums text-foreground/80">{{ flower.count }}</span>
-                    <span>planted ·</span>
+                    <span>{{ t('gardenView.plantedLabel') }}</span>
                     <img
                       :src="getItemImage({ id: flower.yieldId })"
                       :alt="flower.yieldOf"
@@ -774,7 +797,7 @@ watch(
                   <div
                     class="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground"
                   >
-                    {{ flower.unit }}
+                    {{ flower.unit }}{{ t('common.perMin') }}
                   </div>
                   <div
                     class="flex items-center justify-end gap-1.5 font-mono text-2xl font-extrabold tabular-nums leading-none"

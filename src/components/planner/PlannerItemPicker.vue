@@ -2,6 +2,7 @@
 import { Check, Search } from 'lucide-vue-next'
 import { computed, nextTick, ref, watch } from 'vue'
 
+import { t } from '@/i18n'
 import type { ItemType } from '@/types'
 import { itemTypeColor } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
@@ -22,7 +23,7 @@ const props = withDefaults(
     placeholder?: string
   }>(),
   {
-    placeholder: 'Choose an item',
+    placeholder: () => t('plannerComponents.itemPicker.choosePlaceholder'),
   },
 )
 
@@ -175,7 +176,7 @@ function selectOption(itemId: string) {
               ref="searchInputRef"
               v-model="searchQuery"
               type="search"
-              placeholder="Search planner items"
+              :placeholder="t('plannerComponents.itemPicker.placeholder')"
               class="focus-ring h-12 w-full rounded-lg border border-border/60 bg-background/70 pl-10 pr-4 text-sm font-medium text-foreground"
               @click.stop
             />
@@ -227,7 +228,7 @@ function selectOption(itemId: string) {
             v-if="!filteredOptions.length"
             class="rounded-lg border border-dashed border-border/60 bg-background/45 px-4 py-5 text-center text-sm text-muted-foreground"
           >
-            No items match that search.
+            {{ t('plannerComponents.itemPicker.noResults') }}
           </div>
         </div>
       </div>

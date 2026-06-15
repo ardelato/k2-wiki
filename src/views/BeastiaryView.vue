@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Check, Minus, Pencil, Plus, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import notSummonedIcon from '@/assets/icons/not_summoned.webp'
@@ -231,6 +232,9 @@ function removeFilter(key: string) {
 
 
 const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureDrawer()
+
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -262,7 +266,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             @click="startEditing"
           >
             <Pencil class="size-4" />
-            Edit My Collection
+            {{ t('beastiary.collection.editMyCollection') }}
           </button>
         </div>
       </template>
@@ -272,7 +276,12 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
         <span
           class="inline-flex h-9 items-center rounded-full border border-primary/40 bg-primary/10 px-3 text-sm font-bold text-primary"
         >
-          {{ selectedIds.size }} of {{ displayCreatures.length }} selected
+          {{
+            t('beastiary.collection.selected', {
+              count: selectedIds.size,
+              total: displayCreatures.length,
+            })
+          }}
         </span>
 
         <button
@@ -280,13 +289,13 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
           @click="selectAllVisible"
         >
           <Check class="size-4" />
-          Select All
+          {{ t('beastiary.collection.selectAll') }}
         </button>
         <button
           class="focus-ring inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
           @click="deselectAllVisible"
         >
-          Clear
+          {{ t('beastiary.collection.clear') }}
         </button>
 
         <div class="ml-auto flex items-center gap-2">
@@ -295,14 +304,14 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             @click="finishEditing"
           >
             <Pencil class="size-4" />
-            Done
+            {{ t('beastiary.collection.done') }}
           </button>
           <button
             class="focus-ring inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold text-muted-foreground transition hover:border-destructive/50 hover:text-destructive"
             @click="cancelEditing"
           >
             <X class="size-4" />
-            Cancel
+            {{ t('beastiary.collection.cancel') }}
           </button>
         </div>
 
@@ -315,7 +324,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             @click="bulkSetSummoned(true)"
           >
             <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
-            Summoned
+            {{ t('beastiary.collection.summoned') }}
           </button>
           <button
             class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
@@ -323,7 +332,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             @click="bulkSetSummoned(false)"
           >
             <img :src="notSummonedIcon" alt="" class="size-4" loading="lazy" />
-            Not Summoned
+            {{ t('beastiary.collection.notSummoned') }}
           </button>
 
           <div class="h-8 w-0.5 rounded-full bg-muted-foreground/30" />
@@ -335,25 +344,27 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             @click="bulkSetAwakened(true)"
           >
             <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
-            Awaken
+            {{ t('beastiary.collection.awaken') }}
           </button>
           <button
             class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="!selectedIds.size"
             @click="bulkSetAwakened(false)"
           >
-            Unawaken
+            {{ t('beastiary.collection.unawaken') }}
           </button>
 
           <div class="h-8 w-0.5 rounded-full bg-muted-foreground/30" />
 
           <!-- Level -->
           <div class="flex items-center gap-1.5">
-            <span class="text-xs font-semibold text-muted-foreground">LVL</span>
+            <span class="text-xs font-semibold text-muted-foreground">{{
+              t('beastiary.collection.lvl')
+            }}</span>
             <button
               class="focus-ring inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="bulkLevel <= 1"
-              aria-label="Decrease bulk level"
+              :aria-label="t('beastiary.collection.decreaseBulkLevel')"
               @click="bulkLevel = Math.max(1, bulkLevel - 1)"
             >
               <Minus class="size-3.5" />
@@ -364,7 +375,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
               pattern="[0-9]*"
               class="focus-ring h-8 w-11 rounded-md border border-input bg-background/85 text-center font-mono text-sm font-semibold"
               :value="bulkLevel"
-              aria-label="Bulk level"
+              :aria-label="t('beastiary.collection.bulkLevel')"
               @blur="
                 bulkLevel = Math.max(
                   1,
@@ -376,7 +387,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
             <button
               class="focus-ring inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
               :disabled="bulkLevel >= 120"
-              aria-label="Increase bulk level"
+              :aria-label="t('beastiary.collection.increaseBulkLevel')"
               @click="bulkLevel = Math.min(120, bulkLevel + 1)"
             >
               <Plus class="size-3.5" />
@@ -387,7 +398,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
               max="120"
               :value="bulkLevel"
               class="level-slider h-1.5 w-32 min-w-0 cursor-pointer"
-              aria-label="Bulk level slider"
+              :aria-label="t('beastiary.collection.bulkLevelSlider')"
               @input="bulkLevel = +($event.target as HTMLInputElement).value"
             />
             <button
@@ -395,7 +406,7 @@ const { selectedCreature, drawerOpen, openCreature, closeDrawer } = useCreatureD
               :disabled="!selectedIds.size"
               @click="bulkApplyLevel"
             >
-              Set Level
+              {{ t('beastiary.collection.setLevel') }}
             </button>
           </div>
         </div>

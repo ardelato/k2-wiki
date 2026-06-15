@@ -1,7 +1,13 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import { useItems } from '@/composables/useItems'
+import { activeLocale } from '@/i18n'
 import { toTitleCase } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 defineProps<{
   costs: { id: string; amount: number }[]
@@ -13,7 +19,7 @@ const { getItemById } = useItems()
 
 <template>
   <section class="detail-section">
-    <h3 class="section-title mb-3">Summoning Cost</h3>
+    <h3 class="section-title mb-3">{{ t('beastiary.summoningCost.title') }}</h3>
     <div class="space-y-2">
       <router-link
         v-for="cost in costs"
@@ -33,7 +39,7 @@ const { getItemById } = useItems()
           getItemById(cost.id)?.name ?? toTitleCase(cost.id)
         }}</span>
         <span class="font-mono text-sm font-semibold text-muted-foreground"
-          >x{{ cost.amount.toLocaleString() }}</span
+          >x{{ cost.amount.toLocaleString(activeLocale()) }}</span
         >
       </router-link>
     </div>

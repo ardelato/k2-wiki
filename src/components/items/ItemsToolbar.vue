@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
@@ -71,6 +72,9 @@ const sourceOptions: Array<{ value: Exclude<SourceCategory, 'all'>; label: strin
 ]
 
 
+const { t } = useI18n()
+
+
 const showFilters = ref(false)
 </script>
 
@@ -85,7 +89,7 @@ const showFilters = ref(false)
           :value="props.searchQuery"
           type="text"
           class="focus-ring w-full rounded-xl border border-input bg-background/70 py-2.5 pl-10 pr-4 text-sm"
-          placeholder="Search items by name, type, or description"
+          :placeholder="t('items.toolbar.searchPlaceholder')"
           @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
         />
       </label>
@@ -93,7 +97,7 @@ const showFilters = ref(false)
       <div
         class="inline-flex items-center rounded-xl border border-border bg-muted/50 p-1"
         role="radiogroup"
-        aria-label="View mode"
+        :aria-label="t('common.viewMode')"
       >
         <button
           role="radio"
@@ -107,7 +111,7 @@ const showFilters = ref(false)
           @click="emit('update:viewMode', 'grid')"
         >
           <Grid2x2 class="size-3.5" />
-          Grid
+          {{ t('common.grid') }}
         </button>
         <button
           role="radio"
@@ -121,7 +125,7 @@ const showFilters = ref(false)
           @click="emit('update:viewMode', 'table')"
         >
           <Columns3 class="size-3.5" />
-          Table
+          {{ t('common.table') }}
         </button>
       </div>
 
@@ -132,7 +136,7 @@ const showFilters = ref(false)
         @click="showFilters = !showFilters"
       >
         <SlidersHorizontal class="size-4" />
-        Filters
+        {{ t('common.filters') }}
         <span
           v-if="hasActiveFilters"
           class="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
@@ -149,11 +153,11 @@ const showFilters = ref(false)
       <div
         class="flex flex-wrap items-center gap-2.5"
         role="radiogroup"
-        aria-label="Filter by type"
+        :aria-label="t('items.toolbar.filterByType')"
       >
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Type</span
-        >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+          t('items.toolbar.typeLabel')
+        }}</span>
         <button
           v-for="option in typeOptions"
           :key="option.value"
@@ -177,11 +181,11 @@ const showFilters = ref(false)
       <div
         class="flex flex-wrap items-center gap-2.5"
         role="radiogroup"
-        aria-label="Filter by source"
+        :aria-label="t('items.toolbar.filterBySource')"
       >
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Source</span
-        >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+          t('items.toolbar.sourceLabel')
+        }}</span>
         <button
           v-for="option in sourceOptions"
           :key="option.value"
@@ -198,7 +202,7 @@ const showFilters = ref(false)
           class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
           aria-live="polite"
         >
-          {{ props.resultCount }} results
+          {{ t('items.toolbar.resultCount', { count: props.resultCount }) }}
         </div>
       </div>
 

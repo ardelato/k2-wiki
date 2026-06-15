@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { Clock3, Zap, Repeat, Layers, Flag, RotateCcw, Users } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
+import { activeLocale } from '@/i18n'
 import type { Creature } from '@/types'
 import { formatDuration } from '@/utils/format'
 import type { LevelingPlan } from '@/utils/levelPlanner'
+
+const { t } = useI18n()
+
 
 const props = defineProps<{
   plan: LevelingPlan
@@ -74,7 +79,9 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
       />
       <div>
         <p class="text-sm font-bold text-foreground">{{ creatureName }}</p>
-        <p class="text-xs text-muted-foreground">Leveling Plan</p>
+        <p class="text-xs text-muted-foreground">
+          {{ t('levelPlannerComponents.summary.subtitle') }}
+        </p>
       </div>
       <button
         v-if="hasRouteOverrides"
@@ -82,7 +89,7 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
         @click="$emit('resetAllOverrides')"
       >
         <RotateCcw class="size-3" />
-        Reset Routes
+        {{ t('levelPlannerComponents.summary.resetRoutes') }}
       </button>
     </div>
 
@@ -94,29 +101,30 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
       </span>
       <span class="inline-flex items-center gap-1.5 text-sky-400">
         <Layers class="size-3.5" />
-        {{ plan.steps.length }} step{{ plan.steps.length > 1 ? 's' : '' }}
+        {{ plan.steps.length }} {{ t('levelPlannerComponents.summary.steps') }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-amber-400">
         <Repeat class="size-3.5" />
-        {{ plan.totalRuns.toLocaleString() }} runs
+        {{ plan.totalRuns.toLocaleString(activeLocale()) }}
+        {{ t('levelPlannerComponents.summary.runs') }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-purple-400">
         <Zap class="size-3.5" />
-        {{ Math.round(plan.xpPerMinute) }} XP/min avg
+        {{ Math.round(plan.xpPerMinute) }} {{ t('levelPlannerComponents.summary.xpPerMin') }}
       </span>
       <span v-if="boostedStepCount > 0" class="inline-flex items-center gap-1.5 text-sky-400">
         <Users class="size-3.5" />
-        {{ boostedStepCount }} boosted step{{ boostedStepCount > 1 ? 's' : '' }}
+        {{ boostedStepCount }} {{ t('levelPlannerComponents.summary.boostedSteps') }}
       </span>
     </div>
 
     <!-- Segmented progress bar -->
     <div class="space-y-1 pb-4">
       <div class="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
-        <span>LVL {{ fromLevel }}</span>
+        <span>{{ t('levelPlannerComponents.summary.levelFrom', { n: fromLevel }) }}</span>
         <span class="inline-flex items-center gap-1 text-foreground">
           <Flag class="size-3" />
-          LVL {{ toLevel }}
+          {{ t('levelPlannerComponents.summary.levelTo', { n: toLevel }) }}
         </span>
       </div>
 
@@ -162,15 +170,15 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold">
       <span class="inline-flex items-center gap-1.5" style="color: var(--color-green)">
         <span class="size-2.5 rounded-full" style="background-color: var(--color-green)" />
-        Advantage
+        {{ t('levelPlannerComponents.summary.advantage') }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-primary">
         <span class="size-2.5 rounded-full bg-primary" />
-        Neutral
+        {{ t('levelPlannerComponents.summary.neutral') }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-destructive">
         <span class="size-2.5 rounded-full bg-destructive" />
-        Disadvantage
+        {{ t('levelPlannerComponents.summary.disadvantage') }}
       </span>
     </div>
   </div>

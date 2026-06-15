@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { CheckCircle2, Clock3, Loader2, Route } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
+import { activeLocale } from '@/i18n'
 import { formatDuration } from '@/utils/format'
+
+const { t } = useI18n()
+
 
 defineProps<{
   subtitle: string
@@ -20,7 +25,10 @@ function formatElapsedMs(ms: number): string {
 </script>
 
 <template>
-  <PlannerEmptyState title="Finding the best routes..." :subtitle="subtitle">
+  <PlannerEmptyState
+    :title="t('levelPlannerComponents.loadingProgress.findingRoutes')"
+    :subtitle="subtitle"
+  >
     <template #action>
       <div class="w-full max-w-xl space-y-4">
         <Loader2 class="mx-auto size-8 animate-spin text-primary" />
@@ -45,7 +53,7 @@ function formatElapsedMs(ms: number): string {
             <Clock3 class="size-4 shrink-0 text-muted-foreground" />
             <div class="min-w-0">
               <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Elapsed
+                {{ t('levelPlannerComponents.loadingProgress.elapsed') }}
               </p>
               <p class="truncate text-sm font-semibold tabular-nums">
                 {{ formatElapsedMs(elapsedMs) }}
@@ -56,10 +64,10 @@ function formatElapsedMs(ms: number): string {
             <Route class="size-4 shrink-0 text-muted-foreground" />
             <div class="min-w-0">
               <p class="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Routes explored
+                {{ t('levelPlannerComponents.loadingProgress.routesExplored') }}
               </p>
               <p class="truncate text-sm font-semibold tabular-nums">
-                {{ exploredStates.toLocaleString() }}
+                {{ exploredStates.toLocaleString(activeLocale()) }}
               </p>
             </div>
           </div>
@@ -72,7 +80,7 @@ function formatElapsedMs(ms: number): string {
               <p
                 class="text-[10px] font-medium uppercase tracking-wider text-green-600 dark:text-green-400"
               >
-                Best time
+                {{ t('levelPlannerComponents.loadingProgress.bestTime') }}
               </p>
               <p
                 class="truncate text-sm font-semibold tabular-nums text-green-700 dark:text-green-300"

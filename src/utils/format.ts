@@ -1,4 +1,5 @@
 import { itemById, machineById, toolById } from '@/data/indexes'
+import { activeLocale, t } from '@/i18n'
 import type { ElementType, ItemType, PlannerMethodKind } from '@/types'
 
 export function typeColor(type: ElementType): string {
@@ -17,7 +18,7 @@ export function typeColorVar(type: ElementType): string {
 
 export function formatDuration(totalSeconds: number): string {
   const safeSeconds = Math.max(0, Math.round(totalSeconds))
-  if (safeSeconds < 60) return `${safeSeconds}s`
+  if (safeSeconds < 60) return t('duration.seconds', { n: safeSeconds })
 
   const days = Math.floor(safeSeconds / 86400)
   const hours = Math.floor((safeSeconds % 86400) / 3600)
@@ -25,10 +26,10 @@ export function formatDuration(totalSeconds: number): string {
   const seconds = safeSeconds % 60
 
   const parts: string[] = []
-  if (days > 0) parts.push(`${days}d`)
-  if (hours > 0) parts.push(`${hours}h`)
-  if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`)
-  if (seconds > 0 && days === 0 && hours === 0) parts.push(`${seconds}s`)
+  if (days > 0) parts.push(t('duration.days', { n: days }))
+  if (hours > 0) parts.push(t('duration.hours', { n: hours }))
+  if (minutes > 0 || parts.length === 0) parts.push(t('duration.minutes', { n: minutes }))
+  if (seconds > 0 && days === 0 && hours === 0) parts.push(t('duration.seconds', { n: seconds }))
 
   return parts.join(' ')
 }
@@ -48,22 +49,27 @@ export function itemTypeColor(type: ItemType): string {
 
 export function sourceLabel(source: string): string {
   if (source.startsWith('crafting_')) return toTitleCase(source.replace('crafting_', ''))
-  if (source.startsWith('expedition_') || source === 'completing expeditions') return 'Expedition'
+  if (source.startsWith('expedition_') || source === 'completing expeditions')
+    return t('methods.expedition')
   return toTitleCase(source)
 }
 
+const METHOD_KIND_KEYS: Record<PlannerMethodKind, string> = {
+  craft: 'methods.craft',
+  gather: 'methods.gather',
+  garden: 'methods.garden',
+  container: 'methods.container',
+  expedition: 'methods.expedition',
+  buy: 'methods.buy',
+  cycle: 'methods.cycle',
+  stocked: 'methods.stocked',
+  machine: 'methods.machine',
+  fabrication: 'methods.fabrication',
+  unknown: 'methods.unknown',
+}
+
 export function methodKindLabel(kind: PlannerMethodKind): string {
-  if (kind === 'craft') return 'Craft'
-  if (kind === 'gather') return 'Gather'
-  if (kind === 'garden') return 'Garden'
-  if (kind === 'container') return 'Container'
-  if (kind === 'expedition') return 'Expedition'
-  if (kind === 'buy') return 'Buy'
-  if (kind === 'cycle') return 'Cycle'
-  if (kind === 'stocked') return 'In Stock'
-  if (kind === 'machine') return 'Machine'
-  if (kind === 'fabrication') return 'Fabrication'
-  return 'Unknown'
+  return t(METHOD_KIND_KEYS[kind])
 }
 
 export function methodKindClasses(kind: PlannerMethodKind): string {
@@ -99,13 +105,25 @@ export function methodKindColor(kind: PlannerMethodKind): string {
   return 'hsl(var(--muted-foreground))'
 }
 
+function percentValue(fraction: number): string {
+  const digits = fraction < 0.01 ? 2 : 1
+  return (fraction * 100).toLocaleString(activeLocale(), {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })
+}
+
 export function formatChance(chance: number): string {
   if (chance === 1) return '100%'
-  if (chance > 1) {
-    const extra = chance - 1
-    return `2x ${(extra * 100).toFixed(extra < 0.01 ? 2 : 1)}%`
-  }
-  return `${(chance * 100).toFixed(chance < 0.01 ? 2 : 1)}%`
+  if (chance > 1) return `2x ${percentValue(chance - 1)}%`
+  return `${percentValue(chance)}%`
+}
+
+export function formatDecimal(value: number, fractionDigits = 2): string {
+  return value.toLocaleString(activeLocale(), {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })
 }
 
 export function itemName(id: string): string {

@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { getCreatureImage } from '@/utils/creatureImages'
+
+const { t } = useI18n()
+
 
 interface AssignmentSlot {
   id: string
@@ -72,7 +77,7 @@ defineEmits<{
               v-if="slot.isNew"
               class="absolute left-0.5 top-0.5 rounded bg-emerald-500/85 px-1 text-[8px] font-bold uppercase leading-none text-white shadow"
             >
-              new
+              {{ t('configs.newBadge') }}
             </span>
           </RightClickHint>
         </template>

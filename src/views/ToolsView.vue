@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useTools } from '@/composables/useTools'
@@ -7,6 +8,9 @@ import { itemById } from '@/data/indexes'
 import { itemName } from '@/utils/format'
 import { toolIcons, sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const {
   gatheringTools,
@@ -33,25 +37,33 @@ const hasSaveData = computed(() => Object.keys(toolLevels.value).length > 0)
 
 
 const toolGroups = computed(() => [
-  { label: 'Gathering', tools: gatheringTools.value },
-  { label: 'Workstation', tools: workstationTools.value },
-  { label: 'Other', tools: otherTools.value },
+  { label: t('toolsView.gathering'), tools: gatheringTools.value },
+  { label: t('toolsView.workstation'), tools: workstationTools.value },
+  { label: t('toolsView.other'), tools: otherTools.value },
 ])
 </script>
 
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-bold">Tools</h1>
+      <h1 class="text-2xl font-bold">{{ t('toolsView.title') }}</h1>
       <p class="mt-1 text-sm text-muted-foreground">
-        Tools provide an XP bonus to their associated skill. Each level grants +{{
-          xpBonusPerLevel
-        }}% XP (up to +{{ maxLevel * xpBonusPerLevel }}% at level {{ maxLevel }}).
-        <span class="font-semibold"
-          >Workstation tools can be toggled to Speed mode, granting +{{ speedBonusPerLevel }}%
-          crafting speed per level instead (up to +{{ maxLevel * speedBonusPerLevel }}% at level
-          {{ maxLevel }}).</span
-        >
+        {{
+          t('toolsView.subtitle', {
+            xpBonus: xpBonusPerLevel,
+            maxXp: maxLevel * xpBonusPerLevel,
+            maxLevel,
+          })
+        }}
+        <span class="font-semibold">
+          {{
+            t('toolsView.workstationNote', {
+              speedBonus: speedBonusPerLevel,
+              maxSpeed: maxLevel * speedBonusPerLevel,
+              maxLevel,
+            })
+          }}
+        </span>
       </p>
     </div>
 
@@ -80,7 +92,7 @@ const toolGroups = computed(() => [
 
           <div class="space-y-2 px-4 py-3 text-sm">
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Skill</span>
+              <span class="text-muted-foreground">{{ t('toolsView.skill') }}</span>
               <div class="flex items-center gap-1.5 font-medium">
                 <img
                   v-if="sourceIcons[tool.skillId] || toolIcons[tool.id]"
@@ -94,20 +106,20 @@ const toolGroups = computed(() => [
             </div>
             <template v-if="hasSaveData">
               <div class="flex items-center justify-between border-t border-border/50 pt-2">
-                <span class="text-muted-foreground">Your Level</span>
+                <span class="text-muted-foreground">{{ t('toolsView.yourLevel') }}</span>
                 <span class="font-semibold text-primary">
                   {{ getToolLevel(tool.id) }}/{{ maxLevel }}
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Your XP Bonus</span>
+                <span class="text-muted-foreground">{{ t('toolsView.yourXpBonus') }}</span>
                 <span class="font-semibold text-primary">
                   +{{ getXpBonus(getToolLevel(tool.id)) }}%
                 </span>
               </div>
               <template v-if="tool.category === 'workstation'">
                 <div class="flex items-center justify-between">
-                  <span class="text-muted-foreground">Speed Mode</span>
+                  <span class="text-muted-foreground">{{ t('toolsView.speedMode') }}</span>
                   <span
                     class="font-semibold"
                     :class="
@@ -117,7 +129,7 @@ const toolGroups = computed(() => [
                     {{
                       toolSpeedModes[tool.skillId]
                         ? `+${getSpeedBonus(getToolLevel(tool.id))}%`
-                        : 'Off'
+                        : t('toolsView.speedModeOff')
                     }}
                   </span>
                 </div>
@@ -137,20 +149,20 @@ const toolGroups = computed(() => [
 
     <!-- Upgrade Costs Table -->
     <section>
-      <h2 class="mb-4 text-lg font-semibold">Upgrade Costs</h2>
+      <h2 class="mb-4 text-lg font-semibold">{{ t('toolsView.upgradeCosts') }}</h2>
       <div class="overflow-x-auto rounded-xl border border-border">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-border bg-muted/30">
-              <th class="px-4 py-2.5 text-left font-semibold">Level</th>
-              <th class="px-4 py-2.5 text-left font-semibold">Bar Required</th>
-              <th class="px-4 py-2.5 text-right font-semibold">Amount</th>
-              <th class="px-4 py-2.5 text-right font-semibold">XP Bonus</th>
+              <th class="px-4 py-2.5 text-left font-semibold">{{ t('toolsView.level') }}</th>
+              <th class="px-4 py-2.5 text-left font-semibold">{{ t('toolsView.barRequired') }}</th>
+              <th class="px-4 py-2.5 text-right font-semibold">{{ t('toolsView.amount') }}</th>
+              <th class="px-4 py-2.5 text-right font-semibold">{{ t('toolsView.xpBonus') }}</th>
               <th class="px-4 py-2.5 text-right font-semibold">
-                Speed Bonus
-                <span class="block text-xs font-normal text-muted-foreground"
-                  >Workstation only</span
-                >
+                {{ t('toolsView.speedBonus') }}
+                <span class="block text-xs font-normal text-muted-foreground">
+                  {{ t('toolsView.workstationOnly') }}
+                </span>
               </th>
             </tr>
           </thead>

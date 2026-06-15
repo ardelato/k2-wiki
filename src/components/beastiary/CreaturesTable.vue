@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { Creature, CreatureStats, Jobs } from '@/types'
@@ -26,6 +27,9 @@ const emit = defineEmits<{
   select: [creature: Creature]
   'toggle-selected': [id: string]
 }>()
+
+
+const { t } = useI18n()
 
 
 const { isOwned, isAwakened, getLevel } = useCreatureCollection()
@@ -120,7 +124,7 @@ const sortedCreatures = computed(() => {
                 class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                 @click="sortBy('name')"
               >
-                Name
+                {{ t('beastiary.table.name') }}
                 <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-0'">{{
                   tableSortDirection === 'asc' ? '▲' : '▼'
                 }}</span>
@@ -140,7 +144,7 @@ const sortedCreatures = computed(() => {
                 class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                 @click="sortBy('type')"
               >
-                Type
+                {{ t('beastiary.table.type') }}
                 <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-0'">{{
                   tableSortDirection === 'asc' ? '▲' : '▼'
                 }}</span>
@@ -160,7 +164,7 @@ const sortedCreatures = computed(() => {
                 class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                 @click="sortBy('trait')"
               >
-                Trait
+                {{ t('beastiary.table.trait') }}
                 <span :class="tableSortKey === 'trait' ? 'text-primary' : 'opacity-0'">{{
                   tableSortDirection === 'asc' ? '▲' : '▼'
                 }}</span>
@@ -180,7 +184,7 @@ const sortedCreatures = computed(() => {
                 class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                 @click="sortBy('level')"
               >
-                Lvl
+                {{ t('beastiary.table.lvl') }}
                 <span :class="tableSortKey === 'level' ? 'text-primary' : 'opacity-0'">{{
                   tableSortDirection === 'asc' ? '▲' : '▼'
                 }}</span>
@@ -223,7 +227,7 @@ const sortedCreatures = computed(() => {
                 class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                 @click="sortBy('statTotal')"
               >
-                Total
+                {{ t('beastiary.table.total') }}
                 <span :class="tableSortKey === 'statTotal' ? 'text-primary' : 'opacity-0'">{{
                   tableSortDirection === 'asc' ? '▲' : '▼'
                 }}</span>
@@ -278,7 +282,7 @@ const sortedCreatures = computed(() => {
                 class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                 @click="sortBy('jobTotal')"
               >
-                Total
+                {{ t('beastiary.table.total') }}
                 <span :class="tableSortKey === 'jobTotal' ? 'text-primary' : 'opacity-0'">{{
                   tableSortDirection === 'asc' ? '▲' : '▼'
                 }}</span>

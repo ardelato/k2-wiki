@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ChevronDown, RotateCcw } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type { Expedition } from '@/types'
+
+const { t } = useI18n()
 import { itemName } from '@/utils/format'
 import { expeditionTierIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
@@ -88,16 +91,21 @@ function handleRowClick(expeditionId: string) {
     >
       <label
         class="pointer-events-none text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
-        >Expeditions</label
+        >{{ t('levelPlannerComponents.partyExpeditionFilter.label') }}</label
       >
       <span class="text-xs text-muted-foreground">
-        {{ includedCount }} of {{ expeditions.length }} included
+        {{
+          t('levelPlannerComponents.partyExpeditionFilter.count', {
+            count: includedCount,
+            total: expeditions.length,
+          })
+        }}
       </span>
       <span
         v-if="hasOverrides"
         class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
       >
-        Filtered
+        {{ t('levelPlannerComponents.partyExpeditionFilter.filtered') }}
       </span>
       <div class="ml-auto flex items-center gap-2">
         <button
@@ -110,7 +118,7 @@ function handleRowClick(expeditionId: string) {
           @click.stop="emit('reset')"
         >
           <RotateCcw class="size-3" />
-          Reset
+          {{ t('levelPlannerComponents.partyExpeditionFilter.reset') }}
         </button>
         <ChevronDown
           class="size-4 text-muted-foreground transition-transform"
@@ -122,8 +130,7 @@ function handleRowClick(expeditionId: string) {
     <!-- Body -->
     <div v-if="expanded" class="border-t border-border/40 px-4 py-3">
       <p class="mb-2 text-[11px] leading-relaxed text-muted-foreground/70">
-        Default state reflects your save file progress from the
-        <span class="font-semibold text-muted-foreground">Configs</span> page.
+        {{ t('levelPlannerComponents.partyExpeditionFilter.configNote') }}
       </p>
 
       <!-- Controls -->
@@ -137,7 +144,7 @@ function handleRowClick(expeditionId: string) {
           "
           @click="emit('update:includeAll', !includeAll)"
         >
-          Include All
+          {{ t('levelPlannerComponents.partyExpeditionFilter.includeAll') }}
         </button>
       </div>
 
@@ -153,8 +160,12 @@ function handleRowClick(expeditionId: string) {
             class="focus-ring flex items-center gap-2 rounded text-left transition hover:opacity-80"
             :title="
               isExpeditionIncluded(exp.id)
-                ? `${exp.name} — click to exclude`
-                : `${exp.name} — click to include`
+                ? t('levelPlannerComponents.partyExpeditionFilter.clickToExclude', {
+                    name: exp.name,
+                  })
+                : t('levelPlannerComponents.partyExpeditionFilter.clickToInclude', {
+                    name: exp.name,
+                  })
             "
             @click="handleRowClick(exp.id)"
           >
@@ -167,21 +178,25 @@ function handleRowClick(expeditionId: string) {
             />
             <span class="font-medium">{{ exp.name }}</span>
             <span class="text-[11px] text-muted-foreground">
-              ({{ exp.requiredExpeditionCompletions }} req.)
+              {{
+                t('levelPlannerComponents.partyExpeditionFilter.required', {
+                  n: exp.requiredExpeditionCompletions,
+                })
+              }}
             </span>
           </button>
           <div class="flex items-center gap-1 text-xs tabular-nums">
             <button
-              v-for="t in 5"
-              :key="t"
+              v-for="t_val in 5"
+              :key="t_val"
               class="focus-ring rounded-md px-1.5 py-1 transition hover:ring-1 hover:ring-foreground/20"
-              :class="isTierSelected(exp.id, t) ? 'bg-emerald-500/15' : 'opacity-40 grayscale'"
-              :title="`Toggle tier ${t}`"
-              @click="handleTierClick(exp.id, t)"
+              :class="isTierSelected(exp.id, t_val) ? 'bg-emerald-500/15' : 'opacity-40 grayscale'"
+              :title="t('levelPlannerComponents.partyExpeditionFilter.toggleTier', { n: t_val })"
+              @click="handleTierClick(exp.id, t_val)"
             >
               <img
-                :src="expeditionTierIcons[t]"
-                :alt="`Tier ${t}`"
+                :src="expeditionTierIcons[t_val]"
+                :alt="`Tier ${t_val}`"
                 class="size-7 object-contain"
                 loading="lazy"
               />

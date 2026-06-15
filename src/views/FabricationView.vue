@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
-import { Minus, Plus } from 'lucide-vue-next'
+import { Minus, Plus, Sparkles } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { items, jobActivityIndex } from '@/data/indexes'
 import { toTitleCase } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const FABRICATION_INTERVAL_SECONDS = 180
 const MAX_ALLOCATION_PER_ITEM = 5
@@ -152,12 +157,14 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-bold">Fabrication</h1>
-      <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Allocate prestige points to passively generate gathering items. Each point produces
-        <strong class="text-foreground">1 item every 3 minutes ({{ CYCLES_PER_HOUR }}/hr)</strong>,
-        up to {{ MAX_ALLOCATION_PER_ITEM }} points per item. Use the +/- buttons to simulate
-        allocations.
+      <h1 class="text-2xl font-bold">{{ t('fabricationView.title') }}</h1>
+      <p class="mt-1 text-sm text-muted-foreground">
+        {{
+          t('fabricationView.subtitle', {
+            cyclesPerHour: CYCLES_PER_HOUR,
+            maxPoints: MAX_ALLOCATION_PER_ITEM,
+          })
+        }}
       </p>
     </div>
 
@@ -168,7 +175,9 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-1.5">
           <img v-if="prestigeImage" :src="prestigeImage" alt="" class="size-5" loading="lazy" />
-          <span class="font-semibold">{{ totalPoints }} points</span>
+          <span class="font-semibold">{{
+            t('fabricationView.points', { n: totalPoints }, totalPoints)
+          }}</span>
         </div>
         <div
           v-if="savePoints > 0 || addedPoints > 0 || removedPoints > 0 || savedUnallocated > 0"
@@ -178,7 +187,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             v-if="savePoints > 0"
             class="rounded-full bg-primary/15 px-2 py-0.5 font-medium text-primary"
           >
-            {{ savePoints }} from save
+            {{ savePoints }} {{ t('fabricationView.fromSave') }}
           </span>
           <span
             v-if="savedUnallocated > 0"
@@ -189,23 +198,23 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             "
             :title="
               unallocatedPoints < 0
-                ? `Simulated allocations exceed your unspent prestige points by ${Math.abs(unallocatedPoints)}`
-                : 'Unspent prestige points in your save inventory (updates with simulated changes)'
+                ? t('fabricationView.unallocatedExceedTitle', { n: Math.abs(unallocatedPoints) })
+                : t('fabricationView.unallocatedTitle')
             "
           >
-            {{ unallocatedPoints }} unallocated
+            {{ unallocatedPoints }} {{ t('fabricationView.unallocated') }}
           </span>
           <span
             v-if="addedPoints > 0"
             class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
           >
-            +{{ addedPoints }} simulated
+            +{{ addedPoints }} {{ t('fabricationView.simulated') }}
           </span>
           <span
             v-if="removedPoints > 0"
             class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
           >
-            -{{ removedPoints }} removed
+            -{{ removedPoints }} {{ t('fabricationView.removed') }}
           </span>
         </div>
       </div>
@@ -215,10 +224,11 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
           :class="{ 'pointer-events-none invisible': !hasSimulatedChanges }"
           @click="resetToSave"
         >
-          Reset
+          {{ t('fabricationView.reset') }}
         </button>
         <span class="font-semibold text-primary"
-          >{{ totalPerMin }}/min · {{ totalPerHour }}/hr</span
+          >{{ totalPerMin }}{{ t('common.perMin') }} · {{ totalPerHour
+          }}{{ t('common.perHour') }}</span
         >
       </div>
     </div>
@@ -290,13 +300,18 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
                 }"
               >
                 <template v-if="getPoints(item.id) > 0">
-                  {{ +(getPoints(item.id) / (FABRICATION_INTERVAL_SECONDS / 60)).toFixed(1) }}/min ·
-                  {{ getPoints(item.id) * CYCLES_PER_HOUR }}/hr
+                  {{ +(getPoints(item.id) / (FABRICATION_INTERVAL_SECONDS / 60)).toFixed(1)
+                  }}{{ t('common.perMin') }} · {{ getPoints(item.id) * CYCLES_PER_HOUR
+                  }}{{ t('common.perHour') }}
                 </template>
                 <template v-else-if="getSavePoints(item.id) > 0">
-                  {{ getSavePoints(item.id) * CYCLES_PER_HOUR }}/hr removed
+                  {{
+                    t('fabricationView.perHrRemoved', {
+                      n: getSavePoints(item.id) * CYCLES_PER_HOUR,
+                    })
+                  }}
                 </template>
-                <template v-else>Lv {{ item.level }}</template>
+                <template v-else>{{ t('fabricationView.levelLabel', { n: item.level }) }}</template>
               </div>
             </div>
 
@@ -321,5 +336,25 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
         </div>
       </div>
     </div>
+
+    <!-- Empty state -->
+    <section
+      v-if="totalPoints === 0"
+      class="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border py-12 text-center"
+    >
+      <Sparkles class="size-8 text-muted-foreground/50" />
+      <div>
+        <p class="font-medium text-muted-foreground">
+          {{ t('fabricationView.emptyTitle') }}
+        </p>
+        <p class="mt-1 text-sm text-muted-foreground/70">
+          {{ t('fabricationView.emptySubtitle') }}
+          <RouterLink to="/configs" class="text-primary underline underline-offset-2">
+            {{ t('fabricationView.emptyConfigs') }}
+          </RouterLink>
+          {{ t('fabricationView.emptySubtitleSuffix') }}
+        </p>
+      </div>
+    </section>
   </div>
 </template>

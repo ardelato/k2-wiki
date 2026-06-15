@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
 import { computed, ref, nextTick, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
@@ -222,6 +223,9 @@ function removeFilter(key: string) {
 }
 
 
+const { t } = useI18n()
+
+
 const route = useRoute()
 
 
@@ -257,16 +261,16 @@ onMounted(() => {
           v-if="filteredItems.length === 0"
           class="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/50 px-6 py-16 text-center"
         >
-          <p class="text-lg font-semibold text-foreground">No items match your filters</p>
+          <p class="text-lg font-semibold text-foreground">{{ t('items.view.emptyTitle') }}</p>
           <p class="mt-1 text-sm text-muted-foreground">
-            Try adjusting your search or filter criteria.
+            {{ t('items.view.emptySubtitle') }}
           </p>
           <button
             v-if="hasActiveFilters"
             class="focus-ring mt-4 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground"
             @click="clearFilters"
           >
-            Clear all filters
+            {{ t('items.view.clearAllFilters') }}
           </button>
         </div>
 
@@ -304,7 +308,7 @@ onMounted(() => {
                       class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                       @click="sortBy('name')"
                     >
-                      Name
+                      {{ t('items.view.name') }}
                       <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-30'">{{
                         tableSortDirection === 'asc' ? '▲' : '▼'
                       }}</span>
@@ -324,7 +328,7 @@ onMounted(() => {
                       class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                       @click="sortBy('type')"
                     >
-                      Type
+                      {{ t('items.view.type') }}
                       <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-30'">{{
                         tableSortDirection === 'asc' ? '▲' : '▼'
                       }}</span>
@@ -333,7 +337,7 @@ onMounted(() => {
                   <th
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   >
-                    Sources
+                    {{ t('items.view.sources') }}
                   </th>
                   <th
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
@@ -343,7 +347,7 @@ onMounted(() => {
                         class="focus-ring inline-flex items-center gap-0.5 transition hover:text-foreground"
                         @click="sortBy('buyValue')"
                       >
-                        Buy
+                        {{ t('items.view.buy') }}
                         <span
                           :class="tableSortKey === 'buyValue' ? 'text-primary' : 'opacity-30'"
                           >{{
@@ -360,7 +364,7 @@ onMounted(() => {
                         class="focus-ring inline-flex items-center gap-0.5 transition hover:text-foreground"
                         @click="sortBy('sellValue')"
                       >
-                        Sell
+                        {{ t('items.view.sell') }}
                         <span
                           :class="tableSortKey === 'sellValue' ? 'text-primary' : 'opacity-30'"
                           >{{
@@ -388,7 +392,7 @@ onMounted(() => {
                       class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                       @click="sortBy('recipeCount')"
                     >
-                      Recipes
+                      {{ t('items.view.recipes') }}
                       <span
                         :class="tableSortKey === 'recipeCount' ? 'text-primary' : 'opacity-30'"
                         >{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span
@@ -409,7 +413,7 @@ onMounted(() => {
                       class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
                       @click="sortBy('usedInCount')"
                     >
-                      Used In
+                      {{ t('items.view.usedIn') }}
                       <span
                         :class="tableSortKey === 'usedInCount' ? 'text-primary' : 'opacity-30'"
                         >{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span
@@ -420,7 +424,7 @@ onMounted(() => {
                     v-if="anySummons"
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   >
-                    Summons
+                    {{ t('items.view.summons') }}
                   </th>
                 </tr>
               </thead>

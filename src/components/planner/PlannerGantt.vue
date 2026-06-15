@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Clock3, Layers, Minus, Play, Plus, RotateCcw, Square } from 'lucide-vue-next'
 import { computed, nextTick, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useGanttZoom, niceTimeStep, formatAxisLabel } from '@/composables/useGanttZoom'
+import { activeLocale } from '@/i18n'
+
+const { t } = useI18n()
 import { itemById } from '@/data/indexes'
 import type { PlannerNode, PlannerSchedule, ScheduledTask } from '@/types'
 import { formatDuration, methodKindClasses, methodKindColor, methodKindLabel } from '@/utils/format'
@@ -18,12 +22,31 @@ const groupIcons: Record<string, string> = {
   Machines: machinesIcon,
   Refining: sourceIcons['Workbench'],
 }
+
+
+/**
+ * Translate a resource-group label (from getResourceGroupKey) for display.
+ * Only chrome words are translated; frozen game terms (Machines, Expeditions,
+ * Garden, Fabrication) and raw resource fallbacks pass through as English.
+ */
+function groupLabelText(label: string): string {
+  switch (label) {
+    case 'Gathering':
+      return t('toolsView.gathering')
+    case 'Refining':
+      return t('plannerComponents.gantt.categories.refining')
+    case 'Merchant':
+      return t('summoningPlanner.sourceGroups.merchant')
+    default:
+      return label
+  }
+}
 import { getItemImage } from '@/utils/itemImages'
 
 function humanAmount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
-  return n.toLocaleString()
+  return n.toLocaleString(activeLocale())
 }
 
 
@@ -390,18 +413,18 @@ function barHighlightClasses(task: ScheduledTask): string {
       <button
         class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
         :class="isDefaultZoom ? 'invisible' : ''"
-        title="Reset zoom"
+        :title="t('plannerComponents.gantt.resetZoom')"
         @click="resetZoom"
       >
         <RotateCcw class="size-3" />
-        Reset
+        {{ t('plannerComponents.gantt.resetZoom') }}
       </button>
       <span class="text-[11px] font-semibold text-muted-foreground">{{ zoom }}x</span>
       <div class="inline-flex items-center overflow-hidden rounded-lg border border-border/60">
         <button
           class="focus-ring flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           :disabled="!canZoomOut"
-          title="Zoom out"
+          :title="t('plannerComponents.gantt.zoomOut')"
           @click="zoomOut"
         >
           <Minus class="size-3.5" />
@@ -409,7 +432,7 @@ function barHighlightClasses(task: ScheduledTask): string {
         <button
           class="focus-ring flex h-7 w-7 items-center justify-center border-l border-border/60 text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
           :disabled="!canZoomIn"
-          title="Zoom in"
+          :title="t('plannerComponents.gantt.zoomIn')"
           @click="zoomIn"
         >
           <Plus class="size-3.5" />
@@ -461,7 +484,7 @@ function barHighlightClasses(task: ScheduledTask): string {
                 class="size-4 shrink-0"
                 loading="lazy"
               />
-              {{ group.label }}
+              {{ groupLabelText(group.label) }}
             </div>
             <!-- Lane with individually positioned task segments -->
             <div
@@ -477,12 +500,12 @@ function barHighlightClasses(task: ScheduledTask): string {
                   left: '0%',
                   width: `${Math.max(0.3, (queueOffsetFor(group.resources[0]) / schedule.totalTime) * 100)}%`,
                 }"
-                :title="`Queue: ${formatDuration(queueOffsetFor(group.resources[0]))}`"
+                :title="`${t('plannerComponents.gantt.queueTitle')} ${formatDuration(queueOffsetFor(group.resources[0]))}`"
               >
                 <span
                   class="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-sky-600 dark:text-sky-400"
                 >
-                  Queue
+                  {{ t('plannerComponents.gantt.queue') }}
                 </span>
               </div>
               <button
@@ -531,7 +554,7 @@ function barHighlightClasses(task: ScheduledTask): string {
                 loading="lazy"
               />
               <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                {{ group.label }}
+                {{ groupLabelText(group.label) }}
               </span>
               <span class="text-[10px] text-muted-foreground/40">
                 ({{ group.resources.length }})
@@ -595,7 +618,7 @@ function barHighlightClasses(task: ScheduledTask): string {
                     borderColor: methodKindColor(task.kind),
                     backgroundColor: 'hsl(var(--card))',
                   }"
-                  :title="`${task.itemName} — buy at ${formatDuration(task.endTime)}`"
+                  :title="`${task.itemName} — ${t('plannerComponents.gantt.buyAtTitle')} ${formatDuration(task.endTime)}`"
                   @click="!zoomModifierHeld && !shiftHeld && handleBarClick(task, $event)"
                 >
                   <img
@@ -624,12 +647,12 @@ function barHighlightClasses(task: ScheduledTask): string {
                   left: '0%',
                   width: `${Math.max(0.3, (queueOffsetFor(resource) / schedule.totalTime) * 100)}%`,
                 }"
-                :title="`Queue: ${formatDuration(queueOffsetFor(resource))}`"
+                :title="`${t('plannerComponents.gantt.queueTitle')} ${formatDuration(queueOffsetFor(resource))}`"
               >
                 <span
                   class="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-sky-600 dark:text-sky-400"
                 >
-                  Queue
+                  {{ t('plannerComponents.gantt.queue') }}
                 </span>
               </div>
               <button
@@ -668,7 +691,7 @@ function barHighlightClasses(task: ScheduledTask): string {
 
       <!-- Empty state -->
       <div v-if="schedule.tasks.length === 0" class="px-6 py-8 text-center">
-        <p class="text-sm text-muted-foreground">No scheduled tasks to display.</p>
+        <p class="text-sm text-muted-foreground">{{ t('plannerComponents.gantt.noTasks') }}</p>
       </div>
     </div>
 
@@ -678,7 +701,7 @@ function barHighlightClasses(task: ScheduledTask): string {
       class="flex items-center justify-end border-t border-border/40 px-4 pb-3 pt-3"
     >
       <span class="text-xs font-bold text-foreground/80">
-        Total:
+        {{ t('plannerComponents.gantt.total') }}
         <span class="font-mono" style="color: var(--color-green)">{{
           formatDuration(schedule.totalTime)
         }}</span>
@@ -725,7 +748,7 @@ function barHighlightClasses(task: ScheduledTask): string {
           <div class="flex items-center justify-between text-xs">
             <div class="flex items-center gap-1.5">
               <Clock3 class="size-3 shrink-0" style="color: var(--color-green)" />
-              <span class="text-muted-foreground">Duration</span>
+              <span class="text-muted-foreground">{{ t('plannerComponents.gantt.duration') }}</span>
             </div>
             <span class="font-mono font-semibold text-foreground">{{
               formatDuration(activeTask.localTime)
@@ -734,7 +757,7 @@ function barHighlightClasses(task: ScheduledTask): string {
           <div class="flex items-center justify-between text-xs">
             <div class="flex items-center gap-1.5">
               <Layers class="size-3 shrink-0 text-primary" />
-              <span class="text-muted-foreground">Amount</span>
+              <span class="text-muted-foreground">{{ t('plannerComponents.gantt.amount') }}</span>
             </div>
             <span class="font-mono font-semibold text-foreground">
               {{ activeTaskAmount != null ? `×${humanAmount(Math.round(activeTaskAmount))}` : '—' }}
@@ -748,16 +771,16 @@ function barHighlightClasses(task: ScheduledTask): string {
                 alt="Gold"
                 class="size-3 shrink-0 object-contain"
               />
-              <span class="text-muted-foreground">Gold</span>
+              <span class="text-muted-foreground">{{ t('plannerComponents.gantt.gold') }}</span>
             </div>
             <span class="font-mono font-semibold" style="color: var(--color-yellow)">
-              {{ activeTaskGoldCost.toLocaleString() }}
+              {{ activeTaskGoldCost.toLocaleString(activeLocale()) }}
             </span>
           </div>
           <div class="flex items-center justify-between text-xs">
             <div class="flex items-center gap-1.5">
               <Play class="size-3 shrink-0 text-muted-foreground" />
-              <span class="text-muted-foreground">Start</span>
+              <span class="text-muted-foreground">{{ t('plannerComponents.gantt.start') }}</span>
             </div>
             <span class="font-mono font-semibold text-foreground">{{
               formatDuration(activeTask.startTime)
@@ -766,7 +789,7 @@ function barHighlightClasses(task: ScheduledTask): string {
           <div class="flex items-center justify-between text-xs">
             <div class="flex items-center gap-1.5">
               <Square class="size-3 shrink-0 text-muted-foreground" />
-              <span class="text-muted-foreground">End</span>
+              <span class="text-muted-foreground">{{ t('plannerComponents.gantt.end') }}</span>
             </div>
             <span class="font-mono font-semibold text-foreground">{{
               formatDuration(activeTask.endTime)
@@ -783,14 +806,14 @@ function barHighlightClasses(task: ScheduledTask): string {
             class="flex items-center gap-1.5 text-[10px] text-muted-foreground"
           >
             <span class="inline-block size-2 rounded-full bg-amber-400/80" />
-            {{ prereqNodeIds.size }} prereq{{ prereqNodeIds.size > 1 ? 's' : '' }}
+            {{ prereqNodeIds.size }} {{ t('plannerComponents.gantt.prereqs') }}
           </div>
           <div
             v-if="dependentNodeIds.size > 0"
             class="flex items-center gap-1.5 text-[10px] text-muted-foreground"
           >
             <span class="inline-block size-2 rounded-full bg-sky-400/80" />
-            {{ dependentNodeIds.size }} dependent{{ dependentNodeIds.size > 1 ? 's' : '' }}
+            {{ dependentNodeIds.size }} {{ t('plannerComponents.gantt.dependents') }}
           </div>
         </div>
       </div>

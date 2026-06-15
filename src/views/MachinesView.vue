@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { ChevronDown, Clock } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useMachines } from '@/composables/useMachines'
 import { itemById } from '@/data/indexes'
+import { activeLocale } from '@/i18n'
 import { itemName, typeColor } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
 import { getMachineImage } from '@/utils/machineImages'
+
+const { t } = useI18n()
+
 
 const { machines, generators, processors, upgradeCosts, speedMultipliers, getInterval } =
   useMachines()
@@ -35,7 +40,7 @@ function formatInterval(seconds: number): string {
 
 
 function formatGold(amount: number): string {
-  return amount.toLocaleString()
+  return amount.toLocaleString(activeLocale())
 }
 
 
@@ -55,17 +60,16 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
 <template>
   <div class="space-y-8">
     <div>
-      <h1 class="text-2xl font-bold">Machines</h1>
+      <h1 class="text-2xl font-bold">{{ t('machines.title') }}</h1>
       <p class="mt-1 text-sm text-muted-foreground">
-        Machines passively generate or process items when a creature is assigned. Upgrade them to
-        increase speed.
-        <span class="font-semibold">Assigned creatures gain 0.5 XP/second passively.</span>
+        {{ t('machines.subtitle') }}
+        <span class="font-semibold">{{ t('machines.passiveXp') }}</span>
       </p>
     </div>
 
     <!-- Generators -->
     <section>
-      <h2 class="mb-4 text-lg font-semibold">Generators</h2>
+      <h2 class="mb-4 text-lg font-semibold">{{ t('machines.generators') }}</h2>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="machine in generators"
@@ -86,7 +90,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                 <span
                   class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400"
                 >
-                  Generator
+                  {{ t('machines.generator') }}
                 </span>
               </div>
               <p class="mt-1 text-xs text-muted-foreground">{{ machine.description }}</p>
@@ -95,7 +99,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
 
           <div class="space-y-2 px-4 py-3 text-sm">
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Cost</span>
+              <span class="text-muted-foreground">{{ t('machines.cost') }}</span>
               <div class="flex items-center gap-1.5 font-medium">
                 <img
                   v-if="getItemImage({ id: 'gold' })"
@@ -108,7 +112,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
               </div>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Output</span>
+              <span class="text-muted-foreground">{{ t('machines.output') }}</span>
               <div class="flex items-center gap-1.5">
                 <img
                   v-if="machine.outputItemId && getItemImage(itemById.get(machine.outputItemId)!)"
@@ -121,20 +125,20 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
               </div>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Base Interval</span>
+              <span class="text-muted-foreground">{{ t('machines.baseInterval') }}</span>
               <span class="font-medium">{{ formatInterval(machine.baseInterval) }}</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Creature</span>
-              <span class="font-medium">Any</span>
+              <span class="text-muted-foreground">{{ t('machines.creatureAny') }}</span>
+              <span class="font-medium">{{ t('machines.creatureAny') }}</span>
             </div>
             <template v-if="hasSaveData && getMachineLevel(machine.id) > 0">
               <div class="flex items-center justify-between border-t border-border/50 pt-2">
-                <span class="text-muted-foreground">Your Level</span>
+                <span class="text-muted-foreground">{{ t('machines.yourLevel') }}</span>
                 <span class="font-semibold text-primary">{{ getMachineLevel(machine.id) }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Your Interval</span>
+                <span class="text-muted-foreground">{{ t('machines.yourInterval') }}</span>
                 <span class="font-semibold text-primary">
                   {{ formatInterval(getInterval(machine.id, getMachineLevel(machine.id))) }}
                 </span>
@@ -147,7 +151,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
 
     <!-- Processors -->
     <section>
-      <h2 class="mb-4 text-lg font-semibold">Processors</h2>
+      <h2 class="mb-4 text-lg font-semibold">{{ t('machines.processors') }}</h2>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="machine in processors"
@@ -167,25 +171,25 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                 <h3 class="font-semibold">{{ machine.name }}</h3>
                 <div class="flex items-center gap-2">
                   <span
-                    v-for="t in machine.creatureTypeRequired ?? []"
-                    :key="t"
+                    v-for="type_val in machine.creatureTypeRequired ?? []"
+                    :key="type_val"
                     class="type-chip"
                     :style="{
-                      '--chip-color': typeColor(t),
+                      '--chip-color': typeColor(type_val),
                     }"
                   >
-                    {{ t }}
+                    {{ type_val }}
                   </span>
                   <span
                     v-if="!machine.creatureTypeRequired"
                     class="rounded-full border border-border bg-muted/45 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
                   >
-                    Any
+                    {{ t('machines.creatureAny') }}
                   </span>
                   <span
                     class="rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-400"
                   >
-                    Processor
+                    {{ t('machines.processor') }}
                   </span>
                 </div>
               </div>
@@ -195,7 +199,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
 
           <div class="space-y-2 px-4 py-3 text-sm">
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Cost</span>
+              <span class="text-muted-foreground">{{ t('machines.cost') }}</span>
               <div class="flex items-center gap-1.5 font-medium">
                 <img
                   v-if="getItemImage({ id: 'gold' })"
@@ -208,16 +212,16 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
               </div>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-muted-foreground">Base Interval</span>
+              <span class="text-muted-foreground">{{ t('machines.baseInterval') }}</span>
               <span class="font-medium">{{ formatInterval(machine.baseInterval) }}</span>
             </div>
             <template v-if="hasSaveData && getMachineLevel(machine.id) > 0">
               <div class="flex items-center justify-between border-t border-border/50 pt-2">
-                <span class="text-muted-foreground">Your Level</span>
+                <span class="text-muted-foreground">{{ t('machines.yourLevel') }}</span>
                 <span class="font-semibold text-primary">{{ getMachineLevel(machine.id) }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Your Interval</span>
+                <span class="text-muted-foreground">{{ t('machines.yourInterval') }}</span>
                 <span class="font-semibold text-primary">
                   {{ formatInterval(getInterval(machine.id, getMachineLevel(machine.id))) }}
                 </span>
@@ -235,7 +239,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                   class="size-3.5 transition-transform"
                   :class="expandedMachineId === machine.id ? '' : '-rotate-90'"
                 />
-                Recipes ({{ machine.recipes.length }})
+                {{ t('machines.recipesToggle', { n: machine.recipes.length }) }}
               </button>
 
               <div class="mt-3" :class="expandedMachineId === machine.id ? 'block' : 'hidden'">
@@ -302,16 +306,16 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
 
     <!-- Upgrade Costs Table -->
     <section>
-      <h2 class="mb-4 text-lg font-semibold">Upgrade Costs</h2>
+      <h2 class="mb-4 text-lg font-semibold">{{ t('machines.upgradeCosts') }}</h2>
       <div class="overflow-x-auto rounded-xl border border-border">
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-border bg-muted/30">
-              <th class="px-3 py-2.5 text-left font-semibold">Level</th>
-              <th class="px-3 py-2.5 text-left font-semibold">Bar</th>
-              <th class="px-3 py-2.5 text-right font-semibold">Bar Qty</th>
-              <th class="px-3 py-2.5 text-right font-semibold">Planks</th>
-              <th class="px-3 py-2.5 text-right font-semibold">Speed</th>
+              <th class="px-3 py-2.5 text-left font-semibold">{{ t('machines.level') }}</th>
+              <th class="px-3 py-2.5 text-left font-semibold">{{ t('machines.bar') }}</th>
+              <th class="px-3 py-2.5 text-right font-semibold">{{ t('machines.barQty') }}</th>
+              <th class="px-3 py-2.5 text-right font-semibold">{{ t('machines.planks') }}</th>
+              <th class="px-3 py-2.5 text-right font-semibold">{{ t('machines.speed') }}</th>
               <th
                 v-for="(machine, i) in machines"
                 :key="machine.id"

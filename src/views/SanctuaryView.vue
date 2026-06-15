@@ -2,6 +2,7 @@
 import { useMediaQuery } from '@vueuse/core'
 import { AlertCircle, ChevronDown, Clock3, Layers, Plus, Trash2, X, Zap } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import summonedIcon from '@/assets/icons/summoned.webp'
@@ -29,6 +30,9 @@ import {
   targetPercent,
   isScoreAtThreshold,
 } from '@/utils/sanctuaryConstants'
+
+const { t } = useI18n()
+
 
 const route = useRoute()
 const router = useRouter()
@@ -94,7 +98,7 @@ const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
 const sortByJob = ref<string>('recommended')
 
 
-const hasTargets = computed(() => Object.values(targetTiers.value).some((t) => t > 0))
+const hasTargets = computed(() => Object.values(targetTiers.value).some((t_val) => t_val > 0))
 
 
 const highlightedJobs = computed<Set<string>>(() => {
@@ -248,9 +252,14 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
     }
   }
   if (!ownedOnly.value)
-    filters.push({ key: 'ownedOnly', group: 'Summoned', label: 'Showing All', image: summonedIcon })
+    filters.push({
+      key: 'ownedOnly',
+      group: 'Summoned',
+      label: t('common.showingAll'),
+      image: summonedIcon,
+    })
   if (showExcludedCreatures.value)
-    filters.push({ key: 'showExcluded', group: 'Filter', label: 'Showing Excluded' })
+    filters.push({ key: 'showExcluded', group: 'Filter', label: t('common.showingExcluded') })
   return filters
 })
 
@@ -289,7 +298,7 @@ function toggleCreatureTier(tier: number) {
       selectedCreatureTiers.value = [...creatureTierOptions.value]
       return
     }
-    selectedCreatureTiers.value = selectedCreatureTiers.value.filter((t) => t !== tier)
+    selectedCreatureTiers.value = selectedCreatureTiers.value.filter((t_val) => t_val !== tier)
   } else {
     selectedCreatureTiers.value = [...selectedCreatureTiers.value, tier]
   }
@@ -317,9 +326,9 @@ function chooseCreature(creature: Creature) {
     <!-- Page header -->
     <div class="flex items-start justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-extrabold">Sanctuary</h1>
+        <h1 class="text-2xl font-extrabold">{{ t('sanctuaryView.title') }}</h1>
         <p class="mt-1 text-sm text-muted-foreground">
-          Place awakened creatures to boost gathering skill tiers.
+          {{ t('sanctuaryView.subtitle') }}
         </p>
       </div>
       <button
@@ -328,7 +337,7 @@ function chooseCreature(creature: Creature) {
         @click="clearAll"
       >
         <Trash2 class="size-3.5" />
-        Clear All
+        {{ t('sanctuaryView.clearAll') }}
       </button>
     </div>
 
@@ -344,7 +353,7 @@ function chooseCreature(creature: Creature) {
           "
           @click="mobileSection = 'sanctuary'"
         >
-          Sanctuary
+          {{ t('sanctuaryView.sanctuary') }}
         </button>
         <button
           class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
@@ -355,7 +364,7 @@ function chooseCreature(creature: Creature) {
           "
           @click="mobileSection = 'creatures'"
         >
-          Creatures
+          {{ t('sanctuaryView.creatures') }}
         </button>
       </div>
     </div>
@@ -374,7 +383,7 @@ function chooseCreature(creature: Creature) {
           <div class="mb-5">
             <div class="mb-2 flex items-center justify-between">
               <h3 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Party
+                {{ t('sanctuaryView.party') }}
                 <span class="ml-1 normal-case tracking-normal text-muted-foreground/70">
                   {{ sanctuaryCreatureIds.length }}/{{ MAX_SANCTUARY_SLOTS }}
                 </span>
@@ -385,7 +394,7 @@ function chooseCreature(creature: Creature) {
                 @click="clearSanctuary"
               >
                 <X class="size-3" />
-                Clear Party
+                {{ t('sanctuaryView.clearParty') }}
               </button>
             </div>
             <div class="flex flex-wrap gap-1.5">
@@ -432,7 +441,7 @@ function chooseCreature(creature: Creature) {
                     <div class="flex size-full flex-col items-center justify-center">
                       <Plus class="size-3 text-muted-foreground/50" />
                       <span v-if="activeSlotIndex === index" class="text-[8px] text-primary">
-                        Select
+                        {{ t('sanctuaryView.select') }}
                       </span>
                     </div>
                   </template>
@@ -445,12 +454,12 @@ function chooseCreature(creature: Creature) {
           <div>
             <div class="mb-2 flex items-start justify-between gap-2">
               <h3 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-                Skill Benefits
+                {{ t('sanctuaryView.skillBenefits') }}
               </h3>
               <div class="flex items-center gap-2">
                 <AppTooltip
                   v-if="unreachableTargets.length > 0"
-                  text="These targets cannot be reached with the current selectable creatures"
+                  :text="t('sanctuaryView.unreachableTooltip')"
                   position="bottom"
                 >
                   <div
@@ -466,7 +475,7 @@ function chooseCreature(creature: Creature) {
                       />
                       <span>{{ job }}</span>
                     </template>
-                    <span>unreachable</span>
+                    <span>{{ t('sanctuaryView.unreachable') }}</span>
                   </div>
                 </AppTooltip>
                 <button
@@ -475,7 +484,7 @@ function chooseCreature(creature: Creature) {
                   @click="setAllTargets(0)"
                 >
                   <X class="size-3" />
-                  Clear Targets
+                  {{ t('sanctuaryView.clearTargets') }}
                 </button>
               </div>
             </div>
@@ -500,7 +509,7 @@ function chooseCreature(creature: Creature) {
                       class="inline-flex items-center gap-0.5 rounded-full border border-emerald-500/25 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
                     >
                       <Zap class="size-2.5" />
-                      +{{ JOB_TIER_BENEFITS[jp.tier].xpBonus }}% XP
+                      {{ t('sanctuary.xpBonus', { n: JOB_TIER_BENEFITS[jp.tier].xpBonus }) }}
                     </span>
                     <span
                       v-if="JOB_TIER_BENEFITS[jp.tier].durationReduction > 0"
@@ -518,7 +527,7 @@ function chooseCreature(creature: Creature) {
                     </span>
                   </div>
                   <span v-else class="ml-auto text-[10px] text-muted-foreground/50">
-                    No bonuses
+                    {{ t('sanctuary.noBonuses') }}
                   </span>
                 </div>
 
@@ -539,10 +548,10 @@ function chooseCreature(creature: Creature) {
                     </div>
                     <!-- Tier threshold markers (overlaid on top of bar) -->
                     <div
-                      v-for="t in [1, 2, 3, 4, 5]"
-                      :key="t"
+                      v-for="t_val in [1, 2, 3, 4, 5]"
+                      :key="t_val"
                       class="absolute inset-y-0 w-px -translate-x-1/2 bg-foreground/30"
-                      :style="{ left: `${targetPercent(t)}%` }"
+                      :style="{ left: `${targetPercent(t_val)}%` }"
                     />
                     <!-- Target marker -->
                     <div
@@ -554,19 +563,19 @@ function chooseCreature(creature: Creature) {
                   <!-- Tier benefit labels below bar -->
                   <div class="relative h-3.5">
                     <span
-                      v-for="t in [1, 2, 3, 4, 5]"
-                      :key="t"
+                      v-for="t_val in [1, 2, 3, 4, 5]"
+                      :key="t_val"
                       class="absolute -translate-x-1/2 text-[8px] font-semibold"
                       :class="
-                        jp.tier >= t
+                        jp.tier >= t_val
                           ? 'text-emerald-600 dark:text-emerald-400'
                           : 'text-muted-foreground/50'
                       "
-                      :style="{ left: `${targetPercent(t)}%` }"
+                      :style="{ left: `${targetPercent(t_val)}%` }"
                     >
-                      <Zap v-if="tierBenefitType(t) === 'xp'" class="mx-auto size-2.5" />
+                      <Zap v-if="tierBenefitType(t_val) === 'xp'" class="mx-auto size-2.5" />
                       <Clock3
-                        v-else-if="tierBenefitType(t) === 'duration'"
+                        v-else-if="tierBenefitType(t_val) === 'duration'"
                         class="mx-auto size-2.5"
                       />
                       <Layers v-else class="mx-auto size-2.5" />
@@ -578,16 +587,15 @@ function chooseCreature(creature: Creature) {
                 <div class="text-[11px]">
                   <span class="text-muted-foreground">
                     <template v-if="jp.isMaxed">
-                      <span class="font-semibold text-emerald-600 dark:text-emerald-400"
-                        >All bonuses unlocked!</span
-                      >
+                      <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{
+                        t('sanctuaryView.allBonusesUnlocked')
+                      }}</span>
                     </template>
                     <template v-else>
                       {{ jp.score }}/{{ jp.nextThreshold }} ·
-                      <span class="font-semibold text-foreground/70"
-                        >{{ jp.pointsToNext }} pts</span
-                      >
-                      to next
+                      <span class="font-semibold text-foreground/70">{{
+                        t('sanctuaryView.ptsToNext', { pts: jp.pointsToNext })
+                      }}</span>
                     </template>
                   </span>
                 </div>
@@ -596,30 +604,37 @@ function chooseCreature(creature: Creature) {
                 <div class="mt-2">
                   <span
                     class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
-                    >Set Target</span
+                    >{{ t('sanctuaryView.setTarget') }}</span
                   >
                   <div class="flex gap-1">
                     <button
-                      v-for="t in [1, 2, 3, 4, 5]"
-                      :key="t"
+                      v-for="t_val in [1, 2, 3, 4, 5]"
+                      :key="t_val"
                       class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[10px] font-medium transition"
                       :class="
-                        (targetTiers[jp.job] ?? 0) === t
+                        (targetTiers[jp.job] ?? 0) === t_val
                           ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
-                          : jp.tier >= t
+                          : jp.tier >= t_val
                             ? 'border-emerald-500/30 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
                             : 'border-border bg-muted/40 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                       "
-                      :title="`Tier ${t}: ${jobTierLabel(t)}`"
-                      @click="setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t ? 0 : t)"
+                      :title="`Tier ${t_val}: ${jobTierLabel(t_val)}`"
+                      @click="
+                        setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t_val ? 0 : t_val)
+                      "
                     >
-                      <template v-if="jp.tier >= t">✓</template>
+                      <template v-if="jp.tier >= t_val">✓</template>
                       <template v-else>
-                        <Zap v-if="tierBenefitType(t) === 'xp'" class="size-2.5" />
-                        <Clock3 v-else-if="tierBenefitType(t) === 'duration'" class="size-2.5" />
+                        <Zap v-if="tierBenefitType(t_val) === 'xp'" class="size-2.5" />
+                        <Clock3
+                          v-else-if="tierBenefitType(t_val) === 'duration'"
+                          class="size-2.5"
+                        />
                         <Layers v-else class="size-2.5" />
                       </template>
-                      <span class="hidden text-[9px] sm:inline">{{ tierIncrementalLabel(t) }}</span>
+                      <span class="hidden text-[9px] sm:inline">{{
+                        tierIncrementalLabel(t_val)
+                      }}</span>
                     </button>
                   </div>
                 </div>
@@ -636,7 +651,7 @@ function chooseCreature(creature: Creature) {
       >
         <!-- Header -->
         <div class="border-b border-border/70 px-4 py-3">
-          <h2 class="text-base font-bold">Select Creature</h2>
+          <h2 class="text-base font-bold">{{ t('sanctuaryView.selectCreature') }}</h2>
         </div>
 
         <!-- Filters -->
@@ -644,7 +659,7 @@ function chooseCreature(creature: Creature) {
           <input
             v-model="creatureSearch"
             type="text"
-            placeholder="Search creature"
+            :placeholder="t('sanctuaryView.searchCreature')"
             class="focus-ring w-full rounded-lg border border-input bg-background/70 px-3 py-2 text-sm"
           />
 
@@ -655,20 +670,20 @@ function chooseCreature(creature: Creature) {
               @click="ownedOnly = !ownedOnly"
             >
               <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
-              Summoned Only
+              {{ t('sanctuaryView.summonedOnly') }}
             </button>
             <button
               class="pill focus-ring gap-1.5"
               :class="showExcludedCreatures ? 'pill-active' : ''"
               @click="showExcludedCreatures = !showExcludedCreatures"
             >
-              Show Excluded
+              {{ t('sanctuaryView.showExcluded') }}
             </button>
             <div
               class="ml-auto flex items-center rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground"
               aria-live="polite"
             >
-              {{ displayRecommended.length }} creatures
+              {{ t('sanctuaryView.creatures_count', { n: displayRecommended.length }) }}
             </div>
           </div>
 
@@ -681,13 +696,14 @@ function chooseCreature(creature: Creature) {
               class="size-3.5 transition-transform"
               :class="showMoreCreatureFilters || hasSecondaryCreatureFilters ? '' : '-rotate-90'"
             />
-            More filters
+            {{ t('sanctuaryView.moreFilters') }}
           </button>
 
           <template v-if="showMoreCreatureFilters || hasSecondaryCreatureFilters">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-                >Type</span
+              <span
+                class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+                >{{ t('sanctuaryView.type') }}</span
               >
               <button
                 v-for="type in creatureTypes"
@@ -705,8 +721,9 @@ function chooseCreature(creature: Creature) {
               </button>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-                >Tier</span
+              <span
+                class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
+                >{{ t('sanctuaryView.tier') }}</span
               >
               <button
                 v-for="tier in creatureTierOptions"
@@ -734,7 +751,7 @@ function chooseCreature(creature: Creature) {
 
         <!-- Sort row -->
         <div class="flex items-center gap-3 border-b border-border/70 py-1.5 pl-[20px] pr-[20px]">
-          <AppTooltip text="Recommended" position="top">
+          <AppTooltip :text="t('sanctuaryView.recommended')" position="top">
             <button
               class="focus-ring inline-flex w-12 shrink-0 items-center justify-center rounded-md border px-1 py-1 text-[10px] font-medium transition"
               :class="
@@ -744,7 +761,7 @@ function chooseCreature(creature: Creature) {
               "
               @click="sortByJob = 'recommended'"
             >
-              Rec.
+              {{ t('sanctuaryView.recommendedAbbr') }}
             </button>
           </AppTooltip>
           <div class="flex min-w-0 flex-1 gap-1">
@@ -776,7 +793,7 @@ function chooseCreature(creature: Creature) {
             v-if="displayRecommended.length === 0"
             class="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-7 text-center text-sm text-muted-foreground"
           >
-            No creatures match your filters.
+            {{ t('sanctuaryView.noCreaturesMatch') }}
           </div>
           <div class="space-y-1">
             <button
@@ -859,18 +876,18 @@ function chooseCreature(creature: Creature) {
                     >
                     <AppTooltip
                       v-if="isOwned(creature.id) && !isAwakened(creature.id)"
-                      text="Must be awakened to place in Sanctuary in-game"
+                      :text="t('sanctuaryView.mustAwakened')"
                       position="top"
                     >
                       <span
                         class="shrink-0 cursor-help rounded border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[9px] font-semibold text-amber-500 dark:text-amber-400"
-                        >Not Awakened</span
+                        >{{ t('sanctuaryView.notAwakened') }}</span
                       >
                     </AppTooltip>
                     <span v-if="score > 0" class="ml-auto flex shrink-0 items-baseline gap-1">
                       <span class="font-mono text-sm font-semibold text-primary">{{ score }}</span>
                       <span class="text-[10px] text-muted-foreground">{{
-                        hasTargets ? 'value' : 'total'
+                        hasTargets ? t('sanctuaryView.value') : t('sanctuaryView.total')
                       }}</span>
                     </span>
                   </div>
