@@ -28,7 +28,7 @@ test.describe('fabrication page', () => {
 
     // Summary bar should appear with totals
     const summaryBar = page.locator('.flex.items-center.justify-between.rounded-xl')
-    await expect(summaryBar.getByText('1 points')).toBeVisible()
+    await expect(summaryBar.getByText('1 point')).toBeVisible()
     await expect(summaryBar.getByText('0.3/min · 20/hr')).toBeVisible()
   })
 
@@ -38,7 +38,7 @@ test.describe('fabrication page', () => {
 
     // Allocate then deallocate
     await plusButtons.first().click()
-    await expect(page.getByText('1 points')).toBeVisible()
+    await expect(page.getByText('1 point')).toBeVisible()
 
     await minusButtons.first().click()
     // Summary bar stays mounted; the total falls back to 0
