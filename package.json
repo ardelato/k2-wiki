@@ -20,6 +20,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "generate-tables": "npx tsx --tsconfig tsconfig.app.json scripts/generate-tables.ts",
+    "i18n:sync-frozen": "node scripts/sync-frozen-locales.mjs",
+    "i18n:check-frozen": "node scripts/sync-frozen-locales.mjs --check",
     "knip": "knip",
     "knip:fix": "knip --fix",
     "prepare": "lefthook install"
@@ -28,9 +30,11 @@
     "@vueuse/core": "^14.2.1",
     "lucide-vue-next": "^0.577.0",
     "vue": "^3.5.13",
+    "vue-i18n": "^11.4.4",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@intlify/unplugin-vue-i18n": "^11.2.3",
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.5.0",
     "@vitejs/plugin-vue": "^6.0.5",
