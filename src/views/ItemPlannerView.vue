@@ -12,7 +12,11 @@ import {
   TrendingUp,
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+
+const { t } = useI18n()
+
 
 import GoldRateBadge from '@/components/planner/GoldRateBadge.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
@@ -72,7 +76,9 @@ const plannerItemOptions = computed(() =>
       id: item.id,
       name: item.name,
       type: item.type,
-      source: item.sources?.find(Boolean) ? sourceLabel(item.sources.find(Boolean)!) : 'Unknown',
+      source: item.sources?.find(Boolean)
+        ? sourceLabel(item.sources.find(Boolean)!)
+        : t('methods.unknown'),
       image: item.image,
     })),
 )
@@ -251,7 +257,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
           @click="switchTab('craft')"
         >
           <Hammer class="size-4" />
-          Craft
+          {{ t('planner.tabs.craft') }}
         </button>
         <button
           class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
@@ -263,7 +269,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
           @click="switchTab('levelup')"
         >
           <TrendingUp class="size-4" />
-          Level Up
+          {{ t('planner.tabs.levelUp') }}
         </button>
         <button
           class="inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition"
@@ -275,7 +281,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
           @click="switchTab('summoning')"
         >
           <Sparkles class="size-4" />
-          Summoning
+          {{ t('planner.tabs.summoning') }}
         </button>
       </div>
     </div>
@@ -289,26 +295,29 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
         <div class="space-y-2">
           <div>
             <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              Craft Planner
+              {{ t('planner.title') }}
             </p>
             <h1 class="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-              {{ rootNode ? `${rootNode.itemName} Planner` : 'Planner' }}
+              {{
+                rootNode
+                  ? t('planner.dynamicTitle', { name: rootNode.itemName })
+                  : t('planner.title')
+              }}
             </h1>
             <p class="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-              Browse every recipe branch, container route, and gathering path for any item, then pin
-              the method you want to use for totals and expected time.
+              {{ t('planner.description') }}
             </p>
             <GoldRateBadge class="mt-2" />
           </div>
         </div>
       </div>
 
-      <PlannerToolbar picker-label="Item">
+      <PlannerToolbar :picker-label="t('planner.pickerLabel')">
         <template #picker>
           <PlannerItemPicker
             :model-value="selectedPlannerItemId"
             :options="plannerItemOptions"
-            placeholder="Choose an item"
+            :placeholder="t('plannerComponents.itemPicker.choosePlaceholder')"
             @update:model-value="handlePlannerTargetChange"
           />
         </template>
@@ -366,15 +375,14 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
         class="flex items-center gap-2 rounded-lg border border-sky-500/25 bg-sky-500/5 px-3 py-2"
       >
         <span class="text-xs text-sky-700 dark:text-sky-300">
-          This planner targets <span class="font-bold">additional</span> crafts beyond your current
-          inventory and queued workstation items.
+          {{ t('planner.inventoryNotice') }}
         </span>
       </div>
 
       <PlannerEmptyState
         v-if="!rootNode"
-        title="Choose an item to begin planning."
-        subtitle="Select a target item above or jump here directly from any item card's planner link."
+        :title="t('planner.emptyState.chooseItem')"
+        :subtitle="t('planner.emptyState.selectTarget')"
       >
         <template #action>
           <RouterLink
@@ -382,15 +390,15 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
             class="focus-ring bg-primary/12 hover:bg-primary/18 inline-flex items-center gap-2 rounded-full border border-primary/35 px-4 py-2.5 text-sm font-semibold text-primary transition"
           >
             <Search class="size-4" />
-            Browse Items
+            {{ t('planner.emptyState.browseItems') }}
           </RouterLink>
         </template>
       </PlannerEmptyState>
 
       <PlannerEmptyState
         v-else-if="!isDesktop"
-        title="Planner is desktop-first for now."
-        subtitle="Open this page on a wider screen to browse the full dependency tree and inspector."
+        :title="t('planner.emptyState.desktopOnly')"
+        :subtitle="t('planner.emptyState.desktopOnlyHint')"
       />
 
       <div v-else-if="rootNode" class="space-y-6">
@@ -406,7 +414,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
               @click="viewMode = 'list'"
             >
               <ClipboardList class="size-3.5" />
-              List
+              {{ t('planner.viewMode.list') }}
             </button>
             <button
               class="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition"
@@ -418,7 +426,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
               @click="viewMode = 'tree'"
             >
               <Network class="size-3.5" />
-              Tree
+              {{ t('planner.viewMode.tree') }}
             </button>
             <button
               class="inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-xs font-semibold transition"
@@ -430,7 +438,7 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
               @click="viewMode = 'timeline'"
             >
               <GanttChart class="size-3.5" />
-              Timeline
+              {{ t('planner.viewMode.timeline') }}
             </button>
           </div>
 
@@ -440,20 +448,20 @@ function switchTab(tab: 'craft' | 'levelup' | 'summoning') {
               @click="viewMode === 'list' ? listViewRef?.collapseAll() : collapseToLeaves()"
             >
               <ChevronsDownUp class="size-3.5" />
-              Collapse All
+              {{ t('planner.controls.collapseAll') }}
             </button>
             <button
               class="focus-ring inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/65 px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
               @click="viewMode === 'list' ? listViewRef?.expandAll() : expandAll()"
             >
               <ChevronsUpDown class="size-3.5" />
-              Expand All
+              {{ t('planner.controls.expandAll') }}
             </button>
             <span
               v-if="viewMode === 'tree' && collapsedCount > 0"
               class="rounded-full border border-border/50 bg-background/50 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
             >
-              {{ collapsedCount }} collapsed
+              {{ collapsedCount }} {{ t('planner.controls.collapsed') }}
             </span>
           </template>
         </div>

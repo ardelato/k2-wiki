@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Search } from 'lucide-vue-next'
 import { computed, ref, nextTick, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
@@ -10,6 +11,9 @@ import { useCreatures } from '@/composables/useCreatures'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { typeColor, typeColorVar } from '@/utils/format'
+
+const { t } = useI18n()
+
 
 const props = withDefaults(
   defineProps<{
@@ -155,7 +159,9 @@ function close() {
       <template v-else>
         <div class="size-10 rounded-xl border border-dashed border-border/60 bg-muted/30" />
         <span class="text-sm text-muted-foreground">{{
-          partyMode ? "Follow a Creature's Plan" : 'Choose a creature'
+          partyMode
+            ? t('levelPlannerComponents.creaturePicker.partyPlaceholder')
+            : t('levelPlannerComponents.creaturePicker.defaultPlaceholder')
         }}</span>
       </template>
       <svg
@@ -185,7 +191,7 @@ function close() {
             <input
               v-model="query"
               type="text"
-              placeholder="Search creatures..."
+              :placeholder="t('levelPlannerComponents.creaturePicker.placeholder')"
               class="focus-ring h-12 w-full rounded-lg border border-border/60 bg-background/70 pl-10 pr-4 text-sm font-medium text-foreground"
               @click.stop
             />
@@ -197,7 +203,7 @@ function close() {
             v-if="filtered.length === 0"
             class="px-3 py-4 text-center text-sm text-muted-foreground"
           >
-            No matches.
+            {{ t('levelPlannerComponents.creaturePicker.noMatches') }}
           </p>
           <button
             v-for="creature in filtered"
@@ -239,7 +245,9 @@ function close() {
                   LVL {{ getLevel(creature.id)
                   }}<span v-if="isAwakened(creature.id)" class="ml-1 text-pink-400">★</span>
                 </span>
-                <span v-else class="italic">Not summoned</span>
+                <span v-else class="italic">{{
+                  t('levelPlannerComponents.creaturePicker.notSummoned')
+                }}</span>
                 <span>·</span>
                 <span
                   v-for="type in creature.types"

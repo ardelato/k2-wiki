@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Check, Minus, Plus } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import notSummonedIcon from '@/assets/icons/not_summoned.webp'
@@ -24,6 +25,9 @@ const emit = defineEmits<{
 }>()
 
 
+const { t } = useI18n()
+
+
 const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normalizeLevelOnBlur } =
   useCreatureCollection()
 </script>
@@ -33,7 +37,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
     <div v-for="group in groups" :key="group.tier" class="space-y-3">
       <div class="flex items-center gap-3">
         <h2 class="shrink-0 text-sm font-bold uppercase tracking-[0.15em] text-muted-foreground">
-          Tier {{ group.tier + 1 }}
+          {{ t('beastiary.grid.tierHeading', { tier: group.tier + 1 }) }}
           <span class="ml-1 text-xs font-normal">
             ({{ group.creatures.filter((c) => isOwned(c.id)).length }}/{{ group.creatures.length }})
           </span>
@@ -87,9 +91,9 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
             :alt="
               isOwned(creature.id)
                 ? isAwakened(creature.id)
-                  ? 'Awakened'
-                  : 'Summoned'
-                : 'Not summoned'
+                  ? t('beastiary.grid.awakenedAlt')
+                  : t('beastiary.grid.summonedAlt')
+                : t('beastiary.grid.notSummonedAlt')
             "
             class="absolute left-2.5 top-3.5 z-10 size-5 drop-shadow-md"
           />
@@ -152,7 +156,8 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
                 v-if="!editing && isOwned(creature.id)"
                 class="font-mono text-xs text-foreground/80"
               >
-                LVL <span class="font-bold text-foreground">{{ getLevel(creature.id) }}</span
+                {{ t('beastiary.grid.lvl') }}
+                <span class="font-bold text-foreground">{{ getLevel(creature.id) }}</span
                 ><span class="text-muted-foreground"
                   >/{{ maxLevelForState(isAwakened(creature.id)) }}</span
                 >
@@ -166,7 +171,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
                 <button
                   class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="getLevel(creature.id) <= 1"
-                  aria-label="Decrease level"
+                  :aria-label="t('beastiary.grid.decreaseLevel')"
                   @click="stepLevel(creature.id, -1)"
                 >
                   <Minus class="size-3.5" />
@@ -177,14 +182,14 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
                   pattern="[0-9]*"
                   class="focus-ring h-7 w-12 rounded-md border border-input bg-background/85 text-center font-mono text-xs font-semibold"
                   :value="getLevel(creature.id)"
-                  aria-label="Creature level"
+                  :aria-label="t('beastiary.grid.creatureLevel')"
                   @blur="normalizeLevelOnBlur(creature.id, $event)"
                   @keydown.enter="($event.target as HTMLInputElement).blur()"
                 />
                 <button
                   class="focus-ring inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground transition hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   :disabled="getLevel(creature.id) >= maxLevelForState(isAwakened(creature.id))"
-                  aria-label="Increase level"
+                  :aria-label="t('beastiary.grid.increaseLevel')"
                   @click="stepLevel(creature.id, 1)"
                 >
                   <Plus class="size-3.5" />
@@ -197,7 +202,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
                 :max="maxLevelForState(isAwakened(creature.id))"
                 :value="getLevel(creature.id)"
                 class="level-slider h-1.5 w-full cursor-pointer"
-                aria-label="Level slider"
+                :aria-label="t('beastiary.grid.levelSlider')"
                 @input="setLevel(creature.id, +($event.target as HTMLInputElement).value)"
               />
               <!-- Awakened toggle -->
@@ -211,7 +216,11 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
                 @click="setAwakened(creature.id, !isAwakened(creature.id))"
               >
                 <span>&#9733;</span>
-                {{ isAwakened(creature.id) ? 'Awakened' : 'Awaken' }}
+                {{
+                  isAwakened(creature.id)
+                    ? t('beastiary.grid.awakened')
+                    : t('beastiary.grid.awaken')
+                }}
               </button>
             </div>
           </div>

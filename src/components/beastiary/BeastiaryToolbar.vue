@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import notSummonedIcon from '@/assets/icons/not_summoned.webp'
@@ -46,6 +47,9 @@ const typeOptions: Array<ElementType | 'all'> = ['all', 'Fire', 'Water', 'Wind',
 const tierOptions = ['all', 0, 1, 2, 3, 4, 5] as const
 
 
+const { t } = useI18n()
+
+
 const showFilters = ref(false)
 const showMoreFilters = ref(false)
 
@@ -79,7 +83,7 @@ const hasActiveFilters = computed(
           :value="props.searchQuery"
           type="text"
           class="focus-ring w-full rounded-xl border border-input bg-background/70 py-2.5 pl-10 pr-4 text-sm"
-          placeholder="Search creatures by name, type, trait, or job"
+          :placeholder="t('beastiary.toolbar.searchPlaceholder')"
           @input="emit('update:searchQuery', ($event.target as HTMLInputElement).value)"
         />
       </label>
@@ -88,7 +92,7 @@ const hasActiveFilters = computed(
       <div
         class="inline-flex items-center rounded-xl border border-border bg-muted/50 p-1"
         role="radiogroup"
-        aria-label="View mode"
+        :aria-label="t('common.viewMode')"
       >
         <button
           role="radio"
@@ -102,7 +106,7 @@ const hasActiveFilters = computed(
           @click="emit('update:viewMode', 'grid')"
         >
           <Grid2x2 class="size-3.5" />
-          Grid
+          {{ t('common.grid') }}
         </button>
         <button
           role="radio"
@@ -116,7 +120,7 @@ const hasActiveFilters = computed(
           @click="emit('update:viewMode', 'table')"
         >
           <Columns3 class="size-3.5" />
-          Table
+          {{ t('common.table') }}
         </button>
       </div>
 
@@ -128,7 +132,7 @@ const hasActiveFilters = computed(
         @click="showFilters = !showFilters"
       >
         <SlidersHorizontal class="size-4" />
-        Filters
+        {{ t('common.filters') }}
         <span
           v-if="hasActiveFilters"
           class="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
@@ -144,10 +148,14 @@ const hasActiveFilters = computed(
       :class="showFilters ? 'block' : 'hidden lg:block'"
     >
       <!-- Tier filter -->
-      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by tier">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Tier</span
-        >
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="radiogroup"
+        :aria-label="t('beastiary.toolbar.filterByTier')"
+      >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+          t('beastiary.toolbar.tierLabel')
+        }}</span>
         <button
           v-for="option in tierOptions.filter((o) => o !== 'all')"
           :key="option"
@@ -162,10 +170,14 @@ const hasActiveFilters = computed(
       </div>
 
       <!-- Job filter -->
-      <div class="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Filter by job">
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Job</span
-        >
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="radiogroup"
+        :aria-label="t('beastiary.toolbar.filterByJob')"
+      >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+          t('beastiary.toolbar.jobLabel')
+        }}</span>
         <button
           v-for="job in props.jobOptions"
           :key="job"
@@ -190,11 +202,11 @@ const hasActiveFilters = computed(
       <div
         class="flex flex-wrap items-center gap-2"
         role="radiogroup"
-        aria-label="Filter by summoned"
+        :aria-label="t('beastiary.toolbar.filterBySummoned')"
       >
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Summoned</span
-        >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+          t('beastiary.toolbar.summonedLabel')
+        }}</span>
         <button
           v-for="option in ['owned', 'unowned'] as const"
           :key="option"
@@ -212,7 +224,11 @@ const hasActiveFilters = computed(
             class="size-4"
             loading="lazy"
           />
-          {{ option === 'owned' ? 'Summoned' : 'Not Summoned' }}
+          {{
+            option === 'owned'
+              ? t('beastiary.toolbar.summoned')
+              : t('beastiary.toolbar.notSummoned')
+          }}
         </button>
       </div>
 
@@ -220,11 +236,11 @@ const hasActiveFilters = computed(
       <div
         class="flex flex-wrap items-center gap-2"
         role="radiogroup"
-        aria-label="Filter by awakened"
+        :aria-label="t('beastiary.toolbar.filterByAwakened')"
       >
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-          >Awakened</span
-        >
+        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+          t('beastiary.toolbar.awakenedLabel')
+        }}</span>
         <button
           v-for="option in ['awakened', 'unawakened'] as const"
           :key="option"
@@ -241,14 +257,23 @@ const hasActiveFilters = computed(
             class="size-4"
             loading="lazy"
           />
-          {{ option === 'awakened' ? 'Awakened' : 'Not Awakened' }}
+          {{
+            option === 'awakened'
+              ? t('beastiary.toolbar.awakened')
+              : t('beastiary.toolbar.notAwakened')
+          }}
         </button>
 
         <div
           class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
           aria-live="polite"
         >
-          {{ props.ownedCount }} summoned · {{ props.resultCount }} results
+          {{
+            t('beastiary.toolbar.statusSummary', {
+              ownedCount: props.ownedCount,
+              resultCount: props.resultCount,
+            })
+          }}
         </div>
       </div>
       <!-- More filters toggle -->
@@ -263,7 +288,7 @@ const hasActiveFilters = computed(
             class="size-3.5 transition-transform"
             :class="showMoreFilters || hasSecondaryFilters ? '' : '-rotate-90'"
           />
-          More filters
+          {{ t('common.moreFilters') }}
         </button>
 
         <div
@@ -275,11 +300,11 @@ const hasActiveFilters = computed(
           <div
             class="flex flex-wrap items-center gap-2"
             role="radiogroup"
-            aria-label="Filter by type"
+            :aria-label="t('beastiary.toolbar.filterByType')"
           >
-            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-              >Type</span
-            >
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+              t('beastiary.toolbar.typeLabel')
+            }}</span>
             <button
               v-for="option in typeOptions.filter((o) => o !== 'all')"
               :key="option"
@@ -302,11 +327,11 @@ const hasActiveFilters = computed(
           <div
             class="flex flex-wrap items-center gap-2"
             role="radiogroup"
-            aria-label="Filter by trait"
+            :aria-label="t('beastiary.toolbar.filterByTrait')"
           >
-            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-              >Trait</span
-            >
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+              t('beastiary.toolbar.traitLabel')
+            }}</span>
             <button
               v-for="trait in props.traitOptions"
               :key="trait"

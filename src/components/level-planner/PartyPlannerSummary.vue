@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { Clock3, Repeat, Users, Flag, ArrowRightLeft } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import expeditionsData from '@/data/expeditions.json'
+import { activeLocale } from '@/i18n'
 import type { PartyLevelingPlan } from '@/types'
 import type { Creature } from '@/types'
 import { formatDuration } from '@/utils/format'
+
+const { t } = useI18n()
+
 
 const props = defineProps<{
   plan: PartyLevelingPlan
@@ -42,25 +47,35 @@ const swapCount = computed(
         :class="plan.isComplete ? 'text-sky-400' : 'text-amber-400'"
       >
         <Users class="size-4" />
-        {{ plan.plannedLevelerCount - plan.incompleteCreatureIds.length }}/{{
-          plan.inputLevelerCount
+        {{
+          t('levelPlannerComponents.partySummary.creatureCount', {
+            planned: plan.plannedLevelerCount - plan.incompleteCreatureIds.length,
+            input: plan.inputLevelerCount,
+          })
         }}
-        creature{{ plan.inputLevelerCount === 1 ? '' : 's' }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-amber-400">
         <Repeat class="size-4" />
-        {{ plan.totalRuns.toLocaleString() }} runs
+        {{
+          t('levelPlannerComponents.partySummary.runs', {
+            total: plan.totalRuns.toLocaleString(activeLocale()),
+          })
+        }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-purple-400">
         <Flag class="size-4" />
-        {{ usedExpeditionCount }}/{{ totalExpeditionCount }} expeditions
+        {{
+          t('levelPlannerComponents.partySummary.expeditions', {
+            count: usedExpeditionCount + '/' + totalExpeditionCount,
+          })
+        }}
       </span>
       <span
         class="inline-flex cursor-help items-center gap-1.5 text-rose-400"
-        title="Party reconfigurations that reset an expedition's loop streak"
+        :title="t('levelPlannerComponents.partySummary.swapsTooltip')"
       >
         <ArrowRightLeft class="size-4" />
-        {{ swapCount }} swap{{ swapCount === 1 ? '' : 's' }}
+        {{ t('levelPlannerComponents.partySummary.swaps', { count: swapCount }) }}
       </span>
     </div>
     <div
@@ -68,15 +83,14 @@ const swapCount = computed(
       class="mt-3 rounded-lg bg-amber-400/10 px-4 py-3 text-center text-sm text-amber-400"
     >
       <p class="font-semibold">
-        Plan is incomplete: {{ plan.incompleteCreatureIds.length }} creature{{
-          plan.incompleteCreatureIds.length === 1 ? '' : 's'
+        {{
+          t('levelPlannerComponents.partySummary.incompleteWarning', {
+            n: plan.incompleteCreatureIds.length,
+          })
         }}
-        still {{ plan.incompleteCreatureIds.length === 1 ? 'does' : 'do' }} not reach the target
-        level.
       </p>
       <p class="mt-1 text-xs text-amber-400/70">
-        The planner has a calculation limit to keep results fast. Some creatures may need more runs
-        than the planner can simulate in one pass.
+        {{ t('levelPlannerComponents.partySummary.incompleteHint') }}
       </p>
     </div>
   </div>

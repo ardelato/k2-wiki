@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import { useGoldIncome } from '@/composables/useGoldIncome'
 import { getItemImage } from '@/utils/itemImages'
 
+const { t } = useI18n()
 const { goldPerMinute, breakdown } = useGoldIncome()
 </script>
 
@@ -16,7 +19,7 @@ const { goldPerMinute, breakdown } = useGoldIncome()
         alt="Gold"
         class="size-3.5 object-contain"
       />
-      {{ goldPerMinute }} gold/min
+      {{ goldPerMinute }} {{ t('plannerComponents.goldRate.goldPerMin') }}
     </div>
 
     <!-- Popover -->
@@ -24,28 +27,39 @@ const { goldPerMinute, breakdown } = useGoldIncome()
       class="pointer-events-none absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-border bg-card p-3 opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
     >
       <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-        Gold Income Breakdown
+        {{ t('plannerComponents.goldRate.breakdown') }}
       </p>
       <div class="space-y-1.5 text-xs">
         <div class="flex items-center justify-between">
-          <span class="text-muted-foreground">Awakened creatures</span>
+          <span class="text-muted-foreground">{{
+            t('plannerComponents.goldRate.awakenedCreatures')
+          }}</span>
           <span class="font-semibold text-foreground">
             {{ breakdown.awakenedCount }} × {{ 1 + breakdown.awakenGoldLevel }} =
-            {{ breakdown.creatureGoldPerMin }}/min
+            {{ breakdown.creatureGoldPerMin }}{{ t('plannerComponents.goldRate.perMin') }}
           </span>
         </div>
         <div v-if="breakdown.awakenGoldLevel > 0" class="flex items-center justify-between pl-3">
-          <span class="text-muted-foreground/60">Awaken Gold +{{ breakdown.awakenGoldLevel }}</span>
+          <span class="text-muted-foreground/60">{{
+            t('plannerComponents.goldRate.awakenGold', { n: breakdown.awakenGoldLevel })
+          }}</span>
         </div>
         <div v-if="breakdown.flowerGoldPerMin > 0" class="flex items-center justify-between">
-          <span class="text-muted-foreground">Gold flowers</span>
-          <span class="font-semibold text-foreground">{{ breakdown.flowerGoldPerMin }}/min</span>
+          <span class="text-muted-foreground">{{
+            t('plannerComponents.goldRate.goldFlowers')
+          }}</span>
+          <span class="font-semibold text-foreground"
+            >{{ breakdown.flowerGoldPerMin }}{{ t('plannerComponents.goldRate.perMin') }}</span
+          >
         </div>
         <div class="border-t border-border/40 pt-1.5">
           <div class="flex items-center justify-between">
-            <span class="font-semibold text-foreground">Total</span>
+            <span class="font-semibold text-foreground">{{
+              t('plannerComponents.goldRate.total')
+            }}</span>
             <span class="font-bold text-yellow-700 dark:text-yellow-400"
-              >{{ breakdown.totalGoldPerMin }} gold/min</span
+              >{{ breakdown.totalGoldPerMin }}
+              {{ t('plannerComponents.goldRate.goldPerMin') }}</span
             >
           </div>
         </div>

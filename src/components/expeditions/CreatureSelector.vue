@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, Info, Minus, Plus, Target } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
@@ -19,6 +20,9 @@ import {
   expeditionsIcon,
   dungeonsIcon,
 } from '@/utils/icons'
+
+const { t } = useI18n()
+
 
 const props = defineProps<{
   recommendedCreatures: {
@@ -171,7 +175,7 @@ function removeCreatureFilter(key: string) {
     if (selectedCreatureTiers.value.length === 1) {
       selectedCreatureTiers.value = [...creatureTierOptions.value]
     } else {
-      selectedCreatureTiers.value = selectedCreatureTiers.value.filter((t) => t !== tier)
+      selectedCreatureTiers.value = selectedCreatureTiers.value.filter((t_val) => t_val !== tier)
     }
     return
   }
@@ -202,9 +206,14 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
     }
   }
   if (!ownedOnly.value)
-    filters.push({ key: 'ownedOnly', group: 'Summoned', label: 'Showing All', image: summonedIcon })
+    filters.push({
+      key: 'ownedOnly',
+      group: 'Summoned',
+      label: t('common.showingAll'),
+      image: summonedIcon,
+    })
   if (props.showExcludedCreatures)
-    filters.push({ key: 'showExcluded', group: 'Excluded', label: 'Showing' })
+    filters.push({ key: 'showExcluded', group: 'Excluded', label: t('common.showing') })
   return filters
 })
 </script>
@@ -213,7 +222,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
   <section class="surface-card flex flex-col overflow-hidden">
     <!-- Header with Focus stats -->
     <div class="flex items-center gap-3 border-b border-border/70 px-4 py-3">
-      <h2 class="text-base font-bold">Select Creature</h2>
+      <h2 class="text-base font-bold">{{ t('common.selectCreature') }}</h2>
       <div v-if="weightedStats.length" class="flex items-center gap-1.5">
         <Target class="size-3.5 text-accent" />
         <span
@@ -231,7 +240,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
       <input
         v-model="creatureSearch"
         type="text"
-        placeholder="Search creature"
+        :placeholder="t('common.searchCreature')"
         class="focus-ring w-full rounded-lg border border-input bg-background/70 px-3 py-2 text-sm"
       />
 
@@ -242,21 +251,21 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
           @click="ownedOnly = !ownedOnly"
         >
           <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
-          Summoned Only
+          {{ t('common.summoned') }}
         </button>
         <button
           class="pill focus-ring gap-1.5"
           :class="showExcludedCreatures ? 'pill-active' : ''"
           @click="emit('update:showExcludedCreatures', !showExcludedCreatures)"
         >
-          Show Excluded
+          {{ t('common.showExcluded') }}
         </button>
 
         <div
           class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
           aria-live="polite"
         >
-          {{ displayRecommended.length }} creatures
+          {{ t('common.creaturesCount', { n: displayRecommended.length }) }}
         </div>
       </div>
 
@@ -271,7 +280,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
             class="size-3.5 transition-transform"
             :class="showMoreCreatureFilters || hasSecondaryCreatureFilters ? '' : '-rotate-90'"
           />
-          More filters
+          {{ t('common.moreFilters') }}
         </button>
 
         <div
@@ -280,9 +289,9 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
         >
           <!-- Type filter -->
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-              >Type</span
-            >
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+              t('common.type')
+            }}</span>
             <button
               v-for="type in creatureTypes"
               :key="type"
@@ -301,9 +310,9 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
 
           <!-- Tier filter -->
           <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-              >Tier</span
-            >
+            <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+              t('common.tier')
+            }}</span>
             <button
               v-for="tier in creatureTierOptions"
               :key="tier"
@@ -330,7 +339,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
       <div class="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2">
         <Info class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
         <p class="text-[11px] text-muted-foreground">
-          Level changes here are per-expedition only and do not update your collection.
+          {{ t('expeditions.selector.levelHint') }}
         </p>
       </div>
     </div>
@@ -432,7 +441,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
             <p
               class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
             >
-              Lvl
+              {{ t('common.lvl') }}
               <span
                 v-if="suggestedLevel != null"
                 class="ml-1 normal-case tracking-normal"
@@ -442,7 +451,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
                     : 'text-amber-700 dark:text-amber-400'
                 "
               >
-                (Suggested: {{ suggestedLevel }})
+                {{ t('common.suggested', { n: suggestedLevel }) }}
               </span>
             </p>
             <div
@@ -451,7 +460,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
               <button
                 class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 :disabled="level <= 1"
-                aria-label="Decrease creature level"
+                :aria-label="t('common.decreaseLevel')"
                 @click.stop="emit('step-level', creature.id, level, -1)"
               >
                 <Minus class="size-3" />
@@ -462,13 +471,13 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
                 pattern="[0-9]*"
                 class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
                 :value="level"
-                aria-label="Creature level"
+                :aria-label="t('common.creatureLevel')"
                 @blur="emit('normalize-level', creature.id, level, $event)"
               />
               <button
                 class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 :disabled="level >= 120"
-                aria-label="Increase creature level"
+                :aria-label="t('common.increaseLevel')"
                 @click.stop="emit('step-level', creature.id, level, 1)"
               >
                 <Plus class="size-3" />
@@ -503,8 +512,8 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
       >
         {{
           selectedExpedition
-            ? 'No creatures match your creature filters.'
-            : 'Select an expedition first.'
+            ? t('expeditions.selector.noCreaturesExpedition')
+            : t('expeditions.selector.selectExpeditionFirst')
         }}
       </div>
     </div>

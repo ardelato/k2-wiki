@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Bug, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { itemById } from '@/data/indexes'
+import { activeLocale } from '@/i18n'
 import type { PlannerNode } from '@/types'
 import { getItemImage } from '@/utils/itemImages'
 
@@ -20,6 +22,7 @@ const emit = defineEmits<{
 }>()
 
 
+const { t } = useI18n()
 const gameConfig = useGameConfig()
 
 
@@ -157,7 +160,7 @@ const filteredNodes = computed(() => {
 
 
 function fmt(n: number): string {
-  return n.toLocaleString()
+  return n.toLocaleString(activeLocale())
 }
 </script>
 
@@ -175,7 +178,7 @@ function fmt(n: number): string {
           <span
             class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400"
           >
-            Debug Panel
+            {{ t('summoningPlannerComponents.debugPanel.title') }}
           </span>
           <button
             class="ml-auto rounded-md p-1 text-muted-foreground transition hover:bg-muted hover:text-foreground"
@@ -196,7 +199,9 @@ function fmt(n: number): string {
             "
             @click="activeTab = 'inventory'"
           >
-            Inventory ({{ inventoryEntries.length }})
+            {{
+              t('summoningPlannerComponents.debugPanel.inventory', { n: inventoryEntries.length })
+            }}
           </button>
           <button
             class="flex-1 px-4 py-2 text-xs font-medium transition"
@@ -207,7 +212,7 @@ function fmt(n: number): string {
             "
             @click="activeTab = 'nodes'"
           >
-            Tree Nodes
+            {{ t('summoningPlannerComponents.debugPanel.treeNodes') }}
           </button>
         </div>
 
@@ -217,7 +222,9 @@ function fmt(n: number): string {
             v-model="filter"
             type="text"
             :placeholder="
-              activeTab === 'inventory' ? 'Filter items...' : 'Filter nodes by item name/id...'
+              activeTab === 'inventory'
+                ? t('summoningPlannerComponents.debugPanel.filterItems')
+                : t('summoningPlannerComponents.debugPanel.filterNodes')
             "
             class="w-full rounded-lg border border-border/40 bg-background/60 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
           />
@@ -229,7 +236,11 @@ function fmt(n: number): string {
             v-if="filteredInventory.length === 0"
             class="py-8 text-center text-xs text-muted-foreground/50"
           >
-            {{ filter ? 'No items match filter.' : 'No inventory data.' }}
+            {{
+              filter
+                ? t('summoningPlannerComponents.debugPanel.noItems')
+                : t('summoningPlannerComponents.debugPanel.noInventory')
+            }}
           </p>
 
           <table v-else class="w-full text-xs">
@@ -237,10 +248,16 @@ function fmt(n: number): string {
               <tr
                 class="border-b border-border/40 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60"
               >
-                <th class="px-4 py-2">Item</th>
-                <th class="px-3 py-2 text-right">Owned</th>
-                <th class="px-3 py-2 text-right">Queued</th>
-                <th class="px-3 py-2 text-right">Total</th>
+                <th class="px-4 py-2">{{ t('summoningPlannerComponents.debugPanel.item') }}</th>
+                <th class="px-3 py-2 text-right">
+                  {{ t('summoningPlannerComponents.debugPanel.owned') }}
+                </th>
+                <th class="px-3 py-2 text-right">
+                  {{ t('summoningPlannerComponents.debugPanel.queued') }}
+                </th>
+                <th class="px-3 py-2 text-right">
+                  {{ t('summoningPlannerComponents.debugPanel.total') }}
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-border/20">
@@ -315,35 +332,47 @@ function fmt(n: number): string {
                   v-if="entry.fulfilled"
                   class="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"
                 >
-                  FULFILLED
+                  {{ t('summoningPlannerComponents.debugPanel.fulfilled') }}
                 </span>
                 <span
                   v-else-if="entry.methodCount === 0"
                   class="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400"
                 >
-                  NO METHODS
+                  {{ t('summoningPlannerComponents.debugPanel.noMethods') }}
                 </span>
                 <span
                   v-if="entry.depth === 0"
                   class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
                 >
-                  ROOT
+                  {{ t('summoningPlannerComponents.debugPanel.root') }}
                 </span>
               </div>
               <div
                 class="mt-0.5 flex items-center gap-3 text-[10px] text-muted-foreground/60"
                 :style="{ paddingLeft: entry.depth > 0 ? (entry.depth - 1) * 12 + 16 + 'px' : '0' }"
               >
-                <span>gross: {{ fmt(entry.grossAmount) }}</span>
-                <span>net: {{ fmt(entry.requiredAmount) }}</span>
-                <span v-if="entry.defaultMethodKind">via: {{ entry.defaultMethodKind }}</span>
-                <span>methods: {{ entry.methodCount }}</span>
+                <span
+                  >{{ t('summoningPlannerComponents.debugPanel.gross') }}
+                  {{ fmt(entry.grossAmount) }}</span
+                >
+                <span
+                  >{{ t('summoningPlannerComponents.debugPanel.net') }}
+                  {{ fmt(entry.requiredAmount) }}</span
+                >
+                <span v-if="entry.defaultMethodKind"
+                  >{{ t('summoningPlannerComponents.debugPanel.via') }}
+                  {{ entry.defaultMethodKind }}</span
+                >
+                <span
+                  >{{ t('summoningPlannerComponents.debugPanel.methods') }}
+                  {{ entry.methodCount }}</span
+                >
                 <span class="text-muted-foreground/30">{{ entry.treeRoot }}</span>
               </div>
             </div>
           </template>
           <p v-else class="py-8 text-center text-xs text-muted-foreground/50">
-            No tree data available.
+            {{ t('summoningPlannerComponents.debugPanel.noTree') }}
           </p>
         </div>
       </div>

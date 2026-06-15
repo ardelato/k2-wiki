@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 interface InventoryGridEntry {
   id: string
@@ -28,11 +33,16 @@ function formatAmount(amount: number): string {
     <div class="rounded-2xl border border-border bg-card/50 p-5">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex items-start gap-2 text-left">
-          <h3 class="text-sm font-extrabold">Inventory</h3>
+          <h3 class="text-sm font-extrabold">{{ t('configs.inventoryGrid.title') }}</h3>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-            {{ items.filter((i) => i.owned).length }} / {{ items.length }} collected
+            {{
+              t('configs.inventoryGrid.collected', {
+                count: items.filter((i) => i.owned).length,
+                total: items.length,
+              })
+            }}
           </span>
         </div>
       </div>

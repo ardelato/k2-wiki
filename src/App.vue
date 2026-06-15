@@ -2,11 +2,13 @@
 import { useLocalStorage } from '@vueuse/core'
 import { Menu, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 const mobileMenuOpen = ref(false)
 const sidebarCollapsed = useLocalStorage('sidebar-collapsed', true)
 
@@ -51,13 +53,13 @@ watch(
         class="sticky top-0 z-40 flex h-[var(--header-height)] items-center gap-3 border-b border-border/70 bg-background/85 px-4 backdrop-blur-xl md:hidden"
       >
         <button
-          aria-label="Open menu"
+          :aria-label="t('common.openMenu')"
           class="focus-ring -ml-1 rounded-lg p-2 text-muted-foreground transition hover:text-foreground"
           @click="mobileMenuOpen = true"
         >
           <Menu class="size-5" />
         </button>
-        <span class="text-sm font-semibold text-foreground">Koltera 2 Wiki</span>
+        <span class="text-sm font-semibold text-foreground">{{ t('common.koltera2Wiki') }}</span>
       </header>
 
       <div
@@ -66,14 +68,13 @@ watch(
         role="status"
       >
         <span class="mx-auto block max-w-app">
-          This wiki has moved to
+          {{ t('common.moveBannerBefore') }}
           <a
             href="https://k2-wiki.pages.dev"
             class="font-semibold underline underline-offset-2 hover:no-underline"
           >
             k2-wiki.pages.dev </a
-          >. The new domain may be blocked by some countries' ISPs &mdash; you can keep using this
-          GitHub-hosted version if it's unreachable.
+          >{{ t('common.moveBannerAfter') }}
         </span>
       </div>
 
@@ -84,8 +85,7 @@ watch(
       <footer
         class="border-t border-border/70 px-4 py-4 text-center text-xs text-muted-foreground sm:px-6"
       >
-        This is an unofficial fan project and is not affiliated with or endorsed by Braymen, the
-        developer of Koltera 2.
+        {{ t('common.footer') }}
       </footer>
     </div>
 
@@ -106,7 +106,7 @@ watch(
             <div class="flex h-full flex-col">
               <!-- Close button -->
               <button
-                aria-label="Close menu"
+                :aria-label="t('common.closeMenu')"
                 class="focus-ring absolute right-3 top-4 z-10 rounded-lg p-1.5 text-muted-foreground transition hover:text-foreground"
                 @click="mobileMenuOpen = false"
               >

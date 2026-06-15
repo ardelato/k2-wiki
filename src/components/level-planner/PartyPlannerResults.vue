@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { GanttChart, List, BarChart3, ExternalLink, Copy, Check, X } from 'lucide-vue-next'
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
@@ -31,6 +32,7 @@ const props = defineProps<{
 }>()
 
 
+const { t } = useI18n()
 const router = useRouter()
 const {
   expeditionParties,
@@ -390,7 +392,7 @@ const stepsByWave = computed(() => {
         @click="filterCreatureId = ''"
       >
         <X class="size-3.5" />
-        Clear
+        {{ t('levelPlannerComponents.partyResults.clear') }}
       </button>
     </div>
 
@@ -407,7 +409,7 @@ const stepsByWave = computed(() => {
           @click="viewMode = 'timeline'"
         >
           <GanttChart class="size-3.5" />
-          Timeline
+          {{ t('levelPlannerComponents.partyResults.timeline') }}
         </button>
         <div class="w-px self-stretch bg-border/40" />
         <button
@@ -420,7 +422,7 @@ const stepsByWave = computed(() => {
           @click="viewMode = 'steps'"
         >
           <List class="size-3.5" />
-          Steps
+          {{ t('levelPlannerComponents.partyResults.steps') }}
         </button>
         <div class="w-px self-stretch bg-border/40" />
         <button
@@ -433,7 +435,7 @@ const stepsByWave = computed(() => {
           @click="viewMode = 'chart'"
         >
           <BarChart3 class="size-3.5" />
-          Chart
+          {{ t('levelPlannerComponents.partyResults.chart') }}
         </button>
       </div>
 
@@ -444,14 +446,18 @@ const stepsByWave = computed(() => {
         >
           <Check v-if="copied" class="size-3.5 text-emerald-400" />
           <Copy v-else class="size-3.5" />
-          {{ copied ? 'Copied!' : 'Copy JSON' }}
+          {{
+            copied
+              ? t('levelPlannerComponents.partyResults.copied')
+              : t('levelPlannerComponents.partyResults.copyJson')
+          }}
         </button>
         <button
           class="focus-ring flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-primary"
           @click="viewInitialSetupInExpeditions"
         >
           <ExternalLink class="size-3.5" />
-          View Initial Setup in Expeditions
+          {{ t('levelPlannerComponents.partyResults.viewExpeditions') }}
         </button>
       </div>
     </div>

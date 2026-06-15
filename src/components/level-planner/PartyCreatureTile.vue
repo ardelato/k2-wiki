@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
+
+const { t } = useI18n()
+
 
 type ChipState = 'included' | 'excluded' | 'force-included' | 'selected'
 
@@ -57,7 +62,7 @@ function levelBadgeClass(): string {
     <button
       class="focus-ring relative size-16 overflow-hidden rounded-lg border transition sm:size-[4.5rem]"
       :class="tileBorderClass()"
-      :title="`${creature.name} — LVL ${level}${awakened ? ' ★' : ''}${titleSuffix ?? ''}`"
+      :title="`${creature.name} — ${t('levelPlanner.stats.level', { n: level })}${awakened ? ' ★' : ''}${titleSuffix ?? ''}`"
       @click="$emit('toggle')"
     >
       <RightClickHint @contextmenu="toggleCreature(creature)">
@@ -79,7 +84,7 @@ function levelBadgeClass(): string {
       class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold"
       :class="levelBadgeClass()"
     >
-      LVL {{ level }}<span v-if="awakened" class="ml-0.5">★</span>
+      {{ t('levelPlanner.stats.level', { n: level }) }}<span v-if="awakened" class="ml-0.5">★</span>
     </span>
   </div>
   <CreatureDetail :creature="selectedCreature" :open="drawerOpen" @close="closeDrawer" />

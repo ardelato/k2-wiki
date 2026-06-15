@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Compass } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
@@ -17,6 +18,7 @@ defineProps<{
 }>()
 
 
+const { t } = useI18n()
 const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 </script>
 
@@ -25,7 +27,7 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
     <div class="flex items-center gap-2">
       <Compass class="size-3.5 text-primary" />
       <span class="text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
-        Expedition Sources
+        {{ t('summoningPlannerComponents.expeditionPlan.title') }}
       </span>
     </div>
 
@@ -55,7 +57,7 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
               v-if="plan.expedition.id === bestPlan.expedition.id"
               class="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary"
             >
-              Fastest
+              {{ t('summoningPlannerComponents.expeditionPlan.fastest') }}
             </span>
             <span class="text-muted-foreground">·</span>
             <img
@@ -77,13 +79,16 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
 
         <!-- Row 2: Runs × Duration/run | Loot details -->
         <div class="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span class="font-mono">{{ plan.runsNeeded }} runs</span>
-          <span>×</span>
-          <span class="font-mono font-semibold text-emerald-700 dark:text-emerald-400">
-            {{ formatDuration(plan.durationPerRun) }}/run
-          </span>
+          <span class="font-mono">{{
+            t('summoningPlannerComponents.expeditionPlan.runsPerDuration', {
+              n: plan.runsNeeded,
+              duration: formatDuration(plan.durationPerRun),
+            })
+          }}</span>
           <div class="ml-auto flex items-center gap-2">
-            <span class="font-mono">x{{ plan.lootPerRun }}/run</span>
+            <span class="font-mono">{{
+              t('summoningPlannerComponents.expeditionPlan.perRun', { n: plan.lootPerRun })
+            }}</span>
           </div>
         </div>
 

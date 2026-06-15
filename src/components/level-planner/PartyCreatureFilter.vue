@@ -7,9 +7,13 @@ import {
   Search,
 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import PartyCreatureTile from '@/components/level-planner/PartyCreatureTile.vue'
 import type { Creature } from '@/types'
+
+const { t } = useI18n()
+
 
 const props = withDefaults(
   defineProps<{
@@ -155,17 +159,22 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
     >
       <label
         class="pointer-events-none text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
-        >Creatures</label
+        >{{ t('levelPlannerComponents.partyCreatureFilter.label') }}</label
       >
       <template v-if="!selectMode">
         <span class="text-xs text-muted-foreground">
-          {{ includedCount }} of {{ creatures.length }} included
+          {{
+            t('levelPlannerComponents.partyCreatureFilter.count', {
+              count: includedCount,
+              total: creatures.length,
+            })
+          }}
         </span>
         <span
           v-if="hasOverrides"
           class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
         >
-          Filtered
+          {{ t('levelPlannerComponents.partyCreatureFilter.filtered') }}
         </span>
       </template>
       <div class="ml-auto flex items-center gap-2">
@@ -180,7 +189,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
           @click.stop="emit('reset')"
         >
           <RotateCcw class="size-3" />
-          Reset
+          {{ t('levelPlannerComponents.partyCreatureFilter.reset') }}
         </button>
         <ChevronDown
           class="size-4 text-muted-foreground transition-transform"
@@ -200,7 +209,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
           <input
             v-model="query"
             type="text"
-            placeholder="Search creatures..."
+            :placeholder="t('levelPlannerComponents.creaturePicker.placeholder')"
             class="focus-ring h-9 w-full rounded-lg border border-border/60 bg-background/70 pl-9 pr-4 text-sm font-medium text-foreground"
           />
         </div>
@@ -216,7 +225,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             "
             @click="sortBy = 'tier'"
           >
-            Tier
+            {{ t('levelPlannerComponents.partyCreatureFilter.sortTier') }}
           </button>
           <button
             class="focus-ring h-8 px-2.5 text-[11px] font-semibold transition"
@@ -227,7 +236,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             "
             @click="sortBy = 'name'"
           >
-            Name
+            {{ t('levelPlannerComponents.partyCreatureFilter.sortName') }}
           </button>
           <button
             class="focus-ring flex h-8 items-center gap-1 px-2.5 text-[11px] font-semibold transition"
@@ -238,7 +247,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             "
             @click="toggleLevelSort"
           >
-            Level
+            {{ t('levelPlannerComponents.partyCreatureFilter.sortLevel') }}
             <ArrowDownNarrowWide v-if="sortBy !== 'level-asc'" class="size-3" />
             <ArrowUpNarrowWide v-else class="size-3" />
           </button>
@@ -256,7 +265,9 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
           >
             <div class="mb-1.5 flex items-center gap-2">
               <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
-                Tier {{ group.tier + 1 }}
+                {{
+                  t('levelPlannerComponents.partyCreatureFilter.tierGroup', { n: group.tier + 1 })
+                }}
               </p>
               <button
                 v-if="!selectMode"
@@ -274,7 +285,11 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
                   )
                 "
               >
-                {{ isAllIncluded(group.creatures) ? 'Exclude all' : 'Include all' }}
+                {{
+                  isAllIncluded(group.creatures)
+                    ? t('levelPlannerComponents.partyCreatureFilter.excludeAll')
+                    : t('levelPlannerComponents.partyCreatureFilter.includeAll')
+                }}
               </button>
             </div>
             <div class="flex flex-wrap gap-2">
@@ -310,7 +325,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             <div class="h-px flex-1 bg-border/40" />
             <span
               class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60"
-              >Excluded by config</span
+              >{{ t('levelPlannerComponents.partyCreatureFilter.excludedByConfig') }}</span
             >
             <div class="h-px flex-1 bg-border/40" />
           </div>
@@ -322,7 +337,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
               :chip-state="chipState(c.id)"
               :level="getLevel(c.id)"
               :awakened="isAwakened(c.id)"
-              title-suffix=" (config excluded)"
+              :title-suffix="t('levelPlannerComponents.partyCreatureFilter.configExcludedSuffix')"
               @toggle="handleTileClick(c.id)"
             />
           </div>
@@ -333,7 +348,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
           v-if="filteredNormal.length === 0 && filteredExcluded.length === 0"
           class="py-4 text-center text-sm text-muted-foreground"
         >
-          No matches.
+          {{ t('levelPlannerComponents.partyCreatureFilter.noMatches') }}
         </p>
       </div>
     </div>

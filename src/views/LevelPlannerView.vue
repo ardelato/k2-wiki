@@ -2,6 +2,7 @@
 import { useNow } from '@vueuse/core'
 import { Clock3, Play, RefreshCw, Users, User, Zap } from 'lucide-vue-next'
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import LevelPlannerCalculatePrompt from '@/components/level-planner/LevelPlannerCalculatePrompt.vue'
@@ -19,12 +20,14 @@ import { useExpeditionTierSelections } from '@/composables/useExpeditionTierSele
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useLevelPlanner } from '@/composables/useLevelPlanner'
 import { usePartyPlanner } from '@/composables/usePartyPlanner'
+import { activeLocale } from '@/i18n'
 import type { PlannerStrategy, PlannerTimeBudget } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { maxLevelForState } from '@/utils/formulas'
 import { toolIcons } from '@/utils/icons'
 import { expeditions as allExpeditions } from '@/utils/precomputedTables'
 
+const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { creatures } = useCreatures()
@@ -305,20 +308,20 @@ const partySearchRatio = computed(() => {
 
 
 const partyProgressSubtitle = computed(() => {
-  if (!partyProgress.value) return 'Exploring route combinations...'
+  if (!partyProgress.value) return t('levelPlanner.progress.exploring')
   switch (partyProgress.value.phase) {
     case 'initializing':
-      return 'Setting up...'
+      return t('levelPlanner.progress.settingUp')
     case 'candidates':
-      return 'Evaluating expedition options...'
+      return t('levelPlanner.progress.evaluating')
     case 'waves':
-      return 'Building expedition waves...'
+      return t('levelPlanner.progress.buildingWaves')
     case 'beam':
-      return 'Narrowing down the best routes...'
+      return t('levelPlanner.progress.narrowing')
     case 'finalizing':
-      return 'Wrapping up...'
+      return t('levelPlanner.progress.wrappingUp')
     default:
-      return 'Exploring route combinations...'
+      return t('levelPlanner.progress.exploring')
   }
 })
 
@@ -333,24 +336,22 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
   <div class="space-y-6">
     <div class="space-y-2">
       <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-        Level Up
+        {{ t('levelPlanner.title') }}
       </p>
       <h1 class="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
         {{
           mode === 'single' && creature
-            ? `${creature.name} Leveling`
-            : mode === 'party'
-              ? 'Party Level Up'
-              : 'Level Up Planner'
+            ? t('levelPlanner.dynamicTitle', { name: creature.name })
+            : t('levelPlanner.title')
         }}
       </h1>
       <p class="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
         {{
           mode === 'party'
             ? partyStrategy === 'hands-free'
-              ? 'Stable expedition assignments that run for hours without needing swaps.'
-              : 'Optimal expedition plan to level your entire collection simultaneously.'
-            : 'Optimal expedition path to level your creature as fast as possible.'
+              ? t('levelPlanner.descriptionHandsFree')
+              : t('levelPlanner.descriptionParty')
+            : t('levelPlanner.descriptionSingle')
         }}
       </p>
     </div>
@@ -370,7 +371,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
           @click="mode = 'single'"
         >
           <User class="size-3.5" />
-          Single
+          {{ t('levelPlanner.mode.single') }}
         </button>
         <div class="w-px self-stretch bg-border/40" />
         <button
@@ -383,7 +384,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
           @click="mode = 'party'"
         >
           <Users class="size-3.5" />
-          Party
+          {{ t('levelPlanner.mode.party') }}
         </button>
       </div>
     </div>
@@ -402,7 +403,9 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
       <PlannerToolbar>
         <template #controls>
           <div class="flex items-center gap-2">
-            <label class="text-xs font-semibold text-muted-foreground">Target</label>
+            <label class="text-xs font-semibold text-muted-foreground">{{
+              t('levelPlanner.controls.target')
+            }}</label>
             <div
               class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
             >
@@ -446,12 +449,17 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
         <template v-if="creature && !isMaxLevel && totalXpNeeded > 0" #summary>
           <PlannerBadge color="var(--color-primary)">
             <Zap class="size-3.5" />
-            {{ totalXpNeeded.toLocaleString() }} XP needed
+            {{ totalXpNeeded.toLocaleString(activeLocale()) }}
+            {{ t('levelPlanner.stats.xpNeeded') }}
           </PlannerBadge>
-          <PlannerBadge> LVL {{ startLevel }} </PlannerBadge>
+          <PlannerBadge> {{ t('levelPlanner.stats.level', { n: startLevel }) }} </PlannerBadge>
           <PlannerBadge v-if="expeditionToolXpBonus > 1" color="rgb(217, 119, 6)">
             <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
-            +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
+            {{
+              t('levelPlanner.badges.swordBonus', {
+                pct: Math.round((expeditionToolXpBonus - 1) * 100),
+              })
+            }}
           </PlannerBadge>
           <button
             v-if="plan && plan.steps.length > 0"
@@ -459,7 +467,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             @click="singleCalculate"
           >
             <RefreshCw class="size-3.5" />
-            Recalculate
+            {{ t('levelPlanner.controls.recalculate') }}
           </button>
         </template>
       </PlannerToolbar>
@@ -478,18 +486,18 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
       <!-- No creature selected -->
       <PlannerEmptyState
         v-if="!creature && !creatureId"
-        title="Choose a creature to begin planning."
-        subtitle="Select a creature above to find the fastest expedition leveling path."
+        :title="t('levelPlanner.emptyState.chooseCreature')"
+        :subtitle="t('levelPlanner.emptyState.selectCreature')"
       />
 
       <!-- Already max level -->
       <PlannerEmptyState
         v-else-if="isMaxLevel"
-        title="Already at max level!"
+        :title="t('levelPlanner.emptyState.maxLevel')"
         :subtitle="
           needsAwaken
-            ? `${creature?.name} is at level 70 — awaken to continue leveling to 120.`
-            : `${creature?.name} is already at level ${startLevel} — nothing left to grind.`
+            ? t('levelPlanner.emptyState.awakenToContinue', { name: creature?.name })
+            : t('levelPlanner.emptyState.nothingLeft', { name: creature?.name, n: startLevel })
         "
       />
 
@@ -552,7 +560,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             <div class="flex items-center gap-2">
               <label
                 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
-                >Target</label
+                >{{ t('levelPlanner.controls.target') }}</label
               >
               <div
                 class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
@@ -590,7 +598,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             <div class="flex items-center gap-2">
               <label
                 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
-                >Budget</label
+                >{{ t('levelPlanner.controls.budget') }}</label
               >
               <div
                 class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
@@ -606,10 +614,12 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
                   "
                   @click="partyTimeBudget = opt"
                 >
-                  {{ opt }}
+                  {{ t(`levelPlanner.controls.${opt}`) }}
                 </button>
               </div>
-              <span class="text-[10px] text-muted-foreground/60">Mainly affects optimal</span>
+              <span class="text-[10px] text-muted-foreground/60">{{
+                t('levelPlanner.controls.budgetHint')
+              }}</span>
             </div>
 
             <button
@@ -620,26 +630,33 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
               @click="recalculateBoth"
             >
               <RefreshCw class="size-3.5" :class="{ 'animate-spin': anyComputing }" />
-              Recalculate
+              {{ t('levelPlanner.controls.recalculate') }}
             </button>
           </div>
 
           <div v-if="hasLevelers" class="ml-auto flex items-center gap-4">
             <PlannerBadge color="var(--color-primary)">
               <Users class="size-3.5" />
-              {{ levelers.length }} to level
+              {{ levelers.length }} {{ t('levelPlanner.badges.toLevel') }}
             </PlannerBadge>
-            <PlannerBadge v-if="hasOverrides" color="var(--color-primary)"> Filtered </PlannerBadge>
+            <PlannerBadge v-if="hasOverrides" color="var(--color-primary)">
+              {{ t('levelPlanner.badges.filtered') }}
+            </PlannerBadge>
             <PlannerBadge v-if="expeditionToolXpBonus > 1" color="rgb(217, 119, 6)">
               <img :src="toolIcons.sword" alt="" class="size-3.5" loading="lazy" />
-              +{{ Math.round((expeditionToolXpBonus - 1) * 100) }}% Sword
+              {{
+                t('levelPlanner.badges.swordBonus', {
+                  pct: Math.round((expeditionToolXpBonus - 1) * 100),
+                })
+              }}
             </PlannerBadge>
           </div>
         </div>
 
         <div v-if="hasAnyPlan" class="flex items-center gap-2 border-t border-border/40 px-4 py-3">
-          <label class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
-            >Strategy</label
+          <label
+            class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
+            >{{ t('levelPlanner.controls.strategy') }}</label
           >
           <div
             class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
@@ -654,7 +671,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
               @click="partyStrategy = 'optimal'"
             >
               <Zap class="size-3.5" />
-              Optimal
+              {{ t('levelPlanner.controls.optimal') }}
             </button>
             <div class="w-px self-stretch bg-border/40" />
             <button
@@ -667,7 +684,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
               @click="partyStrategy = 'hands-free'"
             >
               <Clock3 class="size-3.5" />
-              Hands-Free
+              {{ t('levelPlanner.controls.handsFree') }}
             </button>
           </div>
         </div>
@@ -686,15 +703,15 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
       <!-- No owned creatures to level -->
       <PlannerEmptyState
         v-else-if="!hasLevelers"
-        title="No creatures to level."
-        subtitle="Add creatures to your collection and set their levels in the Beastiary to use party mode."
+        :title="t('levelPlanner.emptyState.noCreatures')"
+        :subtitle="t('levelPlanner.emptyState.addCreaturesParty')"
       />
 
       <!-- Ready to calculate (no plan yet) -->
       <PlannerEmptyState
         v-else-if="!hasAnyPlan && !anyComputing"
-        title="Ready to plan."
-        subtitle="Choose your target level and budget, then click Calculate to find the best expedition routes."
+        :title="t('levelPlanner.emptyState.readyToPlan')"
+        :subtitle="t('levelPlanner.emptyState.chooseLevelBudgetParty')"
       >
         <template #action>
           <button
@@ -702,7 +719,7 @@ const partyBestCompleteTime = computed(() => partyProgress.value?.bestCompleteTi
             @click="calculateBoth"
           >
             <Play class="size-4" />
-            Calculate
+            {{ t('levelPlanner.controls.calculate') }}
           </button>
         </template>
       </PlannerEmptyState>

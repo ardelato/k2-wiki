@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { X, ChevronRight, ChevronDown, GitBranch } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useItems } from '@/composables/useItems'
@@ -11,6 +12,9 @@ import { getCreatureImage } from '@/utils/creatureImages'
 import { itemTypeColor, toTitleCase, formatDuration, formatChance } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const expeditionById = new Map(expeditionsData.map((e) => [e.id, e]))
 
@@ -203,7 +207,7 @@ const jobColorMap: Record<string, string> = {
     >
       <button
         v-if="showCloseButton"
-        aria-label="Close item details"
+        :aria-label="t('items.detail.closeDetails')"
         class="focus-ring absolute right-3 top-3 rounded-lg border border-border/60 bg-card/80 p-2 text-muted-foreground backdrop-blur hover:text-foreground active:bg-muted/60"
         @click="emit('close')"
       >
@@ -242,7 +246,7 @@ const jobColorMap: Record<string, string> = {
           class="focus-ring inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition hover:bg-primary/15"
         >
           <GitBranch class="size-3.5" />
-          Open Planner
+          {{ t('items.detail.openPlanner') }}
         </RouterLink>
       </div>
     </div>
@@ -259,7 +263,7 @@ const jobColorMap: Record<string, string> = {
         class="border-t border-border/60 pt-4"
       >
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Costs
+          {{ t('items.detail.costs') }}
         </h3>
         <div
           class="grid gap-2"
@@ -271,11 +275,15 @@ const jobColorMap: Record<string, string> = {
         >
           <div v-if="item.buyValue != null" class="rounded-xl bg-muted/20 px-3 py-2 text-center">
             <p class="font-mono text-sm font-semibold text-foreground">{{ item.buyValue }}</p>
-            <p class="text-xs uppercase tracking-wide text-muted-foreground">Buy</p>
+            <p class="text-xs uppercase tracking-wide text-muted-foreground">
+              {{ t('items.detail.buy') }}
+            </p>
           </div>
           <div v-if="item.sellValue != null" class="rounded-xl bg-muted/20 px-3 py-2 text-center">
             <p class="font-mono text-sm font-semibold text-foreground">{{ item.sellValue }}</p>
-            <p class="text-xs uppercase tracking-wide text-muted-foreground">Sell</p>
+            <p class="text-xs uppercase tracking-wide text-muted-foreground">
+              {{ t('items.detail.sell') }}
+            </p>
           </div>
         </div>
       </section>
@@ -286,7 +294,7 @@ const jobColorMap: Record<string, string> = {
         class="border-t border-border/60 pt-4"
       >
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Obtained From
+          {{ t('items.detail.obtainedFrom') }}
         </h3>
         <div class="space-y-2">
           <!-- Job activity sources -->
@@ -320,7 +328,7 @@ const jobColorMap: Record<string, string> = {
                 v-if="item.type !== 'Container'"
                 class="shrink-0 font-mono text-sm"
                 style="color: var(--color-primary)"
-                >Lv{{ group.sources[0].levelRequirement }}</span
+                >{{ t('items.detail.levelShort') }}{{ group.sources[0].levelRequirement }}</span
               >
               <span
                 v-if="item.type !== 'Container'"
@@ -357,11 +365,11 @@ const jobColorMap: Record<string, string> = {
                     >{{ group.jobId }}</span
                   >
                   <span class="text-sm text-muted-foreground">
-                    &middot; {{ group.count }} variants</span
+                    &middot; {{ t('items.detail.variants', { count: group.count }) }}</span
                   >
                 </div>
                 <span class="shrink-0 font-mono text-sm" style="color: var(--color-primary)">
-                  Lv{{ group.levelRange[0]
+                  {{ t('items.detail.levelShort') }}{{ group.levelRange[0]
                   }}{{
                     group.levelRange[0] !== group.levelRange[1] ? `–${group.levelRange[1]}` : ''
                   }}
@@ -391,7 +399,7 @@ const jobColorMap: Record<string, string> = {
                     <span class="text-sm text-muted-foreground">{{ js.activityName }}</span>
                   </div>
                   <span class="shrink-0 font-mono text-sm" style="color: var(--color-primary)"
-                    >Lv{{ js.levelRequirement }}</span
+                    >{{ t('items.detail.levelShort') }}{{ js.levelRequirement }}</span
                   >
                   <span class="shrink-0 font-mono text-sm" style="color: var(--color-green)">{{
                     formatChance(js.chance)
@@ -434,7 +442,7 @@ const jobColorMap: Record<string, string> = {
       <!-- Expeditions -->
       <section v-if="expeditionSources.length" class="border-t border-border/60 pt-4">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Expeditions
+          {{ t('items.detail.expeditions') }}
         </h3>
         <div class="space-y-2">
           <div
@@ -456,7 +464,7 @@ const jobColorMap: Record<string, string> = {
       <!-- Recipes (how to craft this item) -->
       <section v-if="item.recipes.length" class="border-t border-border/60 pt-4">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Recipes
+          {{ t('items.detail.recipes') }}
         </h3>
         <div class="space-y-3">
           <div v-for="(recipe, idx) in mergedRecipes" :key="idx" class="rounded-xl bg-muted/20 p-3">
@@ -474,7 +482,9 @@ const jobColorMap: Record<string, string> = {
 
             <!-- Stats bar -->
             <div class="mb-3 flex flex-wrap gap-3 text-sm">
-              <span style="color: var(--color-primary)">Lv{{ recipe.levelRequirement }}</span>
+              <span style="color: var(--color-primary)"
+                >{{ t('items.detail.levelShort') }}{{ recipe.levelRequirement }}</span
+              >
               <span class="text-foreground">{{ formatDuration(recipe.craftTime) }}</span>
               <span style="color: var(--color-green)">
                 {{ recipe.experience[0]
@@ -523,7 +533,9 @@ const jobColorMap: Record<string, string> = {
                 >
                   <span class="size-1.5 shrink-0 rounded-full bg-accent/60" />
                   <span class="flex-1 text-sm text-muted-foreground">
-                    1 of {{ recipe.varyingIngredients.length }} variants
+                    {{
+                      t('items.detail.oneOfVariants', { count: recipe.varyingIngredients.length })
+                    }}
                   </span>
                   <component
                     :is="expandedVariants.has(idx) ? ChevronDown : ChevronRight"
@@ -561,7 +573,7 @@ const jobColorMap: Record<string, string> = {
       <!-- Used As Ingredient -->
       <section v-if="dedupedRecipeUsages.length" class="border-t border-border/60 pt-4">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Used As Ingredient
+          {{ t('items.detail.usedAsIngredient') }}
         </h3>
         <div class="space-y-2">
           <div
@@ -594,7 +606,7 @@ const jobColorMap: Record<string, string> = {
       <!-- Loot Table -->
       <section v-if="item.lootTable?.length" class="border-t border-border/60 pt-4">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Loot Table
+          {{ t('items.detail.lootTable') }}
         </h3>
         <div class="space-y-2">
           <div
@@ -628,7 +640,7 @@ const jobColorMap: Record<string, string> = {
       <!-- Summoning -->
       <section v-if="summoningCreatures.length" class="border-t border-border/60 pt-4">
         <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-          Summoning
+          {{ t('items.detail.summoning') }}
         </h3>
         <div class="grid grid-cols-4 gap-3">
           <RightClickHint

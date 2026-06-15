@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Clock3, Minus, Plus, Repeat, RotateCcw, Users, Zap } from 'lucide-vue-next'
 import { computed, ref, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import { activeLocale } from '@/i18n'
+
+const { t } = useI18n()
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
@@ -341,18 +345,18 @@ const activeBarScoreRatio = computed(() => {
         <button
           class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
           :class="isDefaultZoom ? 'invisible' : ''"
-          title="Reset zoom"
+          :title="t('levelPlannerComponents.partyGantt.resetZoom')"
           @click="resetZoom"
         >
           <RotateCcw class="size-3" />
-          Reset
+          {{ t('levelPlannerComponents.partyGantt.resetZoom') }}
         </button>
         <span class="text-[11px] font-semibold text-muted-foreground">{{ zoom }}x</span>
         <div class="inline-flex items-center overflow-hidden rounded-lg border border-border/60">
           <button
             class="focus-ring flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
             :disabled="!canZoomOut"
-            title="Zoom out"
+            :title="t('levelPlannerComponents.partyGantt.zoomOut')"
             @click="zoomOut"
           >
             <Minus class="size-3.5" />
@@ -360,7 +364,7 @@ const activeBarScoreRatio = computed(() => {
           <button
             class="focus-ring flex h-7 w-7 items-center justify-center border-l border-border/60 text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
             :disabled="!canZoomIn"
-            title="Zoom in"
+            :title="t('levelPlannerComponents.partyGantt.zoomIn')"
             @click="zoomIn"
           >
             <Plus class="size-3.5" />
@@ -477,7 +481,9 @@ const activeBarScoreRatio = computed(() => {
 
       <!-- Empty state -->
       <div v-if="bars.length === 0" class="px-6 py-8 text-center">
-        <p class="text-sm text-muted-foreground">No timeline data available.</p>
+        <p class="text-sm text-muted-foreground">
+          {{ t('levelPlannerComponents.partyGantt.noData') }}
+        </p>
       </div>
     </div>
 
@@ -519,21 +525,27 @@ const activeBarScoreRatio = computed(() => {
           <div class="grid grid-cols-2 gap-x-4 gap-y-2 border-b border-border/40 px-4 py-3">
             <div class="flex items-center gap-1.5 text-xs">
               <Clock3 class="size-3 shrink-0" style="color: var(--color-green)" />
-              <span class="text-muted-foreground">Duration</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.duration')
+              }}</span>
               <span class="ml-auto font-mono font-semibold text-foreground">{{
                 formatDuration(activeBar.step.timeSeconds)
               }}</span>
             </div>
             <div class="flex items-center gap-1.5 text-xs">
               <Repeat class="size-3 shrink-0 text-amber-400" />
-              <span class="text-muted-foreground">Runs</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.runs')
+              }}</span>
               <span class="ml-auto font-mono font-semibold text-foreground">{{
-                activeBar.runs.toLocaleString()
+                activeBar.runs.toLocaleString(activeLocale())
               }}</span>
             </div>
             <div class="flex items-center gap-1.5 text-xs">
               <Zap class="size-3 shrink-0 text-purple-400" />
-              <span class="text-muted-foreground">Loop bonus</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.loopBonus')
+              }}</span>
               <span class="ml-auto font-mono font-semibold text-foreground">
                 +{{ Math.round(getLoopXpBonus(activeBar.step.loopCountStart) * 100) }}%&rarr;+{{
                   Math.round(getLoopXpBonus(activeBar.step.loopCountEnd) * 100)
@@ -542,28 +554,34 @@ const activeBarScoreRatio = computed(() => {
             </div>
             <div class="flex items-center gap-1.5 text-xs">
               <Users class="size-3 shrink-0 text-sky-400" />
-              <span class="text-muted-foreground">Party</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.party')
+              }}</span>
               <span class="ml-auto font-mono font-semibold text-foreground">{{
                 activeBar.step.party.length
               }}</span>
             </div>
             <div class="col-span-2 flex items-center gap-1.5 text-xs">
               <Repeat class="size-3 shrink-0 text-amber-400" />
-              <span class="text-muted-foreground">Loop streak</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.loopStreak')
+              }}</span>
               <span class="ml-auto font-mono font-semibold text-foreground">
                 {{ activeBar.step.loopCountStart }}&rarr;{{ activeBar.step.loopCountEnd }}
               </span>
             </div>
             <div class="col-span-2 flex items-center gap-1.5 text-xs">
               <RotateCcw class="size-3 shrink-0 text-muted-foreground" />
-              <span class="text-muted-foreground">Route state</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.routeState')
+              }}</span>
               <span class="ml-auto font-mono font-semibold text-foreground">
                 {{
                   activeBar.step.preservedLoopBonus
-                    ? 'Preserved'
+                    ? t('levelPlannerComponents.partyGantt.preserved')
                     : activeBar.step.wasReconfigured
-                      ? 'Reset'
-                      : 'Fresh'
+                      ? t('levelPlannerComponents.partyGantt.reset')
+                      : t('levelPlannerComponents.partyGantt.fresh')
                 }}
               </span>
             </div>
@@ -577,7 +595,9 @@ const activeBarScoreRatio = computed(() => {
                 "
                 >%</span
               >
-              <span class="text-muted-foreground">Score Ratio</span>
+              <span class="text-muted-foreground">{{
+                t('levelPlannerComponents.partyGantt.scoreRatio')
+              }}</span>
               <span
                 class="ml-auto font-mono font-semibold"
                 :class="
@@ -594,7 +614,7 @@ const activeBarScoreRatio = computed(() => {
           <!-- Party members -->
           <div class="px-4 py-3">
             <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              Creatures
+              {{ t('levelPlannerComponents.partyGantt.creatures') }}
             </p>
             <div class="space-y-2">
               <div
@@ -619,13 +639,18 @@ const activeBarScoreRatio = computed(() => {
                   </p>
                   <p class="text-[10px] text-muted-foreground">
                     <template v-if="member.isBooster">
-                      Booster at LVL {{ member.fromLevel }}
+                      {{
+                        t('levelPlannerComponents.partyGantt.boosterAt', { from: member.fromLevel })
+                      }}
                     </template>
                     <template v-else>
-                      LVL {{ member.fromLevel }}&rarr;{{ member.toLevel }}
-                      <span class="ml-1 text-primary"
-                        >+{{ member.xpGained.toLocaleString() }} XP</span
-                      >
+                      {{
+                        t('levelPlannerComponents.partyGantt.levelRange', {
+                          from: member.fromLevel,
+                          to: member.toLevel,
+                          xp: member.xpGained.toLocaleString(activeLocale()),
+                        })
+                      }}
                     </template>
                   </p>
                 </div>
@@ -676,7 +701,9 @@ const activeBarScoreRatio = computed(() => {
                     class="size-4 shrink-0 object-contain"
                     loading="lazy"
                   />
-                  <p class="text-sm font-bold text-pink-400">Manually Awaken</p>
+                  <p class="text-sm font-bold text-pink-400">
+                    {{ t('levelPlannerComponents.partyGantt.manuallyAwaken') }}
+                  </p>
                 </div>
                 <p class="mt-0.5 truncate text-xs text-foreground">
                   {{ activeAwakenMarker.creature?.name ?? activeAwakenMarker.event.creatureId }}
@@ -684,7 +711,7 @@ const activeBarScoreRatio = computed(() => {
               </div>
             </div>
             <p class="mt-2 text-xs text-muted-foreground">
-              Awaken this creature to continue leveling past 70
+              {{ t('levelPlannerComponents.partyGantt.awakenHint') }}
             </p>
           </div>
         </div>
@@ -697,7 +724,7 @@ const activeBarScoreRatio = computed(() => {
       class="flex items-center justify-end border-t border-border/40 px-4 py-3"
     >
       <span class="text-sm font-bold text-foreground/80">
-        Total:
+        {{ t('levelPlannerComponents.partyGantt.total') }}
         <span class="font-mono" style="color: var(--color-green)">{{
           formatDuration(totalTime)
         }}</span>

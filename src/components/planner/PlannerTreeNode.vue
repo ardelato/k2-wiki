@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { CheckCircle2, ChevronDown, ChevronRight } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { activeLocale } from '@/i18n'
 import type { PlannerNode } from '@/types'
 import { itemTypeColor } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractModifierChips, type ModifierChip } from '@/utils/modifierChips'
+
+const { t } = useI18n()
+
 
 defineOptions({
   name: 'PlannerTreeNode',
@@ -190,7 +195,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
         <span
           class="bg-emerald-600/8 dark:bg-emerald-400/8 shrink-0 rounded-full border border-emerald-600/30 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:border-emerald-400/30 dark:text-emerald-400"
         >
-          In stock
+          {{ t('plannerComponents.treeNode.inStock') }}
         </span>
       </div>
     </div>
@@ -292,22 +297,28 @@ function forwardPinMethod(nodeId: string, methodId: string) {
             <!-- Amounts -->
             <div class="mt-1.5 flex items-baseline justify-between">
               <span class="font-mono text-[11px] font-semibold">
-                <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
+                <span class="text-[10px] font-normal text-muted-foreground/50"
+                  >{{ t('plannerComponents.treeNode.have') }}
+                </span>
                 <span class="text-foreground"
-                  >{{ stockOnHand.toLocaleString()
+                  >{{ stockOnHand.toLocaleString(activeLocale())
                   }}<sup v-if="queuedForItem > 0" class="text-sky-500">*</sup></span
                 >
-                <span class="text-muted-foreground/50"> / {{ totalNeeded.toLocaleString() }}</span>
-                <span class="text-[10px] font-normal text-muted-foreground/50"> Total</span>
+                <span class="text-muted-foreground/50">
+                  / {{ totalNeeded.toLocaleString(activeLocale()) }}</span
+                >
+                <span class="text-[10px] font-normal text-muted-foreground/50">
+                  {{ t('plannerComponents.treeNode.total') }}</span
+                >
               </span>
               <span
                 v-if="deficit > 0"
                 class="font-mono text-[11px] font-semibold text-amber-600 dark:text-amber-400"
               >
                 <span class="text-[10px] font-normal text-amber-600/60 dark:text-amber-400/60"
-                  >Need
+                  >{{ t('plannerComponents.treeNode.need') }}
                 </span>
-                {{ deficit.toLocaleString() }}
+                {{ deficit.toLocaleString(activeLocale()) }}
               </span>
             </div>
           </div>
@@ -353,7 +364,7 @@ function forwardPinMethod(nodeId: string, methodId: string) {
         @click="emit('toggle-collapse', node.id)"
       >
         <ChevronRight class="size-3" />
-        {{ activeMethod!.children.length }} items
+        {{ activeMethod!.children.length }} {{ t('plannerComponents.treeNode.items') }}
       </button>
     </div>
 
@@ -368,15 +379,19 @@ function forwardPinMethod(nodeId: string, methodId: string) {
           <div class="flex items-center gap-1.5 px-3 py-2">
             <template v-if="barPopoverSegment === 'owned'">
               <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
-                {{ stockOnHand.toLocaleString() }}
+                {{ stockOnHand.toLocaleString(activeLocale()) }}
               </span>
-              <span class="text-[11px] text-muted-foreground">have</span>
+              <span class="text-[11px] text-muted-foreground">{{
+                t('plannerComponents.treeNode.have2')
+              }}</span>
             </template>
             <template v-else-if="barPopoverSegment === 'queued'">
               <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
-                {{ queuedForItem.toLocaleString() }}
+                {{ queuedForItem.toLocaleString(activeLocale()) }}
               </span>
-              <span class="text-[11px] text-muted-foreground">queued</span>
+              <span class="text-[11px] text-muted-foreground">{{
+                t('plannerComponents.treeNode.queued')
+              }}</span>
             </template>
           </div>
         </div>

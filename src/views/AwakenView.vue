@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { Coins, Sparkles } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { useAwakenSimulation } from '@/composables/useAwakenSimulation'
 import { useGameConfig } from '@/composables/useGameConfig'
 import UpgradesContent from '@/data/upgrades'
-import type { Upgrade } from '@/data/upgrades'
+import type { Upgrade, UpgradeEffectData } from '@/data/upgrades'
 import { jobIcons, sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const awakenPointImage = getItemImage({ id: 'awaken-points' })
 
@@ -177,10 +181,10 @@ const SIM_STROKE = 'oklch(0.84 0.17 75)'
 const REM_STROKE = 'oklch(0.62 0.22 25)'
 
 
-const TAB_LABEL: Record<TabId, string> = {
-  gathering: 'Gathering',
-  workstations: 'Workstations',
-  gold: 'Gold',
+// "Gold" is a frozen game currency term and stays English in every locale.
+function tabLabel(id: TabId): string {
+  if (id === 'gold') return 'Gold'
+  return t(`awakenView.tabs.${id}`)
 }
 
 
@@ -386,7 +390,7 @@ function clickNode(upgrade: Upgrade) {
 
 
 // --- Per-skill card data --------------------------------------------------
-type RowLabel = { y: number; label: string; value: number }
+type RowLabel = { y: number; kind: string; value: number }
 
 
 type CardView = {
@@ -412,15 +416,62 @@ const GRID = 32
 const LABEL_PAD = 64
 
 
-const KIND_LABEL: Record<string, string> = {
-  yield: 'Yield',
-  duration: 'Duration',
-  speed: 'Speed',
-  xp: 'XP',
-  recovery: 'Recovery',
-  discount: 'Discount',
-  bonus: 'Bonus',
-  gold: 'Gold',
+// Effect-type ("kind") labels are wiki-derived from the upgrade id, not verbatim
+// in-game text, so they are translated. Gold/XP stay English (frozen currency / universal).
+const KIND_KEYS = new Set([
+  'yield',
+  'duration',
+  'speed',
+  'xp',
+  'recovery',
+  'discount',
+  'bonus',
+  'gold',
+])
+function kindLabel(kind: string): string {
+  return KIND_KEYS.has(kind) ? t('awakenView.kinds.' + kind) : kind
+}
+
+
+// Descriptive group headers are translated (keeping the embedded game term English);
+// game-vocab group labels (job/workstation names, Awaken Gold) fall back to their literal.
+const GROUP_LABEL_KEY: Record<string, string> = {
+  'merchant-discount': 'merchantDiscount',
+  'sellable-gold': 'sellableBonus',
+}
+function groupLabel(group: SkillGroup): string {
+  const key = GROUP_LABEL_KEY[group.id]
+  return key ? t('awakenView.groups.' + key) : group.label
+}
+
+
+// Tooltip descriptions are regenerated from each upgrade's structured effectData
+// so the text is localized AND locale-reactive (t() runs at render). The English
+// `description` in upgrades.ts stays the data source / fallback. Job/workstation
+// names, XP, Gold, Merchant, Shop and Awaken stay English (frozen game vocab);
+// only Duration/Yield/Speed and the recovery/awaken-gold/merchant-cost phrases
+// are translated.
+function describeEffect(e: UpgradeEffectData): string {
+  switch (e.type) {
+    case 'skill_xp':
+      return `${e.skill} +${e.value}% XP`
+    case 'workstation_xp':
+      return `${e.workstation} +${e.value}% XP`
+    case 'skill_duration':
+      return `${e.skill} -${Math.abs(e.value)}% ${t('awakenView.kinds.duration')}`
+    case 'skill_yield':
+      return `${e.skill} +${e.value} ${t('awakenView.kinds.yield')}`
+    case 'workstation_speed':
+      return `${e.workstation} +${e.value}% ${t('awakenView.kinds.speed')}`
+    case 'workstation_recovery':
+      return t('awakenView.effects.recovery', { value: e.value })
+    case 'awaken_gold':
+      return t('awakenView.effects.awakenGold', { value: e.value })
+    case 'merchant_discount':
+      return t('awakenView.effects.merchantCost', { value: e.value })
+    case 'sellable_gold_bonus':
+      return `Merchant +${e.value}% Gold`
+  }
 }
 
 
@@ -449,16 +500,16 @@ function computeRows(list: Upgrade[]): RowLabel[] {
         bestK = k
       }
     }
-    rows.push({ y, label: KIND_LABEL[bestK] ?? bestK, value: 0 })
+    rows.push({ y, kind: bestK, value: 0 })
   }
   if (rows.length === 0) return []
   // Single-kind cards collapse to one summary row anchored at the median y so
   // the label lands centered against the node row(s) rather than repeating.
-  const distinct = new Set(rows.map((r) => r.label))
+  const distinct = new Set(rows.map((r) => r.kind))
   if (distinct.size === 1) {
     const sortedYs = rows.map((r) => r.y).toSorted((a, b) => a - b)
     const medianY = sortedYs[Math.floor(sortedYs.length / 2)]
-    return [{ y: medianY, label: rows[0].label, value: 0 }]
+    return [{ y: medianY, kind: rows[0].kind, value: 0 }]
   }
   return rows.toSorted((a, b) => a.y - b.y)
 }
@@ -481,12 +532,12 @@ function rowEffectiveValue(
 }
 
 
-function formatRowValue(label: string, value: number): string {
+function formatRowValue(kind: string, value: number): string {
   if (value === 0) return ''
-  if (label === 'Yield' || label === 'Gold') {
+  if (kind === 'yield' || kind === 'gold') {
     return value < 0 ? `−${Math.abs(value)}` : `+${value}`
   }
-  if (label === 'Discount') return `−${Math.abs(value)}%`
+  if (kind === 'discount') return `−${Math.abs(value)}%`
   if (value < 0) return `−${Math.abs(value)}%`
   return `+${value}%`
 }
@@ -638,12 +689,11 @@ function onNodeMouseLeave() {
   <div class="space-y-6" @mousemove="onNodeMouseMove">
     <div>
       <div class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-        Progression
+        {{ t('awakenView.eyebrow') }}
       </div>
       <h1 class="mt-1 text-2xl font-bold">Awaken Tree</h1>
       <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
-        Permanent upgrades purchased with Awaken Points. Click any available node to simulate
-        unlocking it; click an unlocked node to remove it.
+        {{ t('awakenView.intro') }}
       </p>
     </div>
 
@@ -663,7 +713,7 @@ function onNodeMouseLeave() {
           />
           <Sparkles v-else class="size-4 text-primary" />
           <span class="font-semibold">
-            {{ effectiveIds.size }} of {{ totalUpgrades }} upgrades
+            {{ t('awakenView.upgradesCount', { n: effectiveIds.size, total: totalUpgrades }) }}
           </span>
         </div>
         <div class="flex items-center gap-2 text-xs">
@@ -671,7 +721,7 @@ function onNodeMouseLeave() {
             v-if="totalSaved > 0"
             class="rounded-full bg-primary/15 px-2 py-0.5 font-medium text-primary"
           >
-            {{ totalSaved }} from save
+            {{ totalSaved }} {{ t('awakenView.fromSave') }}
           </span>
           <span
             v-if="savedUnallocated > 0"
@@ -682,23 +732,23 @@ function onNodeMouseLeave() {
             "
             :title="
               unallocatedPoints < 0
-                ? `Simulated upgrades exceed your unspent awaken points by ${Math.abs(unallocatedPoints)}`
-                : 'Unspent awaken points in your save inventory (updates with simulated changes)'
+                ? t('awakenView.unallocatedExceedTooltip', { n: Math.abs(unallocatedPoints) })
+                : t('awakenView.unallocatedTooltip')
             "
           >
-            {{ unallocatedPoints }} unallocated
+            {{ unallocatedPoints }} {{ t('awakenView.unallocated') }}
           </span>
           <span
             v-if="totalSim > 0"
             class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
           >
-            +{{ totalSim }} simulated
+            +{{ totalSim }} {{ t('awakenView.simulated') }}
           </span>
           <span
             v-if="totalRemoved > 0"
             class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
           >
-            −{{ totalRemoved }} removed
+            −{{ totalRemoved }} {{ t('awakenView.removed') }}
           </span>
         </div>
       </div>
@@ -709,7 +759,7 @@ function onNodeMouseLeave() {
           :aria-hidden="!hasChanges"
           @click="resetSimulation"
         >
-          Reset
+          {{ t('awakenView.reset') }}
         </button>
       </div>
     </div>
@@ -727,7 +777,7 @@ function onNodeMouseLeave() {
         "
         @click="tab = t"
       >
-        {{ TAB_LABEL[t] }}
+        {{ tabLabel(t) }}
         <span class="font-mono text-xs text-muted-foreground">({{ tabCount(t) }})</span>
       </button>
       <div class="ml-auto flex items-center gap-3 pb-2 font-mono text-[10px] text-muted-foreground">
@@ -736,7 +786,7 @@ function onNodeMouseLeave() {
             class="inline-block size-2.5 rounded-sm"
             style="box-shadow: inset 0 0 0 1.5px hsl(var(--primary))"
           />
-          From save
+          {{ t('awakenView.legendFromSave') }}
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="relative inline-block size-2.5 rounded-sm border border-muted-foreground/60">
@@ -745,14 +795,14 @@ function onNodeMouseLeave() {
               style="background: oklch(0.84 0.17 75)"
             />
           </span>
-          Simulated
+          {{ t('awakenView.legendSimulated') }}
         </span>
         <span class="inline-flex items-center gap-1">
           <span
             class="inline-block size-2.5 rounded-sm border border-dashed"
             style="border-color: oklch(0.62 0.22 25)"
           />
-          Removed
+          {{ t('awakenView.legendRemoved') }}
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="relative inline-block size-2.5 rounded-sm border border-foreground">
@@ -760,11 +810,11 @@ function onNodeMouseLeave() {
               class="absolute left-1/2 top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-[1px] bg-foreground"
             />
           </span>
-          Available
+          {{ t('awakenView.legendAvailable') }}
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="inline-block size-2.5 rounded-sm bg-muted" />
-          Locked
+          {{ t('awakenView.legendLocked') }}
         </span>
       </div>
     </div>
@@ -782,13 +832,13 @@ function onNodeMouseLeave() {
             <img
               v-if="card.group.iconUrl"
               :src="card.group.iconUrl"
-              :alt="card.group.label"
+              :alt="groupLabel(card.group)"
               class="size-5"
               style="image-rendering: pixelated"
               loading="lazy"
             />
             <Coins v-else class="size-5" :style="{ color: PALETTE[card.group.color].stroke }" />
-            <span class="text-sm font-semibold">{{ card.group.label }}</span>
+            <span class="text-sm font-semibold">{{ groupLabel(card.group) }}</span>
           </div>
           <span class="font-mono text-[10px] text-muted-foreground">
             {{ card.owned }}/{{ card.upgrades.length }}
@@ -817,9 +867,9 @@ function onNodeMouseLeave() {
             "
             dominant-baseline="middle"
           >
-            {{ row.label }}
+            {{ kindLabel(row.kind) }}
             <tspan v-if="row.value !== 0" class="fill-foreground" dx="3" style="font-weight: 600">
-              {{ formatRowValue(row.label, row.value) }}
+              {{ formatRowValue(row.kind, row.value) }}
             </tspan>
           </text>
 
@@ -929,9 +979,11 @@ function onNodeMouseLeave() {
       :style="{ top: hoverPos.y + 14 + 'px', left: hoverPos.x + 14 + 'px' }"
     >
       <div class="font-semibold text-foreground">{{ hovered.name }}</div>
-      <div class="mt-0.5 text-muted-foreground">{{ hovered.description }}</div>
+      <div class="mt-0.5 text-muted-foreground">{{ describeEffect(hovered.effectData) }}</div>
       <div class="mt-1 font-mono text-[10px]">
-        <span v-if="effectiveIds.has(hovered.id)" class="text-green-500">Unlocked</span>
+        <span v-if="effectiveIds.has(hovered.id)" class="text-green-500">{{
+          t('awakenView.unlocked')
+        }}</span>
         <span v-else class="inline-flex items-center gap-1">
           <span class="inline-flex items-center gap-1 text-amber-500">
             <img
@@ -944,7 +996,9 @@ function onNodeMouseLeave() {
             />
             {{ costToUnlock(hovered).toLocaleString() }}
           </span>
-          <span v-if="!isPrereqMet(hovered)" class="text-muted-foreground"> · incl. prereqs </span>
+          <span v-if="!isPrereqMet(hovered)" class="text-muted-foreground">
+            {{ t('awakenView.inclPrereqs') }}
+          </span>
         </span>
       </div>
     </div>

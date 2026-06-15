@@ -14,6 +14,7 @@ import {
   Network,
 } from 'lucide-vue-next'
 import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import PlannerEmptyState from '@/components/planner/PlannerEmptyState.vue'
@@ -50,6 +51,7 @@ import { extractModifierChips, type ModifierChip } from '@/utils/modifierChips'
 import { computePriorityWaves } from '@/utils/prioritySteps'
 
 const isDesktop = useMediaQuery('(min-width: 1024px)')
+const { t } = useI18n()
 const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened, collectionLevels } = useCreatureCollection()
 const gameConfig = useGameConfig()
@@ -96,26 +98,26 @@ const {
 const viewMode = ref<'list' | 'tree' | 'timeline'>('list')
 
 
-const viewTabs = [
+const viewTabs = computed(() => [
   {
     id: 'list' as const,
-    label: 'List',
+    label: t('summoningPlanner.tabs.list'),
     icon: ClipboardList,
-    description: 'Everything you need to farm and craft, sorted by where you get it.',
+    description: t('summoningPlanner.tabs.listDescription'),
   },
   {
     id: 'tree' as const,
-    label: 'Tree',
+    label: t('summoningPlanner.tabs.tree'),
     icon: Network,
-    description: 'Full crafting chains — see every step from raw mats to the final item.',
+    description: t('summoningPlanner.tabs.treeDescription'),
   },
   {
     id: 'timeline' as const,
-    label: 'Timeline',
+    label: t('summoningPlanner.tabs.timeline'),
     icon: GanttChart,
-    description: "The optimal route — what to farm first and how long it'll take.",
+    description: t('summoningPlanner.tabs.timelineDescription'),
   },
-]
+])
 
 
 // --- Debug drawer state (dev only) ---
@@ -228,13 +230,13 @@ const sourceGroupOrder: SourceGroup[] = [
 
 
 const sourceGroupLabels: Record<SourceGroup, string> = {
-  Refined: 'Refined Materials',
-  Gathered: 'Gathered Resources',
-  Expedition: 'Expedition Rewards',
-  Garden: 'Garden Flowers',
-  Merchant: 'Merchant',
-  Currency: 'Currency',
-  Other: 'Other',
+  Refined: t('summoningPlanner.sourceGroups.refined'),
+  Gathered: t('summoningPlanner.sourceGroups.gathered'),
+  Expedition: t('summoningPlanner.sourceGroups.expedition'),
+  Garden: t('summoningPlanner.sourceGroups.garden'),
+  Merchant: t('summoningPlanner.sourceGroups.merchant'),
+  Currency: t('summoningPlanner.sourceGroups.currency'),
+  Other: t('summoningPlanner.sourceGroups.other'),
 }
 
 
@@ -463,7 +465,7 @@ function buildNodeAnnotations(treeIndex: number): Record<string, string> {
     if (node.itemType === 'Gathered') {
       const info = getGatherInfo(node.itemId)
       if (info) {
-        annotations[nodeId] = `Lv. ${info.levelRequirement}`
+        annotations[nodeId] = t('summoningPlanner.gatherLevel', { n: info.levelRequirement })
       }
     }
   }
@@ -975,19 +977,27 @@ const goldModifiers = computed<ModifierChip[]>(() => {
   if (goldPerMinute.value <= 0) return []
   return [
     {
-      label: 'Gold Income',
-      value: `${goldPerMinute.value.toFixed(0)} gold/min`,
+      label: t('summoningPlanner.goldIncome.title'),
+      value: t('summoningPlanner.goldIncome.perMin', { n: goldPerMinute.value.toFixed(0) }),
       icon: getItemImage({ id: 'gold' }) ?? undefined,
       color:
         'border-yellow-600/35 bg-yellow-100 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-400/20 dark:text-yellow-100',
       accentColor: 'bg-yellow-500',
-      subtitle: 'Passive gold generation',
+      subtitle: t('summoningPlanner.goldIncome.passive'),
       stats: [
         ...(goldBreakdown.value.creatureGoldPerMin > 0
-          ? [`+${goldBreakdown.value.creatureGoldPerMin} gold/min from creatures`]
+          ? [
+              t('summoningPlanner.goldIncome.fromCreatures', {
+                n: goldBreakdown.value.creatureGoldPerMin,
+              }),
+            ]
           : []),
         ...(goldBreakdown.value.flowerGoldPerMin > 0
-          ? [`+${goldBreakdown.value.flowerGoldPerMin} gold/min from flowers`]
+          ? [
+              t('summoningPlanner.goldIncome.fromFlowers', {
+                n: goldBreakdown.value.flowerGoldPerMin,
+              }),
+            ]
           : []),
       ],
     },
@@ -1080,7 +1090,7 @@ const flatListEntries = computed(() => {
   if (totalGold.value > 0) {
     merged.set('gold', {
       itemId: 'gold',
-      itemName: 'Gold',
+      itemName: t('summoningPlanner.gold'),
       itemType: 'Currency',
       totalNeeded: totalGold.value,
       inventoryAmount: goldInventory.value,
@@ -1156,13 +1166,13 @@ const flatGroupedCosts = computed(() => {
   <div class="space-y-6">
     <div class="space-y-2">
       <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-        Summoning Planner
+        {{ t('summoningPlanner.title') }}
       </p>
       <h1 class="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-        Summoning Costs
+        {{ t('summoningPlanner.costsTitle') }}
       </h1>
       <p class="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-        Select unsummoned creatures to see the full crafting breakdown for all required materials.
+        {{ t('summoningPlanner.description') }}
       </p>
     </div>
 
@@ -1184,14 +1194,14 @@ const flatGroupedCosts = computed(() => {
     <!-- Empty state -->
     <PlannerEmptyState
       v-if="aggregatedCosts.length === 0"
-      title="Choose creatures to plan summoning costs."
-      subtitle="Select creatures above to see the full material breakdown with crafting trees."
+      :title="t('summoningPlanner.emptyState.chooseCreatures')"
+      :subtitle="t('summoningPlanner.emptyState.selectCreatures')"
     />
 
     <PlannerEmptyState
       v-else-if="!isDesktop"
-      title="Planner is desktop-first for now."
-      subtitle="Open this page on a wider screen to browse the full dependency tree and inspector."
+      :title="t('summoningPlanner.emptyState.desktopOnly')"
+      :subtitle="t('summoningPlanner.emptyState.desktopOnlyHint')"
     />
 
     <!-- Main content -->
@@ -1218,42 +1228,46 @@ const flatGroupedCosts = computed(() => {
         <template v-if="viewMode === 'list' || viewMode === 'tree'">
           <div class="h-5 w-px bg-border/40" />
           <div class="flex items-center gap-1.5">
-            <span class="text-[11px] font-medium text-muted-foreground/60">Groups</span>
+            <span class="text-[11px] font-medium text-muted-foreground/60">{{
+              t('summoningPlanner.controls.groups')
+            }}</span>
             <div class="flex rounded-lg border border-border/60 p-0.5">
               <button
                 class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
                 @click="collapseAllGroups()"
               >
                 <ChevronsDownUp class="size-3.5" />
-                Collapse
+                {{ t('summoningPlanner.controls.collapse') }}
               </button>
               <button
                 class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
                 @click="expandAllGroups()"
               >
                 <ChevronsUpDown class="size-3.5" />
-                Expand
+                {{ t('summoningPlanner.controls.expand') }}
               </button>
             </div>
           </div>
         </template>
         <template v-if="viewMode === 'tree'">
           <div class="flex items-center gap-1.5">
-            <span class="text-[11px] font-medium text-muted-foreground/60">Nodes</span>
+            <span class="text-[11px] font-medium text-muted-foreground/60">{{
+              t('summoningPlanner.controls.nodes')
+            }}</span>
             <div class="flex rounded-lg border border-border/60 p-0.5">
               <button
                 class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
                 @click="collapseAllTrees()"
               >
                 <ChevronsDownUp class="size-3.5" />
-                Collapse
+                {{ t('summoningPlanner.controls.collapse') }}
               </button>
               <button
                 class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
                 @click="expandAllTrees()"
               >
                 <ChevronsUpDown class="size-3.5" />
-                Expand
+                {{ t('summoningPlanner.controls.expand') }}
               </button>
             </div>
           </div>
@@ -1264,13 +1278,15 @@ const flatGroupedCosts = computed(() => {
           v-if="viewMode === 'list' || viewMode === 'tree'"
           class="ml-auto flex items-center gap-1.5"
         >
-          <span class="text-[11px] font-medium text-muted-foreground/60">Sort</span>
+          <span class="text-[11px] font-medium text-muted-foreground/60">{{
+            t('summoningPlanner.controls.sort')
+          }}</span>
           <div class="flex rounded-lg border border-border/60 p-0.5">
             <button
               v-for="opt in [
-                { value: 'name', label: 'Name' },
-                { value: 'progress', label: 'Progress' },
-                { value: 'complexity', label: 'Steps' },
+                { value: 'name', label: t('summoningPlanner.controls.name') },
+                { value: 'progress', label: t('summoningPlanner.controls.progress') },
+                { value: 'complexity', label: t('summoningPlanner.controls.steps') },
               ] as const"
               :key="opt.value"
               class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold transition"
@@ -1434,7 +1450,7 @@ const flatGroupedCosts = computed(() => {
                 <div class="min-w-0 flex-1">
                   <SummoningObjectiveCard
                     item-id="gold"
-                    item-name="Gold"
+                    :item-name="t('summoningPlanner.gold')"
                     item-type="Currency"
                     :total-needed="totalGold"
                     :inventory-amount="goldInventory"
@@ -1573,7 +1589,7 @@ const flatGroupedCosts = computed(() => {
                             {{
                               getActiveExpeditionParty(cost.sortedIndex)!.activeVariant.runsNeeded
                             }}
-                            runs
+                            {{ t('summoningPlanner.runs') }}
                           </span>
                           <span
                             class="flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400"
@@ -1601,7 +1617,7 @@ const flatGroupedCosts = computed(() => {
                           >
                             <span
                               class="text-[9px] font-semibold uppercase text-muted-foreground/50"
-                              >Alt</span
+                              >{{ t('summoningPlanner.altButton') }}</span
                             >
                             <div class="flex min-w-0 flex-1 flex-wrap gap-1">
                               <RightClickHint
@@ -1645,7 +1661,7 @@ const flatGroupedCosts = computed(() => {
       <div v-if="!hasCurrencyGroup && totalGold > 0" class="space-y-3">
         <div class="flex w-full items-center gap-2 border-l-2 border-primary/30 pl-2">
           <span class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            Currency
+            {{ t('summoningPlanner.currency') }}
           </span>
           <span class="h-px flex-1 bg-border/40" />
         </div>
@@ -1654,7 +1670,7 @@ const flatGroupedCosts = computed(() => {
           <div :class="viewMode === 'tree' ? 'min-w-0 flex-1' : ''">
             <SummoningObjectiveCard
               item-id="gold"
-              item-name="Gold"
+              :item-name="t('summoningPlanner.gold')"
               item-type="Currency"
               :total-needed="totalGold"
               :inventory-amount="goldInventory"
@@ -1676,7 +1692,7 @@ const flatGroupedCosts = computed(() => {
         @click="debugDrawerOpen = true"
       >
         <Bug class="size-4" />
-        Debug
+        {{ t('summoningPlanner.debug') }}
       </button>
       <SummoningDebugPanel
         :open="debugDrawerOpen"
@@ -1720,11 +1736,13 @@ const flatGroupedCosts = computed(() => {
               <span class="text-xs font-bold text-amber-500">!</span>
             </div>
             <div class="min-w-0">
-              <span class="block text-xs font-semibold text-foreground"
-                >Conflicting party member</span
-              >
+              <span class="block text-xs font-semibold text-foreground">{{
+                t('summoningPlanner.conflict.title')
+              }}</span>
               <div class="mt-0.5 flex flex-wrap items-center gap-x-1">
-                <span class="text-[11px] text-muted-foreground">Also assigned to</span>
+                <span class="text-[11px] text-muted-foreground">{{
+                  t('summoningPlanner.conflict.alsoAssignedTo')
+                }}</span>
                 <template v-for="(exp, ni) in conflictPopover.otherExpeditions" :key="ni">
                   <span v-if="ni > 0" class="text-[11px] text-muted-foreground/50">,</span>
                   <span class="inline-flex items-center gap-1">

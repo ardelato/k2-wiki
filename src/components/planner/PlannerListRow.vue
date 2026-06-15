@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { activeLocale } from '@/i18n'
 import type { PlannerMethod, PlannerNode } from '@/types'
 import { itemTypeColor } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
 import { extractModifierChips, type ModifierChip } from '@/utils/modifierChips'
+
+const { t } = useI18n()
+
 
 import PlannerRecommendation from './PlannerRecommendation.vue'
 
@@ -222,7 +227,7 @@ function onSegmentLeave() {
             alt="Gold"
             class="size-3 object-contain"
           />
-          {{ Math.round(displayCost!).toLocaleString() }}
+          {{ Math.round(displayCost!).toLocaleString(activeLocale()) }}
         </span>
       </div>
     </div>
@@ -242,15 +247,19 @@ function onSegmentLeave() {
         <div class="flex items-center gap-1.5 px-3 py-2">
           <template v-if="barPopoverSegment === 'owned'">
             <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
-              {{ rawInventory.toLocaleString() }}
+              {{ rawInventory.toLocaleString(activeLocale()) }}
             </span>
-            <span class="text-[11px] text-muted-foreground">have</span>
+            <span class="text-[11px] text-muted-foreground">{{
+              t('plannerComponents.listRow.have')
+            }}</span>
           </template>
           <template v-else-if="barPopoverSegment === 'queued'">
             <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
-              {{ (queuedAmount ?? 0).toLocaleString() }}
+              {{ (queuedAmount ?? 0).toLocaleString(activeLocale()) }}
             </span>
-            <span class="text-[11px] text-muted-foreground">queued</span>
+            <span class="text-[11px] text-muted-foreground">{{
+              t('plannerComponents.listRow.queued')
+            }}</span>
           </template>
         </div>
       </div>

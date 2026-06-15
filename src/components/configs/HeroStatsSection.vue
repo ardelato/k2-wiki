@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 import SectionEyebrow from '@/components/shared/SectionEyebrow.vue'
 import { getPlayerLevelXpBonus } from '@/utils/formulas'
+
+const { t } = useI18n()
+
 
 interface TierBucket {
   tier: number
@@ -41,35 +46,43 @@ defineProps<{
         class="pointer-events-none absolute -left-12 -top-12 size-48 rounded-full bg-accent/15 blur-3xl"
       />
       <div class="relative">
-        <SectionEyebrow>Creatures Collected</SectionEyebrow>
+        <SectionEyebrow>{{ t('configs.hero.creaturesCollected') }}</SectionEyebrow>
         <div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span class="font-mono text-6xl font-extrabold leading-none text-foreground">
             {{ collectionSummary.owned
             }}<span class="text-3xl text-muted-foreground/60">/{{ collectionSummary.total }}</span>
           </span>
           <span v-if="collectionSummary.awakened" class="text-sm font-semibold text-pink-400">
-            ★ {{ collectionSummary.awakened }} awakened
+            ★ {{ t('configs.hero.awakenedCount', { n: collectionSummary.awakened }) }}
           </span>
         </div>
         <div class="mt-4 space-y-1.5">
-          <div v-for="t in collectionSummary.tiers" :key="t.tier" class="flex items-center gap-2">
+          <div
+            v-for="tierBucket in collectionSummary.tiers"
+            :key="tierBucket.tier"
+            class="flex items-center gap-2"
+          >
             <span
               class="w-12 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
             >
-              Tier {{ t.tier + 1 }}
+              {{ t('configs.creatures.tier', { n: tierBucket.tier + 1 }) }}
             </span>
             <div class="flex flex-1 gap-0.5">
               <span
-                v-for="i in t.total"
+                v-for="i in tierBucket.total"
                 :key="i"
                 class="h-2.5 flex-1 rounded-sm"
                 :class="
-                  i <= t.awakened ? 'bg-pink-400' : i <= t.owned ? 'bg-accent' : 'bg-muted/40'
+                  i <= tierBucket.awakened
+                    ? 'bg-pink-400'
+                    : i <= tierBucket.owned
+                      ? 'bg-accent'
+                      : 'bg-muted/40'
                 "
               />
             </div>
             <span class="w-12 shrink-0 text-right font-mono text-[10px] font-bold tabular-nums">
-              {{ t.owned }}/{{ t.total }}
+              {{ tierBucket.owned }}/{{ tierBucket.total }}
             </span>
           </div>
         </div>
@@ -83,13 +96,17 @@ defineProps<{
         class="pointer-events-none absolute -right-12 -top-12 size-48 rounded-full bg-primary/15 blur-3xl"
       />
       <div class="relative">
-        <SectionEyebrow>Player Level</SectionEyebrow>
+        <SectionEyebrow>{{ t('configs.hero.playerLevel') }}</SectionEyebrow>
         <div class="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span class="font-mono text-6xl font-extrabold leading-none text-foreground">
             {{ displayPlayerLevel }}
           </span>
           <span class="text-sm font-semibold text-emerald-400">
-            +{{ getPlayerLevelXpBonus(displayPlayerLevel).toFixed(2) }}% XP
+            {{
+              t('configs.skills.xpBonus', {
+                pct: getPlayerLevelXpBonus(displayPlayerLevel).toFixed(2),
+              })
+            }}
           </span>
         </div>
         <div class="mt-4 grid grid-cols-3 gap-x-3 gap-y-1.5">

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Minus, Plus, TrendingUp, X } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import summonedIcon from '@/assets/icons/summoned.webp'
@@ -51,6 +52,9 @@ const {
   dungeonParty,
   expeditionCreatureIds,
 } = useGameConfig()
+
+
+const { t } = useI18n()
 
 
 const maxJobLevel = 10
@@ -131,7 +135,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           }"
         >
           <button
-            aria-label="Close"
+            :aria-label="t('beastiary.detail.close')"
             class="focus-ring absolute right-3 top-3 rounded-lg border border-border/60 bg-card/80 p-2 text-muted-foreground backdrop-blur hover:text-foreground"
             @click="emit('close')"
           >
@@ -153,7 +157,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
             </span>
             <AppTooltip
               v-if="assignmentBadge"
-              :text="`Assigned to ${assignmentBadge.label}`"
+              :text="t('beastiary.detail.assignedTo', { label: assignmentBadge.label })"
               position="right"
             >
               <img
@@ -195,14 +199,14 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
 
           <!-- Collection & Actions -->
           <div class="detail-section space-y-4 rounded-lg border border-border/60 bg-muted/10 p-4">
-            <h3 class="section-title">Collection</h3>
+            <h3 class="section-title">{{ t('beastiary.detail.collection') }}</h3>
             <div class="space-y-3">
               <label
                 class="flex cursor-pointer items-center justify-between rounded-lg border border-border/60 bg-card/80 px-3 py-2.5"
               >
                 <span class="flex items-center gap-2 text-sm font-medium text-foreground">
                   <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
-                  Summoned
+                  {{ t('beastiary.detail.summoned') }}
                 </span>
                 <button
                   role="switch"
@@ -224,13 +228,13 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                 <div>
                   <span class="flex items-center gap-2 text-sm font-medium text-foreground">
                     <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
-                    Awakened
+                    {{ t('beastiary.detail.awakened') }}
                   </span>
                   <p class="text-[11px] text-muted-foreground">
                     {{
                       isAwakened(creature.id)
-                        ? 'Cap raised to 120. Un-awaken to clamp to 70.'
-                        : 'Raises level cap to 120.'
+                        ? t('beastiary.detail.awakenedCapRaised')
+                        : t('beastiary.detail.awakenedCapInfo')
                     }}
                   </p>
                 </div>
@@ -251,14 +255,16 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                 v-if="isOwned(creature.id)"
                 class="flex items-center gap-3 rounded-lg border border-border/60 bg-card/80 px-3 py-2.5"
               >
-                <span class="text-sm font-medium text-foreground">Level</span>
+                <span class="text-sm font-medium text-foreground">{{
+                  t('beastiary.detail.level')
+                }}</span>
                 <div
                   class="ml-auto inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
                 >
                   <button
                     class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     :disabled="getLevel(creature.id) <= 1"
-                    aria-label="Decrease creature level"
+                    :aria-label="t('beastiary.detail.decreaseCreatureLevel')"
                     @click="stepLevel(creature.id, -1)"
                   >
                     <Minus class="size-3" />
@@ -269,13 +275,13 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                     pattern="[0-9]*"
                     class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
                     :value="getLevel(creature.id)"
-                    aria-label="Creature level"
+                    :aria-label="t('beastiary.detail.creatureLevel')"
                     @blur="normalizeLevelOnBlur(creature.id, $event)"
                   />
                   <button
                     class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     :disabled="getLevel(creature.id) >= maxLevelForState(isAwakened(creature.id))"
-                    aria-label="Increase creature level"
+                    :aria-label="t('beastiary.detail.increaseCreatureLevel')"
                     @click="stepLevel(creature.id, 1)"
                   >
                     <Plus class="size-3" />
@@ -289,7 +295,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
               class="focus-ring bg-primary/12 hover:bg-primary/18 flex w-full items-center justify-center gap-2 rounded-lg border border-primary/35 px-4 py-2.5 text-sm font-semibold text-primary transition"
             >
               <TrendingUp class="size-4" />
-              Plan Leveling
+              {{ t('beastiary.detail.planLeveling') }}
             </router-link>
           </div>
 
@@ -299,12 +305,12 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           <!-- Stats with Radar Chart -->
           <section class="detail-section">
             <div class="mb-3 flex items-baseline justify-between">
-              <h3 class="section-title">Stats</h3>
+              <h3 class="section-title">{{ t('beastiary.detail.stats') }}</h3>
               <span
                 v-if="selectedCreatureStats"
                 class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary"
               >
-                LVL {{ getLevel(creature.id) }}
+                {{ t('beastiary.detail.lvlBadge', { level: getLevel(creature.id) }) }}
               </span>
             </div>
             <div class="flex justify-center">
@@ -328,7 +334,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                   v-if="selectedCreatureStats"
                   class="font-mono text-[10px] text-muted-foreground/60"
                 >
-                  (BASE {{ creature.stats[statKey] }})
+                  {{ t('beastiary.detail.baseStat', { value: creature.stats[statKey] }) }}
                 </p>
                 <p class="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
                   {{ statLabel }}
@@ -340,11 +346,15 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           <!-- Job Levels with Proficiency Rings -->
           <section class="detail-section">
             <div class="mb-3 flex items-baseline justify-between">
-              <h3 class="section-title">Job Levels</h3>
+              <h3 class="section-title">{{ t('beastiary.detail.jobLevels') }}</h3>
               <span
                 class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary"
               >
-                Total {{ Object.values(creature.jobs).reduce((sum, v) => sum + v, 0) }}
+                {{
+                  t('beastiary.detail.totalJobPoints', {
+                    total: Object.values(creature.jobs).reduce((sum, v) => sum + v, 0),
+                  })
+                }}
               </span>
             </div>
             <div class="flex flex-wrap justify-center gap-3">
@@ -373,7 +383,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
 
           <!-- Best Expeditions -->
           <section v-if="bestExpeditions.length" class="detail-section">
-            <h3 class="section-title mb-3">Best Expeditions</h3>
+            <h3 class="section-title mb-3">{{ t('beastiary.detail.bestExpeditions') }}</h3>
             <div class="space-y-2">
               <router-link
                 v-for="(entry, index) in bestExpeditions"
@@ -408,13 +418,15 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                   class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"
                 >
                   <span>{{ entry.biomeName }}</span>
-                  <span v-if="entry.traitMatch" class="text-primary">· Trait ✓</span>
-                  <span v-if="entry.biomeStatus === 'advantage'" class="text-green-500"
-                    >· ▲ Advantage</span
-                  >
-                  <span v-if="entry.biomeStatus === 'disadvantage'" class="text-destructive"
-                    >· ▼ Disadvantage</span
-                  >
+                  <span v-if="entry.traitMatch" class="text-primary">{{
+                    t('beastiary.detail.traitMatch')
+                  }}</span>
+                  <span v-if="entry.biomeStatus === 'advantage'" class="text-green-500">{{
+                    t('beastiary.detail.advantage')
+                  }}</span>
+                  <span v-if="entry.biomeStatus === 'disadvantage'" class="text-destructive">{{
+                    t('beastiary.detail.disadvantage')
+                  }}</span>
                 </div>
               </router-link>
             </div>

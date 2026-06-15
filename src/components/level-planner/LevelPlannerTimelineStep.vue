@@ -9,8 +9,12 @@ import {
   ArrowRightLeft,
   RotateCcw,
 } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
+import { activeLocale } from '@/i18n'
+
+const { t } = useI18n()
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import LevelPlannerBoosterChip from '@/components/level-planner/LevelPlannerBoosterChip.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
@@ -137,7 +141,11 @@ function formatDelta(value: number): string {
                   loading="lazy"
                 />
                 <p class="text-sm font-semibold text-pink-400">
-                  {{ step.fromLevel > 70 ? 'Prestige Creature' : 'Awaken Creature' }}
+                  {{
+                    step.fromLevel > 70
+                      ? t('levelPlannerComponents.timelineStep.prestigeCreature')
+                      : t('levelPlannerComponents.timelineStep.awakenCreature')
+                  }}
                 </p>
               </div>
               <span
@@ -149,8 +157,12 @@ function formatDelta(value: number): string {
             <p class="mt-1.5 text-xs text-muted-foreground">
               {{
                 step.fromLevel > 70
-                  ? `Prestige ${creatureName} to restart from level 1`
-                  : `Awaken ${creatureName} to continue past level 70`
+                  ? t('levelPlannerComponents.timelineStep.prestigeDescription', {
+                      name: creatureName,
+                    })
+                  : t('levelPlannerComponents.timelineStep.awakenDescription', {
+                      name: creatureName,
+                    })
               }}
             </p>
           </div>
@@ -198,10 +210,10 @@ function formatDelta(value: number): string {
                   v-if="step.traitMatch"
                   class="shrink-0 text-[10px] font-semibold text-primary"
                 >
-                  Trait Match
+                  {{ t('levelPlannerComponents.timelineStep.traitMatch') }}
                 </span>
                 <span v-if="hasOverride" class="shrink-0 text-[10px] font-semibold text-primary">
-                  Override
+                  {{ t('levelPlannerComponents.timelineStep.override') }}
                 </span>
               </div>
 
@@ -275,7 +287,9 @@ function formatDelta(value: number): string {
                 <span
                   class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
                 >
-                  <template v-if="member.isBooster">Booster</template>
+                  <template v-if="member.isBooster">{{
+                    t('levelPlannerComponents.timelineStep.booster')
+                  }}</template>
                   <template v-else>LVL {{ member.fromLevel }}&rarr;{{ member.toLevel }}</template>
                 </span>
               </div>
@@ -292,13 +306,13 @@ function formatDelta(value: number): string {
                   class="font-semibold"
                   style="color: var(--color-green)"
                 >
-                  Advantage
+                  {{ t('levelPlannerComponents.timelineStep.advantage') }}
                 </span>
                 <span
                   v-if="step.biomeStatus === 'disadvantage'"
                   class="font-semibold text-destructive"
                 >
-                  Disadvantage
+                  {{ t('levelPlannerComponents.timelineStep.disadvantage') }}
                 </span>
               </div>
 
@@ -312,7 +326,7 @@ function formatDelta(value: number): string {
                 </span>
                 <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-400">
                   <Repeat class="size-3" />
-                  {{ step.runs.toLocaleString() }}
+                  {{ step.runs.toLocaleString(activeLocale()) }}
                 </span>
                 <span
                   class="inline-flex items-center gap-1 text-xs font-semibold"
@@ -332,12 +346,12 @@ function formatDelta(value: number): string {
                     "
                   >
                     {{
-                      (step.startXpPerMinute / 60).toLocaleString(undefined, {
+                      (step.startXpPerMinute / 60).toLocaleString(activeLocale(), {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })
                     }}&rarr;{{
-                      (step.endXpPerMinute / 60).toLocaleString(undefined, {
+                      (step.endXpPerMinute / 60).toLocaleString(activeLocale(), {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })
@@ -345,13 +359,13 @@ function formatDelta(value: number): string {
                   </template>
                   <template v-else>
                     {{
-                      (step.xpPerMinute / 60).toLocaleString(undefined, {
+                      (step.xpPerMinute / 60).toLocaleString(activeLocale(), {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })
                     }}
                   </template>
-                  XP/s
+                  {{ t('levelPlannerComponents.timelineStep.xpPerSec') }}
                 </span>
                 <span
                   v-if="partyMembers"
@@ -370,7 +384,7 @@ function formatDelta(value: number): string {
             >
               <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400">
                 <Users class="size-3" />
-                Bring:
+                {{ t('levelPlannerComponents.timelineStep.bring') }}
               </span>
               <LevelPlannerBoosterChip
                 v-for="booster in step.boosters"
@@ -391,7 +405,7 @@ function formatDelta(value: number): string {
                   Math.round(
                     (step.boosterTimeSavings / (step.timeSeconds + step.boosterTimeSavings)) * 100,
                   )
-                }}% faster
+                }}{{ t('levelPlannerComponents.timelineStep.percentFaster') }}
               </span>
             </div>
 
@@ -430,7 +444,7 @@ function formatDelta(value: number): string {
             @click="$emit('viewInExpeditions')"
           >
             <ExternalLink class="size-3" />
-            View in Expeditions
+            {{ t('levelPlannerComponents.timelineStep.viewInExpeditions') }}
           </button>
         </div>
 
@@ -442,7 +456,7 @@ function formatDelta(value: number): string {
               <div class="mb-2 flex items-center justify-between">
                 <p class="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                   <ArrowRightLeft class="size-3" />
-                  Alternative Routes
+                  {{ t('levelPlannerComponents.timelineStep.alternativeRoutes') }}
                 </p>
                 <button
                   v-if="hasOverride"
@@ -450,7 +464,7 @@ function formatDelta(value: number): string {
                   @click.stop="$emit('resetOverride', step.fromLevel)"
                 >
                   <RotateCcw class="size-3" />
-                  Reset to optimal
+                  {{ t('levelPlannerComponents.timelineStep.resetToOptimal') }}
                 </button>
               </div>
 
@@ -517,7 +531,7 @@ function formatDelta(value: number): string {
                       >
                         <Zap class="size-3" />
                         {{
-                          (alt.xpPerMinute / 60).toLocaleString(undefined, {
+                          (alt.xpPerMinute / 60).toLocaleString(activeLocale(), {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
                           })
@@ -538,7 +552,7 @@ function formatDelta(value: number): string {
                       class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400"
                     >
                       <Users class="size-3" />
-                      Bring:
+                      {{ t('levelPlannerComponents.timelineStep.bring') }}
                     </span>
                     <LevelPlannerBoosterChip
                       v-for="booster in alt.boosters"

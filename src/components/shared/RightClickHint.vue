@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 defineProps<{
   label?: string
 }>()
+
+
+const { t } = useI18n()
 
 
 const emit = defineEmits<{
@@ -55,7 +59,7 @@ function onContextMenu(e: MouseEvent) {
         <line x1="12" y1="2" x2="12" y2="10" stroke="currentColor" stroke-width="2" />
       </svg>
       <span class="text-[10px] font-medium text-muted-foreground">{{
-        label ?? 'Right-click'
+        label ?? t('shared.rightClickHint.label')
       }}</span>
     </div>
   </Teleport>

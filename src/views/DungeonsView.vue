@@ -2,6 +2,7 @@
 import { useMediaQuery } from '@vueuse/core'
 import { ChevronDown, Info, Minus, Plus, Swords, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
 import summonedIcon from '@/assets/icons/summoned.webp'
@@ -14,12 +15,16 @@ import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import { useDungeons } from '@/composables/useDungeons'
 import { useGameConfig } from '@/composables/useGameConfig'
+import { activeLocale } from '@/i18n'
 import type { Creature, ElementType, ExpeditionStatKey, GatheringSubFocus } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { itemName, toTitleCase, typeColor } from '@/utils/format'
 import { statAbbreviations, statLabels } from '@/utils/formulas'
 import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const route = useRoute()
 const router = useRouter()
@@ -67,6 +72,38 @@ const {
 
 
 const TIER_LABELS = ['I', 'II', 'III', 'IV', 'V']
+
+
+// ── Defensive: heal persisted state ──
+// dungeon-focus / dungeon-tier / dungeon-creature-levels come from localStorage
+// (useLocalStorage in useDungeons). If those keys hold junk — an unknown focus
+// string, a numeric/out-of-range tier, or a non-object level map — config lookups
+// like config.statWeights[focus] or config.tierLevelRequirements[focus] resolve to
+// undefined and downstream computeds (e.g. Object.entries(activeStatWeights)) throw
+// during render, leaving a blank <main>. Reset any invalid value to a safe default.
+const VALID_FOCUSES = Object.keys(config.statWeights) as (keyof typeof config.statWeights)[]
+const VALID_TIERS = config.tiers.map((tier) => tier.tier)
+const VALID_SUB_FOCUSES = new Set<string>(GATHERING_SUB_FOCUSES)
+
+
+watch(
+  [selectedFocus, selectedTier, selectedSubFocus],
+  () => {
+    if (!VALID_FOCUSES.includes(selectedFocus.value)) {
+      selectedFocus.value = VALID_FOCUSES[0]
+    }
+    if (!VALID_TIERS.includes(Number(selectedTier.value))) {
+      selectedTier.value = VALID_TIERS[0]
+    } else if (typeof selectedTier.value !== 'number') {
+      // Coerce a persisted numeric-string tier into a real number.
+      selectedTier.value = Number(selectedTier.value)
+    }
+    if (!VALID_SUB_FOCUSES.has(selectedSubFocus.value)) {
+      selectedSubFocus.value = GATHERING_SUB_FOCUSES[0]
+    }
+  },
+  { immediate: true },
+)
 
 
 // ── Mobile section handling ──
@@ -188,9 +225,14 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
     }
   }
   if (!ownedOnly.value)
-    filters.push({ key: 'ownedOnly', group: 'Summoned', label: 'Showing All', image: summonedIcon })
+    filters.push({
+      key: 'ownedOnly',
+      group: 'Summoned',
+      label: t('common.showingAll'),
+      image: summonedIcon,
+    })
   if (showExcludedCreatures.value)
-    filters.push({ key: 'showExcluded', group: 'Excluded', label: 'Showing' })
+    filters.push({ key: 'showExcluded', group: 'Excluded', label: t('common.showing') })
   return filters
 })
 
@@ -311,7 +353,7 @@ const tierLevelReq = computed(() => {
           "
           @click="mobileSection = 'config'"
         >
-          Config
+          {{ t('dungeons.config') }}
         </button>
         <button
           class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
@@ -322,7 +364,7 @@ const tierLevelReq = computed(() => {
           "
           @click="mobileSection = 'details'"
         >
-          Details
+          {{ t('dungeons.details') }}
         </button>
         <button
           class="focus-ring rounded-lg px-3 py-2 text-xs font-semibold"
@@ -333,7 +375,7 @@ const tierLevelReq = computed(() => {
           "
           @click="mobileSection = 'creature'"
         >
-          Creature
+          {{ t('dungeons.creature') }}
         </button>
       </div>
     </div>
@@ -348,7 +390,7 @@ const tierLevelReq = computed(() => {
         :class="!isDesktop && mobileSection !== 'config' ? 'hidden' : ''"
       >
         <div class="border-b border-border/70 px-4 py-3">
-          <h2 class="text-base font-bold">Dungeon Config</h2>
+          <h2 class="text-base font-bold">{{ t('dungeons.dungeonConfig') }}</h2>
         </div>
 
         <div
@@ -357,7 +399,7 @@ const tierLevelReq = computed(() => {
           <!-- Focus Mode -->
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Focus Mode
+              {{ t('dungeons.focusMode') }}
             </h4>
             <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
               <button
@@ -369,7 +411,7 @@ const tierLevelReq = computed(() => {
                 "
                 @click="selectedFocus = 'combat'"
               >
-                Combat
+                {{ t('dungeons.combat') }}
               </button>
               <button
                 class="focus-ring rounded-md px-3 py-1.5 text-xs font-semibold transition"
@@ -380,7 +422,7 @@ const tierLevelReq = computed(() => {
                 "
                 @click="selectedFocus = 'gathering'"
               >
-                Gathering
+                {{ t('dungeons.gathering') }}
               </button>
             </div>
           </div>
@@ -388,7 +430,7 @@ const tierLevelReq = computed(() => {
           <!-- Sub-Focus (gathering only) -->
           <div v-if="selectedFocus === 'gathering'" class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Gathering Skill
+              {{ t('dungeons.gatheringSkill') }}
             </h4>
             <div class="flex flex-wrap gap-1.5">
               <button
@@ -419,27 +461,27 @@ const tierLevelReq = computed(() => {
             <h4
               class="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"
             >
-              Tier
+              {{ t('dungeons.tier') }}
               <span
                 v-if="tierLevelReq > 0"
                 class="text-[11px] font-semibold normal-case tracking-normal text-muted-foreground/70"
               >
-                (Requires Player LVL {{ tierLevelReq }})
+                {{ t('dungeons.tierRequiresLevel', { n: tierLevelReq }) }}
               </span>
             </h4>
             <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
               <button
-                v-for="t in 5"
-                :key="t"
+                v-for="t_val in 5"
+                :key="t_val"
                 class="focus-ring rounded-md px-3 py-1.5 text-xs font-semibold transition"
                 :class="
-                  selectedTier === t
+                  selectedTier === t_val
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
                 "
-                @click="selectedTier = t"
+                @click="selectedTier = t_val"
               >
-                {{ TIER_LABELS[t - 1] }}
+                {{ TIER_LABELS[t_val - 1] }}
               </button>
             </div>
           </div>
@@ -447,7 +489,7 @@ const tierLevelReq = computed(() => {
           <!-- Stat Weights -->
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Stat Weights
+              {{ t('dungeons.statWeights') }}
             </h4>
             <div
               v-for="[key, weight] in weightedStats"
@@ -470,18 +512,20 @@ const tierLevelReq = computed(() => {
           <!-- Tier Table -->
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Tier Overview
+              {{ t('dungeons.tierOverview') }}
             </h4>
             <div class="overflow-hidden rounded-lg border border-border">
               <table class="w-full text-xs">
                 <thead>
                   <tr class="bg-muted/45">
-                    <th class="px-3 py-1.5 text-left font-semibold text-muted-foreground">Tier</th>
-                    <th class="px-3 py-1.5 text-right font-semibold text-muted-foreground">
-                      Base Rating
+                    <th class="px-3 py-1.5 text-left font-semibold text-muted-foreground">
+                      {{ t('dungeons.tierCol') }}
                     </th>
                     <th class="px-3 py-1.5 text-right font-semibold text-muted-foreground">
-                      XP Reward
+                      {{ t('dungeons.baseRating') }}
+                    </th>
+                    <th class="px-3 py-1.5 text-right font-semibold text-muted-foreground">
+                      {{ t('dungeons.xpReward') }}
                     </th>
                   </tr>
                 </thead>
@@ -494,10 +538,10 @@ const tierLevelReq = computed(() => {
                   >
                     <td class="px-3 py-1.5 font-semibold">{{ TIER_LABELS[tier.tier - 1] }}</td>
                     <td class="px-3 py-1.5 text-right font-mono">
-                      {{ tier.baseRating.toLocaleString() }}
+                      {{ tier.baseRating.toLocaleString(activeLocale()) }}
                     </td>
                     <td class="px-3 py-1.5 text-right font-mono">
-                      {{ tier.xpReward.toLocaleString() }}
+                      {{ tier.xpReward.toLocaleString(activeLocale()) }}
                     </td>
                   </tr>
                 </tbody>
@@ -508,18 +552,20 @@ const tierLevelReq = computed(() => {
           <!-- Grade Table -->
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Grade Thresholds
+              {{ t('dungeons.gradeThresholds') }}
             </h4>
             <div class="overflow-hidden rounded-lg border border-border">
               <table class="w-full text-xs">
                 <thead>
                   <tr class="bg-muted/45">
-                    <th class="px-3 py-1.5 text-left font-semibold text-muted-foreground">Grade</th>
-                    <th class="px-3 py-1.5 text-right font-semibold text-muted-foreground">
-                      Min Score
+                    <th class="px-3 py-1.5 text-left font-semibold text-muted-foreground">
+                      {{ t('dungeons.grade') }}
                     </th>
                     <th class="px-3 py-1.5 text-right font-semibold text-muted-foreground">
-                      Reward Mult.
+                      {{ t('dungeons.minScore') }}
+                    </th>
+                    <th class="px-3 py-1.5 text-right font-semibold text-muted-foreground">
+                      {{ t('dungeons.rewardMult') }}
                     </th>
                   </tr>
                 </thead>
@@ -540,7 +586,9 @@ const tierLevelReq = computed(() => {
                     </td>
                     <td class="px-3 py-1.5 text-right font-mono">
                       {{
-                        Math.floor(grade.minRatio * currentTierConfig.baseRating).toLocaleString()
+                        Math.floor(grade.minRatio * currentTierConfig.baseRating).toLocaleString(
+                          activeLocale(),
+                        )
                       }}
                     </td>
                     <td class="px-3 py-1.5 text-right font-mono">{{ grade.multiplier }}x</td>
@@ -553,10 +601,12 @@ const tierLevelReq = computed(() => {
           <!-- Requirements -->
           <div class="rounded-lg border border-border bg-muted/30 p-3">
             <p class="text-[11px] text-muted-foreground">
-              Requires
-              <span class="font-semibold text-foreground">{{ itemName(config.requiresItem) }}</span>
-              to enter (1 per creature). Duration:
-              <span class="font-semibold text-foreground">{{ config.duration / 60 }} minutes</span>.
+              {{
+                t('dungeons.requiresNote', {
+                  item: itemName(config.requiresItem),
+                  duration: config.duration / 60,
+                })
+              }}
             </p>
           </div>
         </div>
@@ -568,7 +618,7 @@ const tierLevelReq = computed(() => {
         :class="!isDesktop && mobileSection !== 'details' ? 'hidden' : ''"
       >
         <div class="border-b border-border/70 px-4 py-3">
-          <h2 class="text-base font-bold">Dungeon Details</h2>
+          <h2 class="text-base font-bold">{{ t('dungeons.dungeonDetails') }}</h2>
         </div>
 
         <div
@@ -577,31 +627,40 @@ const tierLevelReq = computed(() => {
           <!-- Current Config Summary -->
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Focus</p>
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {{ t('dungeons.focus') }}
+              </p>
               <p class="font-semibold">
-                {{ toTitleCase(selectedFocus) }}
+                {{ t('dungeons.' + selectedFocus) }}
                 <span v-if="selectedFocus === 'gathering'" class="text-xs text-muted-foreground">
                   ({{ selectedSubFocus }})
                 </span>
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Tier</p>
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {{ t('dungeons.tier') }}
+              </p>
               <p class="font-semibold">
                 {{ TIER_LABELS[selectedTier - 1] }}
                 <span class="text-xs text-muted-foreground">
-                  ({{ currentTierConfig.baseRating.toLocaleString() }} rating)
+                  ({{ currentTierConfig.baseRating.toLocaleString(activeLocale()) }}
+                  {{ t('dungeons.rating') }})
                 </span>
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">XP / Creature</p>
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {{ t('dungeons.xpPerCreature') }}
+              </p>
               <p class="font-mono font-semibold">
-                {{ predictedXP ? predictedXP.toLocaleString() : '—' }}
+                {{ predictedXP ? predictedXP.toLocaleString(activeLocale()) : '—' }}
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">Entry Cost</p>
+              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+                {{ t('dungeons.entryCost') }}
+              </p>
               <p class="flex items-center gap-1.5 font-semibold">
                 <img
                   v-if="getItemImage({ id: config.requiresItem })"
@@ -619,7 +678,7 @@ const tierLevelReq = computed(() => {
           <!-- Rewards -->
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Rewards
+              {{ t('dungeons.rewards') }}
               <span v-if="currentGrade" class="normal-case tracking-normal text-foreground">
                 ({{ currentGrade.multiplier }}x)
               </span>
@@ -650,7 +709,7 @@ const tierLevelReq = computed(() => {
           <!-- Party Slots -->
           <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Party
+              {{ t('dungeons.party') }}
             </h4>
             <div class="flex flex-wrap gap-2">
               <div
@@ -698,9 +757,9 @@ const tierLevelReq = computed(() => {
                   <template v-else>
                     <div class="flex size-full flex-col items-center justify-center gap-1">
                       <Plus class="size-4 text-muted-foreground/50" />
-                      <span v-if="activeSlotIndex === index" class="text-[9px] text-primary"
-                        >Select</span
-                      >
+                      <span v-if="activeSlotIndex === index" class="text-[9px] text-primary">{{
+                        t('common.select')
+                      }}</span>
                     </div>
                   </template>
                 </div>
@@ -720,23 +779,23 @@ const tierLevelReq = computed(() => {
             class="space-y-2 rounded-lg border border-border bg-muted/30 p-3"
           >
             <h4 class="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
-              Party Summary
+              {{ t('dungeons.partySummary') }}
             </h4>
             <div class="grid grid-cols-3 gap-2 text-center text-xs">
               <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Party Score</p>
+                <p class="text-muted-foreground">{{ t('dungeons.partyScore') }}</p>
                 <p class="font-mono text-sm font-semibold text-primary">
-                  {{ partyScore.toLocaleString() }}
+                  {{ partyScore.toLocaleString(activeLocale()) }}
                 </p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Base Rating</p>
+                <p class="text-muted-foreground">{{ t('dungeons.baseRating') }}</p>
                 <p class="font-mono text-sm font-semibold">
-                  {{ currentTierConfig.baseRating.toLocaleString() }}
+                  {{ currentTierConfig.baseRating.toLocaleString(activeLocale()) }}
                 </p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
-                <p class="text-muted-foreground">Score Ratio</p>
+                <p class="text-muted-foreground">{{ t('dungeons.scoreRatio') }}</p>
                 <p
                   class="font-mono text-sm font-semibold"
                   :class="
@@ -759,7 +818,7 @@ const tierLevelReq = computed(() => {
                 {{ currentGrade.grade }}
               </span>
               <span class="text-xs font-semibold text-muted-foreground">
-                {{ currentGrade.multiplier }}x rewards
+                {{ t('dungeons.rewardsMultiplier', { n: currentGrade.multiplier }) }}
               </span>
             </div>
 
@@ -804,7 +863,7 @@ const tierLevelReq = computed(() => {
       >
         <!-- Header with Focus stats -->
         <div class="flex items-center gap-3 border-b border-border/70 px-4 py-3">
-          <h2 class="text-base font-bold">Select Creature</h2>
+          <h2 class="text-base font-bold">{{ t('dungeons.selectCreature') }}</h2>
           <div v-if="weightedStats.length" class="flex items-center gap-1.5">
             <Swords class="size-3.5 text-accent" />
             <span
@@ -822,7 +881,7 @@ const tierLevelReq = computed(() => {
           <input
             v-model="creatureSearch"
             type="text"
-            placeholder="Search creature"
+            :placeholder="t('dungeons.searchCreature')"
             class="focus-ring w-full rounded-lg border border-input bg-background/70 px-3 py-2 text-sm"
           />
 
@@ -833,21 +892,21 @@ const tierLevelReq = computed(() => {
               @click="ownedOnly = !ownedOnly"
             >
               <img :src="summonedIcon" alt="" class="size-4" loading="lazy" />
-              Summoned Only
+              {{ t('dungeons.summonedOnly') }}
             </button>
             <button
               class="pill focus-ring gap-1.5"
               :class="showExcludedCreatures ? 'pill-active' : ''"
               @click="showExcludedCreatures = !showExcludedCreatures"
             >
-              Show Excluded
+              {{ t('dungeons.showExcluded') }}
             </button>
 
             <div
               class="ml-auto rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-muted-foreground"
               aria-live="polite"
             >
-              {{ displayRecommended.length }} creatures
+              {{ t('dungeons.creatures', { n: displayRecommended.length }) }}
             </div>
           </div>
 
@@ -862,7 +921,7 @@ const tierLevelReq = computed(() => {
                 class="size-3.5 transition-transform"
                 :class="showMoreCreatureFilters || hasSecondaryCreatureFilters ? '' : '-rotate-90'"
               />
-              More filters
+              {{ t('dungeons.moreFilters') }}
             </button>
 
             <div
@@ -873,7 +932,7 @@ const tierLevelReq = computed(() => {
               <div class="flex flex-wrap items-center gap-2">
                 <span
                   class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-                  >Type</span
+                  >{{ t('dungeons.type') }}</span
                 >
                 <button
                   v-for="type in creatureTypes"
@@ -895,7 +954,7 @@ const tierLevelReq = computed(() => {
               <div class="flex flex-wrap items-center gap-2">
                 <span
                   class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground"
-                  >Tier</span
+                  >{{ t('dungeons.tierFilter') }}</span
                 >
                 <button
                   v-for="tier in creatureTierOptions"
@@ -923,7 +982,7 @@ const tierLevelReq = computed(() => {
           <div class="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2">
             <Info class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
             <p class="text-[11px] text-muted-foreground">
-              Level changes here are per-dungeon only and do not update your collection.
+              {{ t('dungeons.levelHint') }}
             </p>
           </div>
         </div>
@@ -1021,7 +1080,7 @@ const tierLevelReq = computed(() => {
                 <p
                   class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
                 >
-                  Lvl
+                  {{ t('common.lvl') }}
                   <span
                     v-if="suggestedLevel != null"
                     class="ml-1 normal-case tracking-normal"
@@ -1031,7 +1090,7 @@ const tierLevelReq = computed(() => {
                         : 'text-amber-700 dark:text-amber-400'
                     "
                   >
-                    (Suggested: {{ suggestedLevel }})
+                    {{ t('common.suggested', { n: suggestedLevel }) }}
                   </span>
                 </p>
                 <div
@@ -1040,7 +1099,7 @@ const tierLevelReq = computed(() => {
                   <button
                     class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     :disabled="level <= 1"
-                    aria-label="Decrease creature level"
+                    :aria-label="t('dungeons.decreaseLevel')"
                     @click.stop="stepCreatureLevel(creature.id, level, -1)"
                   >
                     <Minus class="size-3" />
@@ -1051,13 +1110,13 @@ const tierLevelReq = computed(() => {
                     pattern="[0-9]*"
                     class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
                     :value="level"
-                    aria-label="Creature level"
+                    :aria-label="t('dungeons.creatureLevel')"
                     @blur="normalizeLevelOnBlur(creature.id, level, $event)"
                   />
                   <button
                     class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                     :disabled="level >= 120"
-                    aria-label="Increase creature level"
+                    :aria-label="t('dungeons.increaseLevel')"
                     @click.stop="stepCreatureLevel(creature.id, level, 1)"
                   >
                     <Plus class="size-3" />
@@ -1090,7 +1149,7 @@ const tierLevelReq = computed(() => {
             v-if="displayRecommended.length === 0"
             class="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-7 text-center text-sm text-muted-foreground"
           >
-            No creatures match your filters.
+            {{ t('dungeons.noCreaturesMatch') }}
           </div>
         </div>
       </section>

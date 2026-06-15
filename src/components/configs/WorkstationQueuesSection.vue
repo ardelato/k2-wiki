@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ChevronRight } from 'lucide-vue-next'
+import { useI18n } from 'vue-i18n'
 
 import { formatDuration } from '@/utils/format'
 import { sourceIcons } from '@/utils/icons'
@@ -24,6 +25,9 @@ defineProps<{
   queuedTimes: Record<string, number>
   saveFileName: string
 }>()
+
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -31,12 +35,12 @@ defineProps<{
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="flex items-start gap-2 text-left">
         <div>
-          <h3 class="text-sm font-extrabold">Workstation Queues</h3>
+          <h3 class="text-sm font-extrabold">{{ t('configs.sections.workstationQueues') }}</h3>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <span class="rounded-md bg-muted/50 px-2 py-1 text-xs font-medium">
-          {{ queuedStationCount }} items
+          {{ t('configs.queued.items', { n: queuedStationCount }, queuedStationCount) }}
         </span>
       </div>
     </div>
@@ -67,7 +71,7 @@ defineProps<{
                 <span
                   class="text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-amber-700/80 dark:text-amber-300/70"
                 >
-                  ETA
+                  {{ t('configs.queued.eta') }}
                 </span>
                 <span class="leading-none">
                   {{ formatDuration(queuedTimes[group.station]) }}
@@ -76,7 +80,7 @@ defineProps<{
               <span
                 class="inline-flex items-center rounded-md bg-muted/50 px-2 py-1 font-medium leading-none text-muted-foreground"
               >
-                {{ group.items.length }} in queue
+                {{ t('configs.queued.inQueue', { n: group.items.length }) }}
               </span>
             </div>
           </div>
@@ -133,11 +137,7 @@ defineProps<{
         v-else
         class="rounded-lg border border-dashed border-border/50 px-3 py-6 text-center text-xs text-muted-foreground"
       >
-        {{
-          saveFileName
-            ? 'No queued recipes in save file.'
-            : 'No queued recipes configured. Upload a save to import.'
-        }}
+        {{ saveFileName ? t('configs.queued.noQueued') : t('configs.queued.noQueuedConfig') }}
       </p>
     </div>
   </div>

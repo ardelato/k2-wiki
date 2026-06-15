@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronRight, Clock3, Compass, GitBranch } from 'lucide-vue-next'
 import { computed, ref, toRef } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import PlannerBadge from '@/components/planner/PlannerBadge.vue'
 import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
 import SummoningExpeditionPlan from '@/components/summoning-planner/SummoningExpeditionPlan.vue'
 import { useCraftPlanner } from '@/composables/useCraftPlanner'
+import { activeLocale } from '@/i18n'
 import type { Creature, Expedition } from '@/types'
 import { findExpeditionPlans } from '@/utils/expeditionOptimizer'
 import { formatDuration } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
+
+const { t } = useI18n()
+
 
 const props = defineProps<{
   itemId: string
@@ -189,7 +194,7 @@ defineExpose({
         {{ rootNode.itemName }}
       </span>
       <span class="font-mono text-sm font-semibold text-primary">
-        x{{ quantity.toLocaleString() }}
+        x{{ quantity.toLocaleString(activeLocale()) }}
       </span>
 
       <div v-if="summary" class="ml-auto flex items-center gap-2">
@@ -204,7 +209,7 @@ defineExpose({
             alt="Gold"
             class="size-3 object-contain"
           />
-          {{ Math.round(summary.totalCost).toLocaleString() }}
+          {{ Math.round(summary.totalCost).toLocaleString(activeLocale()) }}
         </PlannerBadge>
         <PlannerBadge v-if="summary.branchPointCount > 0" color="var(--color-primary)">
           <GitBranch class="size-3" />
@@ -212,7 +217,7 @@ defineExpose({
         </PlannerBadge>
         <PlannerBadge v-if="expeditionResult.best" color="var(--color-primary)">
           <Compass class="size-3" />
-          Expedition
+          {{ t('summoningPlannerComponents.materialTree.expedition') }}
         </PlannerBadge>
       </div>
     </button>
@@ -244,7 +249,7 @@ defineExpose({
       v-if="isOpen && rootChildren.length === 0 && rootNode && !rootNode.fulfilled"
       class="border-t border-border/40 px-4 py-3 text-xs text-muted-foreground"
     >
-      Leaf item — no sub-dependencies.
+      {{ t('summoningPlannerComponents.materialTree.leafItem') }}
     </div>
 
     <div

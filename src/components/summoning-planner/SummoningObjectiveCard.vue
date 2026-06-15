@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { CheckCircle2 } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+import { activeLocale } from '@/i18n'
 import type { ItemType } from '@/types'
 import { itemTypeColor } from '@/utils/format'
 import { getItemImage } from '@/utils/itemImages'
 import type { ModifierChip } from '@/utils/modifierChips'
+
+const { t } = useI18n()
+
 
 const props = withDefaults(
   defineProps<{
@@ -103,7 +108,7 @@ const deficit = computed(() =>
 
 
 function fmt(n: number): string {
-  return n.toLocaleString()
+  return n.toLocaleString(activeLocale())
 }
 </script>
 
@@ -175,7 +180,7 @@ function fmt(n: number): string {
             :class="{ 'ml-auto': modifiers.length === 0 }"
           >
             <CheckCircle2 class="size-3" />
-            Complete
+            {{ t('summoningPlannerComponents.objectiveCard.complete') }}
           </span>
         </div>
 
@@ -209,7 +214,9 @@ function fmt(n: number): string {
         <!-- Amounts -->
         <div class="mt-1.5 flex items-baseline justify-between">
           <span class="font-mono text-xs font-semibold">
-            <span class="text-[10px] font-normal text-muted-foreground/50">Have </span>
+            <span class="text-[10px] font-normal text-muted-foreground/50"
+              >{{ t('summoningPlannerComponents.objectiveCard.have') }}
+            </span>
             <span :class="fulfilled ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'">
               {{ fmt(inventoryAmount)
               }}<sup v-if="!fulfilled && queuedAmount && queuedAmount > 0" class="text-sky-500"
@@ -217,14 +224,16 @@ function fmt(n: number): string {
               >
             </span>
             <span class="text-muted-foreground/50"> / {{ fmt(totalNeeded) }} </span>
-            <span class="text-[10px] font-normal text-muted-foreground/50"> Total</span>
+            <span class="text-[10px] font-normal text-muted-foreground/50">
+              {{ t('summoningPlannerComponents.objectiveCard.total') }}</span
+            >
           </span>
           <span
             v-if="!fulfilled && deficit > 0"
             class="font-mono text-xs font-semibold text-amber-600 dark:text-amber-400"
           >
             <span class="text-[10px] font-normal text-amber-600/60 dark:text-amber-400/60"
-              >Need
+              >{{ t('summoningPlannerComponents.objectiveCard.need') }}
             </span>
             {{ fmt(deficit) }}
           </span>
@@ -245,13 +254,17 @@ function fmt(n: number): string {
               <span class="font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
                 {{ fmt(inventoryAmount) }}
               </span>
-              <span class="text-[11px] text-muted-foreground">have</span>
+              <span class="text-[11px] text-muted-foreground">{{
+                t('summoningPlannerComponents.objectiveCard.have2')
+              }}</span>
             </template>
             <template v-else-if="barPopoverSegment === 'queued'">
               <span class="font-mono text-xs font-bold text-sky-600 dark:text-sky-400">
                 {{ fmt(queuedAmount ?? 0) }}
               </span>
-              <span class="text-[11px] text-muted-foreground">queued</span>
+              <span class="text-[11px] text-muted-foreground">{{
+                t('summoningPlannerComponents.objectiveCard.queued')
+              }}</span>
             </template>
           </div>
         </div>

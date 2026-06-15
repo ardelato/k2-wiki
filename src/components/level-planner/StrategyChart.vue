@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import type { ChartPoint } from '@/utils/strategyChartData'
+
+const { t } = useI18n()
+
 
 const props = withDefaults(
   defineProps<{
@@ -306,7 +310,9 @@ function onPointLeave() {
         {{ primaryLabel }}
       </span>
       <template v-if="secondaryLoading">
-        <span class="animate-pulse text-muted-foreground">Computing...</span>
+        <span class="animate-pulse text-muted-foreground">{{
+          t('levelPlannerComponents.strategyComparison.computing')
+        }}</span>
       </template>
       <template v-else-if="secondarySeries">
         <span class="flex items-center gap-1.5">

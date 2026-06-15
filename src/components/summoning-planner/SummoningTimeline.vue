@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Clock3, Copy, Check } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import PlannerGantt from '@/components/planner/PlannerGantt.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
+import { activeLocale } from '@/i18n'
 import type { Creature, ItemType, PlannerNode, PlannerSchedule } from '@/types'
 import { getCreatureImage } from '@/utils/creatureImages'
 import { formatDuration, itemTypeColor, methodKindLabel } from '@/utils/format'
@@ -26,6 +28,7 @@ const props = defineProps<{
 }>()
 
 
+const { t } = useI18n()
 const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatureDrawer()
 
 
@@ -49,7 +52,7 @@ function humanAmount(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
   if (n >= 10_000) return `${(n / 1_000).toFixed(1)}K`
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
-  return n.toLocaleString()
+  return n.toLocaleString(activeLocale())
 }
 
 
@@ -90,14 +93,16 @@ function copyScheduleJson() {
         @click="copyScheduleJson"
       >
         <component :is="copied ? Check : Copy" class="size-3" />
-        {{ copied ? 'Copied!' : 'Copy JSON' }}
+        {{
+          copied ? t('summoningPlanner.timeline.copied') : t('summoningPlanner.timeline.copyJson')
+        }}
       </button>
     </div>
 
     <!-- Priority steps (wave-based vertical timeline) -->
     <div v-if="filteredWaves.length > 0">
       <p class="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-        Priority Steps
+        {{ t('summoningPlanner.timeline.prioritySteps') }}
       </p>
       <div>
         <div v-for="(wave, wi) in filteredWaves" :key="wave.waveNumber" class="flex gap-3">
@@ -175,7 +180,7 @@ function copyScheduleJson() {
                           card.kind === 'expedition'
                             ? (expeditionParties[card.itemId]?.expeditionName ?? card.description)
                             : card.kind === 'buy'
-                              ? 'Merchant'
+                              ? t('summoningPlanner.timeline.merchant')
                               : card.description
                         }}
                       </span>
