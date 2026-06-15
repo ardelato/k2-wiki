@@ -1,5 +1,6 @@
 import creaturesData from '@/data/creatures.json'
 import dungeonData from '@/data/dungeons.json'
+import i18n from '@/i18n'
 import type { Biome, Creature, DungeonConfig, DungeonGrade, Expedition } from '@/types'
 import {
   biomeMultiplier,
@@ -19,8 +20,11 @@ import {
   getRecommendedCreatures,
   getRecommendedDungeonCreatures,
   getSkillLevel,
+  jobLabels,
   levelFromXp,
   SKILLING_IDS,
+  statAbbreviations,
+  statLabels,
   traitAbbreviations,
   xpForLevel,
   xpForSkillLevel,
@@ -1093,5 +1097,33 @@ describe('getPlayerLevelXpBonus', () => {
 
   test('level 99 gives 25.00', () => {
     expect(getPlayerLevelXpBonus(99)).toBeCloseTo(25.0)
+  })
+})
+
+describe('i18n label objects are locale-reactive', () => {
+  const TEST_LOCALE = 'test-reactivity'
+
+  afterEach(() => {
+    i18n.global.locale.value = 'en'
+  })
+
+  // Guards the i18nRecord / Object.defineProperty getters: a refactor that turns
+  // these into plain eager objects would freeze every stat/trait/job label to the
+  // boot locale, and only this test would catch it.
+  test('stat/job/trait labels re-read t() when the active locale changes', () => {
+    expect(statLabels.power).toBe('Power')
+    expect(statAbbreviations.power).toBe('POW')
+
+    i18n.global.setLocaleMessage(TEST_LOCALE, {
+      stats: { power: 'PUISSANCE', powerAbbr: 'PUI' },
+      jobs: { chopping: 'COUPE' },
+      traits: { 'cold-resistance': 'FROID' },
+    })
+    i18n.global.locale.value = TEST_LOCALE
+
+    expect(statLabels.power).toBe('PUISSANCE')
+    expect(statAbbreviations.power).toBe('PUI')
+    expect(jobLabels.chopping).toBe('COUPE')
+    expect(traitAbbreviations['cold-resistance']).toBe('FROID')
   })
 })
