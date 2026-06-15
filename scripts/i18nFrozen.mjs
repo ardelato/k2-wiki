@@ -38,7 +38,6 @@ const FROZEN = {
     'nav.awakenTree',
     'nav.items', // wiki "Items" tab represents the in-game Item Codex — keep English
 
-
     // Page titles that are just the feature's proper noun.
     'expeditions.title',
     'sanctuaryView.title',
