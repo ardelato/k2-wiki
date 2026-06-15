@@ -1,38 +1,57 @@
 <script setup lang="ts">
 import { Check, ChevronDown, Languages } from 'lucide-vue-next'
-import { nextTick, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 
 import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { useLocale, type SupportedLocale } from '@/composables/useLocale'
+import { useLocaleOnboarding } from '@/composables/useLocaleOnboarding'
 import { t } from '@/i18n'
 
 defineProps<{ collapsed: boolean }>()
 
 
 const { currentLocale, currentLocaleShort, setLocale, locales } = useLocale()
+const { showSwitcherHint, dismissHint } = useLocaleOnboarding()
 
 
 const isOpen = ref(false)
 const triggerRef = ref<HTMLElement | null>(null)
 const menuStyle = ref<Record<string, string>>({})
+const hintStyle = ref<Record<string, string>>({})
+
+
+// Position a popover above the trigger (the switcher sits at the bottom of the
+// sidebar, so overlays open upward). Returns {} when the trigger is hidden
+// (e.g. the desktop rail's switcher while the mobile drawer is the live one),
+// so the hint never anchors to an off-screen rect.
+function anchorAbove(): Record<string, string> {
+  const el = triggerRef.value
+  if (!el || el.offsetParent === null) return {}
+  const r = el.getBoundingClientRect()
+  return {
+    bottom: `${Math.round(window.innerHeight - r.top + 8)}px`,
+    left: `${Math.round(r.left)}px`,
+  }
+}
+
+
+onMounted(async () => {
+  if (!showSwitcherHint.value) return
+  await nextTick()
+  hintStyle.value = anchorAbove()
+})
 
 
 async function toggle() {
+  // Opening the switcher counts as discovering it; retire the hint.
+  if (showSwitcherHint.value) dismissHint()
   if (isOpen.value) {
     isOpen.value = false
     return
   }
   isOpen.value = true
   await nextTick()
-  const r = triggerRef.value?.getBoundingClientRect()
-  if (r) {
-    // Anchored to the bottom of the trigger so the menu opens upward
-    // (the switcher lives at the bottom of the sidebar).
-    menuStyle.value = {
-      bottom: `${Math.round(window.innerHeight - r.top + 8)}px`,
-      left: `${Math.round(r.left)}px`,
-    }
-  }
+  menuStyle.value = anchorAbove()
 }
 
 
@@ -113,5 +132,44 @@ async function choose(code: SupportedLocale) {
         </button>
       </div>
     </Teleport>
+
+    <!-- One-time pointer so users seeing English discover other languages -->
+    <Teleport to="body">
+      <Transition name="locale-hint">
+        <div
+          v-if="showSwitcherHint && hintStyle.bottom"
+          class="fixed z-[49] w-max max-w-[220px] rounded-xl border border-border/70 bg-card/95 p-3 shadow-2xl backdrop-blur"
+          :style="hintStyle"
+          role="status"
+        >
+          <div class="flex items-start gap-2">
+            <Languages class="mt-0.5 size-4 shrink-0 text-primary" />
+            <p class="text-xs leading-snug text-foreground">{{ t('localeHint.message') }}</p>
+          </div>
+          <button
+            type="button"
+            class="focus-ring mt-2 w-full rounded-lg bg-primary/10 px-2 py-1 text-xs font-semibold text-primary transition hover:bg-primary/20"
+            @click="dismissHint"
+          >
+            {{ t('localeHint.gotIt') }}
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+.locale-hint-enter-active,
+.locale-hint-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.locale-hint-enter-from,
+.locale-hint-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+</style>

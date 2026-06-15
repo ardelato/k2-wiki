@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { useLocalStorage } from '@vueuse/core'
-import { Menu, X } from 'lucide-vue-next'
+import { Languages, Menu, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
+import { useLocaleOnboarding } from '@/composables/useLocaleOnboarding'
 
 const route = useRoute()
 const { t } = useI18n()
+const { showAutoSwitchNotice, currentLocaleName, switchToEnglish, keepLanguage } =
+  useLocaleOnboarding()
 const mobileMenuOpen = ref(false)
 const sidebarCollapsed = useLocalStorage('sidebar-collapsed', true)
 
@@ -119,6 +122,39 @@ watch(
         </div>
       </Transition>
     </Teleport>
+
+    <!-- First-run notice for users auto-switched into a translated UI.
+         Entrance-only CSS rather than <Transition>: this mounts with v-if
+         already true, and a Teleport+Transition whose enter hook never runs
+         then fails to fire its leave hook, so the notice wouldn't dismiss.
+         (The switcher hint can use <Transition> because it mounts false→true.) -->
+    <Teleport to="body">
+      <div
+        v-if="showAutoSwitchNotice"
+        class="locale-notice fixed inset-x-0 bottom-4 z-[60] mx-auto flex w-max max-w-[calc(100vw-2rem)] items-center gap-2.5 rounded-xl border border-border/70 bg-card/95 px-4 py-2.5 shadow-2xl backdrop-blur"
+        role="status"
+      >
+        <Languages class="size-4 shrink-0 text-muted-foreground" />
+        <span class="text-sm text-foreground">{{
+          t('localeNotice.shownIn', { language: currentLocaleName })
+        }}</span>
+        <button
+          type="button"
+          class="focus-ring rounded-lg px-2.5 py-1 text-sm font-semibold text-primary transition hover:bg-primary/10"
+          @click="switchToEnglish"
+        >
+          {{ t('localeNotice.viewInEnglish') }}
+        </button>
+        <button
+          type="button"
+          :aria-label="t('localeNotice.dismiss')"
+          class="focus-ring rounded-lg p-1 text-muted-foreground transition hover:text-foreground"
+          @click="keepLanguage"
+        >
+          <X class="size-4" />
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -149,5 +185,20 @@ watch(
 .overlay-enter-from aside,
 .overlay-leave-to aside {
   transform: translateX(-100%);
+}
+
+@keyframes locale-notice-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.locale-notice {
+  animation: locale-notice-in 0.2s ease;
 }
 </style>
