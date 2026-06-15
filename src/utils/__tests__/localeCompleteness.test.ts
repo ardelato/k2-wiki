@@ -1,7 +1,17 @@
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 
+import { collectFrozenPaths } from '../../../scripts/i18nFrozen.mjs'
+
 const LOCALES_DIR = join(__dirname, '../../locales')
+
+// Minimum share of non-frozen UI strings a locale must actually translate
+// (i.e. differ from English). This is a coarse floor, not a per-key check:
+// French↔English cognates ("Type", "Machine", "Bonus", "Source"…) legitimately
+// match English, so a locale never reaches 100%. The point is to fail loudly if
+// a whole locale ships untranslated — placeholder/key-presence checks alone pass
+// in that case. Current coverage: fr 90.5% (lowest), de/es ~94%, tr/zh ~97%.
+const MIN_TRANSLATED_RATIO = 0.8
 
 function flatKeys(obj: Record<string, unknown>, prefix = ''): string[] {
   return Object.entries(obj).flatMap(([key, val]) => {
@@ -14,6 +24,16 @@ function flatKeys(obj: Record<string, unknown>, prefix = ''): string[] {
 
 const enJson = JSON.parse(readFileSync(join(LOCALES_DIR, 'en/ui.json'), 'utf8'))
 const enKeys = new Set(flatKeys(enJson))
+
+const resolve = (json: unknown, key: string): unknown =>
+  key.split('.').reduce((o: any, k) => o?.[k], json)
+
+// Game-canonical vocabulary stays English in every locale by design, so exclude
+// it before measuring translation coverage.
+const frozenPaths = collectFrozenPaths(enJson)
+const enTranslatableKeys = [...enKeys].filter(
+  (k) => !frozenPaths.has(k) && typeof resolve(enJson, k) === 'string',
+)
 
 const localeDirs = readdirSync(LOCALES_DIR, { withFileTypes: true })
   .filter((d) => d.isDirectory() && d.name !== 'en')
@@ -59,5 +79,15 @@ describe.skipIf(localeDirs.length === 0).each(localeDirs)('locale %s', (locale) 
       }
     }
     expect(mismatches).toEqual([])
+  })
+
+  it('translates the bulk of non-frozen UI strings', () => {
+    const stillEnglish = enTranslatableKeys.filter((k) => resolve(json, k) === resolve(enJson, k))
+    const translatedRatio = 1 - stillEnglish.length / enTranslatableKeys.length
+    expect(
+      translatedRatio,
+      `${locale} translates only ${(translatedRatio * 100).toFixed(1)}% of non-frozen UI strings ` +
+        `(floor ${MIN_TRANSLATED_RATIO * 100}%). Still English: ${stillEnglish.join(', ')}`,
+    ).toBeGreaterThanOrEqual(MIN_TRANSLATED_RATIO)
   })
 })
