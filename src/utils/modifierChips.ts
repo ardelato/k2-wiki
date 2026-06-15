@@ -1,3 +1,4 @@
+import { t } from '@/i18n'
 import {
   upgradesIcon,
   sanctuaryIcon,
@@ -23,12 +24,30 @@ const workstationToolId: Record<string, string> = {
   Stove: 'knife',
 }
 
+/**
+ * Localizes the hardcoded English effect-descriptor fragments emitted by
+ * useCraftPlanner's solve (e.g. "yield", "duration", "Speed", "/min").
+ *
+ * The solve does not re-run on locale change, so it intentionally emits English
+ * sentinels. This helper translates them at render time — it runs inside the
+ * consuming components' computeds, where `t()` re-evaluates on locale change,
+ * keeping chip values locale-reactive. Job/stat names, "T{n}" tier notation,
+ * and numbers are preserved verbatim (game vocabulary / data).
+ */
+function localizeModifierValue(value: string): string {
+  return value
+    .replace(/\/min\b/g, t('common.perMin'))
+    .replace(/\byield\b/g, t('awakenView.kinds.yield'))
+    .replace(/\bduration\b/g, t('awakenView.kinds.duration'))
+    .replace(/\bSpeed\b/g, t('awakenView.kinds.speed'))
+}
+
 function parseStats(value: string): string[] {
   const inner = value.match(/\(([^)]+)\)/)
   const raw = inner ? inner[1] : value
   return raw
     .split(',')
-    .map((s) => s.trim())
+    .map((s) => localizeModifierValue(s.trim()))
     .filter(Boolean)
 }
 
@@ -47,7 +66,7 @@ export function extractModifierChips(
         color:
           'border-cyan-600/35 bg-cyan-100 text-cyan-800 dark:border-cyan-400/40 dark:bg-cyan-400/20 dark:text-cyan-100',
         accentColor: 'bg-cyan-500',
-        subtitle: 'Skill tree bonuses',
+        subtitle: t('modifiers.skillTreeBonuses'),
         stats: parseStats(row.value),
       })
     } else if (row.label === 'Sanctuary') {
@@ -59,7 +78,9 @@ export function extractModifierChips(
         color:
           'border-amber-600/35 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/20 dark:text-amber-100',
         accentColor: 'bg-amber-500',
-        subtitle: tierMatch ? `Tier ${tierMatch[1]} job bonus` : 'Job tier bonus',
+        subtitle: tierMatch
+          ? t('modifiers.tierJobBonus', { n: tierMatch[1] })
+          : t('modifiers.jobTierBonus'),
         stats: parseStats(row.value),
       })
     } else if (row.label.startsWith('Machine')) {
@@ -71,42 +92,42 @@ export function extractModifierChips(
         color:
           'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100',
         accentColor: 'bg-orange-500',
-        subtitle: 'Passive machine production',
-        stats: [row.value],
+        subtitle: t('modifiers.passiveMachineProduction'),
+        stats: [localizeModifierValue(row.value)],
       })
     } else if (row.label.startsWith('Fabrication')) {
       chips.push({
-        label: options?.compact ? 'Fab' : 'Fabrication',
+        label: t(options?.compact ? 'modifiers.fabricationShort' : 'modifiers.fabrication'),
         value: row.value,
         icon: itemGridIcon,
         color:
           'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100',
         accentColor: 'bg-violet-500',
-        subtitle: 'Passive fabrication output',
-        stats: [row.value],
+        subtitle: t('modifiers.passiveFabricationOutput'),
+        stats: [localizeModifierValue(row.value)],
       })
     } else if (row.label === 'Speed Tier') {
       chips.push({
-        label: 'Speed Tier',
+        label: t('modifiers.speedTier'),
         value: row.value,
         icon: upgradesIcon,
         color:
           'border-emerald-600/35 bg-emerald-100 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/20 dark:text-emerald-100',
         accentColor: 'bg-emerald-500',
-        subtitle: 'Awaken speed upgrade',
-        stats: [row.value],
+        subtitle: t('modifiers.awakenSpeedUpgrade'),
+        stats: [localizeModifierValue(row.value)],
       })
     } else if (row.label === 'Tool Speed') {
       const toolId = methodTitle ? workstationToolId[methodTitle] : undefined
       chips.push({
-        label: 'Tool Speed',
+        label: t('modifiers.toolSpeed'),
         value: row.value,
         icon: toolId ? toolIcons[toolId] : upgradesIcon,
         color:
           'border-teal-600/35 bg-teal-100 text-teal-800 dark:border-teal-400/40 dark:bg-teal-400/20 dark:text-teal-100',
         accentColor: 'bg-teal-500',
-        subtitle: 'Tool speed mode bonus',
-        stats: [row.value],
+        subtitle: t('modifiers.toolSpeedModeBonus'),
+        stats: [localizeModifierValue(row.value)],
       })
     }
   }

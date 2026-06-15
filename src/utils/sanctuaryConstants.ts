@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 export const MAX_SANCTUARY_SLOTS = 8
 
 export const SANCTUARY_JOBS = [
@@ -28,12 +30,16 @@ export const JOB_TIER_BENEFITS = [
 
 export function jobTierLabel(tier: number, shortDuration = false): string {
   const b = JOB_TIER_BENEFITS[tier] ?? JOB_TIER_BENEFITS[0]
-  if (tier === 0) return 'No bonuses'
+  if (tier === 0) return t('sanctuary.noBonuses')
   const parts: string[] = []
-  if (b.xpBonus > 0) parts.push(`+${b.xpBonus}% XP`)
+  if (b.xpBonus > 0) parts.push(t('sanctuary.xpBonus', { n: b.xpBonus }))
   if (b.durationReduction > 0)
-    parts.push(`-${b.durationReduction}% ${shortDuration ? 'Dur' : 'Duration'}`)
-  if (b.yieldBonus > 0) parts.push(`+${b.yieldBonus} Yield`)
+    parts.push(
+      t(shortDuration ? 'sanctuary.durationReductionShort' : 'sanctuary.durationReduction', {
+        n: b.durationReduction,
+      }),
+    )
+  if (b.yieldBonus > 0) parts.push(t('sanctuary.yieldBonus', { n: b.yieldBonus }))
   return parts.join(', ')
 }
 
@@ -54,10 +60,13 @@ export function tierIncrementalLabel(tier: number): string {
   if (tier < 1 || tier > MAX_TIER) return ''
   const curr = JOB_TIER_BENEFITS[tier]
   const prev = JOB_TIER_BENEFITS[tier - 1]
-  if (curr.xpBonus > prev.xpBonus) return `+${curr.xpBonus - prev.xpBonus}% XP`
+  if (curr.xpBonus > prev.xpBonus) return t('sanctuary.xpBonus', { n: curr.xpBonus - prev.xpBonus })
   if (curr.durationReduction > prev.durationReduction)
-    return `-${curr.durationReduction - prev.durationReduction}% Dur`
-  if (curr.yieldBonus > prev.yieldBonus) return `+${curr.yieldBonus - prev.yieldBonus} Yield`
+    return t('sanctuary.durationReductionShort', {
+      n: curr.durationReduction - prev.durationReduction,
+    })
+  if (curr.yieldBonus > prev.yieldBonus)
+    return t('sanctuary.yieldBonus', { n: curr.yieldBonus - prev.yieldBonus })
   return ''
 }
 

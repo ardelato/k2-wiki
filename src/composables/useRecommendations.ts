@@ -1,4 +1,5 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import { machineRecipeIndex, machineSpeedMultipliers } from '@/data/indexes'
 import type { PlannerMethod, PlannerNode } from '@/types'
@@ -18,6 +19,8 @@ export function useRecommendations(
   getActiveMethod: (nodeId: string) => PlannerMethod | null,
   gameConfig: ReturnType<typeof useGameConfig>,
 ): ComputedRef<Record<string, Recommendation>> {
+  const { t } = useI18n()
+
   return computed(() => {
     const result: Record<string, Recommendation> = {}
 
@@ -62,7 +65,11 @@ export function useRecommendations(
             const improvement = 1 - nextMultiplier / currentMultiplier
             if (improvement >= 0.05) {
               result[node.id] = {
-                text: `Upgrade ${source.machineName} to Lv${currentLevel + 1} for ~${Math.round(improvement * 100)}% faster passive generation`,
+                text: t('recommendations.machineUpgrade', {
+                  machineName: source.machineName,
+                  level: currentLevel + 1,
+                  pct: Math.round(improvement * 100),
+                }),
               }
             }
           }
@@ -86,7 +93,11 @@ export function useRecommendations(
           const improvement = nextReduction - currentReduction
           if (improvement >= 0.05) {
             result[node.id] = {
-              text: `Place sanctuary creatures for ${jobId} to reach T${nextTier} (~${Math.round(improvement * 100)}% faster gathering)`,
+              text: t('recommendations.sanctuaryTier', {
+                jobId,
+                tier: nextTier,
+                pct: Math.round(improvement * 100),
+              }),
             }
             continue
           }
@@ -98,7 +109,11 @@ export function useRecommendations(
           const improvement = nextTier * 0.05 - awakenGather.durationTier * 0.05
           if (improvement >= 0.05) {
             result[node.id] = {
-              text: `Awaken duration tier for ${jobId} would reduce ${node.itemName} gathering by ~${Math.round(nextTier * 5)}%`,
+              text: t('recommendations.awakenGatherDuration', {
+                jobId,
+                itemName: node.itemName,
+                pct: Math.round(nextTier * 5),
+              }),
             }
             continue
           }
@@ -107,7 +122,10 @@ export function useRecommendations(
         // Awaken yield bonus recommendation (max is 2)
         if (awakenGather.yieldBonus < 2) {
           result[node.id] = {
-            text: `Awaken yield bonus for ${jobId} would increase ${node.itemName} gather yield`,
+            text: t('recommendations.awakenGatherYield', {
+              jobId,
+              itemName: node.itemName,
+            }),
           }
           continue
         }
@@ -127,7 +145,7 @@ export function useRecommendations(
           const improvement = nextTier * 0.05 - currentSpeedTier * 0.05
           if (improvement >= 0.05) {
             result[node.id] = {
-              text: `Awaken speed tier for ${workstation} would reduce craft time by ~5%`,
+              text: t('recommendations.awakenSpeed', { workstation }),
             }
           }
         }
@@ -140,7 +158,10 @@ export function useRecommendations(
         if (currentPoints < MAX_FABRICATION_POINTS) {
           const additionalPoints = MAX_FABRICATION_POINTS - currentPoints
           result[node.id] = {
-            text: `Allocate ${additionalPoints} more fabrication point${additionalPoints !== 1 ? 's' : ''} to ${node.itemName} for faster passive production`,
+            text: t('recommendations.fabricationPoints', {
+              count: additionalPoints,
+              itemName: node.itemName,
+            }),
           }
         }
         continue

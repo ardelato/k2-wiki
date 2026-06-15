@@ -13,6 +13,7 @@ import {
   machineRecipeIndex,
   machineSpeedMultipliers,
 } from '@/data/indexes'
+import { activeLocale } from '@/i18n'
 import type {
   AwakenGatherUpgrade,
   GardenFlowerEntry,
@@ -87,7 +88,7 @@ function expectedAmount(min: number, max: number): number {
 }
 
 function formatAmount(value: number): string {
-  if (Number.isInteger(value)) return value.toLocaleString()
+  if (Number.isInteger(value)) return value.toLocaleString(activeLocale())
   if (value >= 100) return value.toFixed(1)
   if (value >= 10) return value.toFixed(2)
   return value.toFixed(3)
@@ -861,14 +862,17 @@ export function buildPlannerGraph(
         totalTimeSeconds: goldTime ?? 0,
         cost,
         detailRows: [
-          { label: 'Unit price', value: `${item.buyValue.toLocaleString()} gold` },
-          { label: 'Total cost', value: `${Math.round(cost).toLocaleString()} gold` },
+          { label: 'Unit price', value: `${item.buyValue.toLocaleString(activeLocale())} gold` },
+          { label: 'Total cost', value: `${Math.round(cost).toLocaleString(activeLocale())} gold` },
           ...(currentGold > 0
             ? [
-                { label: 'On hand', value: `${Math.round(currentGold).toLocaleString()} gold` },
+                {
+                  label: 'On hand',
+                  value: `${Math.round(currentGold).toLocaleString(activeLocale())} gold`,
+                },
                 {
                   label: 'Still need',
-                  value: `${Math.round(remainingCost).toLocaleString()} gold`,
+                  value: `${Math.round(remainingCost).toLocaleString(activeLocale())} gold`,
                 },
               ]
             : []),

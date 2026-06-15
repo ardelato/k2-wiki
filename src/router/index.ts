@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { LocationQuery } from 'vue-router'
 
+import { t } from '@/i18n'
+
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -98,17 +100,17 @@ export const router = createRouter({
 function getPlannerTitle(query: LocationQuery): string {
   const tab = query.tab
   if (tab === 'levelup') {
-    const mode = query.mode === 'party' ? 'P' : 'S'
-    return `Planner · Level Up (${mode})`
+    return t(query.mode === 'party' ? 'meta.plannerLevelUpParty' : 'meta.plannerLevelUpSingle')
   }
-  if (tab === 'summoning') return 'Planner · Summoning'
-  return 'Planner · Craft'
+  if (tab === 'summoning') return t('meta.plannerSummoning')
+  return t('meta.plannerCraft')
 }
 
 router.afterEach((to) => {
   if (to.name === 'planner') {
     document.title = getPlannerTitle(to.query)
   } else {
-    document.title = (to.meta.title as string) ?? 'K2 Wiki'
+    const titleKey = to.meta.title as string | undefined
+    document.title = titleKey ? t(`nav.${titleKey.toLowerCase()}`) : t('common.k2Wiki')
   }
 })

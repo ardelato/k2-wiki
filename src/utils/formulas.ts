@@ -1,5 +1,6 @@
 import biomesData from '@/data/biomes.json'
 import expeditionsData from '@/data/expeditions.json'
+import { i18nRecord } from '@/i18n'
 import type {
   Creature,
   Expedition,
@@ -11,49 +12,51 @@ import type {
   DungeonReward,
 } from '@/types'
 
-// Consolidated stat labels & abbreviations (creature and expedition stats share the same keys)
-export const statLabels: Record<keyof CreatureStats, string> = {
-  power: 'Power',
-  grit: 'Grit',
-  agility: 'Agility',
-  smarts: 'Smarts',
-  looting: 'Looting',
-  luck: 'Luck',
-}
+const STAT_KEYS: readonly (keyof CreatureStats)[] = [
+  'power',
+  'grit',
+  'agility',
+  'smarts',
+  'looting',
+  'luck',
+]
 
-export const statAbbreviations: Record<keyof CreatureStats, string> = {
-  power: 'POW',
-  grit: 'GRT',
-  agility: 'AGI',
-  smarts: 'SMT',
-  looting: 'LOT',
-  luck: 'LCK',
-}
+const TRAIT_KEYS = [
+  'cold-resistance',
+  'heat-resistance',
+  'poison-resistance',
+  'water-breathing',
+  'hard-shell',
+  'night-vision',
+  'camouflage',
+  'gatherer',
+  'learner',
+  'lucky',
+  'regeneration',
+  'scouting',
+  'tracking',
+] as const
 
-export const traitAbbreviations: Record<string, string> = {
-  'cold-resistance': 'Cold Res',
-  'heat-resistance': 'Heat Res',
-  'poison-resistance': 'Poison Res',
-  'water-breathing': 'Water Brt',
-  'hard-shell': 'Hard Shell',
-  'night-vision': 'Night Vis',
-  camouflage: 'Camo',
-  gatherer: 'Gatherer',
-  learner: 'Learner',
-  lucky: 'Lucky',
-  regeneration: 'Regen',
-  scouting: 'Scouting',
-  tracking: 'Tracking',
-}
+const JOB_KEYS: readonly (keyof Creature['jobs'])[] = [
+  'chopping',
+  'mining',
+  'digging',
+  'exploring',
+  'fishing',
+  'farming',
+]
 
-export const jobLabels: Record<keyof Creature['jobs'], string> = {
-  chopping: 'Chopping',
-  mining: 'Mining',
-  digging: 'Digging',
-  exploring: 'Exploring',
-  fishing: 'Fishing',
-  farming: 'Farming',
-}
+export const statLabels: Record<keyof CreatureStats, string> = i18nRecord(STAT_KEYS, 'stats')
+
+export const statAbbreviations: Record<keyof CreatureStats, string> = i18nRecord(
+  STAT_KEYS,
+  'stats',
+  (key) => `${key}Abbr`,
+)
+
+export const traitAbbreviations: Record<string, string> = i18nRecord(TRAIT_KEYS, 'traits')
+
+export const jobLabels: Record<keyof Creature['jobs'], string> = i18nRecord(JOB_KEYS, 'jobs')
 
 export const jobColors: Record<keyof Creature['jobs'], string> = {
   chopping: 'var(--color-job-chopping)',
