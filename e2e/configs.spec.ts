@@ -117,7 +117,7 @@ test.describe('save file import', () => {
   test('applying a save updates the beastiary with summoned creatures', async ({ page }) => {
     await uploadSave(page)
     await page.goto('./')
-    await page.locator('img[alt="Not summoned"]').first().waitFor()
+    await page.locator('img[alt="Not Summoned"]').first().waitFor()
 
     // Fixture: 5 owned creatures — 4 summoned + 1 awakened
     await expect(page.locator('img[alt="Summoned"]')).toHaveCount(4)

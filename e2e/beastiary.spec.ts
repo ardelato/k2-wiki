@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/')
   await page.evaluate(() => localStorage.clear())
   await page.goto('/')
-  await page.locator('img[alt="Not summoned"]').first().waitFor()
+  await page.locator('img[alt="Not Summoned"]').first().waitFor()
 })
 
 // ── Card state validation ─────────────────────────────────────────────
@@ -13,8 +13,8 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('card state validation', () => {
   test('card icons reflect summoned state', async ({ page }) => {
-    // Initially all cards show "Not summoned" alt
-    await expect(page.locator('img[alt="Not summoned"]')).toHaveCount(120)
+    // Initially all cards show "Not Summoned" alt
+    await expect(page.locator('img[alt="Not Summoned"]')).toHaveCount(120)
 
     // Summon all creatures
     await page.getByRole('button', { name: 'Edit My Collection' }).click()
@@ -98,7 +98,7 @@ test.describe('edit mode lifecycle', () => {
     await page.getByRole('button', { name: 'Cancel' }).click()
 
     await expect(page.getByRole('button', { name: 'Edit My Collection' })).toBeVisible()
-    await expect(page.locator('img[alt="Not summoned"]')).toHaveCount(120)
+    await expect(page.locator('img[alt="Not Summoned"]')).toHaveCount(120)
   })
 })
 
@@ -124,7 +124,7 @@ test.describe('bulk actions', () => {
     await page.getByRole('button', { name: 'Not Summoned' }).click()
     await page.getByRole('button', { name: 'Done' }).click()
 
-    await expect(page.locator('img[alt="Not summoned"]')).toHaveCount(120)
+    await expect(page.locator('img[alt="Not Summoned"]')).toHaveCount(120)
   })
 
   test('bulk awaken sets awakened state', async ({ page }) => {
@@ -317,7 +317,7 @@ test.describe('creature drawer', () => {
 
 /** Count visible creature cards via their status icon (one per card) */
 function creatureCards(page: import('@playwright/test').Page) {
-  return page.locator('img[alt="Not summoned"], img[alt="Summoned"], img[alt="Awakened"]')
+  return page.locator('img[alt="Not Summoned"], img[alt="Summoned"], img[alt="Awakened"]')
 }
 
 test.describe('search and filtering', () => {
