@@ -40,7 +40,7 @@ defineProps<{
 <template>
   <section class="grid gap-3 md:grid-cols-[1.4fr_1fr]">
     <!-- Creatures Collected -->
-    <div class="relative overflow-hidden rounded-2xl border border-border bg-card/50 p-5">
+    <div class="relative overflow-hidden rounded-xl border border-border bg-card/50 p-5">
       <div
         aria-hidden="true"
         class="pointer-events-none absolute -left-12 -top-12 size-48 rounded-full bg-accent/15 blur-3xl"
@@ -63,7 +63,7 @@ defineProps<{
             class="flex items-center gap-2"
           >
             <span
-              class="w-12 shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground"
+              class="w-12 shrink-0 text-3xs font-bold uppercase tracking-wider text-muted-foreground"
             >
               {{ t('configs.creatures.tier', { n: tierBucket.tier + 1 }) }}
             </span>
@@ -81,7 +81,7 @@ defineProps<{
                 "
               />
             </div>
-            <span class="w-12 shrink-0 text-right font-mono text-[10px] font-bold tabular-nums">
+            <span class="w-12 shrink-0 text-right font-mono text-3xs font-bold tabular-nums">
               {{ tierBucket.owned }}/{{ tierBucket.total }}
             </span>
           </div>
@@ -90,7 +90,7 @@ defineProps<{
     </div>
 
     <!-- Player Level -->
-    <div class="relative overflow-hidden rounded-2xl border border-border bg-card/50 p-5">
+    <div class="relative overflow-hidden rounded-xl border border-border bg-card/50 p-5">
       <div
         aria-hidden="true"
         class="pointer-events-none absolute -right-12 -top-12 size-48 rounded-full bg-primary/15 blur-3xl"
@@ -101,7 +101,7 @@ defineProps<{
           <span class="font-mono text-6xl font-extrabold leading-none text-foreground">
             {{ displayPlayerLevel }}
           </span>
-          <span class="text-sm font-semibold text-emerald-400">
+          <span class="text-sm font-semibold text-success-strong">
             {{
               t('configs.skills.xpBonus', {
                 pct: getPlayerLevelXpBonus(displayPlayerLevel).toFixed(2),
@@ -123,19 +123,19 @@ defineProps<{
               class="size-4 shrink-0 object-contain"
               loading="lazy"
             />
-            <span class="w-16 shrink-0 truncate text-[10px] font-semibold text-muted-foreground">
+            <span class="w-16 shrink-0 truncate text-3xs font-semibold text-muted-foreground">
               {{ sk.id }}
             </span>
             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/40">
               <div
                 class="h-full"
-                :class="displaySkillLevel(sk.id) >= 99 ? 'bg-amber-400' : 'bg-accent'"
+                :class="displaySkillLevel(sk.id) >= 99 ? 'bg-warning' : 'bg-accent'"
                 :style="{ width: `${Math.min(100, (displaySkillLevel(sk.id) / 99) * 100)}%` }"
               />
             </div>
             <span
-              class="w-5 shrink-0 text-right font-mono text-[10px] font-bold tabular-nums"
-              :class="displaySkillLevel(sk.id) >= 99 ? 'text-amber-400' : ''"
+              class="w-5 shrink-0 text-right font-mono text-3xs font-bold tabular-nums"
+              :class="displaySkillLevel(sk.id) >= 99 ? 'text-warning-strong' : ''"
             >
               {{ displaySkillLevel(sk.id) }}
             </span>
