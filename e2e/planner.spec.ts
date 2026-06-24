@@ -234,20 +234,110 @@ async function seedCreatures(page: Page) {
 // ── Level Up — single mode rendering ────────────────────────────────
 
 test.describe('level up - single mode rendering', () => {
-  test('default shows Level Up heading and mode toggle', async ({ page }) => {
+  test('default objective is Awaken-rush with an objective selector', async ({ page }) => {
     await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
+    await page.locator('h1', { hasText: 'Awaken Rush' }).waitFor()
 
-    await expect(page.locator('h1', { hasText: 'Level Up' })).toBeVisible()
-    await expect(page.getByText('Single', { exact: true })).toBeVisible()
-    await expect(page.getByText('Party', { exact: true })).toBeVisible()
+    // Objective selector offers both objectives
+    await expect(page.getByRole('button', { name: 'Awaken-rush' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Prestige-loop' })).toBeVisible()
   })
 
   test('empty state shows choose a creature prompt', async ({ page }) => {
     await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
+    await page.locator('h1', { hasText: 'Awaken Rush' }).waitFor()
 
     await expect(page.getByText('Choose a creature to begin planning.')).toBeVisible()
+  })
+})
+
+// ── Level Up — objectives (#9) ──────────────────────────────────────
+
+test.describe('level up - objectives', () => {
+  test('switching objective updates the URL and heading', async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.locator('h1', { hasText: 'Awaken Rush' }).waitFor()
+
+    await page.getByRole('button', { name: 'Prestige-loop' }).click()
+    await expect(page).toHaveURL(/objective=prestige-loop/)
+    await expect(page.locator('h1', { hasText: 'Prestige Loop' })).toBeVisible()
+  })
+
+  test('awaken-rush pins the target to level 70', async ({ page }) => {
+    await page.goto('./planner?tab=levelup&objective=awaken-rush')
+    await page.locator('h1', { hasText: 'Awaken Rush' }).waitFor()
+    await expect(page.getByText('Awaken target · LVL 70')).toBeVisible()
+  })
+
+  test('prestige-loop shows controls and the eligibility empty state', async ({ page }) => {
+    await page.goto('./planner?tab=levelup')
+    await page.evaluate(() => localStorage.clear())
+    await page.goto('./planner?tab=levelup&objective=prestige-loop')
+    await page.locator('h1', { hasText: 'Prestige Loop' }).waitFor()
+
+    // Cadence / strategy controls are first-class
+    await expect(page.getByText('Check in every')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Anchor' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Rotation' })).toBeVisible()
+
+    // No awakened creatures → guidance to Awaken-rush
+    await expect(page.getByText('No prestige-eligible creatures yet.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Go to Awaken-rush' })).toBeVisible()
+  })
+
+  test('prestige-loop computes a stable setup for an awakened roster', async ({ page }) => {
+    test.setTimeout(90000)
+    await page.goto('./planner?tab=levelup')
+    await page.evaluate(() => {
+      const ids = ['moss', 'scoots', 'slick', 'chroma', 'sunny', 'mizu', 'ranger', 'baabaa']
+      const col: Record<string, { owned: boolean; level: number; awakened: boolean }> = {}
+      for (const id of ids) col[id] = { owned: true, level: 120, awakened: true }
+      localStorage.setItem('creature-collection', JSON.stringify(col))
+    })
+    await page.goto('./planner?tab=levelup&objective=prestige-loop')
+    await page.locator('h1', { hasText: 'Prestige Loop' }).waitFor()
+
+    await page.getByRole('button', { name: 'Calculate' }).click()
+
+    // Headline metric + recommended setup render
+    await expect(page.getByText(/tokens\/hr/).first()).toBeVisible({ timeout: 60000 })
+    await expect(page.getByText('Recommended setup')).toBeVisible()
+    await expect(page.getByText('Strategy comparison')).toBeVisible()
+    // Booster count is fixed (no picker)
+    await expect(page.getByText(/K=3/).first()).toBeVisible()
+  })
+
+  test('timeline tab shows the per-check-in evolution', async ({ page }) => {
+    test.setTimeout(90000)
+    await page.goto('./planner?tab=levelup')
+    await page.evaluate(() => {
+      const ids = [
+        'moss',
+        'scoots',
+        'slick',
+        'chroma',
+        'sunny',
+        'mizu',
+        'ranger',
+        'baabaa',
+        'tato',
+        'bolt',
+      ]
+      const col: Record<string, { owned: boolean; level: number; awakened: boolean }> = {}
+      for (const id of ids) col[id] = { owned: true, level: 120, awakened: true }
+      localStorage.setItem('creature-collection', JSON.stringify(col))
+    })
+    await page.goto('./planner?tab=levelup&objective=prestige-loop')
+    await page.locator('h1', { hasText: 'Prestige Loop' }).waitFor()
+    await page.getByRole('button', { name: 'Calculate' }).click()
+    await expect(page.getByText('Recommended setup')).toBeVisible({ timeout: 60000 })
+
+    // Timeline is available for every strategy (no longer a rotation-only drawer).
+    await page.getByRole('button', { name: 'Timeline' }).click()
+    await expect(page.getByRole('button', { name: 'By creature' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'By expedition' })).toBeVisible()
+    // By-creature lens renders a per-creature fate row with a Tokens column.
+    await expect(page.getByText('Tokens', { exact: false }).first()).toBeVisible()
   })
 })
 
@@ -286,38 +376,6 @@ test.describe('level up - single mode planning', () => {
     await expect(page.getByText('Expedition').first()).toBeVisible()
   })
 
-  test('target level preset 70 changes the plan', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Get step count at target 120
-    const stepsText120 = await page
-      .getByText(/\d+ steps?/)
-      .first()
-      .textContent()
-
-    // Switch to target 70 — invalidates the plan, so click Calculate again
-    // There are two sets of preset buttons (single + party), find the one in single mode
-    await page.getByRole('button', { name: '70', exact: true }).first().click()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Wait for plan to recalculate
-    await page
-      .getByText(/\d+ steps?/)
-      .first()
-      .waitFor()
-    const stepsText70 = await page
-      .getByText(/\d+ steps?/)
-      .first()
-      .textContent()
-
-    // Target 70 should have fewer or equal steps than 120
-    const steps120 = parseInt(stepsText120!.match(/(\d+)/)![1])
-    const steps70 = parseInt(stepsText70!.match(/(\d+)/)![1])
-    expect(steps70).toBeLessThanOrEqual(steps120)
-  })
-
   test('creature at max level shows already max message', async ({ page }) => {
     // Seed moss at level 70 (pre-awaken max)
     await page.evaluate(() => {
@@ -327,6 +385,19 @@ test.describe('level up - single mode planning', () => {
     })
     await page.goto('./planner?tab=levelup&creature=moss&target=70')
     await page.getByText('Already at max level!').waitFor()
+  })
+
+  test('awaken-rush shows "already awakened" for an awakened creature', async ({ page }) => {
+    // Regression: an awakened creature past level 70 yielded a zero-step plan and
+    // rendered nothing under Awaken-rush. It should now show the cleared state.
+    await page.evaluate(() => {
+      const coll = JSON.parse(localStorage.getItem('creature-collection') || '{}')
+      coll.moss = { owned: true, level: 80, awakened: true }
+      localStorage.setItem('creature-collection', JSON.stringify(coll))
+    })
+    await page.goto('./planner?tab=levelup&objective=awaken-rush&creature=moss')
+    await expect(page.getByText('Already awakened.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Go to Prestige-loop' })).toBeVisible()
   })
 })
 
@@ -345,78 +416,6 @@ test.describe('level up - step interaction', () => {
 
     // After click, it should be expanded
     await expect(page.locator('button[aria-expanded="true"]').first()).toBeVisible()
-  })
-
-  test('awakening step appears when plan crosses level 70', async ({ page }) => {
-    // Seed creature near awaken threshold so plan includes awakening
-    await page.evaluate(() => {
-      localStorage.setItem(
-        'creature-collection',
-        JSON.stringify({ moss: { owned: true, level: 60, awakened: false } }),
-      )
-    })
-    await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Awakening step should show "Awaken Creature" text
-    await expect(page.getByText('Awaken Creature')).toBeVisible()
-  })
-})
-
-// ── Level Up — party mode rendering ─────────────────────────────────
-
-test.describe('level up - party mode rendering', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-    await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
-  })
-
-  test('switching to Party mode shows creature filter and Calculate button', async ({ page }) => {
-    await page.getByText('Party', { exact: true }).click()
-
-    // Should show creature filter with creature names
-    await expect(page.getByText('Moss').first()).toBeVisible()
-
-    // Calculate button should be visible
-    await expect(page.getByRole('button', { name: 'Calculate' })).toBeVisible()
-  })
-
-  test('party mode shows target level and budget controls', async ({ page }) => {
-    await page.getByText('Party', { exact: true }).click()
-
-    await expect(page.getByText('Target').first()).toBeVisible()
-    await expect(page.getByText('Budget').first()).toBeVisible()
-    await expect(page.getByRole('button', { name: 'quick' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'thorough' })).toBeVisible()
-  })
-})
-
-// ── Level Up — party mode computation ───────────────────────────────
-
-test.describe('level up - party mode computation', () => {
-  test('Calculate triggers computation and shows results', async ({ page }) => {
-    test.setTimeout(90000)
-
-    await page.goto('./planner?tab=levelup')
-    await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-    await page.goto('./planner?tab=levelup&mode=party&partyTarget=70')
-    await page.getByRole('button', { name: 'Calculate' }).waitFor()
-
-    // Click Calculate
-    await page.getByRole('button', { name: 'Calculate' }).click()
-
-    // Wait for results — either loading indicator or results
-    // The computation can take a while, so wait for the summary to appear
-    await expect(page.getByText(/\d+ runs/).first()).toBeVisible({ timeout: 60000 })
-
-    // Strategy toggle should now be visible
-    await expect(page.getByText('Optimal', { exact: true })).toBeVisible()
-    await expect(page.getByText('Hands-Free', { exact: true })).toBeVisible()
   })
 })
 
@@ -448,13 +447,6 @@ test.describe('level up - expedition filter', () => {
     // Should show expedition names and skull icons
     await expect(page.getByText('Expedition Training').first()).toBeVisible()
     await expect(page.locator('img[alt="Tier 1"]').first()).toBeVisible()
-  })
-
-  test('expedition filter is visible in party mode', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&mode=party')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
-
-    await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
   })
 
   test('Include All button toggles all expeditions', async ({ page }) => {
