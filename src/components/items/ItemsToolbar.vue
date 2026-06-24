@@ -7,8 +7,8 @@ import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import type { SourceCategory } from '@/composables/useItems'
 import type { ItemType } from '@/types'
-import { itemTypeColor, sourceLabel } from '@/utils/format'
-import { sourceIcons } from '@/utils/icons'
+import { itemTypeColor, sourceLabel } from '@/utils/format/format'
+import { sourceIcons } from '@/utils/format/icons'
 
 const props = defineProps<{
   searchQuery: string
@@ -81,7 +81,7 @@ const showFilters = ref(false)
 <template>
   <div class="surface-card p-4 sm:p-5">
     <div class="flex flex-wrap items-center gap-3">
-      <label class="relative min-w-[220px] flex-1">
+      <label class="relative min-w-[var(--sidebar-width)] flex-1">
         <Search
           class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         />
@@ -139,7 +139,7 @@ const showFilters = ref(false)
         {{ t('common.filters') }}
         <span
           v-if="hasActiveFilters"
-          class="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+          class="flex size-5 items-center justify-center rounded-full bg-primary text-3xs font-bold text-primary-foreground"
           >!</span
         >
       </button>

@@ -24,19 +24,19 @@ const config = dungeonData as DungeonConfig
 
 const GRADE_COLORS: Record<DungeonGradeLetter, { text: string; bg: string; border: string }> = {
   S: {
-    text: 'text-amber-600 dark:text-amber-300',
-    bg: 'bg-amber-100 dark:bg-amber-500/15',
-    border: 'border-amber-300 dark:border-amber-500/40',
+    text: 'text-warning-strong',
+    bg: 'bg-warning/10 dark:bg-warning/15',
+    border: 'border-warning/30 dark:border-warning/40',
   },
   A: {
-    text: 'text-emerald-700 dark:text-emerald-400',
-    bg: 'bg-emerald-100 dark:bg-emerald-500/15',
-    border: 'border-emerald-300 dark:border-emerald-500/40',
+    text: 'text-success-strong',
+    bg: 'bg-success/10 dark:bg-success/15',
+    border: 'border-success/30 dark:border-success/40',
   },
   B: {
-    text: 'text-sky-700 dark:text-sky-400',
-    bg: 'bg-sky-100 dark:bg-sky-500/15',
-    border: 'border-sky-300 dark:border-sky-500/40',
+    text: 'text-info-strong',
+    bg: 'bg-info/10 dark:bg-info/15',
+    border: 'border-info/30 dark:border-info/40',
   },
   C: {
     text: 'text-orange-700 dark:text-orange-400',
@@ -44,9 +44,9 @@ const GRADE_COLORS: Record<DungeonGradeLetter, { text: string; bg: string; borde
     border: 'border-orange-300 dark:border-orange-500/40',
   },
   F: {
-    text: 'text-red-700 dark:text-red-400',
-    bg: 'bg-red-100 dark:bg-red-500/15',
-    border: 'border-red-300 dark:border-red-500/40',
+    text: 'text-danger-strong',
+    bg: 'bg-danger/10 dark:bg-danger/15',
+    border: 'border-danger/30 dark:border-danger/40',
   },
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Item } from '@/types'
-import { itemTypeColor } from '@/utils/format'
-import { getItemImage } from '@/utils/itemImages'
+import { itemTypeColor } from '@/utils/format/format'
+import { getItemImage } from '@/utils/images/itemImages'
 
 defineProps<{
   item: Item
@@ -52,7 +52,7 @@ defineEmits<{
         {{ item.name }}
       </h3>
       <span
-        class="mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold"
+        class="mt-1 inline-block rounded-full px-2 py-0.5 text-3xs font-semibold"
         :style="{
           color: itemTypeColor(item.type),
           backgroundColor: `color-mix(in oklch, ${itemTypeColor(item.type)} 12%, transparent)`,

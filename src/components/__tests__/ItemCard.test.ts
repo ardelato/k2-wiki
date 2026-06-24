@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import ItemCard from '@/components/items/ItemCard.vue'
 import type { Item } from '@/types'
 
-vi.mock('@/utils/itemImages', () => ({
+vi.mock('@/utils/images/itemImages', () => ({
   getItemImage: () => undefined,
 }))
 

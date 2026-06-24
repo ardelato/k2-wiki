@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { ChevronDown, Compass, Minus, Plus, X } from 'lucide-vue-next'
+import { ChevronDown, Compass, Plus, X } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import LevelStepper from '@/components/shared/LevelStepper.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
-import { activeLocale } from '@/i18n'
 import type { Creature, Expedition, ExpeditionStatWeights } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { TIER_UNLOCK_REQUIREMENTS } from '@/utils/expeditionUnlocks'
-import { formatDecimal, formatDuration, itemName, toTitleCase } from '@/utils/format'
+import {
+  formatDecimal,
+  formatDuration,
+  formatNumber,
+  itemName,
+  toTitleCase,
+} from '@/utils/format/format'
+import { expeditionTierIcons } from '@/utils/format/icons'
 import { statLabels, tierModifiers } from '@/utils/formulas'
-import { expeditionTierIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { getCreatureImage } from '@/utils/images/creatureImages'
+import { getItemImage } from '@/utils/images/itemImages'
+import { TIER_UNLOCK_REQUIREMENTS } from '@/utils/planner/expeditionUnlocks'
 
 const { t } = useI18n()
 
@@ -95,16 +101,16 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
       <!-- Quick Facts: Biome, Trait -->
       <div class="grid grid-cols-2 gap-2 text-sm">
         <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+          <p class="text-2xs uppercase tracking-wide text-muted-foreground">
             {{ t('expeditions.detail.biome') }}
           </p>
           <p class="font-semibold">{{ toTitleCase(expedition.biome) }}</p>
         </div>
         <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+          <p class="text-2xs uppercase tracking-wide text-muted-foreground">
             {{ t('expeditions.detail.trait') }}
           </p>
-          <p class="font-semibold text-amber-700 dark:text-amber-300">
+          <p class="font-semibold text-warning-strong">
             {{ expedition.trait ? toTitleCase(expedition.trait) : t('expeditions.detail.none') }}
           </p>
         </div>
@@ -158,7 +164,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
               </div>
               <span class="text-xs font-semibold">{{ creature.name }}</span>
               <span
-                class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary"
+                class="rounded-full bg-primary/15 px-2 py-0.5 text-3xs font-semibold text-primary"
                 >{{ percent }}%</span
               >
             </div>
@@ -183,13 +189,13 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
         <div class="mt-3 space-y-4" :class="showAdvancedDetails ? 'block' : 'hidden'">
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('expeditions.detail.rating') }}
               </p>
               <p class="font-mono font-semibold">{{ difficultyRating }}</p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('expeditions.detail.xpPool') }}
               </p>
               <p class="font-semibold">
@@ -197,7 +203,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('expeditions.detail.unlockAfter') }}
               </p>
               <p class="font-semibold">
@@ -209,7 +215,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
               v-if="selectedTier > 1"
               class="rounded-lg border border-border bg-muted/35 px-3 py-2"
             >
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('expeditions.detail.tierRequires', { tier: selectedTier }) }}
               </p>
               <p class="font-semibold">
@@ -280,43 +286,27 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             {{ t('expeditions.detail.loopCount') }}
           </h4>
           <div class="flex items-center gap-2">
-            <div
-              class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
-            >
-              <button
-                class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="loopCount <= 0"
-                :aria-label="t('expeditions.detail.decreaseLoopCount')"
-                @click="stepLoopCount(-10)"
-              >
-                <Minus class="size-3" />
-              </button>
-              <input
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                class="focus-ring h-8 w-14 border-x border-input bg-transparent text-center font-mono text-sm"
-                :value="loopCount"
-                :aria-label="t('expeditions.detail.loopCountLabel')"
-                @blur="normalizeLoopCountOnBlur($event)"
-              />
-              <button
-                class="focus-ring inline-flex h-8 w-8 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="loopCount >= 200"
-                :aria-label="t('expeditions.detail.increaseLoopCount')"
-                @click="stepLoopCount(10)"
-              >
-                <Plus class="size-3" />
-              </button>
-            </div>
+            <LevelStepper
+              :model-value="loopCount"
+              :min="0"
+              :max="200"
+              :step="10"
+              :decrease-label="t('expeditions.detail.decreaseLoopCount')"
+              :increase-label="t('expeditions.detail.increaseLoopCount')"
+              :input-label="t('expeditions.detail.loopCountLabel')"
+              button-class="h-8 w-8"
+              input-class="h-8 w-14 text-sm"
+              @step="stepLoopCount($event)"
+              @normalize="normalizeLoopCountOnBlur($event)"
+            />
             <span
               v-if="loopBonusPercent > 0"
-              class="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+              class="rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success-strong dark:bg-success/15 dark:text-success-strong"
             >
               +{{ loopBonusPercent }}%
             </span>
           </div>
-          <p class="text-[11px] text-muted-foreground">{{ t('expeditions.detail.loopHint') }}</p>
+          <p class="text-2xs text-muted-foreground">{{ t('expeditions.detail.loopHint') }}</p>
         </div>
       </div>
 
@@ -351,12 +341,12 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
                     loading="lazy"
                   />
                   <span
-                    class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
+                    class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-3xs font-semibold text-cyan-300"
                   >
                     {{ getCreatureSlotRating(slot) }}
                   </span>
                   <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1.5 py-1">
-                    <p class="truncate text-center text-[10px] font-semibold text-white">
+                    <p class="truncate text-center text-3xs font-semibold text-white">
                       {{ slot.name }}
                     </p>
                   </div>
@@ -371,7 +361,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
               <template v-else>
                 <div class="flex size-full flex-col items-center justify-center gap-1">
                   <Plus class="size-4 text-muted-foreground/50" />
-                  <span v-if="activeSlotIndex === index" class="text-[9px] text-primary">{{
+                  <span v-if="activeSlotIndex === index" class="text-3xs text-primary">{{
                     t('common.select')
                   }}</span>
                 </div>
@@ -379,7 +369,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             </div>
             <span
               v-if="slot"
-              class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
+              class="rounded-full bg-muted/40 px-2 py-0.5 text-3xs font-semibold text-foreground"
             >
               {{ t('levelPlanner.stats.level', { n: creatureLevels[slot.id] || 1 }) }}
             </span>
@@ -405,11 +395,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             <p class="text-muted-foreground">{{ t('expeditions.detail.scoreRatio') }}</p>
             <p
               class="font-mono text-sm font-semibold"
-              :class="
-                scoreRatio && scoreRatio >= 1
-                  ? 'text-emerald-700 dark:text-emerald-400'
-                  : 'text-amber-700 dark:text-amber-400'
-              "
+              :class="scoreRatio && scoreRatio >= 1 ? 'text-success-strong' : 'text-warning-strong'"
             >
               {{ scoreRatio ? formatDecimal(scoreRatio) : '—' }}
             </p>
@@ -421,7 +407,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             </p>
             <p
               v-if="loopCount > 0 && estimatedDuration"
-              class="mt-0.5 text-[10px] text-muted-foreground"
+              class="mt-0.5 text-3xs text-muted-foreground"
             >
               {{ formatDuration(estimatedDuration * loopCount) }}
             </p>
@@ -429,10 +415,10 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
           <div class="rounded-md bg-card px-2 py-2">
             <p class="text-muted-foreground">{{ t('expeditions.detail.xpPerCreature') }}</p>
             <p class="font-mono text-sm font-semibold">
-              {{ totalXp ? totalXp.toLocaleString(activeLocale()) : '—' }}
+              {{ totalXp ? formatNumber(totalXp) : '—' }}
               <span
                 v-if="loopBonusPercent > 0 && totalXp"
-                class="ml-0.5 inline-block rounded bg-emerald-100 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                class="ml-0.5 inline-block rounded bg-success/10 px-1 py-px text-3xs font-semibold text-success-strong dark:bg-success/15 dark:text-success-strong"
               >
                 +{{ loopBonusPercent }}%
               </span>
@@ -442,13 +428,13 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             <p class="text-muted-foreground">{{ t('expeditions.detail.xpRate') }}</p>
             <div class="flex items-center justify-center gap-2">
               <p class="font-mono text-sm font-semibold">
-                {{ xpPerMinute ? Math.round(xpPerMinute).toLocaleString(activeLocale()) : '—'
-                }}<span class="text-[10px] text-muted-foreground">/m</span>
+                {{ xpPerMinute ? formatNumber(Math.round(xpPerMinute)) : '—'
+                }}<span class="text-3xs text-muted-foreground">/m</span>
               </p>
               <div class="h-4 border-l border-border/50" />
               <p class="font-mono text-sm font-semibold">
                 {{ xpPerMinute ? formatDecimal(xpPerMinute / 60) : '—'
-                }}<span class="text-[10px] text-muted-foreground">/s</span>
+                }}<span class="text-3xs text-muted-foreground">/s</span>
               </p>
             </div>
           </div>
@@ -461,12 +447,12 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
             class="flex items-center gap-2"
           >
             <span
-              class="w-16 shrink-0 truncate font-mono text-[10px] font-semibold text-muted-foreground"
+              class="w-16 shrink-0 truncate font-mono text-3xs font-semibold text-muted-foreground"
             >
               {{ entry.creature.name }}
             </span>
             <span
-              class="w-7 shrink-0 text-right font-mono text-[10px] font-semibold text-muted-foreground"
+              class="w-7 shrink-0 text-right font-mono text-3xs font-semibold text-muted-foreground"
             >
               {{ entry.currentLevel }}
             </span>
@@ -476,7 +462,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
                 :style="{ width: `${entry.progress * 100}%` }"
               />
             </div>
-            <span class="w-7 shrink-0 font-mono text-[10px] font-semibold text-foreground">
+            <span class="w-7 shrink-0 font-mono text-3xs font-semibold text-foreground">
               {{ entry.targetLevel }}
             </span>
           </div>

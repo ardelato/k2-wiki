@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useTools } from '@/composables/useTools'
 import { itemById } from '@/data/indexes'
-import { itemName } from '@/utils/format'
-import { toolIcons, sourceIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { itemName } from '@/utils/format/format'
+import { toolIcons, sourceIcons } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 
@@ -41,6 +42,26 @@ const toolGroups = computed(() => [
   { label: t('toolsView.workstation'), tools: workstationTools.value },
   { label: t('toolsView.other'), tools: otherTools.value },
 ])
+
+
+// Deep-link highlight: a planner advisory can open ?tool=<id> to flag that tool.
+const route = useRoute()
+const highlightTool = ref<string | null>(null)
+
+
+onMounted(() => {
+  const tool = typeof route.query.tool === 'string' ? route.query.tool : null
+  if (!tool) return
+  highlightTool.value = tool
+  nextTick(() => {
+    document
+      .getElementById(`tool-card-${tool}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+  window.setTimeout(() => {
+    highlightTool.value = null
+  }, 3500)
+})
 </script>
 
 <template>
@@ -73,8 +94,10 @@ const toolGroups = computed(() => [
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div
           v-for="tool in group.tools"
+          :id="`tool-card-${tool.id}`"
           :key="tool.id"
           class="overflow-hidden rounded-xl border border-border bg-card"
+          :class="{ 'attn-ring': highlightTool === tool.id }"
         >
           <div class="flex items-center gap-3 border-b border-border/50 bg-muted/30 px-4 py-3">
             <img
@@ -123,7 +146,7 @@ const toolGroups = computed(() => [
                   <span
                     class="font-semibold"
                     :class="
-                      toolSpeedModes[tool.skillId] ? 'text-emerald-400' : 'text-muted-foreground'
+                      toolSpeedModes[tool.skillId] ? 'text-success-strong' : 'text-muted-foreground'
                     "
                   >
                     {{

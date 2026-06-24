@@ -6,10 +6,9 @@ import { useI18n } from 'vue-i18n'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useMachines } from '@/composables/useMachines'
 import { itemById } from '@/data/indexes'
-import { activeLocale } from '@/i18n'
-import { itemName, typeColor } from '@/utils/format'
-import { getItemImage } from '@/utils/itemImages'
-import { getMachineImage } from '@/utils/machineImages'
+import { formatNumber, itemName, typeColor } from '@/utils/format/format'
+import { getItemImage } from '@/utils/images/itemImages'
+import { getMachineImage } from '@/utils/images/machineImages'
 
 const { t } = useI18n()
 
@@ -40,7 +39,7 @@ function formatInterval(seconds: number): string {
 
 
 function formatGold(amount: number): string {
-  return amount.toLocaleString(activeLocale())
+  return formatNumber(amount)
 }
 
 
@@ -88,7 +87,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
               <div class="flex items-center justify-between">
                 <h3 class="font-semibold">{{ machine.name }}</h3>
                 <span
-                  class="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs font-medium text-emerald-400"
+                  class="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success-strong"
                 >
                   {{ t('machines.generator') }}
                 </span>
@@ -187,7 +186,7 @@ const hasSaveData = computed(() => Object.keys(machineLevels.value).length > 0)
                     {{ t('machines.creatureAny') }}
                   </span>
                   <span
-                    class="rounded-full bg-violet-500/15 px-2 py-0.5 text-xs font-medium text-violet-400"
+                    class="rounded-full bg-reserved/15 px-2 py-0.5 text-xs font-medium text-reserved-strong"
                   >
                     {{ t('machines.processor') }}
                   </span>

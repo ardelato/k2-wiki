@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useAwakenSimulation } from '@/composables/useAwakenSimulation'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
-import { computeGoldPerMinute } from '@/utils/goldIncome'
+import { computeGoldPerMinute } from '@/utils/planner/goldIncome'
 
 interface GoldIncomeBreakdown {
   awakenedCount: number

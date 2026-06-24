@@ -7,9 +7,9 @@ import { RouterLink } from 'vue-router'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { items, jobActivityIndex } from '@/data/indexes'
-import { toTitleCase } from '@/utils/format'
-import { sourceIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { toTitleCase } from '@/utils/format/format'
+import { sourceIcons } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 
@@ -193,7 +193,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             v-if="savedUnallocated > 0"
             :class="
               unallocatedPoints < 0
-                ? 'rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400'
+                ? 'rounded-full bg-danger/15 px-2 py-0.5 font-medium text-danger-strong'
                 : 'rounded-full bg-muted px-2 py-0.5 font-medium text-foreground'
             "
             :title="
@@ -206,13 +206,13 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
           </span>
           <span
             v-if="addedPoints > 0"
-            class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
+            class="rounded-full bg-warning/15 px-2 py-0.5 font-medium text-warning-strong"
           >
             +{{ addedPoints }} {{ t('fabricationView.simulated') }}
           </span>
           <span
             v-if="removedPoints > 0"
-            class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
+            class="rounded-full bg-danger/15 px-2 py-0.5 font-medium text-danger-strong"
           >
             -{{ removedPoints }} {{ t('fabricationView.removed') }}
           </span>
@@ -220,7 +220,7 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
       </div>
       <div class="flex items-center gap-2">
         <button
-          class="rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
+          class="rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-2xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
           :class="{ 'pointer-events-none invisible': !hasSimulatedChanges }"
           @click="resetToSave"
         >
@@ -256,9 +256,9 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             class="flex items-center gap-2 rounded-lg border px-2 py-1.5 transition-colors"
             :class="
               getCardState(item.id) === 'simulated'
-                ? 'border-amber-500/40 bg-amber-500/5'
+                ? 'border-warning/40 bg-warning/5'
                 : getCardState(item.id) === 'removed'
-                  ? 'border-red-500/40 bg-red-500/5'
+                  ? 'border-danger/40 bg-danger/5'
                   : getPoints(item.id) > 0
                     ? 'border-primary/40 bg-primary/5'
                     : 'border-border bg-card'
@@ -272,8 +272,8 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
                 class="h-1.5 w-3 rounded-sm transition-colors"
                 :class="{
                   'bg-primary': getDotState(item.id, dot) === 'save',
-                  'bg-amber-500': getDotState(item.id, dot) === 'simulated',
-                  'bg-red-500/50': getDotState(item.id, dot) === 'removed',
+                  'bg-warning': getDotState(item.id, dot) === 'simulated',
+                  'bg-danger/50': getDotState(item.id, dot) === 'removed',
                   'bg-muted': getDotState(item.id, dot) === 'empty',
                 }"
               />
@@ -292,10 +292,10 @@ const prestigeImage = computed(() => getItemImage({ id: 'prestige-points' }))
             <div class="min-w-0 flex-1">
               <div class="truncate text-xs font-medium">{{ item.name }}</div>
               <div
-                class="text-[10px]"
+                class="text-3xs"
                 :class="{
-                  'text-amber-600 dark:text-amber-400': getCardState(item.id) === 'simulated',
-                  'text-red-600 dark:text-red-400': getCardState(item.id) === 'removed',
+                  'text-warning-strong': getCardState(item.id) === 'simulated',
+                  'text-danger-strong': getCardState(item.id) === 'removed',
                   'text-muted-foreground': getCardState(item.id) === 'normal',
                 }"
               >

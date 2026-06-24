@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { Minus, Plus, TrendingUp, X } from 'lucide-vue-next'
+import { Sparkles, TrendingUp, X } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import summonedIcon from '@/assets/icons/summoned.webp'
 import AppTooltip from '@/components/shared/AppTooltip.vue'
+import CreatureAssignmentBadge from '@/components/shared/CreatureAssignmentBadge.vue'
+import LevelStepper from '@/components/shared/LevelStepper.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, CreatureStats, Jobs } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { itemName, toTitleCase, typeColor, typeColorVar } from '@/utils/format'
+import { itemName, toTitleCase, typeColor, typeColorVar } from '@/utils/format/format'
+import { jobIcons } from '@/utils/format/icons'
 import {
   getBestExpeditionsForCreature,
   jobColors,
@@ -18,15 +20,8 @@ import {
   maxLevelForState,
   statLabels,
 } from '@/utils/formulas'
-import {
-  jobIcons,
-  sanctuaryIcon,
-  helpersIcon,
-  machinesIcon,
-  dungeonsIcon,
-  expeditionsIcon,
-} from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { getCreatureImage } from '@/utils/images/creatureImages'
+import { getItemImage } from '@/utils/images/itemImages'
 
 import ProficiencyRing from './ProficiencyRing.vue'
 import StatRadarChart from './StatRadarChart.vue'
@@ -60,16 +55,14 @@ const { t } = useI18n()
 const maxJobLevel = 10
 
 
-const assignmentBadge = computed(() => {
-  if (!props.creature) return null
-  const id = props.creature.id
-  if (sanctuaryCreatureIds.value.includes(id)) return { icon: sanctuaryIcon, label: 'Sanctuary' }
-  if (helperCreatureIds.value.includes(id)) return { icon: helpersIcon, label: 'Helper' }
-  if (machineCreatureIds.value.includes(id)) return { icon: machinesIcon, label: 'Machine' }
-  if (dungeonParty.value.includes(id)) return { icon: dungeonsIcon, label: 'Dungeon' }
-  if (expeditionCreatureIds.value.has(id)) return { icon: expeditionsIcon, label: 'Expedition' }
+function assignmentLabel(id: string): string | null {
+  if (sanctuaryCreatureIds.value.includes(id)) return 'Sanctuary'
+  if (helperCreatureIds.value.includes(id)) return 'Helper'
+  if (machineCreatureIds.value.includes(id)) return 'Machine'
+  if (dungeonParty.value.includes(id)) return 'Dungeon'
+  if (expeditionCreatureIds.value.has(id)) return 'Expedition'
   return null
-})
+}
 
 
 const jobEntries = computed(() => Object.entries(jobLabels) as [keyof Jobs, string][])
@@ -115,7 +108,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
     <Transition name="fade">
       <div
         v-if="open && creature"
-        class="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm"
+        class="fixed inset-0 z-[120] bg-background/60 backdrop-blur-sm"
         @click="emit('close')"
         @contextmenu.prevent="emit('close')"
       />
@@ -125,7 +118,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
     <Transition name="slide">
       <div
         v-if="open && creature"
-        class="fixed inset-y-0 right-0 z-50 w-full max-w-[420px] overflow-y-auto border-l border-border bg-card shadow-2xl"
+        class="fixed inset-y-0 right-0 z-[120] w-full max-w-[420px] overflow-y-auto border-l border-border bg-card shadow-2xl"
       >
         <!-- Gradient header with centered hero -->
         <div
@@ -146,25 +139,28 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
             <img
               :src="getCreatureImage(creature)"
               :alt="`${creature.name} artwork`"
-              class="size-24 rounded-2xl border-2 border-border object-cover shadow-lg"
+              class="size-24 rounded-xl border-2 border-border object-cover shadow-lg"
               :style="{ backgroundColor: `hsl(${typeColorVar(creature.types[0])} / 0.1)` }"
               loading="lazy"
             />
             <span
-              class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[11px] font-bold text-muted-foreground shadow-sm"
+              class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-2xs font-bold text-muted-foreground shadow-sm"
             >
               T{{ creature.tier + 1 }}
             </span>
             <AppTooltip
-              v-if="assignmentBadge"
-              :text="t('beastiary.detail.assignedTo', { label: assignmentBadge.label })"
+              v-if="assignmentLabel(creature.id)"
+              :text="t('beastiary.detail.assignedTo', { label: assignmentLabel(creature.id) })"
               position="right"
             >
-              <img
-                :src="assignmentBadge.icon"
-                :alt="assignmentBadge.label"
-                class="absolute -bottom-1 -right-1 size-7 rounded-full border-2 border-background bg-background"
-                loading="lazy"
+              <CreatureAssignmentBadge
+                :creature-id="creature.id"
+                :sanctuary-creature-ids="sanctuaryCreatureIds"
+                :helper-creature-ids="helperCreatureIds"
+                :machine-creature-ids="machineCreatureIds"
+                :expedition-creature-ids="expeditionCreatureIds"
+                :dungeon-party="dungeonParty"
+                img-class="absolute -left-1 -top-1 size-7 rounded-full border-2 border-background bg-background"
               />
             </AppTooltip>
           </div>
@@ -230,7 +226,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                     <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
                     {{ t('beastiary.detail.awakened') }}
                   </span>
-                  <p class="text-[11px] text-muted-foreground">
+                  <p class="text-2xs text-muted-foreground">
                     {{
                       isAwakened(creature.id)
                         ? t('beastiary.detail.awakenedCapRaised')
@@ -258,44 +254,35 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                 <span class="text-sm font-medium text-foreground">{{
                   t('beastiary.detail.level')
                 }}</span>
-                <div
-                  class="ml-auto inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
-                >
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="getLevel(creature.id) <= 1"
-                    :aria-label="t('beastiary.detail.decreaseCreatureLevel')"
-                    @click="stepLevel(creature.id, -1)"
-                  >
-                    <Minus class="size-3" />
-                  </button>
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
-                    :value="getLevel(creature.id)"
-                    :aria-label="t('beastiary.detail.creatureLevel')"
-                    @blur="normalizeLevelOnBlur(creature.id, $event)"
-                  />
-                  <button
-                    class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    :disabled="getLevel(creature.id) >= maxLevelForState(isAwakened(creature.id))"
-                    :aria-label="t('beastiary.detail.increaseCreatureLevel')"
-                    @click="stepLevel(creature.id, 1)"
-                  >
-                    <Plus class="size-3" />
-                  </button>
-                </div>
+                <LevelStepper
+                  class="ml-auto"
+                  :model-value="getLevel(creature.id)"
+                  :min="1"
+                  :max="maxLevelForState(isAwakened(creature.id))"
+                  :decrease-label="t('beastiary.detail.decreaseCreatureLevel')"
+                  :increase-label="t('beastiary.detail.increaseCreatureLevel')"
+                  :input-label="t('beastiary.detail.creatureLevel')"
+                  @step="stepLevel(creature.id, $event)"
+                  @normalize="normalizeLevelOnBlur(creature.id, $event)"
+                />
               </div>
             </div>
 
             <router-link
-              :to="{ path: '/planner', query: { tab: 'levelup', creature: creature.id } }"
+              :to="{ name: 'planner-creature', query: { tab: 'awaken', creature: creature.id } }"
               class="focus-ring bg-primary/12 hover:bg-primary/18 flex w-full items-center justify-center gap-2 rounded-lg border border-primary/35 px-4 py-2.5 text-sm font-semibold text-primary transition"
             >
               <TrendingUp class="size-4" />
               {{ t('beastiary.detail.planLeveling') }}
+            </router-link>
+
+            <router-link
+              v-if="!isOwned(creature.id) && creature.summoningCost.length"
+              :to="{ name: 'planner-creature', query: { creature: creature.id } }"
+              class="focus-ring bg-primary/12 hover:bg-primary/18 flex w-full items-center justify-center gap-2 rounded-lg border border-primary/35 px-4 py-2.5 text-sm font-semibold text-primary transition"
+            >
+              <Sparkles class="size-4" />
+              {{ t('beastiary.detail.planSummoning') }}
             </router-link>
           </div>
 
@@ -308,7 +295,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
               <h3 class="section-title">{{ t('beastiary.detail.stats') }}</h3>
               <span
                 v-if="selectedCreatureStats"
-                class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary"
+                class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-2xs font-semibold text-primary"
               >
                 {{ t('beastiary.detail.lvlBadge', { level: getLevel(creature.id) }) }}
               </span>
@@ -330,13 +317,10 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                 <p class="font-mono text-xs">
                   {{ (selectedCreatureStats ?? creature.stats)[statKey] }}
                 </p>
-                <p
-                  v-if="selectedCreatureStats"
-                  class="font-mono text-[10px] text-muted-foreground/60"
-                >
+                <p v-if="selectedCreatureStats" class="font-mono text-3xs text-muted-foreground/60">
                   {{ t('beastiary.detail.baseStat', { value: creature.stats[statKey] }) }}
                 </p>
-                <p class="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                <p class="mt-1 text-3xs uppercase tracking-wide text-muted-foreground">
                   {{ statLabel }}
                 </p>
               </div>
@@ -348,7 +332,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
             <div class="mb-3 flex items-baseline justify-between">
               <h3 class="section-title">{{ t('beastiary.detail.jobLevels') }}</h3>
               <span
-                class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-primary"
+                class="rounded-md border border-primary/30 bg-primary/10 px-2 py-0.5 font-mono text-2xs font-semibold text-primary"
               >
                 {{
                   t('beastiary.detail.totalJobPoints', {

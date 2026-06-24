@@ -11,8 +11,8 @@ import { resolve } from 'path'
 
 import { describe, test } from 'vitest'
 
-import { planPartyLevelingPath } from '@/utils/partyPlanner'
-import { scorePlan } from '@/utils/planScorer'
+import { planPartyLevelingPath } from '@/utils/planner/partyPlanner'
+import { scorePlan } from '@/utils/planner/planScorer'
 
 import collectionFull from './fixtures/collection-full.json'
 import collectionSmall from './fixtures/collection-small.json'

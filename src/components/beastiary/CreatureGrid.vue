@@ -7,9 +7,9 @@ import notSummonedIcon from '@/assets/icons/not_summoned.webp'
 import summonedIcon from '@/assets/icons/summoned.webp'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { Creature } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { typeColor, typeColorVar } from '@/utils/format'
+import { typeColor, typeColorVar } from '@/utils/format/format'
 import { maxLevelForState } from '@/utils/formulas'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 defineProps<{
   groups: { tier: number; creatures: Creature[] }[]
@@ -100,7 +100,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
 
           <!-- Tier badge -->
           <span
-            class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] font-bold text-muted-foreground shadow-sm"
+            class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-3xs font-bold text-muted-foreground shadow-sm"
           >
             T{{ creature.tier + 1 }}
           </span>
@@ -110,7 +110,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
             <span
               v-for="type in creature.types"
               :key="type"
-              class="rounded-full border px-1.5 py-px text-[10px] font-semibold leading-tight shadow-sm"
+              class="rounded-full border px-1.5 py-px text-3xs font-semibold leading-tight shadow-sm"
               :style="{
                 color: typeColor(type),
                 backgroundColor: `hsl(${typeColorVar(type)} / 0.15)`,
@@ -207,7 +207,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
               />
               <!-- Awakened toggle -->
               <button
-                class="flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-[10px] font-semibold transition"
+                class="flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-3xs font-semibold transition"
                 :class="
                   isAwakened(creature.id)
                     ? 'border-pink-500/40 bg-pink-500/10 text-pink-400'

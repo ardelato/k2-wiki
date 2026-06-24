@@ -9,8 +9,8 @@ import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import type { ElementType } from '@/types'
-import { toTitleCase, typeColor } from '@/utils/format'
-import { jobIcons } from '@/utils/icons'
+import { toTitleCase, typeColor } from '@/utils/format/format'
+import { jobIcons } from '@/utils/format/icons'
 
 const props = defineProps<{
   searchQuery: string
@@ -75,7 +75,7 @@ const hasActiveFilters = computed(
   <div class="surface-card p-4 sm:p-5">
     <div class="flex flex-wrap items-center gap-3">
       <!-- Search input with icon -->
-      <label class="relative min-w-[220px] flex-1">
+      <label class="relative min-w-[var(--sidebar-width)] flex-1">
         <Search
           class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         />
@@ -135,7 +135,7 @@ const hasActiveFilters = computed(
         {{ t('common.filters') }}
         <span
           v-if="hasActiveFilters"
-          class="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"
+          class="flex size-5 items-center justify-center rounded-full bg-primary text-3xs font-bold text-primary-foreground"
           >!</span
         >
       </button>

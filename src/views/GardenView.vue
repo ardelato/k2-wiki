@@ -6,8 +6,9 @@ import { useI18n } from 'vue-i18n'
 import AppTooltip from '@/components/shared/AppTooltip.vue'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { GardenCell } from '@/types'
-import { gardenIcon } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { formatNumber } from '@/utils/format/format'
+import { gardenIcon } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const {
   gardenLayout,
@@ -348,13 +349,13 @@ watch(
           </span>
           <span
             v-if="diffCounts.added > 0"
-            class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
+            class="rounded-full bg-warning/15 px-2 py-0.5 font-medium text-warning-strong"
           >
             {{ t('gardenView.simulated', { n: diffCounts.added }) }}
           </span>
           <span
             v-if="diffCounts.removed > 0"
-            class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
+            class="rounded-full bg-danger/15 px-2 py-0.5 font-medium text-danger-strong"
           >
             {{ t('gardenView.removed', { n: diffCounts.removed }) }}
           </span>
@@ -362,7 +363,7 @@ watch(
       </div>
       <div class="flex items-center gap-3">
         <button
-          class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
+          class="inline-flex items-center gap-1 rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-2xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
           :class="{ 'pointer-events-none invisible': !hasGardenChanges }"
           :title="
             hasGardenSaveSnapshot ? t('gardenView.revertTitle') : t('gardenView.clearBedTitle')
@@ -373,7 +374,7 @@ watch(
         </button>
         <span
           v-if="totalPlantedCount > 0 || fertilizerToReachCurrent > 0"
-          class="inline-flex items-center gap-2 font-mono text-[11px] text-primary"
+          class="inline-flex items-center gap-2 font-mono text-2xs text-primary"
         >
           {{ t('gardenView.total') }}
           <AppTooltip
@@ -384,7 +385,7 @@ watch(
                   totalPlantedCount === 1
                     ? t('gardenView.flowerCount', { n: totalPlantedCount })
                     : t('gardenView.flowersCount', { n: totalPlantedCount }),
-                cost: FLOWER_BUY_VALUE.toLocaleString(),
+                cost: formatNumber(FLOWER_BUY_VALUE),
               })
             "
           >
@@ -398,7 +399,7 @@ watch(
                 class="size-3.5 object-contain"
                 loading="lazy"
               />
-              {{ (totalPlantedCount * FLOWER_BUY_VALUE).toLocaleString() }}
+              {{ formatNumber(totalPlantedCount * FLOWER_BUY_VALUE) }}
             </span>
           </AppTooltip>
           <AppTooltip
@@ -429,14 +430,14 @@ watch(
     <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,460px)_1fr]">
       <!-- Left column: grid + selection panel -->
       <div class="space-y-4">
-        <div class="rounded-2xl border border-border bg-card/50 p-4">
+        <div class="rounded-xl border border-border bg-card/50 p-4">
           <div class="mb-3 flex items-center justify-between">
             <div class="flex items-center gap-2">
               <img :src="gardenIcon" alt="Garden" class="size-4 object-contain" loading="lazy" />
               <h2 class="text-sm font-extrabold">{{ t('gardenView.gardenBed') }}</h2>
             </div>
             <span
-              class="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground"
+              class="inline-flex items-center gap-1 font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground"
             >
               <img
                 :src="getItemImage({ id: ROCK_ITEM_ID })"
@@ -461,7 +462,7 @@ watch(
                         class="font-mono font-semibold"
                         :style="{ color: `hsl(${FLOWERS[4].color})` }"
                       >
-                        {{ fullBedClearCost.toLocaleString() }}
+                        {{ formatNumber(fullBedClearCost) }}
                       </span>
                     </span>
                     {{ t('gardenView.clearBedCostFirstRock') }}
@@ -476,7 +477,7 @@ watch(
                         class="font-mono font-semibold"
                         :style="{ color: `hsl(${FLOWERS[4].color})` }"
                       >
-                        {{ rockCostAt(0).toLocaleString() }}
+                        {{ formatNumber(rockCostAt(0)) }}
                       </span> </span
                     >{{ t('gardenView.clearBedCostLastRock') }}
                     <span class="inline-flex items-center gap-1 align-middle">
@@ -490,7 +491,7 @@ watch(
                         class="font-mono font-semibold"
                         :style="{ color: `hsl(${FLOWERS[4].color})` }"
                       >
-                        {{ rockCostAt(GRID_SIZE - 1).toLocaleString() }}
+                        {{ formatNumber(rockCostAt(GRID_SIZE - 1)) }}
                       </span> </span
                     >{{ t('gardenView.clearBedCostEnd') }}
                   </span>
@@ -508,7 +509,7 @@ watch(
                 class="garden-cell focus-ring relative aspect-square overflow-hidden rounded-md border transition"
                 :class="
                   selectedIndex === i
-                    ? 'garden-cell-selected ring-2 ring-amber-500 dark:ring-amber-300'
+                    ? 'garden-cell-selected ring-2 ring-warning dark:ring-warning'
                     : ''
                 "
                 :style="{
@@ -529,7 +530,7 @@ watch(
                   loading="lazy"
                 />
                 <span
-                  class="garden-cell-level absolute bottom-0 right-0 py-0.5 pl-1.5 pr-1 font-mono text-[9px] font-bold tabular-nums leading-none"
+                  class="garden-cell-level absolute bottom-0 right-0 py-0.5 pl-1.5 pr-1 font-mono text-3xs font-bold tabular-nums leading-none"
                   style="clip-path: polygon(5px 0, 100% 0, 100% 100%, 0 100%, 0 5px)"
                 >
                   {{ t('gardenView.levelBadge', { n: v.cell.level }) }}
@@ -550,7 +551,7 @@ watch(
         </div>
 
         <!-- Selection panel -->
-        <div class="min-h-[15rem] rounded-2xl border border-border bg-card/50 p-4">
+        <div class="min-h-[15rem] rounded-xl border border-border bg-card/50 p-4">
           <div
             v-if="!selectedVisualCell"
             class="flex h-full min-h-[13rem] items-center justify-center text-center text-sm text-muted-foreground"
@@ -564,7 +565,7 @@ watch(
               <div
                 class="garden-thumb-empty flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-dashed"
               >
-                <span class="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
+                <span class="font-mono text-3xs uppercase tracking-wider text-muted-foreground">
                   {{ t('gardenView.empty') }}
                 </span>
               </div>
@@ -572,13 +573,13 @@ watch(
                 <div class="text-sm font-extrabold leading-tight">
                   {{ t('gardenView.plantAFlower') }}
                 </div>
-                <div class="font-mono text-[10px] text-muted-foreground">
+                <div class="font-mono text-3xs text-muted-foreground">
                   {{ t('gardenView.pickFlowerBelow') }}
                 </div>
               </div>
             </div>
             <div
-              class="flex h-9 items-center justify-center gap-1 rounded-lg border border-border bg-muted/60 px-3 font-mono text-[10px] text-muted-foreground dark:border-border/60 dark:bg-muted/20"
+              class="flex h-9 items-center justify-center gap-1 rounded-lg border border-border bg-muted/60 px-3 font-mono text-3xs text-muted-foreground dark:border-border/60 dark:bg-muted/20"
             >
               <span>{{ t('gardenView.merchantCostLead') }}</span>
               <span class="inline-flex items-center gap-1 align-middle">
@@ -592,7 +593,7 @@ watch(
                   class="font-mono font-semibold"
                   :style="{ color: `hsl(${FLOWERS[4].color})` }"
                 >
-                  {{ FLOWER_BUY_VALUE.toLocaleString() }}
+                  {{ formatNumber(FLOWER_BUY_VALUE) }}
                 </span>
               </span>
               <span>{{ t('gardenView.perFlower') }}</span>
@@ -636,7 +637,7 @@ watch(
                 <div class="text-sm font-extrabold leading-tight">
                   {{ t('gardenView.flowerName', { name: selectedFlowerMeta?.name }) }}
                 </div>
-                <div class="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+                <div class="flex items-center gap-1 font-mono text-3xs text-muted-foreground">
                   <span>
                     {{
                       t('gardenView.levelOf', {
@@ -666,7 +667,7 @@ watch(
                   <Trash2 class="size-4" />
                 </button>
                 <template #content>
-                  <span class="block max-w-[16rem] text-[11px] font-medium leading-snug">
+                  <span class="block max-w-[16rem] text-2xs font-medium leading-snug">
                     {{ t('gardenView.removeTooltip') }}
                   </span>
                 </template>
@@ -746,7 +747,7 @@ watch(
 
       <!-- Right column: flower summary -->
       <div class="space-y-4">
-        <div class="rounded-2xl border border-border bg-card/50 p-4">
+        <div class="rounded-xl border border-border bg-card/50 p-4">
           <div class="mb-3 flex items-center">
             <h2 class="text-sm font-extrabold">{{ t('gardenView.flowersHeading') }}</h2>
           </div>
@@ -757,7 +758,7 @@ watch(
               class="rounded-xl border bg-card/50 p-3 transition-all duration-500"
               :class="
                 recentlyChangedFlowers.has(flower.id)
-                  ? 'border-amber-400/70 bg-amber-400/10 shadow-[0_0_0_3px_rgba(251,191,36,0.18)]'
+                  ? 'border-warning/70 bg-warning/10 shadow-[0_0_0_3px_oklch(var(--warning)_/_0.18)]'
                   : 'border-border'
               "
             >
@@ -776,11 +777,11 @@ watch(
                   />
                 </div>
                 <div class="min-w-0 flex-1">
-                  <div class="text-[13px] font-extrabold leading-tight">
+                  <div class="text-xs font-extrabold leading-tight">
                     {{ t('gardenView.flowerName', { name: flower.name }) }}
                   </div>
                   <div
-                    class="mt-0.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground"
+                    class="mt-0.5 flex items-center gap-1 font-mono text-3xs text-muted-foreground"
                   >
                     <span class="tabular-nums text-foreground/80">{{ flower.count }}</span>
                     <span>{{ t('gardenView.plantedLabel') }}</span>
@@ -794,9 +795,7 @@ watch(
                   </div>
                 </div>
                 <div class="min-w-[112px] shrink-0 text-right">
-                  <div
-                    class="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground"
-                  >
+                  <div class="font-mono text-3xs uppercase tracking-[0.18em] text-muted-foreground">
                     {{ flower.unit }}{{ t('common.perMin') }}
                   </div>
                   <div

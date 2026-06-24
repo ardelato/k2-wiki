@@ -2,10 +2,10 @@
 import { computed } from 'vue'
 
 import type { Creature, JobKey } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase } from '@/utils/format'
+import { toTitleCase } from '@/utils/format/format'
+import { jobIcons } from '@/utils/format/icons'
 import { jobLabels, jobColors } from '@/utils/formulas'
-import { jobIcons } from '@/utils/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 const props = defineProps<{
   creature: Creature
@@ -123,11 +123,11 @@ const jobEntries = computed(() =>
   flex-direction: column;
 }
 .card:hover {
-  border-color: oklch(0.65 0.18 285 / 0.5);
+  border-color: oklch(var(--reserved) / 0.5);
 }
 .card.selected {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px oklch(0.65 0.18 285 / 0.25);
+  box-shadow: 0 0 0 2px oklch(var(--reserved) / 0.25);
 }
 
 .accent-bar {
@@ -144,13 +144,13 @@ const jobEntries = computed(() =>
   width: 20px;
   height: 20px;
   border-radius: var(--radius-sm);
-  border: 2px solid oklch(0.6 0.04 285 / 0.5);
+  border: 2px solid color-mix(in oklch, var(--color-text-muted) 50%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
   padding: 0;
-  background: oklch(0.12 0.02 285 / 0.6);
+  background: oklch(var(--scrim) / 0.6);
   backdrop-filter: blur(4px);
 }
 .checkbox:hover {
@@ -180,7 +180,7 @@ const jobEntries = computed(() =>
   padding: 1px 8px;
   font-size: 12px;
   font-family: 'Geist Mono', monospace;
-  background: oklch(0.12 0.02 285 / 0.7);
+  background: oklch(var(--scrim) / 0.7);
   backdrop-filter: blur(4px);
   border-radius: var(--radius-sm);
   color: var(--color-text);
@@ -254,7 +254,7 @@ const jobEntries = computed(() =>
   align-items: center;
   justify-content: space-between;
   padding: 4px 10px 8px;
-  border-top: 1px solid oklch(0.28 0.04 285 / 0.4);
+  border-top: 1px solid color-mix(in oklch, var(--color-border) 40%, transparent);
   margin-top: auto;
 }
 
