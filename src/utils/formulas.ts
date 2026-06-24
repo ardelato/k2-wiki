@@ -330,9 +330,9 @@ export function getBestExpeditionsForLeveling(
 ): BestExpeditionEntry[] {
   return rankExpeditions(creature, level, limit, (expedition, biome) => {
     // Score by best XP/sec across all tiers
+    const rating = calculateCreatureRating(creature, expedition, level, biome)
     let bestXpPerSec = 0
     for (let tier = 1; tier <= 5; tier++) {
-      const rating = calculateCreatureRating(creature, expedition, level, biome)
       const duration = calculateDuration(rating, expedition, tier)
       const xpPerRun = calculateExpeditionXp(expedition, tier, 0, 1)
       if (duration > 0 && xpPerRun > 0) {
