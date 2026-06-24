@@ -80,11 +80,15 @@ writeFileSync(resolve(OUT_DIR, 'solo-rates.json'), JSON.stringify(soloRates) + '
 console.log('  → solo-rates.json')
 
 // ── Top Expeditions ──────────────────────────────────────────────────
+// Emit expedition *indices* into `expeditions` rather than id strings: only ~20
+// distinct ids are repeated 72k× across creatures/levels, so indexing shrinks this
+// table ~10× (2.0MB → ~190KB). Decoded back to ids in precomputedTables.getTopExpeditions.
 console.log('Computing top expeditions...')
-const topExpeditions: Record<string, string[][]> = {}
+const expeditionIndex = new Map(expeditions.map((e, i) => [e.id, i]))
+const topExpeditions: Record<string, number[][]> = {}
 
 for (const creature of creatures) {
-  const perLevel: string[][] = []
+  const perLevel: number[][] = []
   for (let level = 1; level <= NUM_LEVELS; level++) {
     const rates: { expeditionId: string; bestRate: number }[] = []
     for (const expedition of expeditions) {
@@ -100,7 +104,7 @@ for (const creature of creatures) {
       if (bestRate > 0) rates.push({ expeditionId: expedition.id, bestRate })
     }
     rates.sort((a, b) => b.bestRate - a.bestRate)
-    perLevel.push(rates.slice(0, TOP_K).map((r) => r.expeditionId))
+    perLevel.push(rates.slice(0, TOP_K).map((r) => expeditionIndex.get(r.expeditionId)!))
   }
   topExpeditions[creature.id] = perLevel
 }
@@ -109,6 +113,8 @@ writeFileSync(resolve(OUT_DIR, 'top-expeditions.json'), JSON.stringify(topExpedi
 console.log('  → top-expeditions.json')
 
 // ── Best Expedition ──────────────────────────────────────────────────
+// Kept in-memory only — feeds Level Transitions below. The standalone
+// best-expedition.json was never imported by src, so it is no longer written.
 console.log('Computing best expedition per level...')
 const bestExpedition: Record<string, string[]> = {}
 
