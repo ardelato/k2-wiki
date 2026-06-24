@@ -1,4 +1,5 @@
 import type { ScheduledTask } from '@/types'
+import { isResourceType, parseResourceType, type ResourceType } from '@/utils/save/resourceType'
 
 /** Actual timespan for a resource's tasks (handles overlapping passive tasks). */
 export function barSpan(tasks: ScheduledTask[]): number {
@@ -17,7 +18,7 @@ export function mergePassiveTasks(tasks: ScheduledTask[], resource: string): Sch
   const passiveByItem = new Map<string, ScheduledTask>()
 
   for (const task of tasks) {
-    if (task.passive && !resource.startsWith('Machine:')) {
+    if (task.passive && !isResourceType(resource, 'machine')) {
       const existing = passiveByItem.get(task.itemId)
       if (existing && task.startTime < existing.endTime) {
         // Actually overlapping — merge into one bar
@@ -90,6 +91,16 @@ const MACHINE_RESOURCES = new Set([
   'Coal Miner',
 ])
 
+// Visual group label per prefixed resource kind. Workstation/dungeon lanes have no entry and
+// fall through to the raw resource string (matching the prior ladder's `return resource`).
+const PREFIX_GROUP_LABEL: Partial<Record<ResourceType, string>> = {
+  machine: 'Machines',
+  garden: 'Garden',
+  expedition: 'Expeditions',
+  fabrication: 'Fabrication',
+  buy: 'Merchant',
+}
+
 /** Determine which visual group a resource belongs to. */
 export function getResourceGroupKey(resource: string, tasks: ScheduledTask[]): string {
   const kind = tasks[0]?.kind
@@ -97,10 +108,5 @@ export function getResourceGroupKey(resource: string, tasks: ScheduledTask[]): s
   if (kind === 'machine') return 'Machines'
   if (kind === 'craft' && MACHINE_RESOURCES.has(resource)) return 'Machines'
   if (kind === 'craft') return 'Refining'
-  if (resource.startsWith('Machine:')) return 'Machines'
-  if (resource.startsWith('Garden:')) return 'Garden'
-  if (resource.startsWith('Expedition:')) return 'Expeditions'
-  if (resource.startsWith('Fabrication:')) return 'Fabrication'
-  if (resource.startsWith('Buy:')) return 'Merchant'
-  return resource
+  return PREFIX_GROUP_LABEL[parseResourceType(resource)] ?? resource
 }

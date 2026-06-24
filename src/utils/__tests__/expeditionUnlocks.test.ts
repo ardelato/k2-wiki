@@ -1,4 +1,4 @@
-import { getTotalCompletedExpeditions, getMaxUnlockedTier } from '@/utils/expeditionUnlocks'
+import { getTotalCompletedExpeditions, getMaxUnlockedTier } from '@/utils/planner/expeditionUnlocks'
 
 describe('getTotalCompletedExpeditions', () => {
   test('returns 0 for empty completions', () => {

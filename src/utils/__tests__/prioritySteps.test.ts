@@ -1,5 +1,5 @@
 import type { PlannerSchedule, ScheduledTask } from '@/types'
-import { computePriorityWaves } from '@/utils/prioritySteps'
+import { computePriorityWaves } from '@/utils/planner/prioritySteps'
 
 function makeTask(
   overrides: Partial<ScheduledTask> & { nodeId: string; resource: string },
