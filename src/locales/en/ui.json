@@ -61,7 +61,14 @@
     "tools": "Tools",
     "fabrication": "Fabrication",
     "planner": "Planner",
-    "configs": "Configs"
+    "configs": "Configs",
+    "creaturePlanner": "Creature Planner",
+    "craftingPlanner": "Crafting Planner",
+    "plannerAwaken": "Planner · Awaken",
+    "plannerSummon": "Planner · Summon",
+    "plannerPrestige": "Planner · Prestige",
+    "plannerSkills": "Planner · Skills",
+    "plannerCraft": "Planner · Craft"
   },
   "settings": {
     "themeSystem": "Theme: System",
@@ -242,7 +249,8 @@
       "disadvantage": "· ▼ Disadvantage",
       "lvlBadge": "Lvl {level}",
       "totalJobPoints": "Total {total}",
-      "baseStat": "(BASE {value})"
+      "baseStat": "(BASE {value})",
+      "planSummoning": "Plan Summoning"
     },
     "summoningCost": {
       "title": "Summoning Cost"
@@ -308,7 +316,17 @@
       "clearAll": "Clear all"
     },
     "rightClickHint": {
-      "label": "Right-click"
+      "label": "Inspect"
+    },
+    "infoHint": {
+      "whatIs": "What is {term}?",
+      "moreInfo": "More info"
+    },
+    "learnMore": {
+      "label": "Learn more"
+    },
+    "advisory": {
+      "speedsUp": "Speeds up"
     }
   },
   "expeditions": {
@@ -384,7 +402,8 @@
     "gathering": "Gathering",
     "gatheringSkill": "Gathering Skill",
     "tier": "Tier",
-    "tierRequiresLevel": "(Requires Player Lvl {n})",
+    "tierRequiresLevel": "(Requires {label} Lvl {n})",
+    "player": "Player",
     "statWeights": "Stat Weights",
     "tierOverview": "Tier Overview",
     "tierCol": "Tier",
@@ -451,7 +470,11 @@
     "recommended": "Recommended",
     "select": "Select",
     "unreachableTooltip": "These targets cannot be reached with the current selectable creatures",
-    "recommendedAbbr": "Rec."
+    "recommendedAbbr": "Rec.",
+    "statusHelper": "Helper",
+    "statusMachine": "Machine",
+    "statusDungeon": "Dungeon",
+    "tierLabel": "Tier {n}"
   },
   "machines": {
     "title": "Machines",
@@ -540,7 +563,219 @@
       "expandAll": "Expand All",
       "collapsed": "collapsed"
     },
-    "pickerLabel": "Item"
+    "pickerLabel": "Item",
+    "tour": {
+      "welcome": {
+        "title": "Welcome to the Creature Planner",
+        "body": "Three tabs up top. <b>Summon</b> plans new summons, <b>Awaken&nbsp;Rush</b> takes creatures to level&nbsp;70 so they can awaken, and <b>Prestige&nbsp;Loop</b> farms prestige tokens with a stable party. This tour walks whichever one you’re on."
+      },
+      "summonHeader": {
+        "title": "Plan your next summons",
+        "body": "Add the creatures you want to summon and the planner totals up everything you still need to gather for them — flagging blockers like skill gates."
+      },
+      "summonOrder": {
+        "title": "Your summon order",
+        "body": "Your queue of summons, numbered in the order to tackle them — <b>#1 is “do this now”</b>. Re-sort by step order, readiness, or name; add more with the + row; and pick any row to focus its plan on the right."
+      },
+      "summonFocus": {
+        "title": "The focused creature",
+        "body": "The creature you’re on: its <b>time-to-ready</b>, the items it still needs (passive supply marked separately from hands-on work), and ways to speed those gathers up."
+      },
+      "summonViews": {
+        "title": "Two ways to view it",
+        "body": "<b>Plan</b> (what you’ve seen so far) walks each creature in order. <b>All materials</b> — switching to it now — is the full gather list across every summon, grouped by source."
+      },
+      "summonMaterials": {
+        "title": "Everything to gather",
+        "body": "Every material your queued summons need, pooled and grouped by where it comes from — your one shopping list. Switch back to <b>Plan</b> anytime to work creature-by-creature."
+      },
+      "awakenQueue": {
+        "title": "Your awaken queue",
+        "body": "Add the unawakened creatures you want to take to level&nbsp;70. One creature shows a detailed plan; add several and the planner optimizes them together as a party."
+      },
+      "awakenBoosters": {
+        "title": "Optional boosters",
+        "body": "Awakened creatures you allow here can escort the queue and speed it up, without being leveled themselves."
+      },
+      "awakenStrategy": {
+        "title": "Strategy",
+        "body": "<b>Hands-free</b> gives each creature a stable route with few reassignments — set it and check back in hours. <b>Optimal</b> coordinates the whole queue for the fastest overall finish, at the cost of more swaps."
+      },
+      "awakenExpeditions": {
+        "title": "Expeditions",
+        "body": "Which expeditions the planner may route through, and how many are in scope. Narrow them to match what you actually run."
+      },
+      "awakenFocus": {
+        "title": "Your plan",
+        "body": "The fastest expedition route to level&nbsp;70 appears here, with when each creature lands."
+      },
+      "awakenViews": {
+        "title": "Timeline or Steps",
+        "body": "<b>Timeline</b> is a Gantt of the whole queue across time; <b>Steps</b> breaks the same plan into an ordered, wave-by-wave checklist."
+      },
+      "awakenTimeline": {
+        "title": "Reading the timeline",
+        "body": "Hold <b>⌘/Ctrl</b> and scroll to zoom in and out; hold <b>Shift</b> and scroll to pan across time. The +/− buttons zoom too, and reset returns to the default."
+      },
+      "awakenSetup": {
+        "title": "Push it to Expeditions",
+        "body": "<b>View Initial Setup in Expeditions</b> writes the plan’s first wave of parties into your Expeditions page, ready to apply in-game."
+      },
+      "loopRoster": {
+        "title": "Loop roster",
+        "body": "The awakened creatures that run the loop. After you calculate, each row shows its role — <b>{anchor}</b>, <b>{booster}</b>, or <b>{climber}</b>."
+      },
+      "loopCadence": {
+        "title": "Check-in cadence",
+        "body": "{cadence} The table shows tokens per day for each cadence so you can compare at a glance."
+      },
+      "loopExpeditions": {
+        "title": "Expeditions",
+        "body": "Which expeditions the loop may route through, and how many are in scope. Narrow them to match what you actually run."
+      },
+      "loopHero": {
+        "title": "Your payoff",
+        "body": "Prestige tokens per day from this setup. {prestige} Open “Learn&nbsp;more” for how the set-and-leave strategy works."
+      },
+      "loopTabs": {
+        "title": "Setup & Levels",
+        "body": "<b>Setup</b> is the party assignment to apply right now. <b>Levels</b> charts each creature across check-ins — {levelChart}"
+      },
+      "nav": {
+        "next": "Next",
+        "back": "Back",
+        "done": "Done"
+      }
+    },
+    "heading": "Planner",
+    "subheading": "Browse every recipe branch, container route, and gathering path for any item, then pin the method you want to use for totals and expected time.",
+    "takeTour": "Take a tour",
+    "noItemSelected": "No item selected yet.",
+    "desktopOnlyTreeHint": "Open this page on a wider screen to browse the full dependency tree and inspector.",
+    "additionalCraftsHint": "Targets {additional} crafts beyond your current inventory and queued workstation items.",
+    "additionalCraftsEmphasis": "additional",
+    "alreadyStocked": "Already stocked — nothing to craft.",
+    "clearSelectedItem": "Clear selected item",
+    "creatureTabs": {
+      "summon": "Summon",
+      "awaken": "Awaken",
+      "prestige": "Prestige"
+    },
+    "craftingTabs": {
+      "singleItem": "Single item",
+      "skills": "Skills"
+    },
+    "heroStats": {
+      "craftsLeft": "Crafts left",
+      "estTime": "Est. time",
+      "stocked": "Stocked"
+    },
+    "picker": {
+      "itemCount": "{count} items",
+      "searchPlaceholder": "Search items...",
+      "allTypes": "All",
+      "noMatches": "No items match."
+    },
+    "dungeonCallout": {
+      "title": "Also obtainable from the Dungeon",
+      "subtitle": "Open the Dungeon page"
+    },
+    "skillGate": {
+      "message": "{count} resource needs a higher skill level — highest gate: {gate} | {count} resources need a higher skill level — highest gate: {gate}",
+      "plan": "Plan →"
+    },
+    "detail": {
+      "actions": "Actions",
+      "activity": "Activity",
+      "affordableNow": "Affordable now",
+      "baseDuration": "Base duration",
+      "buyAffordableNote": "You have enough gold on hand to buy this now.",
+      "buyConfigureNote": "Configure gold income in Settings for time estimates.",
+      "buyGoldIncomeNote": "Time estimated from passive gold income ({rate} gold/min).",
+      "buySubtitle": "Buy {amount} directly",
+      "containerFormula": "{amount} ÷ ({chance} × {yield}) per {container} opening",
+      "containerFormulaPassive": "{amount} need − passive → {openings} openings of {container}",
+      "containerNote": "Opening time is treated as negligible; only obtaining the container contributes time.",
+      "containerPassiveNote": "Passive production reduces containers from {from} to {to}.",
+      "containersNeeded": "Containers needed",
+      "containerSubtitle": "Expected {count} openings",
+      "craftFormula": "{crafts} crafts × {time}",
+      "crafts": "Crafts",
+      "craftSubtitle": "{count} craft for {output} output",
+      "craftSubtitlePlural": "{count} crafts for {output} output",
+      "cycleDetected": "Cycle detected",
+      "cycleInChain": "Cycle detected in dependency chain.",
+      "cycleNote": "Planner expansion stopped here to avoid an infinite loop.",
+      "cycles": "Cycles",
+      "cycleSubtitle": "This dependency loops back to an ancestor item.",
+      "cycleTime": "Cycle time",
+      "depsTime": "Deps time",
+      "durationReduction": "-{pct}% duration",
+      "eachValue": "{amount} each",
+      "expeditionFormula": "{runs} runs × {time} base duration",
+      "expeditionNote": "Estimated using base duration — actual time depends on party strength and tier.",
+      "expeditionSubtitle": "{count} expected runs",
+      "fabricationFormula": "{amount} ÷ {perCycle}/cycle × {seconds}s",
+      "fabricationNote": "Fabrication generates items passively every 3 minutes.",
+      "fabricationSource": "Fabrication ({points} pts)",
+      "fabricationSubtitle": "{count} point allocated",
+      "fabricationSubtitlePlural": "{count} points allocated",
+      "flower": "Flower",
+      "gardenConfigureNote": "Configure the flowers under Planner Settings > Garden to calculate time.",
+      "gardenFormula": "{amount} ÷ {yield} per cycle × {time}",
+      "gardenGrowth": "Garden growth",
+      "gardenNoFlowers": "Garden — no flowers configured",
+      "gardenNote": "Garden yield: {setup} = {rate}/min.",
+      "gatherFormula": "{amount} ÷ ({chance} × {yield}) actions × {time}",
+      "gatherNote": "Expected time uses average yield from chance and output range.",
+      "goldPerMinValue": "{rate} gold/min",
+      "goldRate": "Gold rate",
+      "goldTime": "Gold time",
+      "goldTimeToEarn": "~{time} to earn",
+      "goldValue": "{amount} gold",
+      "interval": "Interval",
+      "intervalValue": "{seconds}s per cycle",
+      "itemDataNotFound": "Item data not found.",
+      "itemsPerCycle": "Items / cycle",
+      "level": "Level",
+      "lvValue": "Lv{level}",
+      "machineFormula": "{cycles} cycles × {seconds}s",
+      "machineNote": "Machine level {level} reduces interval from {from}s to {to}s.",
+      "machineSource": "Machine — {name}",
+      "machineSubtitle": "{count} cycle for {output} output",
+      "machineSubtitlePlural": "{count} cycles for {output} output",
+      "merchant": "Merchant",
+      "none": "None",
+      "noSourceFound": "No planner source found for {name}.",
+      "notConfigured": "Not configured",
+      "onHand": "On hand",
+      "output": "Output",
+      "passiveFormula": "{amount} ÷ ({active}/min active + {passive}/min passive)",
+      "perHourValue": "{amount}/hr",
+      "points": "Points",
+      "rate": "Rate",
+      "ratePerMin": "+{rate}/min",
+      "rewardPerRun": "Reward / run",
+      "runsNeeded": "Runs needed",
+      "secondsValue": "{seconds}s",
+      "setup": "Setup",
+      "speedBonus": "+{pct}% Speed",
+      "speedTier": "Speed Tier",
+      "stepTime": "Step time",
+      "stillNeed": "Still need",
+      "toolSpeed": "Tool Speed",
+      "totalCost": "Total cost",
+      "totalFlowers": "Total flowers",
+      "totalTime": "Total time",
+      "unitPrice": "Unit price",
+      "yieldBonus": "+{amount} yield",
+      "yieldPer60s": "{amount} per 60s",
+      "yieldPerAction": "Yield / action",
+      "yieldPerCycle": "Yield / cycle",
+      "yieldPerOpen": "Yield / open",
+      "awakenTree": "Awaken Tree",
+      "sanctuary": "Sanctuary"
+    }
   },
   "levelPlanner": {
     "title": "Level Up",
@@ -562,7 +797,9 @@
       "optimal": "Optimal",
       "handsFree": "Hands-Free",
       "recalculate": "Recalculate",
-      "calculate": "Calculate"
+      "calculate": "Calculate",
+      "addRemove": "Add / Remove",
+      "manage": "Manage"
     },
     "badges": {
       "toLevel": "to level",
@@ -593,6 +830,136 @@
       "narrowing": "Narrowing down the best routes...",
       "wrappingUp": "Wrapping up...",
       "exploring": "Exploring route combinations..."
+    },
+    "eyebrow": {
+      "levelUp": "Level Up"
+    },
+    "learnMore": "Learn more",
+    "tier": "Tier {tier}",
+    "objective": {
+      "awakenRush": "Awaken-rush",
+      "prestigeLoop": "Prestige-loop"
+    },
+    "heading": {
+      "awakenRush": "Awaken Rush",
+      "awakenOne": "Awaken {name}",
+      "awakenMany": "Awaken {n} Creatures",
+      "prestigeLoop": "Prestige Loop",
+      "creatureLeveling": "{name} Leveling",
+      "partyLevelUp": "Party Level Up",
+      "levelUpPlanner": "Level Up Planner",
+      "subtitleAwaken": "Fastest path to level 70 — awaken to unlock Sanctuary eligibility and the Awaken Tree token.",
+      "subtitlePrestige": "A stable party that farms prestige tokens between check-ins.",
+      "subtitlePartyHandsFree": "Stable expedition assignments that run for hours without needing swaps.",
+      "subtitlePartyOptimal": "Optimal expedition plan to level your entire collection simultaneously.",
+      "subtitleSingle": "Optimal expedition path to level your creature as fast as possible."
+    },
+    "rail": {
+      "queue": "Queue",
+      "addRemoveCreatures": "Add / Remove creatures",
+      "sortEta": "ETA",
+      "sortLevel": "Level",
+      "sortName": "Name",
+      "sortTier": "Tier"
+    },
+    "awaken": {
+      "addCreaturesTitle": "Add creatures to awaken",
+      "allowBoostersTitle": "Allow creatures as boosters",
+      "boosterRoster": "Booster Roster",
+      "boosterHint": "By default the strongest {n} awakened creatures are auto-selected (by level, then tier). Toggle to customize; Reset restores this default.",
+      "boosterChipTitle": "{name} — LVL {level}",
+      "removeBooster": "Remove {name}",
+      "handsFree": "Hands-free",
+      "handsFreeTitle": "Set up once and leave for hours — few reassignments per creature",
+      "optimalTitle": "Coordinated, fastest finish — more reassignments",
+      "emptyTitle": "Add a creature to plan an awaken.",
+      "emptySubtitle": "Pick the unawakened creatures you want to take to level 70 from the rail. The planner finds the fastest expedition route and tells you when each one lands.",
+      "alreadyMaxTitle": "Already at level 70.",
+      "alreadyMaxSubtitle": "{name} is ready to awaken now — no leveling needed.",
+      "toFinish": "to finish",
+      "wholeQueue": "Whole queue",
+      "strategyShortHandsFree": "stable routes, few swaps",
+      "strategyShortOptimal": "fastest finish, more swaps",
+      "strategyExplainerHandsFree": "Hands-free gives each creature a stable route to 70 with few reassignments — set it up once and check back in hours.",
+      "strategyExplainerOptimal": "Optimal coordinates the whole queue for the fastest overall finish, at the cost of more reassignments between expeditions.",
+      "metricRuns": "Runs",
+      "metricSwaps": "Swaps",
+      "incompleteWarning": "{n} creature can't reach 70 within the planner's calculation limit — they may need more runs than one pass can simulate. | {n} creatures can't reach 70 within the planner's calculation limit — they may need more runs than one pass can simulate.",
+      "coordinatingSubtitle": "Coordinating the queue across expeditions…",
+      "readySubtitleHandsFree": "Give each creature a stable route to 70 with few reassignments — set it up once and check back in hours.",
+      "readySubtitleOptimal": "Level every queued creature to 70 in parallel — each runs solo with your strongest creatures brought along as boosters.",
+      "targetBadge": "Awaken target · LVL 70",
+      "alreadyAwakenedTitle": "Already awakened.",
+      "alreadyAwakenedSubtitle": "{name} has cleared the level-70 milestone — it already has its Awaken Tree token and Sanctuary eligibility. Farm prestige tokens with it, or keep leveling to 120 in Custom.",
+      "goToPrestige": "Go to Prestige-loop",
+      "keepLeveling": "Keep leveling (Custom)"
+    },
+    "expeditionPicker": {
+      "title": "Expeditions for the planner",
+      "includedCount": "{included} of {total} included",
+      "searchPlaceholder": "Search expeditions...",
+      "includeAll": "Include All",
+      "captionBefore": "Default state reflects your save file progress from the",
+      "captionConfigs": "Configs",
+      "captionAfter": "page. Click a row to include or exclude it; click a tier to toggle just that tier.",
+      "rowExcludeTitle": "{name} — click to exclude",
+      "rowIncludeTitle": "{name} — click to include",
+      "requiredCompletions": "({n} req.)",
+      "toggleTier": "Toggle tier {tier}",
+      "noMatches": "No matches."
+    },
+    "prestigeLoop": {
+      "roster": "Roster",
+      "learnMore": "Learn more",
+      "checkInCadence": "Check-in cadence",
+      "choosePrestigeCreatures": "Choose prestige creatures",
+      "hoursShort": "{h}h",
+      "everyHours": "every {h}h",
+      "perDay": "/ day",
+      "noEligibleTitle": "No prestige-eligible creatures yet.",
+      "noEligibleSubtitle": "The prestige loop needs awakened creatures (they can reach level 120 and reset). Awaken some first.",
+      "goToAwaken": "Go to Awaken-rush",
+      "simulating": "Simulating the prestige loop…",
+      "readyTitle": "Ready to plan your prestige loop.",
+      "readySubtitle": "Pick how often you'll check in and your strategy, then calculate a stable token-farming setup.",
+      "roles": {
+        "climber": "Leveling",
+        "booster": "Booster",
+        "anchor": "Anchor"
+      },
+      "results": {
+        "strategySummary": "Your strongest creatures stay maxed as permanent boosters; everyone else climbs to 120 and prestiges for a token.",
+        "strategyExplainer": "Your {boosterCount} strongest creatures stay parked at level 120 as permanent boosters — they speed up their party but never prestige, so they earn no tokens themselves. Everyone else climbs to 120 and gets prestiged at each check-in for a token. Best-fit parties are built once and stay put, so it's a true set-and-leave loop.",
+        "tabSetup": "Setup",
+        "tabLevels": "Levels",
+        "prestigeTokenAlt": "Prestige token",
+        "tokensPerDay": "prestige tokens / day",
+        "checkingInEvery": "Checking in every {h}h",
+        "recommendedSetup": "Recommended setup",
+        "viewSetup": "View setup in Expeditions",
+        "viewSetupTitle": "Apply this setup to the Expeditions page and open it in a new tab",
+        "howToReadCharts": "How to read these charts"
+      },
+      "timeline": {
+        "caption": "{n} consecutive check-ins, every {h}h.",
+        "captionLegend": "= prestiged for a token, restarts at level 1.",
+        "creature": "Creature",
+        "tokens": "Tokens",
+        "checkInIndex": "#{n}",
+        "plusHours": "+{h}h",
+        "anchorTokensTooltip": "Anchor — held at 120 to boost partners; earns no tokens itself",
+        "tokensTooltip": "{n} prestige token(s) in this window",
+        "prestigedTooltip": "Prestiged this check-in — restarting at level 1",
+        "held": "held"
+      },
+      "chart": {
+        "allHeld": "All held at 120 — no leveling on this expedition.",
+        "lvl": "LVL {n}",
+        "wastedXp": "Wasted XP",
+        "legendTokens": "{name} — {n} prestige token | {name} — {n} prestige tokens",
+        "prestigeTokensAlt": "Prestige tokens",
+        "heldAt120": "Held at 120"
+      }
     }
   },
   "summoningPlanner": {
@@ -654,7 +1021,80 @@
       "fromCreatures": "+{n} gold/min from creatures",
       "fromFlowers": "+{n} gold/min from flowers"
     },
-    "gold": "Gold"
+    "gold": "Gold",
+    "header": {
+      "empty": "Pick what to summon next.",
+      "count": "Summoning {n} creature. | Summoning {n} creatures.",
+      "subtitle": "Aggregated materials across your selected summons. Blockers — like skill levels you haven't reached — surface inline and in the side panel."
+    },
+    "viewTabs": {
+      "plan": {
+        "label": "Plan",
+        "description": "Per-creature: what each summon needs, in the order to tackle them, with time-to-ready."
+      },
+      "materials": {
+        "label": "All materials",
+        "description": "Everything you need, grouped by source — as a flat list or full craft trees."
+      }
+    },
+    "planSort": {
+      "step": "Step order",
+      "ready": "Most ready"
+    },
+    "rail": {
+      "heading": "Plan",
+      "blocked": "Blocked",
+      "addRemove": "Add / Remove creatures"
+    },
+    "picker": {
+      "defaultTitle": "Add creatures to summon",
+      "close": "Close",
+      "sortLevel": "Level",
+      "sortTitle": {
+        "tier": "Sort by tier",
+        "tierAsc": "Tier — ascending (click for descending)",
+        "tierDesc": "Tier — descending (click to clear)",
+        "name": "Sort by name",
+        "nameAsc": "Name — A→Z (click for Z→A)",
+        "nameDesc": "Name — Z→A (click to clear)",
+        "level": "Sort by level",
+        "levelAsc": "Level — lowest first (click for highest first)",
+        "levelDesc": "Level — highest first (click to clear)"
+      },
+      "excludeBusy": "Exclude busy",
+      "includeBusy": "Include busy",
+      "excludeBusyHint": "Exclude every creature currently busy with another activity",
+      "includeBusyHint": "Re-include the creatures busy with another activity"
+    },
+    "focus": {
+      "doThisNow": "Do this now",
+      "requirementsStocked": "{fulfilled}/{total} requirements stocked",
+      "status": {
+        "blocked": "Blocked",
+        "ready": "Ready",
+        "inProgress": "In progress"
+      },
+      "toReady": "{duration} to ready",
+      "waysToImprove": "Ways to improve",
+      "waysToImproveHint": "Suggestions assume the creatures summoned earlier in your plan are already deployed at this step — so they can name creatures you haven't summoned yet.",
+      "requirements": "Requirements",
+      "alsoNeededBy": "also needed by",
+      "reservedNote": "This creature is earlier in your plan and draws from this stock first | These creatures are earlier in your plan and draw from this stock first",
+      "sequentialLegend": {
+        "text": "Amounts are {sequential} — shared materials are spent by creatures earlier in your plan first, so a number here can read below what you own. A {violet} bar slice or {need} is stock that's {earmarked}, not missing.",
+        "sequential": "sequential",
+        "violet": "violet",
+        "need": "Need",
+        "earmarked": "earmarked"
+      }
+    },
+    "expeditionCard": {
+      "tierAlt": "Tier {tier}"
+    },
+    "gatherAdvisory": {
+      "awakenPointCost": "{n} Awaken Point | {n} Awaken Points",
+      "openIn": "Open in {feature}"
+    }
   },
   "configs": {
     "title": "Configs",
@@ -863,7 +1303,12 @@
       "buyAtTitle": "buy at",
       "categories": {
         "refining": "Refining"
-      }
+      },
+      "resourceQueue": "{resource} queue",
+      "active": "active",
+      "elapsed": "elapsed",
+      "alreadyQueued": "Already queued — finishes before new tasks on this station start.",
+      "noQueuedItems": "No queued item details for this station."
     },
     "itemPicker": {
       "placeholder": "Search planner items",
@@ -885,7 +1330,10 @@
       "need": "Need",
       "items": "items",
       "have2": "have",
-      "queued": "queued"
+      "queued": "queued",
+      "here": "Here",
+      "owned": "owned",
+      "usedByEarlierCreatures": "used by earlier creatures"
     },
     "goldRate": {
       "goldPerMin": "gold/min",
@@ -1080,7 +1528,13 @@
       "total": "Total",
       "need": "Need",
       "have2": "have",
-      "queued": "queued"
+      "queued": "queued",
+      "here": "Here ",
+      "owned": "{n} owned",
+      "usedByEarlier": "used by earlier creatures",
+      "requiresSkill": "Requires {skill} Lv{level}",
+      "currentLevel": "(LVL {current})",
+      "clickToPlan": "Click to plan {skill}"
     }
   },
   "gardenView": {
@@ -1173,7 +1627,10 @@
     "awakenGatherDuration": "Awaken duration tier for {jobId} would reduce {itemName} gathering by ~{pct}%",
     "awakenGatherYield": "Awaken yield bonus for {jobId} would increase {itemName} gather yield",
     "awakenSpeed": "Awaken speed tier for {workstation} would reduce craft time by ~5%",
-    "fabricationPoints": "Allocate {count} more fabrication points to {itemName} for faster passive production"
+    "fabricationPoints": "Allocate {count} more fabrication points to {itemName} for faster passive production",
+    "machineSwitch": "Switch {machine} from {current} to {item} to produce it passively",
+    "machineSwitchContention": " — also wanted for {items}{more}",
+    "machineSwitchIdle": "idle"
   },
   "localeNotice": {
     "shownIn": "Shown in {language}",
@@ -1183,5 +1640,168 @@
   "localeHint": {
     "message": "Now available in more languages",
     "gotIt": "Got it"
+  },
+  "skillPlanner": {
+    "eyebrow": "Skill Planner",
+    "heading": "{skill} Leveling",
+    "subheading": "Pick a target level to see the XP, cycles, and time needed — with all your bonuses applied.",
+    "controls": {
+      "gathering": "Gathering",
+      "workstations": "Workstations",
+      "targetLevel": "Target level",
+      "maxOut": "Max out (level 99)",
+      "unlocksAtLevel": "Unlocks {item} at level {level}",
+      "atTopTier": "You're already at the top tier for this skill."
+    },
+    "empty": {
+      "title": "Nothing to plan",
+      "subtitle": "Pick a target level above your current level to see the grind plan."
+    },
+    "summary": {
+      "kicker": "Plan",
+      "title": "Summary",
+      "totalXp": "Total XP",
+      "totalCrafts": "Total Crafts",
+      "totalCycles": "Total Cycles",
+      "totalAutocraft": "Total Autocraft",
+      "totalFocusTime": "Total Focus time",
+      "playerLevel": "Player level",
+      "xpBonusGain": "+{value}% XP"
+    },
+    "waysToImprove": {
+      "kicker": "Efficiency",
+      "title": "Ways to improve"
+    },
+    "ingredients": {
+      "kicker": "Materials",
+      "title": "Ingredient cost",
+      "aside": "consumed from your inventory"
+    },
+    "advisory": {
+      "allRequired": "All {count} required — raise every one:"
+    },
+    "awakenSources": {
+      "banked": "You have {count} unspent {points} — open the tree to allocate.",
+      "awakenOwned": "Awaken one you own → +1 {point}:",
+      "summonThenAwaken": "Summon then awaken one → +1 {point}:",
+      "readyTitle": "Ready to awaken",
+      "levelFirstTitle": "Level to 70 first, then awaken"
+    },
+    "summonChip": {
+      "canSummon": "can summon",
+      "matsShort": "{count} mat short | {count} mats short",
+      "needsSkill": "needs {skill} {level}",
+      "tierSummonThenAwaken": "Tier {tier} · Summon then awaken",
+      "stillNeed": "Still need",
+      "allInInventory": "All materials in inventory — ready to summon.",
+      "blockedNeeds": "Blocked — needs {skill} level {level}",
+      "inspect": "Inspect"
+    },
+    "sanctuary": {
+      "benefitGatherSpeed": "Gather speed",
+      "benefitYield": "Yield",
+      "swapRoster": "Swap your sanctuary roster:",
+      "remove": "Remove",
+      "add": "Add",
+      "nothingToRemove": "Nothing to remove — you have open slots.",
+      "alreadySlotted": "Already slotted — no additions needed.",
+      "keepInPlace": "Keep in place",
+      "resultingTierChanges": "Resulting tier changes",
+      "slotsSharedNote": "— sanctuary slots are shared across all jobs:",
+      "tierMove": "Tier {from} → {to}"
+    },
+    "suggestion": {
+      "aria": "Skill planner suggestion",
+      "suggests": "Skill Planner suggests",
+      "jobToTier": "{job} → Tier {tier}",
+      "dismissAria": "Dismiss suggestion",
+      "dismiss": "Dismiss",
+      "apply": "Apply"
+    },
+    "segments": {
+      "times": "times",
+      "cycles": "cycles",
+      "stepByStep": "Step by step",
+      "grindPath": "Grind path",
+      "inQueue": "{count} in queue"
+    }
+  },
+  "advisories": {
+    "openIn": "Open in {destination}",
+    "benefit": {
+      "fasterGathering": "{pct}% faster gathering",
+      "yield": "+{amount} yield",
+      "xp": "+{pct}% XP"
+    },
+    "cost": {
+      "tool": "{amount} {itemName}",
+      "awakenPoints": "{n} Awaken Point | {n} Awaken Points"
+    },
+    "sanctuary": {
+      "headline": "Sanctuary → Tier {tier}",
+      "headlineWithJob": "{job} Sanctuary → Tier {tier}"
+    },
+    "playerLevel": {
+      "headline": "Raise low skills → +{levels} player level | Raise low skills → +{levels} player levels",
+      "benefit": "+{pct}% XP on every skill"
+    },
+    "gather": {
+      "awakenNodeFallback": "Awaken node",
+      "sanctuaryHeadline": "{job} Sanctuary",
+      "sanctuaryHeadlineWithTier": "{job} Sanctuary → Tier {tier}",
+      "sanctuaryDetail": "faster + higher-yield gathering",
+      "yieldDetail": "+1 gathered per action",
+      "durationDetail": "−5% gather time"
+    },
+    "skill": {
+      "awakenNodeFallback": "Awaken {type} node {from} → {to}",
+      "toolFallback": "Tool",
+      "toolLevel": "{tool} Level {from} → {to}",
+      "sanctuaryLabel": "Sanctuary - {skill} Tier {tier}"
+    }
+  },
+  "plannerGlossary": {
+    "awakenPoint": {
+      "term": "Awaken point",
+      "short": "Earned when you awaken a creature. Spend it on any node in the awaken tree.",
+      "long": "Awakening a creature earns exactly one awaken point. The tree is job-based (e.g. Mining Duration, Chopping XP) rather than creature-based, so a point can go toward whichever job upgrade helps you most — it is never tied to a specific creature."
+    },
+    "sanctuarySeat": {
+      "term": "Sanctuary seat",
+      "short": "A deployment slot. Seating an awakened creature lifts a job tier and speeds those gathers.",
+      "long": "A creature must be awakened before it can take a Sanctuary seat or act as a helper. Once seated, it raises the tier of a gather job, shortening every remaining gather for that job downstream."
+    },
+    "checkIn": {
+      "term": "Check-in",
+      "short": "A return visit where you collect prestige tokens and re-form your parties.",
+      "long": "The prestige loop assumes you step away and come back on a fixed schedule. Each check-in is one of those returns: you bank the tokens earned since the last visit and the planner re-assigns parties for the next stretch."
+    },
+    "cadence": {
+      "term": "Check-in cadence",
+      "short": "How often you return — every 12h, 24h, etc. It changes how the loop is optimized.",
+      "long": "Cadence sets the length of each unattended stretch. Shorter cadences let creatures prestige and be re-formed more often; longer cadences waste more time once creatures max out between visits."
+    },
+    "prestige": {
+      "term": "Prestige",
+      "short": "When a creature hits the level cap, it resets to level 1 and earns a prestige token.",
+      "long": "Prestiging is the loop’s payout: a creature that reaches the cap resets and yields a token. The whole planner is tuned to maximize how many of these resets happen per day across your roster."
+    },
+    "rosterRoleAnchor": {
+      "term": "Anchor",
+      "short": "One of your strongest creatures, parked at level 120 to speed up its party. It never prestiges, so it earns no tokens itself."
+    },
+    "rosterRoleBooster": {
+      "term": "Booster",
+      "short": "Not a creature you pick — a Leveling creature that has reached level 120 and is boosting its party until it gets prestiged at the next check-in."
+    },
+    "rosterRoleClimber": {
+      "term": "Leveling",
+      "short": "A creature climbing toward level 120. When it maxes out it prestiges for a token, then starts over."
+    },
+    "levelChart": {
+      "term": "Level chart",
+      "short": "Each line is a creature’s level across check-ins. A line dropping back to 1 is a prestige reset.",
+      "long": "The Levels view plots every creature in an expedition’s party over time. A line that climbs toward the cap and then drops back to level 1 is a prestige — that reset is the moment a token was earned. Anchors stay flat near the top because they never reset."
+    }
   }
 }

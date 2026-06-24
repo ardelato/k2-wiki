@@ -61,7 +61,14 @@
     "tools": "Tools",
     "fabrication": "Fabrication",
     "planner": "Planlayıcı",
-    "configs": "Yapılandırma"
+    "configs": "Yapılandırma",
+    "creaturePlanner": "Yaratık Planlayıcısı",
+    "craftingPlanner": "Üretim Planlayıcısı",
+    "plannerAwaken": "Planlayıcı · Awaken",
+    "plannerSummon": "Planlayıcı · Summon",
+    "plannerPrestige": "Planlayıcı · Prestige",
+    "plannerSkills": "Planlayıcı · Beceriler",
+    "plannerCraft": "Planlayıcı · Üretim"
   },
   "settings": {
     "themeSystem": "Tema: Sistem",
@@ -242,7 +249,8 @@
       "disadvantage": "· ▼ Dezavantaj",
       "lvlBadge": "Svy {level}",
       "totalJobPoints": "Toplam {total}",
-      "baseStat": "(TEMEL {value})"
+      "baseStat": "(TEMEL {value})",
+      "planSummoning": "Plan Summoning"
     },
     "summoningCost": {
       "title": "Çağırma Maliyeti"
@@ -308,7 +316,17 @@
       "clearAll": "Tümünü temizle"
     },
     "rightClickHint": {
-      "label": "Sağ tık"
+      "label": "İncele"
+    },
+    "infoHint": {
+      "whatIs": "{term} nedir?",
+      "moreInfo": "Daha fazla bilgi"
+    },
+    "learnMore": {
+      "label": "Daha fazla bilgi"
+    },
+    "advisory": {
+      "speedsUp": "Hızlandırır"
     }
   },
   "expeditions": {
@@ -384,7 +402,8 @@
     "gathering": "Toplama",
     "gatheringSkill": "Toplama Becerisi",
     "tier": "Kademe",
-    "tierRequiresLevel": "(Oyuncu Svy {n} gerektirir)",
+    "tierRequiresLevel": "({label} Svy {n} gerektirir)",
+    "player": "Oyuncu",
     "statWeights": "İstatistik Ağırlıkları",
     "tierOverview": "Kademe Genel Bakış",
     "tierCol": "Kademe",
@@ -451,7 +470,11 @@
     "recommended": "Önerilen",
     "select": "Seç",
     "unreachableTooltip": "Bu hedeflere mevcut seçilebilir yaratıklarla ulaşılamaz",
-    "recommendedAbbr": "Önr."
+    "recommendedAbbr": "Önr.",
+    "statusHelper": "Yardımcı",
+    "statusMachine": "Makine",
+    "statusDungeon": "Dungeon",
+    "tierLabel": "Kademe {n}"
   },
   "machines": {
     "title": "Machines",
@@ -540,7 +563,219 @@
       "expandAll": "Tümünü Genişlet",
       "collapsed": "daraltıldı"
     },
-    "pickerLabel": "Eşya"
+    "pickerLabel": "Eşya",
+    "tour": {
+      "welcome": {
+        "title": "Yaratık Planlayıcısına Hoş Geldiniz",
+        "body": "Üstte üç sekme var. <b>Summon</b> yeni çağırma işlemlerini planlar, <b>Awaken&nbsp;Rush</b> yaratıkları uyanabilmeleri için seviye&nbsp;70'e taşır ve <b>Prestige&nbsp;Loop</b>, sabit bir Party ile prestige jetonları toplar. Bu tur, şu an hangi sekmedeyseniz onu anlatır."
+      },
+      "summonHeader": {
+        "title": "Sonraki çağırmalarınızı planlayın",
+        "body": "Çağırmak istediğiniz yaratıkları ekleyin; planlayıcı, onlar için hâlâ toplamanız gerekenlerin toplamını çıkarır ve beceri kapıları gibi engelleyicileri işaretler."
+      },
+      "summonOrder": {
+        "title": "Çağırma sıranız",
+        "body": "Çağırma kuyruğunuz, üstesinden gelinecek sıraya göre numaralandırılmıştır — <b>#1 \"şimdi bunu yap\"</b> anlamına gelir. Adım sırasına, hazırlık durumuna veya ada göre yeniden sıralayın; + satırıyla daha fazla ekleyin ve sağdaki planı odaklamak için herhangi bir satıra tıklayın."
+      },
+      "summonFocus": {
+        "title": "Odaklanan yaratık",
+        "body": "Üzerinde olduğunuz yaratık: <b>hazırlık süresi</b>, hâlâ ihtiyaç duyduğu ögeler (pasif tedarik, elle yapılan işten ayrı olarak işaretlenir) ve bu toplama işlemlerini hızlandırmanın yolları."
+      },
+      "summonViews": {
+        "title": "İki farklı görünüm",
+        "body": "<b>Plan</b> (şimdiye kadar gördüğünüz) her yaratığı sırayla geçer. <b>Tüm materyaller</b> — şimdi oraya geçiyor — her çağırma genelinde kaynağa göre gruplanmış tam toplama listesidir."
+      },
+      "summonMaterials": {
+        "title": "Toplanacak her şey",
+        "body": "Kuyruktaki çağırmalarınızın ihtiyaç duyduğu her materyal, nereden geleceğine göre havuzlanmış ve gruplandırılmıştır — tek alışveriş listeniz. Yaratık yaratık çalışmak için istediğiniz zaman <b>Plan</b>'a geri dönün."
+      },
+      "awakenQueue": {
+        "title": "Uyanma kuyruğunuz",
+        "body": "Seviye&nbsp;70'e taşımak istediğiniz uyanmamış yaratıkları ekleyin. Tek bir yaratık ayrıntılı bir plan gösterir; birkaç tane eklerseniz planlayıcı onları bir Party olarak birlikte optimize eder."
+      },
+      "awakenBoosters": {
+        "title": "İsteğe bağlı güçlendiriciler",
+        "body": "Burada izin verdiğiniz Awakened yaratıklar, kuyruğa eşlik edebilir ve seviyelendirmeden onu hızlandırabilir."
+      },
+      "awakenStrategy": {
+        "title": "Strateji",
+        "body": "<b>Elleri serbest</b> her yaratığa az yeniden atama ile istikrarlı bir rota verir — kurun ve saatler sonra kontrol edin. <b>Optimal</b>, tüm kuyruğu en hızlı genel bitiş için koordine eder, ancak daha fazla takas maliyetiyle."
+      },
+      "awakenExpeditions": {
+        "title": "Expeditions",
+        "body": "Planlayıcının hangi Expeditions üzerinden rota çizebileceği ve kaç tanesinin kapsama dahil olduğu. Gerçekten çalıştırdıklarınızla eşleşecek şekilde daraltın."
+      },
+      "awakenFocus": {
+        "title": "Planınız",
+        "body": "Seviye&nbsp;70'e en hızlı Expedition rotası burada görünür; her yaratığın ne zaman ulaşacağıyla birlikte."
+      },
+      "awakenViews": {
+        "title": "Zaman çizelgesi veya Adımlar",
+        "body": "<b>Zaman çizelgesi</b>, tüm kuyruğun zaman içindeki Gantt şemasıdır; <b>Adımlar</b> aynı planı sıralı, dalga dalga bir kontrol listesine böler."
+      },
+      "awakenTimeline": {
+        "title": "Zaman çizelgesini okuma",
+        "body": "Yakınlaştırıp uzaklaştırmak için <b>⌘/Ctrl</b> tuşunu basılı tutup kaydırın; zaman içinde kaydırmak için <b>Shift</b> tuşunu basılı tutup kaydırın. +/− düğmeleri de yakınlaştırır ve sıfırlama varsayılana döner."
+      },
+      "awakenSetup": {
+        "title": "Expeditions'a aktar",
+        "body": "<b>Expeditions'ta Başlangıç Kurulumunu Görüntüle</b>, planın ilk dalga Party'lerini Expeditions sayfanıza yazar; oyun içinde uygulamaya hazır."
+      },
+      "loopRoster": {
+        "title": "Döngü kadrosu",
+        "body": "Döngüyü çalıştıran Awakened yaratıklar. Hesapladıktan sonra her satır rolünü gösterir — <b>{anchor}</b>, <b>{booster}</b> veya <b>{climber}</b>."
+      },
+      "loopCadence": {
+        "title": "Kontrol sıklığı",
+        "body": "{cadence} Tablo, her sıklık için günlük jeton sayısını göstererek karşılaştırma yapmanızı sağlar."
+      },
+      "loopExpeditions": {
+        "title": "Expeditions",
+        "body": "Döngünün hangi Expeditions üzerinden rota çizebileceği ve kaç tanesinin kapsama dahil olduğu. Gerçekten çalıştırdıklarınızla eşleşecek şekilde daraltın."
+      },
+      "loopHero": {
+        "title": "Kazancınız",
+        "body": "Bu kurulumdan günlük prestige jetonu sayısı. {prestige} Bırak-git stratejisinin nasıl çalıştığını öğrenmek için “Daha&nbsp;fazla bilgi”yi açın."
+      },
+      "loopTabs": {
+        "title": "Kurulum ve Seviyeler",
+        "body": "<b>Kurulum</b>, hemen uygulanacak Party atamasıdır. <b>Seviyeler</b>, her yaratığı kontrol girişleri boyunca grafikler — {levelChart}"
+      },
+      "nav": {
+        "next": "İleri",
+        "back": "Geri",
+        "done": "Tamam"
+      }
+    },
+    "heading": "Planlayıcı",
+    "subheading": "Herhangi bir öge için her tarif dalını, konteyner rotasını ve toplama yolunu inceleyin, ardından toplamlar ve beklenen süre için kullanmak istediğiniz yöntemi sabitleyin.",
+    "takeTour": "Turu başlat",
+    "noItemSelected": "Henüz öge seçilmedi.",
+    "desktopOnlyTreeHint": "Tam bağımlılık ağacını ve denetçiyi görüntülemek için bu sayfayı daha geniş bir ekranda açın.",
+    "additionalCraftsHint": "Mevcut envanterinizin ve kuyruktaki tezgah ögelerinin ötesinde {additional} üretimi hedefler.",
+    "additionalCraftsEmphasis": "ek",
+    "alreadyStocked": "Zaten stokta — üretilecek bir şey yok.",
+    "clearSelectedItem": "Seçili ögeyi temizle",
+    "creatureTabs": {
+      "summon": "Summon",
+      "awaken": "Awaken",
+      "prestige": "Prestige"
+    },
+    "craftingTabs": {
+      "singleItem": "Tek öge",
+      "skills": "Beceriler"
+    },
+    "heroStats": {
+      "craftsLeft": "Kalan üretim",
+      "estTime": "Tahmini süre",
+      "stocked": "Stokta"
+    },
+    "picker": {
+      "itemCount": "{count} öge",
+      "searchPlaceholder": "Öge ara...",
+      "allTypes": "Tümü",
+      "noMatches": "Eşleşen öge yok."
+    },
+    "dungeonCallout": {
+      "title": "Dungeon'dan da edinilebilir",
+      "subtitle": "Dungeon sayfasını aç"
+    },
+    "skillGate": {
+      "message": "{count} kaynak daha yüksek bir beceri seviyesi gerektiriyor — en yüksek kapı: {gate} | {count} kaynak daha yüksek bir beceri seviyesi gerektiriyor — en yüksek kapı: {gate}",
+      "plan": "Planla →"
+    },
+    "detail": {
+      "actions": "Eylemler",
+      "activity": "Aktivite",
+      "affordableNow": "Şu an satın alınabilir",
+      "baseDuration": "Temel süre",
+      "buyAffordableNote": "Bunu şu an satın almak için yeterli gold'unuz var.",
+      "buyConfigureNote": "Zaman tahmini için Ayarlar'da gold gelirini yapılandırın.",
+      "buyGoldIncomeNote": "Zaman, pasif gold gelirine göre tahmin edildi ({rate} gold/dk).",
+      "buySubtitle": "{amount} doğrudan satın al",
+      "containerFormula": "{amount} ÷ ({chance} × {yield}) her {container} açılışı başına",
+      "containerFormulaPassive": "{amount} ihtiyaç − pasif → {container}'ın {openings} kez açılması",
+      "containerNote": "Açılış süresi ihmal edilebilir kabul edilir; yalnızca konteynerin elde edilmesi süreye katkıda bulunur.",
+      "containerPassiveNote": "Pasif üretim konteynerleri {from}'dan {to}'ya düşürür.",
+      "containersNeeded": "Gereken konteyner",
+      "containerSubtitle": "Beklenen {count} açılış",
+      "craftFormula": "{crafts} üretim × {time}",
+      "crafts": "Üretimler",
+      "craftSubtitle": "{output} çıktı için {count} üretim",
+      "craftSubtitlePlural": "{output} çıktı için {count} üretim",
+      "cycleDetected": "Döngü tespit edildi",
+      "cycleInChain": "Bağımlılık zincirinde döngü tespit edildi.",
+      "cycleNote": "Sonsuz döngüyü önlemek için planlayıcı genişlemesi burada durduruldu.",
+      "cycles": "Döngüler",
+      "cycleSubtitle": "Bu bağımlılık bir üst öğeye geri döngü yapıyor.",
+      "cycleTime": "Döngü süresi",
+      "depsTime": "Bağımlılık süresi",
+      "durationReduction": "-%{pct} süre",
+      "eachValue": "her biri {amount}",
+      "expeditionFormula": "{runs} sefer × {time} temel süre",
+      "expeditionNote": "Temel süre kullanılarak tahmin edilir — gerçek süre party gücüne ve kademedeki seviyeye bağlıdır.",
+      "expeditionSubtitle": "{count} beklenen sefer",
+      "fabricationFormula": "{amount} ÷ {perCycle}/döngü × {seconds}s",
+      "fabricationNote": "Üretim makinesi her 3 dakikada bir pasif olarak eşya üretir.",
+      "fabricationSource": "Üretim Makinesi ({points} puan)",
+      "fabricationSubtitle": "{count} puan tahsis edildi",
+      "fabricationSubtitlePlural": "{count} puan tahsis edildi",
+      "flower": "Çiçek",
+      "gardenConfigureNote": "Süreyi hesaplamak için Planlayıcı Ayarları > Bahçe bölümünde çiçekleri yapılandırın.",
+      "gardenFormula": "{amount} ÷ döngü başına {yield} × {time}",
+      "gardenGrowth": "Bahçe büyümesi",
+      "gardenNoFlowers": "Bahçe — hiç çiçek yapılandırılmamış",
+      "gardenNote": "Bahçe verimi: {setup} = {rate}/dk.",
+      "gatherFormula": "{amount} ÷ ({chance} × {yield}) eylem × {time}",
+      "gatherNote": "Beklenen süre, şans ve çıktı aralığından ortalama verimi kullanır.",
+      "goldPerMinValue": "{rate} gold/dk",
+      "goldRate": "Gold oranı",
+      "goldTime": "Gold süresi",
+      "goldTimeToEarn": "kazanmak için ~{time}",
+      "goldValue": "{amount} gold",
+      "interval": "Aralık",
+      "intervalValue": "döngü başına {seconds}s",
+      "itemDataNotFound": "Eşya verisi bulunamadı.",
+      "itemsPerCycle": "Eşya / döngü",
+      "level": "Svy",
+      "lvValue": "Svy{level}",
+      "machineFormula": "{cycles} döngü × {seconds}s",
+      "machineNote": "Makine seviyesi {level}, aralığı {from}s'den {to}s'ye düşürür.",
+      "machineSource": "Makine — {name}",
+      "machineSubtitle": "{output} çıktı için {count} döngü",
+      "machineSubtitlePlural": "{output} çıktı için {count} döngü",
+      "merchant": "Tüccar",
+      "none": "Yok",
+      "noSourceFound": "{name} için planlayıcı kaynağı bulunamadı.",
+      "notConfigured": "Yapılandırılmamış",
+      "onHand": "Eldeki",
+      "output": "Çıktı",
+      "passiveFormula": "{amount} ÷ ({active}/dk aktif + {passive}/dk pasif)",
+      "perHourValue": "{amount}/saat",
+      "points": "Puan",
+      "rate": "Oran",
+      "ratePerMin": "+{rate}/dk",
+      "rewardPerRun": "Ödül / sefer",
+      "runsNeeded": "Gereken sefer sayısı",
+      "secondsValue": "{seconds}sn",
+      "setup": "Kurulum",
+      "speedBonus": "+%{pct} Hız",
+      "speedTier": "Hız Kademesi",
+      "stepTime": "Adım süresi",
+      "stillNeed": "Hâlâ gerekli",
+      "toolSpeed": "Alet Hızı",
+      "totalCost": "Toplam maliyet",
+      "totalFlowers": "Toplam çiçek",
+      "totalTime": "Toplam süre",
+      "unitPrice": "Birim fiyat",
+      "yieldBonus": "+{amount} verim",
+      "yieldPer60s": "60 saniyede {amount}",
+      "yieldPerAction": "Verim / eylem",
+      "yieldPerCycle": "Verim / döngü",
+      "yieldPerOpen": "Verim / açılış",
+      "awakenTree": "Awaken Tree",
+      "sanctuary": "Sanctuary"
+    }
   },
   "levelPlanner": {
     "title": "Seviye Atla",
@@ -562,7 +797,9 @@
       "optimal": "Optimal",
       "handsFree": "Eller Serbest",
       "recalculate": "Yeniden Hesapla",
-      "calculate": "Hesapla"
+      "calculate": "Hesapla",
+      "addRemove": "Ekle / Kaldır",
+      "manage": "Yönet"
     },
     "badges": {
       "toLevel": "seviyeye",
@@ -593,6 +830,136 @@
       "narrowing": "En iyi rotalar daraltılıyor...",
       "wrappingUp": "Tamamlanıyor...",
       "exploring": "Rota kombinasyonları araştırılıyor..."
+    },
+    "eyebrow": {
+      "levelUp": "Seviye Atla"
+    },
+    "learnMore": "Daha fazla bilgi",
+    "tier": "Tier {tier}",
+    "objective": {
+      "awakenRush": "Awaken-rush",
+      "prestigeLoop": "Prestige-loop"
+    },
+    "heading": {
+      "awakenRush": "Awaken Rush",
+      "awakenOne": "{name}'i Awaken et",
+      "awakenMany": "{n} Yaratığı Awaken et",
+      "prestigeLoop": "Prestige Loop",
+      "creatureLeveling": "{name} Seviyelendirme",
+      "partyLevelUp": "Party Seviye Atlama",
+      "levelUpPlanner": "Seviye Atlama Planlayıcısı",
+      "subtitleAwaken": "Seviye 70'e en hızlı yol — Sanctuary uygunluğunu ve Awaken Tree jetonunu açmak için Awaken et.",
+      "subtitlePrestige": "Kontrol girişleri arasında prestige jetonu toplayan istikrarlı bir Party.",
+      "subtitlePartyHandsFree": "Saatlerce takas gerektirmeden çalışan istikrarlı Expedition atamaları.",
+      "subtitlePartyOptimal": "Tüm koleksiyonunuzu aynı anda seviyelendirmek için optimal Expedition planı.",
+      "subtitleSingle": "Yaratığınızı mümkün olan en hızlı şekilde seviyelendirmek için optimal Expedition yolu."
+    },
+    "rail": {
+      "queue": "Kuyruk",
+      "addRemoveCreatures": "Yaratık Ekle / Kaldır",
+      "sortEta": "TTS",
+      "sortLevel": "Seviye",
+      "sortName": "Ad",
+      "sortTier": "Tier"
+    },
+    "awaken": {
+      "addCreaturesTitle": "Awaken edilecek yaratık ekle",
+      "allowBoostersTitle": "Yaratıkların güçlendirici olarak kullanılmasına izin ver",
+      "boosterRoster": "Güçlendirici Kadrosu",
+      "boosterHint": "Varsayılan olarak en güçlü {n} Awakened yaratık otomatik seçilir (önce seviyeye, sonra tier'a göre). Özelleştirmek için geçiş yapın; Sıfırla bu varsayılanı geri yükler.",
+      "boosterChipTitle": "{name} — Svy {level}",
+      "removeBooster": "{name}'i kaldır",
+      "handsFree": "Elleri serbest",
+      "handsFreeTitle": "Bir kez kurun ve saatlerce bırakın — yaratık başına az yeniden atama",
+      "optimalTitle": "Koordineli, en hızlı bitiş — daha fazla yeniden atama",
+      "emptyTitle": "Uyanma planlamak için bir yaratık ekleyin.",
+      "emptySubtitle": "Raydan seviye 70'e taşımak istediğiniz Awakened olmayan yaratıkları seçin. Planlayıcı en hızlı Expedition rotasını bulur ve her birinin ne zaman ulaşacağını söyler.",
+      "alreadyMaxTitle": "Zaten seviye 70'te.",
+      "alreadyMaxSubtitle": "{name} şu anda Awaken olmaya hazır — seviyelendirmeye gerek yok.",
+      "toFinish": "tamamlamak için",
+      "wholeQueue": "Tüm kuyruk",
+      "strategyShortHandsFree": "istikrarlı rotalar, az takas",
+      "strategyShortOptimal": "en hızlı bitiş, daha fazla takas",
+      "strategyExplainerHandsFree": "Elleri serbest, her yaratığa 70'e az yeniden atama ile istikrarlı bir rota verir — bir kez kurun ve saatler sonra kontrol edin.",
+      "strategyExplainerOptimal": "Optimal, tüm kuyruğu en hızlı genel bitiş için koordine eder; Expeditions arasında daha fazla yeniden atama maliyetiyle.",
+      "metricRuns": "Koşu",
+      "metricSwaps": "Takas",
+      "incompleteWarning": "{n} yaratık planlayıcının hesaplama sınırı içinde 70'e ulaşamıyor — bir geçişin simüle edebileceğinden daha fazla koşu gerektirebilir. | {n} yaratık planlayıcının hesaplama sınırı içinde 70'e ulaşamıyor — bir geçişin simüle edebileceğinden daha fazla koşu gerektirebilir.",
+      "coordinatingSubtitle": "Kuyruk, Expeditions genelinde koordine ediliyor…",
+      "readySubtitleHandsFree": "Her yaratığa 70'e az yeniden atama ile istikrarlı bir rota verin — bir kez kurun ve saatler sonra kontrol edin.",
+      "readySubtitleOptimal": "Kuyruktaki her yaratığı paralel olarak 70'e seviyelendirin — her biri, en güçlü yaratıklarınız güçlendirici olarak yanında getirilmek üzere tek başına çalışır.",
+      "targetBadge": "Awaken hedefi · Svy 70",
+      "alreadyAwakenedTitle": "Zaten Awakened.",
+      "alreadyAwakenedSubtitle": "{name} seviye-70 kilometre taşını geçti — zaten Awaken Tree jetonuna ve Sanctuary uygunluğuna sahip. Onunla prestige jetonu toplayın veya Özel modda 120'ye seviyelendirmeye devam edin.",
+      "goToPrestige": "Prestige-loop'a git",
+      "keepLeveling": "Seviyelendirmeye devam et (Özel)"
+    },
+    "expeditionPicker": {
+      "title": "Planlayıcı için Expeditions",
+      "includedCount": "{total} içinden {included} dahil",
+      "searchPlaceholder": "Expedition ara...",
+      "includeAll": "Tümünü Dahil Et",
+      "captionBefore": "Varsayılan durum, kayıt dosyanızın ilerlemesini şuradan yansıtır:",
+      "captionConfigs": "Yapılandırmalar",
+      "captionAfter": "sayfasından. Dahil etmek veya hariç tutmak için bir satıra tıklayın; yalnızca o tier'ı değiştirmek için bir tier'a tıklayın.",
+      "rowExcludeTitle": "{name} — hariç tutmak için tıklayın",
+      "rowIncludeTitle": "{name} — dahil etmek için tıklayın",
+      "requiredCompletions": "({n} ger.)",
+      "toggleTier": "Tier {tier}'ı değiştir",
+      "noMatches": "Eşleşme bulunamadı."
+    },
+    "prestigeLoop": {
+      "roster": "Kadro",
+      "learnMore": "Daha fazla bilgi",
+      "checkInCadence": "Kontrol sıklığı",
+      "choosePrestigeCreatures": "Prestige yaratıklarını seçin",
+      "hoursShort": "{h}s",
+      "everyHours": "her {h} saatte bir",
+      "perDay": "/ gün",
+      "noEligibleTitle": "Henüz prestige uygun yaratık yok.",
+      "noEligibleSubtitle": "Prestige döngüsü Awakened yaratıklara ihtiyaç duyar (seviye 120'ye ulaşabilir ve sıfırlanabilirler). Önce birkaçını Awaken edin.",
+      "goToAwaken": "Awaken-rush'a git",
+      "simulating": "Prestige döngüsü simüle ediliyor…",
+      "readyTitle": "Prestige döngünüzü planlamaya hazırsınız.",
+      "readySubtitle": "Ne sıklıkla kontrol edeceğinizi ve stratejinizi seçin, ardından istikrarlı bir jeton toplama kurulumu hesaplayın.",
+      "roles": {
+        "climber": "Seviyelendirme",
+        "booster": "Booster",
+        "anchor": "Anchor"
+      },
+      "results": {
+        "strategySummary": "En güçlü yaratıklarınız kalıcı güçlendirici olarak maksimumda kalır; geri kalanlar 120'ye tırmanır ve bir jeton için prestige yapar.",
+        "strategyExplainer": "En güçlü {boosterCount} yaratığınız kalıcı güçlendirici olarak seviye 120'de park edilir — Party'lerini hızlandırırlar ancak asla prestige yapmazlar, dolayısıyla kendileri jeton kazanmazlar. Geri kalanlar 120'ye tırmanır ve her kontrol girişinde bir jeton için prestige yapılır. En uygun Party'ler bir kez oluşturulur ve yerinde kalır, bu yüzden gerçek bir bırak-git döngüsüdür.",
+        "tabSetup": "Kurulum",
+        "tabLevels": "Seviyeler",
+        "prestigeTokenAlt": "Prestige jetonu",
+        "tokensPerDay": "prestige jetonu / gün",
+        "checkingInEvery": "Her {h} saatte bir kontrol",
+        "recommendedSetup": "Önerilen kurulum",
+        "viewSetup": "Kurulumu Expeditions'ta görüntüle",
+        "viewSetupTitle": "Bu kurulumu Expeditions sayfasına uygulayın ve yeni sekmede açın",
+        "howToReadCharts": "Bu grafikleri nasıl okursunuz"
+      },
+      "timeline": {
+        "caption": "{n} ardışık kontrol girişi, her {h} saatte bir.",
+        "captionLegend": "= bir jeton için prestige yapıldı, seviye 1'den yeniden başlar.",
+        "creature": "Yaratık",
+        "tokens": "Jetonlar",
+        "checkInIndex": "#{n}",
+        "plusHours": "+{h}s",
+        "anchorTokensTooltip": "Anchor — ortakları güçlendirmek için 120'de tutulur; kendisi jeton kazanmaz",
+        "tokensTooltip": "Bu pencerede {n} prestige jetonu",
+        "prestigedTooltip": "Bu kontrol girişinde prestige yapıldı — seviye 1'den yeniden başlıyor",
+        "held": "tutuldu"
+      },
+      "chart": {
+        "allHeld": "Tümü 120'de tutuldu — bu Expedition'da seviyelendirme yok.",
+        "lvl": "Svy {n}",
+        "wastedXp": "Ziyan Deneyim",
+        "legendTokens": "{name} — {n} prestige jetonu | {name} — {n} prestige jetonu",
+        "prestigeTokensAlt": "Prestige jetonları",
+        "heldAt120": "120'de tutuldu"
+      }
     }
   },
   "summoningPlanner": {
@@ -654,7 +1021,80 @@
       "fromCreatures": "yaratıklardan +{n} gold/dak",
       "fromFlowers": "çiçeklerden +{n} gold/dak"
     },
-    "gold": "Gold"
+    "gold": "Gold",
+    "header": {
+      "empty": "Sonraki çağırmayı seçin.",
+      "count": "{n} yaratık çağrılıyor. | {n} yaratık çağrılıyor.",
+      "subtitle": "Seçili çağırmalarınız genelinde toplanmış materyaller. Ulaşmadığınız beceri seviyeleri gibi engelleyiciler satır içinde ve yan panelde görünür."
+    },
+    "viewTabs": {
+      "plan": {
+        "label": "Plan",
+        "description": "Yaratık başına: her çağırmanın ihtiyaçları, üstesinden gelinecek sırayla ve hazırlık süresiyle."
+      },
+      "materials": {
+        "label": "Tüm materyaller",
+        "description": "İhtiyacınız olan her şey, kaynağa göre gruplanmış — düz liste veya tam üretim ağaçları olarak."
+      }
+    },
+    "planSort": {
+      "step": "Adım sırası",
+      "ready": "En hazır"
+    },
+    "rail": {
+      "heading": "Plan",
+      "blocked": "Engellendi",
+      "addRemove": "Yaratık Ekle / Kaldır"
+    },
+    "picker": {
+      "defaultTitle": "Çağırılacak yaratık ekle",
+      "close": "Kapat",
+      "sortLevel": "Seviye",
+      "sortTitle": {
+        "tier": "Tier'a göre sırala",
+        "tierAsc": "Tier — artan (azalan için tıklayın)",
+        "tierDesc": "Tier — azalan (temizlemek için tıklayın)",
+        "name": "Ada göre sırala",
+        "nameAsc": "Ad — A→Z (Z→A için tıklayın)",
+        "nameDesc": "Ad — Z→A (temizlemek için tıklayın)",
+        "level": "Seviyeye göre sırala",
+        "levelAsc": "Seviye — en düşük önce (en yüksek için tıklayın)",
+        "levelDesc": "Seviye — en yüksek önce (temizlemek için tıklayın)"
+      },
+      "excludeBusy": "Meşgulü hariç tut",
+      "includeBusy": "Meşgulü dahil et",
+      "excludeBusyHint": "Şu an başka bir etkinlikle meşgul olan her yaratığı hariç tut",
+      "includeBusyHint": "Başka bir etkinlikle meşgul olan yaratıkları yeniden dahil et"
+    },
+    "focus": {
+      "doThisNow": "Bunu şimdi yap",
+      "requirementsStocked": "{fulfilled}/{total} gereksinim stokta",
+      "status": {
+        "blocked": "Engellendi",
+        "ready": "Hazır",
+        "inProgress": "Devam ediyor"
+      },
+      "toReady": "Hazır olmaya {duration}",
+      "waysToImprove": "İyileştirme yolları",
+      "waysToImproveHint": "Öneriler, planınızda daha önce çağrılan yaratıkların bu adımda zaten konuşlandırılmış olduğunu varsayar — dolayısıyla henüz çağırmadığınız yaratıkları adlandırabilirler.",
+      "requirements": "Gereksinimler",
+      "alsoNeededBy": "ayrıca şunun için de gerekli",
+      "reservedNote": "Bu yaratık planınızda daha önce yer alır ve bu stoktan önce alır | Bu yaratıklar planınızda daha önce yer alır ve bu stoktan önce alır",
+      "sequentialLegend": {
+        "text": "Miktarlar {sequential} — paylaşılan materyaller planınızda önce gelen yaratıklar tarafından harcanır, bu nedenle buradaki bir sayı sahip olduğunuzdan daha az görünebilir. Bir {violet} çubuk dilimi veya {need}, eksik değil {earmarked} stoktur.",
+        "sequential": "sıralı",
+        "violet": "mor",
+        "need": "Gerekli",
+        "earmarked": "ayrılmış"
+      }
+    },
+    "expeditionCard": {
+      "tierAlt": "Tier {tier}"
+    },
+    "gatherAdvisory": {
+      "awakenPointCost": "{n} Awaken Puanı | {n} Awaken Puanı",
+      "openIn": "{feature} içinde aç"
+    }
   },
   "configs": {
     "title": "Ayarlar",
@@ -863,7 +1303,12 @@
       "buyAtTitle": "şurada satın al",
       "categories": {
         "refining": "İşleme"
-      }
+      },
+      "resourceQueue": "{resource} kuyruğu",
+      "active": "aktif",
+      "elapsed": "geçen",
+      "alreadyQueued": "Zaten sıraya alındı — bu istasyondaki yeni görevler başlamadan önce tamamlanır.",
+      "noQueuedItems": "Bu istasyon için kuyruğa alınmış eşya ayrıntısı yok."
     },
     "itemPicker": {
       "placeholder": "Planlayıcı eşyalarını ara",
@@ -885,7 +1330,10 @@
       "need": "Gerek",
       "items": "eşya",
       "have2": "var",
-      "queued": "kuyrukta"
+      "queued": "kuyrukta",
+      "here": "Burada",
+      "owned": "sahip olunan",
+      "usedByEarlierCreatures": "önceki yaratıklar tarafından kullanıldı"
     },
     "goldRate": {
       "goldPerMin": "gold/dak",
@@ -1080,7 +1528,13 @@
       "total": "Toplam",
       "need": "Gerek",
       "have2": "var",
-      "queued": "kuyrukta"
+      "queued": "kuyrukta",
+      "here": "Burada ",
+      "owned": "{n} sahip",
+      "usedByEarlier": "önceki yaratıklar tarafından kullanılıyor",
+      "requiresSkill": "{skill} Svy{level} gerektirir",
+      "currentLevel": "(Svy {current})",
+      "clickToPlan": "{skill} planlamak için tıklayın"
     }
   },
   "gardenView": {
@@ -1114,7 +1568,7 @@
     "merchantCostLead": "Merchant'tan satın almak",
     "perFlower": "çiçek başına tutar",
     "plantAria": "{name} Flower ek",
-    "flowerName": "{name} Flower",
+    "flowerName": "{name} Çiçeği",
     "levelOf": "Seviye {level}/{max}",
     "removeAria": "Çiçeği yataktan kaldır",
     "removeTooltip": "Oyun içinde bir çiçeği kaldırmak onu envanterine geri gönderir — çiçeğin kendisini kaybetmezsin. Ancak tüm seviye yükseltmelerini kaybedersin, yani onu seviye atlatmak için harcanan gübre de gider.",
@@ -1173,7 +1627,10 @@
     "awakenGatherDuration": "{jobId} için Awaken süre kademesi, {itemName} toplamayı ~{pct}% azaltır",
     "awakenGatherYield": "{jobId} için Awaken verim bonusu, {itemName} toplama verimini artırır",
     "awakenSpeed": "{workstation} için Awaken hız kademesi, üretim süresini ~5% azaltır",
-    "fabricationPoints": "Daha hızlı pasif üretim için {itemName} öğesine {count} fabrication puanı daha atayın"
+    "fabricationPoints": "Daha hızlı pasif üretim için {itemName} öğesine {count} fabrication puanı daha atayın",
+    "machineSwitch": "Pasif üretim için {machine}'i {current} yerine {item} üretecek şekilde değiştirin",
+    "machineSwitchContention": " — ayrıca {items}{more} için de isteniyor",
+    "machineSwitchIdle": "boşta"
   },
   "localeNotice": {
     "shownIn": "{language} dilinde gösteriliyor",
@@ -1183,5 +1640,168 @@
   "localeHint": {
     "message": "Artık daha fazla dilde mevcut",
     "gotIt": "Anladım"
+  },
+  "skillPlanner": {
+    "eyebrow": "Beceri Planlayıcısı",
+    "heading": "{skill} Seviyeleme",
+    "subheading": "Tüm bonuslarınız uygulanmış olarak gereken XP, döngü ve süreyi görmek için hedef seviye seçin.",
+    "controls": {
+      "gathering": "Toplama",
+      "workstations": "İş İstasyonları",
+      "targetLevel": "Hedef seviye",
+      "maxOut": "Maksimuma çıkar (99. seviye)",
+      "unlocksAtLevel": "{level}. seviyede {item}'i açar",
+      "atTopTier": "Bu beceri için zaten en üst kademedeyken."
+    },
+    "empty": {
+      "title": "Planlanacak bir şey yok",
+      "subtitle": "Öğütme planını görmek için mevcut seviyenizin üzerinde bir hedef seviye seçin."
+    },
+    "summary": {
+      "kicker": "Plan",
+      "title": "Özet",
+      "totalXp": "Toplam XP",
+      "totalCrafts": "Toplam Üretim",
+      "totalCycles": "Toplam Döngü",
+      "totalAutocraft": "Toplam Otomatik Üretim",
+      "totalFocusTime": "Toplam Odaklanma Süresi",
+      "playerLevel": "Oyuncu seviyesi",
+      "xpBonusGain": "+%{value} XP"
+    },
+    "waysToImprove": {
+      "kicker": "Verimlilik",
+      "title": "İyileştirme yolları"
+    },
+    "ingredients": {
+      "kicker": "Malzemeler",
+      "title": "İçerik maliyeti",
+      "aside": "envanterinizden tüketildi"
+    },
+    "advisory": {
+      "allRequired": "Tüm {count} gerekli — hepsini yükseltin:"
+    },
+    "awakenSources": {
+      "banked": "{count} harcanmamış {points} var — tahsis etmek için ağacı açın.",
+      "awakenOwned": "Sahip olduğunuz birini Awaken edin → +1 {point}:",
+      "summonThenAwaken": "Birini çağırın sonra Awaken edin → +1 {point}:",
+      "readyTitle": "Awaken etmeye hazır",
+      "levelFirstTitle": "Önce 70. seviyeye ulaşın, sonra Awaken edin"
+    },
+    "summonChip": {
+      "canSummon": "çağırılabilir",
+      "matsShort": "{count} malzeme eksik | {count} malzeme eksik",
+      "needsSkill": "{skill} {level} gerektirir",
+      "tierSummonThenAwaken": "Kademe {tier} · Çağır ve Awaken et",
+      "stillNeed": "Hâlâ gerekli",
+      "allInInventory": "Tüm malzemeler envanterde — çağırmaya hazır.",
+      "blockedNeeds": "Engellendi — {skill} {level}. seviyesini gerektirir",
+      "inspect": "İncele"
+    },
+    "sanctuary": {
+      "benefitGatherSpeed": "Toplama hızı",
+      "benefitYield": "Verim",
+      "swapRoster": "Sanctuary kadronuzu değiştirin:",
+      "remove": "Kaldır",
+      "add": "Ekle",
+      "nothingToRemove": "Kaldırılacak bir şey yok — boş slotlarınız var.",
+      "alreadySlotted": "Zaten slota yerleştirildi — ekleme gerekmiyor.",
+      "keepInPlace": "Yerinde tut",
+      "resultingTierChanges": "Sonuçta oluşan kademe değişiklikleri",
+      "slotsSharedNote": "— sanctuary slotları tüm işler arasında paylaşılıyor:",
+      "tierMove": "Kademe {from} → {to}"
+    },
+    "suggestion": {
+      "aria": "Beceri planlayıcısı önerisi",
+      "suggests": "Beceri Planlayıcısı öneriyor",
+      "jobToTier": "{job} → Kademe {tier}",
+      "dismissAria": "Öneriyi kapat",
+      "dismiss": "Kapat",
+      "apply": "Uygula"
+    },
+    "segments": {
+      "times": "kez",
+      "cycles": "döngü",
+      "stepByStep": "Adım adım",
+      "grindPath": "Öğütme yolu",
+      "inQueue": "sırada {count}"
+    }
+  },
+  "advisories": {
+    "openIn": "{destination} içinde aç",
+    "benefit": {
+      "fasterGathering": "%{pct} daha hızlı toplama",
+      "yield": "+{amount} verim",
+      "xp": "+%{pct} XP"
+    },
+    "cost": {
+      "tool": "{amount} {itemName}",
+      "awakenPoints": "{n} Awaken Puanı | {n} Awaken Puanı"
+    },
+    "sanctuary": {
+      "headline": "Sanctuary → Kademe {tier}",
+      "headlineWithJob": "{job} Sanctuary → Kademe {tier}"
+    },
+    "playerLevel": {
+      "headline": "Düşük becerileri yükselt → +{levels} oyuncu seviyesi | Düşük becerileri yükselt → +{levels} oyuncu seviyesi",
+      "benefit": "her beceriye +%{pct} XP"
+    },
+    "gather": {
+      "awakenNodeFallback": "Awaken düğümü",
+      "sanctuaryHeadline": "{job} Sanctuary",
+      "sanctuaryHeadlineWithTier": "{job} Sanctuary → Kademe {tier}",
+      "sanctuaryDetail": "daha hızlı + daha yüksek verimli toplama",
+      "yieldDetail": "eylem başına +1 toplanan",
+      "durationDetail": "−%5 toplama süresi"
+    },
+    "skill": {
+      "awakenNodeFallback": "{type} Awaken düğümünü {from} → {to} yükselt",
+      "toolFallback": "Alet",
+      "toolLevel": "{tool} Seviyesi {from} → {to}",
+      "sanctuaryLabel": "Sanctuary - {skill} Kademe {tier}"
+    }
+  },
+  "plannerGlossary": {
+    "awakenPoint": {
+      "term": "Awaken point",
+      "short": "Bir yaratığı Awaken ettiğinizde kazanılır. Awaken Tree'deki herhangi bir düğüme harcayın.",
+      "long": "Bir yaratığı Awaken etmek tam olarak bir Awaken point kazandırır. Ağaç, yaratık temelli değil iş temellidir (örneğin Mining Süresi, Chopping XP), bu yüzden bir puan size en çok yardımcı olan iş yükseltmesine gidebilir — asla belirli bir yaratığa bağlı değildir."
+    },
+    "sanctuarySeat": {
+      "term": "Sanctuary koltuğu",
+      "short": "Bir yerleştirme yuvası. Awaken edilmiş bir yaratığı yerleştirmek bir iş kademesini yükseltir ve o toplamaları hızlandırır.",
+      "long": "Bir yaratık, Sanctuary koltuğuna oturabilmek veya yardımcı olarak görev yapabilmek için önce Awaken edilmiş olmalıdır. Yerleştirildikten sonra bir toplama işinin kademesini yükseltir ve o işe ait kalan her toplamayı aşağı doğru kısaltır."
+    },
+    "checkIn": {
+      "term": "Kontrol girişi",
+      "short": "Prestige jetonlarını topladığınız ve Party'lerinizi yeniden oluşturduğunuz bir dönüş ziyareti.",
+      "long": "Prestige döngüsü, sabit bir programa göre uzaklaşıp geri döndüğünüzü varsayar. Her kontrol girişi bu dönüşlerden biridir: son ziyaretten bu yana kazanılan jetonları biriktirirsiniz ve planlayıcı bir sonraki bölüm için Party'leri yeniden atar."
+    },
+    "cadence": {
+      "term": "Kontrol sıklığı",
+      "short": "Ne sıklıkla döndüğünüz — her 12h, 24h vb. Döngünün nasıl optimize edildiğini değiştirir.",
+      "long": "Sıklık, her gözetimsiz bölümün uzunluğunu belirler. Daha kısa sıklıklar yaratıkların daha sık prestige yapıp yeniden oluşturulmasını sağlar; daha uzun sıklıklar ise yaratıklar ziyaretler arasında maksimuma ulaştığında daha fazla zaman israf eder."
+    },
+    "prestige": {
+      "term": "Prestige",
+      "short": "Bir yaratık seviye üst sınırına ulaştığında, seviye 1'e sıfırlanır ve bir prestige jetonu kazanır.",
+      "long": "Prestige yapmak, döngünün getirisidir: üst sınıra ulaşan bir yaratık sıfırlanır ve bir jeton verir. Planlayıcının tamamı, kadronuz genelinde günde kaç tane bu sıfırlamanın gerçekleştiğini en üst düzeye çıkaracak şekilde ayarlanmıştır."
+    },
+    "rosterRoleAnchor": {
+      "term": "Anchor",
+      "short": "En güçlü yaratıklarınızdan biri; Party'sini hızlandırmak için level 120'de park edilir. Asla prestige yapmaz, dolayısıyla kendisi jeton kazanmaz."
+    },
+    "rosterRoleBooster": {
+      "term": "Booster",
+      "short": "Seçtiğiniz bir yaratık değil — level 120'ye ulaşmış ve bir sonraki kontrol girişinde prestige yapılana kadar Party'sini güçlendiren bir Leveling yaratığı."
+    },
+    "rosterRoleClimber": {
+      "term": "Leveling",
+      "short": "Level 120'ye doğru tırmanan bir yaratık. Maksimuma ulaştığında bir jeton için prestige yapar, ardından baştan başlar."
+    },
+    "levelChart": {
+      "term": "Seviye grafiği",
+      "short": "Her çizgi, kontrol girişleri boyunca bir yaratığın seviyesidir. Seviye 1'e geri düşen bir çizgi bir prestige sıfırlamasıdır.",
+      "long": "Seviyeler görünümü, bir Expedition'ın Party'sindeki her yaratığı zaman içinde grafikler. Üst sınıra doğru tırmanıp ardından seviye 1'e geri düşen bir çizgi bir prestige'dir — o sıfırlama, bir jetonun kazanıldığı andır. Anchor'lar asla sıfırlanmadığı için üstte düz kalır."
+    }
   }
 }
