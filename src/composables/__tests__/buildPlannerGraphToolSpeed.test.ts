@@ -24,6 +24,7 @@ function emptyModifiers(overrides: Partial<PlannerModifiers> = {}): PlannerModif
     jobTiers: {},
     goldPerMinute: 0,
     machineLevels: {},
+    machineRecipes: {},
     fabricationAllocations: {},
     expeditionTier: 1,
     ...overrides,
