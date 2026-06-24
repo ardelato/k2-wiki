@@ -14,7 +14,15 @@ import {
   Sparkles,
   Target,
 } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, onBeforeUnmount, ref, watch, type Component } from 'vue'
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onBeforeUnmount,
+  ref,
+  watch,
+  type Component,
+} from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -51,9 +59,21 @@ const asyncTab = (loader: () => Promise<unknown>) =>
   })
 
 
-const LevelPlanner = asyncTab(() => import('@/views/LevelPlanner.vue'))
-const SkillPlanner = asyncTab(() => import('@/views/SkillPlanner.vue'))
-const SummoningPlanner = asyncTab(() => import('@/views/SummoningPlanner.vue'))
+const loadLevelPlanner = () => import('@/views/LevelPlanner.vue')
+const loadSkillPlanner = () => import('@/views/SkillPlanner.vue')
+const loadSummoningPlanner = () => import('@/views/SummoningPlanner.vue')
+const LevelPlanner = asyncTab(loadLevelPlanner)
+const SkillPlanner = asyncTab(loadSkillPlanner)
+const SummoningPlanner = asyncTab(loadSummoningPlanner)
+
+
+// Same loaders keyed by tab, so the tour can await the active tab's chunk before seeding.
+const TAB_LOADERS: Record<string, () => Promise<unknown>> = {
+  summon: loadSummoningPlanner,
+  awaken: loadLevelPlanner,
+  prestige: loadLevelPlanner,
+  skills: loadSkillPlanner,
+}
 
 
 function normalizeQuantity(value: unknown): number {
@@ -378,17 +398,29 @@ const tourObjective = computed<TourObjective | null>(() =>
 
 
 const { hasSeenTour, startTour, stopTour } = usePlannerTour()
-function takeTour() {
-  if (tourObjective.value) startTour(tourObjective.value, { includeIntro: true })
+// The tab views load async (defineAsyncComponent), so a view's tour-demo handlers only
+// register once its chunk has loaded and mounted. Await the active tab's loader, then let
+// the resolved view mount and register, before seeding. Otherwise an auto-launched tour
+// fires before the seeding view exists, the seed lookup misses, and the walkthrough runs
+// with no demo data — only observable once the chunk is a real network fetch (prod build).
+async function takeTour() {
+  const obj = tourObjective.value
+  if (!obj) return
+  await TAB_LOADERS[activeTab.value]?.()
+  // Two ticks: the async wrapper swaps skeleton → view on one flush, the view mounts and
+  // registers its demo on the next. (Its resolve runs after our await, so one isn't enough.)
+  await nextTick()
+  await nextTick()
+  if (tourObjective.value === obj) startTour(obj, { includeIntro: true })
 }
-// Auto-run once, the first time the user lands on a planner objective (not on Summon).
+// Auto-run once, the first time the user lands on a planner objective.
 let autoLaunched = false
 watch(
   tourObjective,
   (obj) => {
     if (autoLaunched || hasSeenTour.value || !obj) return
     autoLaunched = true
-    requestAnimationFrame(takeTour)
+    takeTour()
   },
   { immediate: true },
 )
