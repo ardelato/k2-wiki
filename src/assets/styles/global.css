@@ -26,6 +26,22 @@
     --type-water: 198 88% 42%;
     --type-wind: 154 72% 34%;
     --type-earth: 42 88% 42%;
+
+    /* Semantic palette — bare-channel oklch so Tailwind can inject /<alpha-value>.
+       Additive: existing --color-green/yellow/red (variables.css) stay live. */
+    --success: 0.53 0.15 150; /* green  — replaces emerald-600/700 */
+    --warning: 0.62 0.15 70; /* amber  — replaces amber-600/700  */
+    --danger: 0.55 0.22 25; /* red    — replaces red-600/700    */
+    --info: 0.6 0.13 230; /* sky    — replaces sky-600         */
+    --reserved: 0.62 0.18 285; /* violet — replaces violet-400/700  */
+    --gold: 0.75 0.15 85; /* currency / gold rate              */
+    /* Darker text ramp for readable text on pale fills in light mode. */
+    --success-strong: 0.43 0.16 150;
+    --warning-strong: 0.45 0.13 70;
+    --danger-strong: 0.45 0.2 25;
+    --info-strong: 0.45 0.13 230;
+    --reserved-strong: 0.45 0.18 285;
+    --gold-strong: 0.5 0.12 85;
   }
 
   .dark {
@@ -48,6 +64,21 @@
     --type-water: 198 88% 56%;
     --type-wind: 154 72% 45%;
     --type-earth: 42 88% 54%;
+
+    /* Semantic palette — dark-tuned to match the current emerald/amber/etc. look. */
+    --success: 0.65 0.2 145;
+    --warning: 0.75 0.15 85;
+    --danger: 0.6 0.22 25;
+    --info: 0.7 0.13 230;
+    --reserved: 0.68 0.18 285;
+    --gold: 0.8 0.15 85;
+    /* In dark mode the "strong" ramp is the lighter text on translucent dark fills. */
+    --success-strong: 0.8 0.18 145;
+    --warning-strong: 0.82 0.14 85;
+    --danger-strong: 0.72 0.2 25;
+    --info-strong: 0.78 0.13 230;
+    --reserved-strong: 0.78 0.16 285;
+    --gold-strong: 0.82 0.14 85;
   }
 
   * {
@@ -118,4 +149,117 @@
   .detail-section {
     @apply border-t border-border/60 pt-4;
   }
+
+  /* Reserve real layout width for the scrollbar so it never overlays content.
+     macOS overlay scrollbars take zero width and ignore `scrollbar-gutter`, so
+     Chrome/Safari get a thin themed non-overlay scrollbar via
+     `::-webkit-scrollbar`, which forces a space-occupying scrollbar. The
+     standard `scrollbar-width`/`scrollbar-color` props would *override* the
+     webkit pseudo-element (and still render as a zero-width overlay on macOS),
+     so they're scoped to Firefox, which has no `::-webkit-scrollbar` support. */
+  .scrollbar-stable::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-stable::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-stable::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: hsl(var(--muted-foreground) / 0.3);
+  }
+  .scrollbar-stable:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.45);
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    .scrollbar-stable {
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+    }
+  }
+}
+
+/* Attention pulse — used to flag a deep-linked element (e.g. an Awaken tree/node
+   or a tool) for a few cycles after navigation, then settle. */
+@keyframes attn-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 hsl(48 96% 53% / 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px hsl(48 96% 53% / 0.55);
+  }
+}
+.attn-ring {
+  animation: attn-ring 0.9s ease-in-out 3;
+}
+
+@keyframes attn-node {
+  0%,
+  100% {
+    stroke-opacity: 0.25;
+    stroke-width: 2;
+  }
+  50% {
+    stroke-opacity: 1;
+    stroke-width: 4;
+  }
+}
+.attn-node {
+  animation: attn-node 0.9s ease-in-out 3;
+}
+
+/* ===== Guided tour (driver.js) — themed to match the app surfaces =====
+   Scoped to the `planner-tour-popover` class set in usePlannerTour so it never
+   leaks onto any other driver.js usage. Colors read the same HSL design tokens
+   Tailwind uses, so the popover tracks light/dark automatically. */
+.driver-popover.planner-tour-popover {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.75rem;
+  box-shadow:
+    0 10px 15px -3px hsl(0 0% 0% / 0.18),
+    0 4px 6px -4px hsl(0 0% 0% / 0.18);
+}
+.driver-popover.planner-tour-popover .driver-popover-title {
+  font-weight: 700;
+  color: hsl(var(--foreground));
+}
+.driver-popover.planner-tour-popover .driver-popover-description {
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+}
+.driver-popover.planner-tour-popover .driver-popover-progress-text {
+  color: hsl(var(--muted-foreground));
+}
+.driver-popover.planner-tour-popover .driver-popover-close-btn {
+  color: hsl(var(--muted-foreground));
+}
+.driver-popover.planner-tour-popover .driver-popover-close-btn:hover {
+  color: hsl(var(--foreground));
+}
+.driver-popover.planner-tour-popover .driver-popover-navigation-btns button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 0.5rem;
+  text-shadow: none;
+  font-weight: 600;
+}
+.driver-popover.planner-tour-popover .driver-popover-navigation-btns button:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+/* Arrow tip color, per side — match the popover background. */
+.driver-popover.planner-tour-popover .driver-popover-arrow-side-left {
+  border-left-color: hsl(var(--card));
+}
+.driver-popover.planner-tour-popover .driver-popover-arrow-side-right {
+  border-right-color: hsl(var(--card));
+}
+.driver-popover.planner-tour-popover .driver-popover-arrow-side-top {
+  border-top-color: hsl(var(--card));
+}
+.driver-popover.planner-tour-popover .driver-popover-arrow-side-bottom {
+  border-bottom-color: hsl(var(--card));
 }

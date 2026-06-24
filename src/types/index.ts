@@ -1,6 +1,7 @@
 export type ElementType = 'Fire' | 'Water' | 'Wind' | 'Earth'
 
-export interface CreatureStats {
+/** Shared stat block used by CreatureStats and ExpeditionStatWeights. */
+export interface StatBlock {
   power: number
   grit: number
   agility: number
@@ -9,7 +10,12 @@ export interface CreatureStats {
   luck: number
 }
 
-export interface Jobs {
+export type CreatureStats = StatBlock
+
+// Declared as a `type` (not `interface`) so it gains an implicit index
+// signature and stays assignable to `Record<string, number>` — several skill
+// utilities index jobs by a dynamic skill key.
+export type Jobs = {
   chopping: number
   mining: number
   digging: number
@@ -29,17 +35,10 @@ export interface Creature {
   types: ElementType[]
   stats: CreatureStats
   jobs: Jobs
-  summoningCost: { id: string; amount: number }[]
+  summoningCost: ItemQuantity[]
 }
 
-export interface ExpeditionStatWeights {
-  power: number
-  grit: number
-  agility: number
-  smarts: number
-  looting: number
-  luck: number
-}
+export type ExpeditionStatWeights = StatBlock
 
 export interface Expedition {
   id: string
@@ -54,7 +53,7 @@ export interface Expedition {
   biome: string
   requiredExpeditionCompletions: number
   statWeights: ExpeditionStatWeights
-  rewards: { itemId: string; amount: number }[]
+  rewards: ItemReward[]
 }
 
 // Dungeon types
@@ -108,10 +107,22 @@ export interface Biome {
 
 export type ItemType = 'Currency' | 'Container' | 'Gathered' | 'Refined' | 'Sellable' | 'Consumable'
 
+/** A quantity of an item referenced by `id`. Used in summoningCost, ingredients, loot tables, etc. */
+export interface ItemQuantity {
+  id: string
+  amount: number
+}
+
+/** A quantity of an item referenced by `itemId`. Used in expedition/dungeon rewards. */
+export interface ItemReward {
+  itemId: string
+  amount: number
+}
+
 export interface ItemRecipe {
   workstation: string
   levelRequirement: number
-  ingredients: { id: string; amount: number }[]
+  ingredients: ItemQuantity[]
   outputAmount: number
   craftTime: number
   experience: number
@@ -199,6 +210,8 @@ export interface PlannerMethod {
   requiredAmount: number
   localTimeSeconds: number | null
   totalTimeSeconds: number | null
+  /** B1: active hands-on time (s). Only manual gathering is active; passive/instant methods = 0; children sum. Set during selection. */
+  activeTimeSeconds?: number | null
   cost: number | null
   detailRows: PlannerMethodDetail[]
   formula?: string
@@ -206,6 +219,26 @@ export interface PlannerMethod {
   children: PlannerMethodChild[]
   /** Number of gathering actions needed (gather methods only) */
   actionsNeeded?: number
+  /** Skill + level needed to perform this method (gather/craft only; absent otherwise). */
+  skillGate?: { skill: string; level: number }
+}
+
+/**
+ * A planned node the player can't yet acquire: its active method's skill gate is above
+ * the player's current level in that skill. Drives the planner's "locked resource" flag.
+ */
+export interface PlannerLockedGate {
+  skill: string
+  level: number
+  current: number
+}
+
+/** Plan-level roll-up of locked gates: how many resources are blocked + the worst gate. */
+export interface PlannerSkillGateSummary {
+  /** Distinct resources (by itemId) the player can't yet acquire. */
+  count: number
+  /** The single most-blocking gate (highest required level). */
+  highest: { skill: string; level: number }
 }
 
 export interface PlannerNode {
@@ -308,6 +341,7 @@ export interface GardenCell {
 export interface AwakenGatherUpgrade {
   yieldBonus: number // 0, 1, or 2 (Yield I = +1, Yield II = +1 more)
   durationTier: number // 0–4, each tier = -5% activity duration
+  xpTier: number // 0–6, each purchased skill_xp node = +10% XP
 }
 
 export interface PartyPlanCreature {
@@ -336,6 +370,12 @@ export interface PartyPlannerInput {
   timeBudget?: PlannerTimeBudget
   wallClockLimitMs?: number
   swordXpMultiplier?: number
+  /**
+   * Cap on how many leveling creatures may share one expedition party. Set to 1
+   * for the Awaken queue so each creature runs solo with boosters only; left
+   * undefined (unlimited) for the Custom party planner's shared-XP grouping.
+   */
+  maxLevelersPerParty?: number
 }
 
 export interface PartyPlannerProgress {
@@ -367,22 +407,40 @@ export interface PartyPlanMember {
   isBooster: boolean
 }
 
-export interface PartyPlanStep {
-  expedition: Expedition
-  tier: number
+/** Fields common to every party plan step, regardless of kind. */
+interface PartyPlanStepBase {
   party: PartyPlanMember[]
   runs: number
   timeSeconds: number
   xpPerMinute: number
+  /** True when this step represents a reconfiguration of an active assignment. */
+  wasReconfigured: boolean
+  startTime?: number
+  endTime?: number
+}
+
+/** A normal expedition run step that advances party members' levels. */
+export interface RunPartyStep extends PartyPlanStepBase {
+  kind: 'run'
+  expedition: Expedition
+  tier: number
   biomeName: string
   loopCount: number
   loopCountStart: number
   loopCountEnd: number
   preservedLoopBonus: boolean
-  wasReconfigured: boolean
-  startTime?: number
-  endTime?: number
-  isAwakeningStep?: boolean
+}
+
+/** A marker step representing a creature awakening (no expedition is run). */
+export interface AwakenPartyStep extends PartyPlanStepBase {
+  kind: 'awaken'
+}
+
+export type PartyPlanStep = RunPartyStep | AwakenPartyStep
+
+/** Narrowing guard: true when the party step is a normal expedition run. */
+export function isRunPartyStep(step: PartyPlanStep): step is RunPartyStep {
+  return step.kind === 'run'
 }
 
 export interface CreatureLevelingSummary {

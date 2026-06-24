@@ -1,7 +1,7 @@
 import type { Machine } from '@/types'
-import { getItemImage } from '@/utils/itemImages'
+import { getItemImage } from '@/utils/images/itemImages'
 
-const iconModules = import.meta.glob('../assets/icons/*.webp', {
+const iconModules = import.meta.glob('../../assets/icons/*.webp', {
   eager: true,
   import: 'default',
 }) as Record<string, string>

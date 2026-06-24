@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-import { useLocale } from '@/composables/useLocale'
+import { useLocale } from '@/composables/core/useLocale'
 import { localeAutoDetected } from '@/i18n'
 import { storeLocale } from '@/i18n/locales'
 

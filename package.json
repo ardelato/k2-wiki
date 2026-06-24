@@ -22,12 +22,15 @@
     "generate-tables": "npx tsx --tsconfig tsconfig.app.json scripts/generate-tables.ts",
     "i18n:sync-frozen": "node scripts/sync-frozen-locales.mjs",
     "i18n:check-frozen": "node scripts/sync-frozen-locales.mjs --check",
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "i18n:allow-update": "node scripts/check-i18n.mjs --update",
     "knip": "knip",
     "knip:fix": "knip --fix",
     "prepare": "lefthook install"
   },
   "dependencies": {
     "@vueuse/core": "^14.2.1",
+    "driver.js": "^1.4.0",
     "lucide-vue-next": "^0.577.0",
     "vue": "^3.5.13",
     "vue-i18n": "^11.4.4",

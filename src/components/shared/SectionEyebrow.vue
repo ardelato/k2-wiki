@@ -8,10 +8,7 @@ withDefaults(
 </script>
 
 <template>
-  <component
-    :is="as"
-    class="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground"
-  >
+  <component :is="as" class="text-2xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
     <slot />
   </component>
 </template>

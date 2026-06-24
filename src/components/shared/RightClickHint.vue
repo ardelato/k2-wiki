@@ -45,7 +45,7 @@ function onContextMenu(e: MouseEvent) {
   <Teleport to="body">
     <div
       v-if="hint.visible"
-      class="pointer-events-none fixed z-50 flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 shadow-lg"
+      class="pointer-events-none fixed z-[130] flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1 shadow-lg"
       :style="{ top: `${hint.y + 16}px`, left: `${hint.x + 12}px` }"
     >
       <svg
@@ -58,7 +58,7 @@ function onContextMenu(e: MouseEvent) {
         <rect x="4" y="2" width="16" height="20" rx="8" stroke="currentColor" stroke-width="2" />
         <line x1="12" y1="2" x2="12" y2="10" stroke="currentColor" stroke-width="2" />
       </svg>
-      <span class="text-[10px] font-medium text-muted-foreground">{{
+      <span class="text-3xs font-medium text-muted-foreground">{{
         label ?? t('shared.rightClickHint.label')
       }}</span>
     </div>
