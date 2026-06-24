@@ -1,8 +1,13 @@
 import creaturesData from '@/data/creatures.json'
-import { defaultAwakenGatherUpgrades, defaultAwakenSpeedTiers } from '@/data/defaults'
+import {
+  defaultAwakenGatherUpgrades,
+  defaultAwakenSpeedTiers,
+  defaultAwakenWorkstationXpTiers,
+} from '@/data/defaults'
+import { awakenPrerequisiteClosure } from '@/data/upgrades'
 import type { GardenCell, AwakenGatherUpgrade } from '@/types'
-
-import { levelFromXp, getSkillLevel } from './formulas'
+import { levelFromXp, getSkillLevel } from '@/utils/formulas'
+import { SCORE_DIVISOR, TIER_THRESHOLDS } from '@/utils/planner/sanctuaryConstants'
 
 interface SaveInventoryItem {
   id: string
@@ -44,6 +49,7 @@ export interface SaveConfig {
   gardenLayout: (GardenCell | null)[]
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
+  awakenWorkstationXpTiers: Record<string, number>
   jobTiers: Record<string, number>
   expeditionCompletions: Record<string, Record<number, number>>
   creatures: SaveCreature[]
@@ -79,7 +85,7 @@ type DungeonData = {
 const GATHER_JOBS = new Set(['Chopping', 'Mining', 'Digging', 'Exploring', 'Fishing', 'Farming'])
 const WORKSTATIONS = new Set(['Furnace', 'Stove', 'Workbench'])
 
-const ROMAN_TO_NUM: Record<string, number> = { i: 1, ii: 2, iii: 3, iv: 4 }
+const ROMAN_TO_NUM: Record<string, number> = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6 }
 
 export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const sanctuary = Array.isArray(save.sanctuary) ? (save.sanctuary as string[]) : []
@@ -102,7 +108,8 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
   const gardenLayout = buildGardenLayout(saveFlowers)
 
   const upgrades = Array.isArray(save.purchasedUpgrades) ? (save.purchasedUpgrades as string[]) : []
-  const { awakenGatherUpgrades, awakenSpeedTiers, awakenGoldLevel } = parseAwakenUpgrades(upgrades)
+  const { awakenGatherUpgrades, awakenSpeedTiers, awakenWorkstationXpTiers, awakenGoldLevel } =
+    parseAwakenUpgrades(upgrades)
 
   const creatures = Array.isArray(save.creatures) ? (save.creatures as SaveCreature[]) : []
 
@@ -141,6 +148,7 @@ export function extractSaveConfig(save: Record<string, unknown>): SaveConfig {
     gardenLayout,
     awakenGatherUpgrades,
     awakenSpeedTiers,
+    awakenWorkstationXpTiers,
     jobTiers,
     expeditionCompletions,
     creatures,
@@ -167,19 +175,18 @@ function buildExpeditionData(save: Record<string, any>, creatureMap: SaveCreatur
     levels: {},
   }
 
+  if (!Array.isArray(save.activeExpeditions)) return result
+
+  const creatureById = new Map(creatureMap.map((c) => [c.id, c]))
+
   save.activeExpeditions.forEach((exp: any) => {
     const typeId = exp.instance.expeditionTypeId
 
-    result.parties[typeId] = exp.creatures.map(
-      (id: string) =>
-        creatureMap.find((c: SaveCreature) => {
-          if (c.id === id) {
-            result.levels[c.species] = levelFromXp(c.experience)
-            return true
-          }
-          return false
-        })?.species,
-    )
+    result.parties[typeId] = exp.creatures.map((id: string) => {
+      const creature = creatureById.get(id)
+      if (creature) result.levels[creature.species] = levelFromXp(creature.experience)
+      return creature?.species
+    })
 
     result.tiers[typeId] = exp.instance.tier
     result.loopCounts[typeId] = exp.loopCount ?? 0
@@ -241,14 +248,24 @@ function buildGardenLayout(flowers: SaveFlower[]): (GardenCell | null)[] {
 export function parseAwakenUpgrades(upgrades: string[]): {
   awakenGatherUpgrades: Record<string, AwakenGatherUpgrade>
   awakenSpeedTiers: Record<string, number>
+  awakenWorkstationXpTiers: Record<string, number>
   awakenGoldLevel: number
 } {
   const awakenGatherUpgrades = defaultAwakenGatherUpgrades()
   const awakenSpeedTiers = defaultAwakenSpeedTiers()
+  const awakenWorkstationXpTiers = defaultAwakenWorkstationXpTiers()
   let awakenGoldLevel = 0
 
-  const pattern = /^(\w+)-(yield|duration|speed|gold)-(i{1,4}v?)$/
-  for (const upgrade of upgrades) {
+  // A node can only be owned once its prerequisites are, so the true owned set is
+  // the prerequisite closure of what the save lists. Saves can record just a
+  // branch's leaf node (e.g. Furnace Speed I without the XP nodes gating it), so
+  // close over prerequisites before counting tiers — otherwise the implied XP
+  // spine is undercounted and every downstream cost/plan misreads the tree.
+  const closed = awakenPrerequisiteClosure(upgrades)
+
+  // Roman numerals I–VI (XP trees go to VI for gathering, V for workstations).
+  const pattern = /^(\w+)-(yield|duration|speed|gold|xp)-(i{1,3}|iv|vi?)$/
+  for (const upgrade of closed) {
     const match = upgrade.match(pattern)
     if (!match) continue
 
@@ -260,9 +277,15 @@ export function parseAwakenUpgrades(upgrades: string[]): {
 
     if (type === 'speed' && WORKSTATIONS.has(name)) {
       awakenSpeedTiers[name] = Math.max(awakenSpeedTiers[name] ?? 0, tier)
+    } else if (type === 'xp' && WORKSTATIONS.has(name)) {
+      // Workstation XP nodes are cumulative: each = +10% XP
+      awakenWorkstationXpTiers[name] += 1
     } else if (type === 'yield' && GATHER_JOBS.has(name)) {
       // Yield is cumulative: yield-i + yield-ii = yieldBonus 2
       awakenGatherUpgrades[name].yieldBonus += 1
+    } else if (type === 'xp' && GATHER_JOBS.has(name)) {
+      // XP nodes are cumulative: each purchased skill_xp node = +10% XP
+      awakenGatherUpgrades[name].xpTier += 1
     } else if (type === 'duration' && GATHER_JOBS.has(name)) {
       // Duration: highest tier found
       awakenGatherUpgrades[name].durationTier = Math.max(
@@ -274,10 +297,8 @@ export function parseAwakenUpgrades(upgrades: string[]): {
     }
   }
 
-  return { awakenGatherUpgrades, awakenSpeedTiers, awakenGoldLevel }
+  return { awakenGatherUpgrades, awakenSpeedTiers, awakenWorkstationXpTiers, awakenGoldLevel }
 }
-
-import { SCORE_DIVISOR, TIER_THRESHOLDS } from './sanctuaryConstants'
 
 const creatureJobScoresMap: Record<string, Record<string, number>> = Object.fromEntries(
   (creaturesData as { id: string; jobs: Record<string, number> }[]).map((c) => [c.id, c.jobs]),

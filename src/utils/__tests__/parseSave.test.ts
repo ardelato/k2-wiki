@@ -1,4 +1,4 @@
-import { extractSaveConfig, parseAwakenUpgrades } from '@/utils/parseSave'
+import { extractSaveConfig, parseAwakenUpgrades } from '@/utils/save/parseSave'
 
 function baseSave(): Record<string, unknown> {
   return {
@@ -270,7 +270,39 @@ describe('parseAwakenUpgrades (exported)', () => {
     const result = parseAwakenUpgrades([])
     expect(result.awakenGoldLevel).toBe(0)
     expect(result.awakenSpeedTiers['Furnace']).toBe(0)
-    expect(result.awakenGatherUpgrades['Chopping']).toEqual({ yieldBonus: 0, durationTier: 0 })
+    expect(result.awakenGatherUpgrades['Chopping']).toEqual({
+      yieldBonus: 0,
+      durationTier: 0,
+      xpTier: 0,
+    })
+  })
+
+  test('accumulates skill_xp nodes into xpTier', () => {
+    const result = parseAwakenUpgrades(['chopping-xp-i', 'chopping-xp-ii'])
+    expect(result.awakenGatherUpgrades['Chopping'].xpTier).toBe(2)
+  })
+
+  test('counts a fully-maxed gathering XP tree (I–VI) as xpTier 6', () => {
+    const result = parseAwakenUpgrades([
+      'chopping-xp-i',
+      'chopping-xp-ii',
+      'chopping-xp-iii',
+      'chopping-xp-iv',
+      'chopping-xp-v',
+      'chopping-xp-vi',
+    ])
+    expect(result.awakenGatherUpgrades['Chopping'].xpTier).toBe(6)
+  })
+
+  test('counts a fully-maxed workstation XP tree (I–V) as 5', () => {
+    const result = parseAwakenUpgrades([
+      'furnace-xp-i',
+      'furnace-xp-ii',
+      'furnace-xp-iii',
+      'furnace-xp-iv',
+      'furnace-xp-v',
+    ])
+    expect(result.awakenWorkstationXpTiers['Furnace']).toBe(5)
   })
 
   test('parses awaken-gold tier as the highest matched roman numeral', () => {
@@ -295,6 +327,26 @@ describe('parseAwakenUpgrades (exported)', () => {
   test('parses workstation speed tiers', () => {
     const result = parseAwakenUpgrades(['furnace-speed-i', 'furnace-speed-ii'])
     expect(result.awakenSpeedTiers['Furnace']).toBe(2)
+  })
+
+  test('accumulates workstation_xp nodes into awakenWorkstationXpTiers', () => {
+    const result = parseAwakenUpgrades(['furnace-xp-i', 'furnace-xp-ii', 'furnace-xp-iii'])
+    expect(result.awakenWorkstationXpTiers['Furnace']).toBe(3)
+  })
+
+  test('closes over prerequisites: a Speed node implies its XP spine', () => {
+    // furnace-speed-i is gated behind furnace-xp-ii → furnace-xp-i, so owning it
+    // means those two XP nodes are owned even if the save lists only the leaf.
+    const result = parseAwakenUpgrades(['furnace-speed-i'])
+    expect(result.awakenSpeedTiers['Furnace']).toBe(1)
+    expect(result.awakenWorkstationXpTiers['Furnace']).toBe(2)
+  })
+
+  test('closes over prerequisites: a gathering Duration node implies its XP spine', () => {
+    // mining-duration-i is gated behind mining-xp-ii → mining-xp-i.
+    const result = parseAwakenUpgrades(['mining-duration-i'])
+    expect(result.awakenGatherUpgrades['Mining'].durationTier).toBe(1)
+    expect(result.awakenGatherUpgrades['Mining'].xpTier).toBe(2)
   })
 
   test('ignores unknown upgrade ids', () => {
