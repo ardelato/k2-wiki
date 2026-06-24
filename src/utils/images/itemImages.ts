@@ -1,6 +1,6 @@
 import type { Item } from '@/types'
 
-const itemImageModules = import.meta.glob('../assets/items/*.webp', {
+const itemImageModules = import.meta.glob('../../assets/items/*.webp', {
   eager: true,
   query: '?url',
   import: 'default',

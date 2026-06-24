@@ -2,6 +2,39 @@ import { itemById, machineById, toolById } from '@/data/indexes'
 import { activeLocale, t } from '@/i18n'
 import type { ElementType, ItemType, PlannerMethodKind } from '@/types'
 
+// Constructing an Intl.NumberFormat is ~36× slower than reusing one (measured),
+// and these formatters run per-node across large craft trees. Cache by
+// locale + fraction-digit options so each variant is built once per language.
+const numberFormatCache = new Map<string, Intl.NumberFormat>()
+function numberFormat(options?: Intl.NumberFormatOptions): Intl.NumberFormat {
+  const locale = activeLocale()
+  const key = options
+    ? `${locale}|${options.minimumFractionDigits ?? ''}|${options.maximumFractionDigits ?? ''}`
+    : locale
+  let fmt = numberFormatCache.get(key)
+  if (!fmt) {
+    fmt = new Intl.NumberFormat(locale, options)
+    numberFormatCache.set(key, fmt)
+  }
+  return fmt
+}
+
+/** Locale-aware number formatting via a cached Intl.NumberFormat. Prefer this
+ *  over `n.toLocaleString(activeLocale())`, which rebuilds the formatter per call. */
+export function formatNumber(value: number): string {
+  return numberFormat().format(value)
+}
+
+/** Compact magnitude label for tight UI (gantt bars, inventory chips): `1500 → "1.5K"`,
+ *  `2_000_000 → "2M"`. A trailing `.0` is dropped; values below 1000 fall through to the
+ *  locale-aware {@link formatNumber}. Canonical replacement for the per-component K/M helpers. */
+export function formatNumberCompact(value: number): string {
+  const abs = Math.abs(value)
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}K`
+  return formatNumber(value)
+}
+
 export function typeColor(type: ElementType): string {
   if (type === 'Fire') return 'hsl(var(--type-fire))'
   if (type === 'Water') return 'hsl(var(--type-water))'
@@ -75,19 +108,19 @@ export function methodKindLabel(kind: PlannerMethodKind): string {
 export function methodKindClasses(kind: PlannerMethodKind): string {
   if (kind === 'craft') return 'border-primary/35 bg-primary/12 text-primary'
   if (kind === 'gather')
-    return 'border-emerald-600/35 bg-emerald-100 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/20 dark:text-emerald-200'
+    return 'border-success/35 bg-success/10 text-success-strong dark:border-success/40 dark:bg-success/20 dark:text-success-strong'
   if (kind === 'garden')
     return 'border-lime-600/35 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/20 dark:text-lime-100'
   if (kind === 'container')
-    return 'border-yellow-600/35 bg-yellow-100 text-yellow-800 dark:border-yellow-400/40 dark:bg-yellow-400/20 dark:text-yellow-100'
+    return 'border-gold/35 bg-gold/10 text-gold-strong dark:border-gold/40 dark:bg-gold/20 dark:text-gold-strong'
   if (kind === 'expedition')
-    return 'border-sky-600/35 bg-sky-100 text-sky-800 dark:border-sky-400/40 dark:bg-sky-400/20 dark:text-sky-100'
+    return 'border-info/35 bg-info/10 text-info-strong dark:border-info/40 dark:bg-info/20 dark:text-info-strong'
   if (kind === 'buy')
     return 'border-fuchsia-600/35 bg-fuchsia-100 text-fuchsia-800 dark:border-fuchsia-400/40 dark:bg-fuchsia-400/20 dark:text-fuchsia-100'
   if (kind === 'machine')
     return 'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100'
   if (kind === 'fabrication')
-    return 'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100'
+    return 'border-reserved/35 bg-reserved/10 text-reserved-strong dark:border-reserved/40 dark:bg-reserved/20 dark:text-reserved-strong'
   return 'border-destructive/40 bg-destructive/10 text-destructive-foreground'
 }
 
@@ -107,10 +140,9 @@ export function methodKindColor(kind: PlannerMethodKind): string {
 
 function percentValue(fraction: number): string {
   const digits = fraction < 0.01 ? 2 : 1
-  return (fraction * 100).toLocaleString(activeLocale(), {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  })
+  return numberFormat({ minimumFractionDigits: digits, maximumFractionDigits: digits }).format(
+    fraction * 100,
+  )
 }
 
 export function formatChance(chance: number): string {
@@ -120,10 +152,10 @@ export function formatChance(chance: number): string {
 }
 
 export function formatDecimal(value: number, fractionDigits = 2): string {
-  return value.toLocaleString(activeLocale(), {
+  return numberFormat({
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
-  })
+  }).format(value)
 }
 
 export function itemName(id: string): string {
