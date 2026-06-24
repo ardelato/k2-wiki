@@ -13,16 +13,20 @@ import {
   machineRecipeIndex,
   machineSpeedMultipliers,
 } from '@/data/indexes'
-import { activeLocale } from '@/i18n'
+import toolsData from '@/data/tools.json'
+import { activeLocale, t } from '@/i18n'
 import type {
   AwakenGatherUpgrade,
   GardenFlowerEntry,
   ItemType,
+  PlannerLockedGate,
   PlannerMethod,
   PlannerMethodChild,
+  PlannerMethodDetail,
   PlannerMethodKind,
   PlannerNode,
   PlannerSchedule,
+  PlannerSkillGateSummary,
   PlannerSummary,
   PlannerSummaryLeaf,
   PlannerTimeBreakdown,
@@ -31,11 +35,13 @@ import type {
 import {
   formatChance,
   formatDuration,
+  formatNumber,
   itemName as resolveItemName,
   methodKindLabel,
-} from '@/utils/format'
-import { tierModifiers } from '@/utils/formulas'
-import { computeGoldPerMinute, goldToSeconds } from '@/utils/goldIncome'
+} from '@/utils/format/format'
+import { JOB_TIER_DURATION_REDUCTION, JOB_TIER_YIELD_BONUS, tierModifiers } from '@/utils/formulas'
+import { computeGoldPerMinute, goldToSeconds } from '@/utils/planner/goldIncome'
+import { resourceSortPriority } from '@/utils/save/resourceType'
 
 export type { GardenFlowerEntry, AwakenGatherUpgrade }
 
@@ -47,6 +53,7 @@ export interface PlannerModifiers {
   jobTiers: Record<string, number>
   goldPerMinute: number
   machineLevels: Record<string, number>
+  machineRecipes: Record<string, string | null> // machineId → selectedRecipeId ('all' | outputItemId | null)
   fabricationAllocations: Record<string, number>
   expeditionTier: number // 1–5, multiplies expedition loot rewards
 }
@@ -87,18 +94,49 @@ function expectedAmount(min: number, max: number): number {
   return (min + max) / 2
 }
 
+// `Number.prototype.toLocaleString()` builds a fresh Intl.NumberFormat on every call
+// (~5.7µs each). buildPlannerGraph formats thousands of amounts per graph and the summon
+// page builds many graphs, so we cache one formatter per locale (~0.1µs/call) — ~40× faster
+// while staying locale-aware after the i18n pass: one cached formatter per locale.
+const integerFormatterCache = new Map<string, Intl.NumberFormat>()
+
+function formatInteger(value: number): string {
+  const locale = activeLocale()
+  let formatter = integerFormatterCache.get(locale)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale)
+    integerFormatterCache.set(locale, formatter)
+  }
+  return formatter.format(value)
+}
+
 function formatAmount(value: number): string {
-  if (Number.isInteger(value)) return value.toLocaleString(activeLocale())
+  if (Number.isInteger(value)) return formatInteger(value)
   if (value >= 100) return value.toFixed(1)
   if (value >= 10) return value.toFixed(2)
   return value.toFixed(3)
 }
 
 function formatTimeOrUnknown(value: number | null): string {
-  return value == null ? 'Unknown' : formatDuration(value)
+  return value == null ? t('methods.unknown') : formatDuration(value)
 }
 
 const FABRICATION_CYCLE_SECONDS = 180
+
+// Expedition tier assumed for planner loot/yield modifiers. TODO: wire to the
+// player's actual selected tier instead of assuming max.
+const DEFAULT_EXPEDITION_TIER = 5
+
+/**
+ * Workstation tools (saw/knife/hammer) are owned, one-time prerequisites — they enable
+ * a workstation and are NOT consumed per craft. Recipe data lists them as amount:1
+ * ingredients, so treating them literally explodes requirements (every plank "needs" a
+ * saw → 4 twig + 4 stone each). Exclude them from craft-method children; the workstation
+ * itself is already represented by each craft method's skillGate.
+ */
+const WORKSTATION_TOOL_IDS = new Set(
+  toolsData.tools.filter((t) => t.category === 'workstation').map((t) => t.id),
+)
 
 interface PassiveRateResult {
   rate: number
@@ -121,11 +159,15 @@ function passiveFormula(
   baseFormula: string,
 ): string {
   return passive.rate > 0
-    ? `${formatAmount(requiredAmount)} ÷ (${(activeRate * 60).toFixed(1)}/min active + ${(passive.rate * 60).toFixed(1)}/min passive)`
+    ? t('planner.detail.passiveFormula', {
+        amount: formatAmount(requiredAmount),
+        active: (activeRate * 60).toFixed(1),
+        passive: (passive.rate * 60).toFixed(1),
+      })
     : baseFormula
 }
 
-function getPassiveRate(
+export function getPassiveRate(
   itemId: string,
   modifiers: PlannerModifiers,
   excludeMachineId?: string,
@@ -139,13 +181,26 @@ function getPassiveRate(
   for (const source of machineRecipeIndex.get(itemId) ?? []) {
     if (source.machineId === excludeMachineId) continue
     if (seenMachines.has(source.machineId)) continue
+    // Phantom-credit gate: only credit a processor for the recipe it's actually set to.
+    // Generators (inputItemId === null) always run their single output, so skip the gate.
+    // selectedRecipeId: null/undefined → nothing selected; 'all' → sequential queue over all
+    // recipes (still produces this one); a specific outputItemId → only that item.
+    // NOTE: 'all' mode is sequential, so full-rate credit can over-count when several of a
+    // machine's recipes are needed at once — rate-splitting is a follow-up (needs the queue order).
+    if (source.inputItemId !== null) {
+      const selected = (modifiers.machineRecipes ?? {})[source.machineId]
+      if (selected == null || (selected !== 'all' && selected !== itemId)) continue
+    }
     seenMachines.add(source.machineId)
     const level = modifiers.machineLevels[source.machineId] ?? 0
     const mult = machineSpeedMultipliers[Math.min(level, machineSpeedMultipliers.length - 1)]
     const interval = Math.max(1, Math.floor(source.baseInterval * mult))
     const machineRate = source.outputAmount / interval
     rate += machineRate
-    details.push({ label: `Machine — ${source.machineName}`, ratePerMin: machineRate * 60 })
+    details.push({
+      label: t('planner.detail.machineSource', { name: source.machineName }),
+      ratePerMin: machineRate * 60,
+    })
   }
 
   // Fabrication production rate
@@ -154,7 +209,10 @@ function getPassiveRate(
     if (points > 0) {
       const fabRate = points / FABRICATION_CYCLE_SECONDS
       rate += fabRate
-      details.push({ label: `Fabrication (${points} pts)`, ratePerMin: fabRate * 60 })
+      details.push({
+        label: t('planner.detail.fabricationSource', { points }),
+        ratePerMin: fabRate * 60,
+      })
     }
   }
 
@@ -165,10 +223,971 @@ function passiveDetailRows(passive: PassiveRateResult): { label: string; value: 
   if (passive.rate <= 0) return []
   return passive.details.map((d) => ({
     label: d.label,
-    value: `+${d.ratePerMin.toFixed(1)}/min`,
+    value: t('planner.detail.ratePerMin', { rate: d.ratePerMin.toFixed(1) }),
   }))
 }
 
+/**
+ * Shared inputs every method-kind builder needs. Passed explicitly so each builder reads
+ * independently of `buildNode`'s closure. The maps are the same per-graph instances that
+ * `buildNode` mutates; `recurse` is the `buildNode` recursion callback; `remainingStock`
+ * is the live inventory map (the container builder snapshots/restores it for its two-pass).
+ */
+interface BuildMethodsCtx {
+  modifiers: PlannerModifiers
+  inventory: Record<string, number>
+  nodesById: Map<string, PlannerNode>
+  methodsById: Map<string, PlannerMethod>
+  remainingStock: Map<string, number>
+  recurse: (
+    itemId: string,
+    requiredAmount: number,
+    depth: number,
+    ancestry: string[],
+    path: string,
+  ) => PlannerNode
+}
+
+/**
+ * Roll up a method's total time as localTime + max(child default-method total times).
+ * Returns null when any child's time is unknown (matching the original craft/machine logic).
+ * Shared verbatim by the craft and machine builders.
+ */
+function rollUpChildTimes(
+  children: PlannerMethodChild[],
+  localTimeSeconds: number,
+  ctx: BuildMethodsCtx,
+): number | null {
+  const childTimes = children.map((child) => {
+    const childNode = ctx.nodesById.get(child.nodeId)
+    if (!childNode) return null
+    if (childNode.fulfilled) return 0
+    if (!childNode.defaultMethodId) return null
+    const childMethod = ctx.methodsById.get(childNode.defaultMethodId)
+    if (!childMethod) return null
+    return childMethod.totalTimeSeconds ?? null
+  })
+  const knownChildTimes = childTimes.filter((time): time is number => time != null)
+  const maxChildTime = knownChildTimes.length > 0 ? Math.max(...knownChildTimes) : 0
+  return knownChildTimes.length !== childTimes.length ? null : localTimeSeconds + maxChildTime
+}
+
+function buildCraftMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  depth: number,
+  nextAncestry: string[],
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const item = itemById.get(itemId)
+  if (!item) return []
+  const { modifiers, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  item.recipes.forEach((recipe, recipeIndex) => {
+    const craftsNeeded = Math.ceil(requiredAmount / recipe.outputAmount)
+    const children: PlannerMethodChild[] = recipe.ingredients
+      .filter((ingredient) => !WORKSTATION_TOOL_IDS.has(ingredient.id))
+      .map((ingredient, childIndex) => {
+        const childPath = `${nodeId}/recipe-${recipeIndex}/ingredient-${childIndex}:${ingredient.id}`
+        const childNode = ctx.recurse(
+          ingredient.id,
+          ingredient.amount * craftsNeeded,
+          depth + 1,
+          nextAncestry,
+          childPath,
+        )
+        return {
+          itemId: ingredient.id,
+          amount: ingredient.amount * craftsNeeded,
+          nodeId: childNode.id,
+        }
+      })
+
+    const awakenReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.15
+    const toolSpeedBonus = modifiers.toolSpeedBonuses[recipe.workstation] ?? 0
+    const speedReduction = awakenReduction + toolSpeedBonus
+    const effectiveCraftTime = Math.max(
+      recipe.craftTime * 0.01,
+      recipe.craftTime * (1 - speedReduction),
+    )
+    const passive = getPassiveRate(itemId, modifiers)
+    const activeRate = recipe.outputAmount / effectiveCraftTime
+    const localTimeSeconds = applyPassiveRate(
+      requiredAmount,
+      activeRate,
+      craftsNeeded * effectiveCraftTime,
+      passive,
+    )
+    const totalTimeSeconds = rollUpChildTimes(children, localTimeSeconds, ctx)
+
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#recipe-${recipeIndex}`,
+      nodeId,
+      kind: 'craft',
+      title: recipe.workstation,
+      subtitle: t(
+        craftsNeeded === 1 ? 'planner.detail.craftSubtitle' : 'planner.detail.craftSubtitlePlural',
+        { count: craftsNeeded, output: formatAmount(requiredAmount) },
+      ),
+      requiredAmount,
+      localTimeSeconds,
+      totalTimeSeconds,
+      skillGate: { skill: recipe.workstation, level: recipe.levelRequirement },
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          {
+            label: t('planner.detail.output'),
+            value: t('planner.detail.eachValue', { amount: recipe.outputAmount }),
+          },
+          { label: t('planner.detail.crafts'), value: formatAmount(craftsNeeded) },
+          {
+            label: t('planner.detail.level'),
+            value: t('planner.detail.lvValue', { level: recipe.levelRequirement }),
+          },
+          ...((modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) > 0
+            ? [
+                {
+                  label: t('planner.detail.speedTier'),
+                  value: t('planner.detail.speedBonus', {
+                    pct: modifiers.awakenSpeedTiers[recipe.workstation] * 15,
+                  }),
+                },
+              ]
+            : []),
+          ...((modifiers.toolSpeedBonuses[recipe.workstation] ?? 0) > 0
+            ? [
+                {
+                  label: t('planner.detail.toolSpeed'),
+                  value: t('planner.detail.speedBonus', {
+                    pct: Math.round(modifiers.toolSpeedBonuses[recipe.workstation] * 100),
+                  }),
+                },
+              ]
+            : []),
+          ...passiveDetailRows(passive),
+          { label: t('planner.detail.stepTime'), value: formatDuration(localTimeSeconds) },
+          { label: t('planner.detail.totalTime'), value: formatTimeOrUnknown(totalTimeSeconds) },
+          ...(totalTimeSeconds != null && totalTimeSeconds > localTimeSeconds
+            ? [
+                {
+                  label: t('planner.detail.depsTime'),
+                  value: formatDuration(totalTimeSeconds - localTimeSeconds),
+                },
+              ]
+            : []),
+        ])
+      },
+      get formula() {
+        return passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          t('planner.detail.craftFormula', {
+            crafts: formatAmount(craftsNeeded),
+            time: formatDuration(recipe.craftTime),
+          }),
+        )
+      },
+      notes: [],
+      children,
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  })
+
+  return methods
+}
+
+function buildGatherMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const { modifiers, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  ;(jobActivityIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    const awakenGather = modifiers.awakenGatherUpgrades[source.jobId]
+    const yieldBonus = awakenGather?.yieldBonus ?? 0
+    const jobTier = modifiers.jobTiers[source.jobId] ?? 0
+    const jobYieldBonus = JOB_TIER_YIELD_BONUS[jobTier] ?? 0
+    const baseYield = source.chance * expectedAmount(source.min, source.max)
+    const expectedYield = baseYield + yieldBonus + jobYieldBonus
+    if (expectedYield <= 0) return
+
+    const actionsNeeded = requiredAmount / expectedYield
+    const awakenReduction = (awakenGather?.durationTier ?? 0) * 0.05
+    const jobReduction = JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0
+    const effectiveDuration = Math.max(
+      Math.max(source.duration * 0.01, 1),
+      source.duration * (1 - awakenReduction) * (1 - jobReduction),
+    )
+    const passive = getPassiveRate(itemId, modifiers)
+    const activeRate = expectedYield / effectiveDuration
+    const localTimeSeconds = applyPassiveRate(
+      requiredAmount,
+      activeRate,
+      actionsNeeded * effectiveDuration,
+      passive,
+    )
+    const isEstimated = source.chance !== 1 || source.min !== source.max
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#gather-${sourceIndex}`,
+      nodeId,
+      kind: 'gather',
+      title: source.jobId,
+      subtitle: source.activityName,
+      requiredAmount,
+      localTimeSeconds,
+      totalTimeSeconds: localTimeSeconds,
+      cost: null,
+      actionsNeeded,
+      skillGate: { skill: source.jobId, level: source.levelRequirement },
+      get detailRows() {
+        return (detailRowsCache ??= [
+          { label: t('planner.detail.activity'), value: source.activityName },
+          {
+            label: t('planner.detail.level'),
+            value: t('planner.detail.lvValue', { level: source.levelRequirement }),
+          },
+          {
+            label: t('planner.detail.yieldPerAction'),
+            value: `${formatChance(source.chance)} × ${formatAmount(expectedAmount(source.min, source.max))}`,
+          },
+          ...(yieldBonus > 0 || (awakenGather?.durationTier ?? 0) > 0
+            ? [
+                {
+                  label: t('planner.detail.awakenTree'),
+                  value: [
+                    ...(yieldBonus > 0
+                      ? [t('planner.detail.yieldBonus', { amount: yieldBonus })]
+                      : []),
+                    ...((awakenGather?.durationTier ?? 0) > 0
+                      ? [
+                          t('planner.detail.durationReduction', {
+                            pct: (awakenGather?.durationTier ?? 0) * 5,
+                          }),
+                        ]
+                      : []),
+                  ].join(', '),
+                },
+              ]
+            : []),
+          ...((JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) > 0 ||
+          (JOB_TIER_YIELD_BONUS[jobTier] ?? 0) > 0
+            ? [
+                {
+                  label: t('planner.detail.sanctuary'),
+                  value: `T${jobTier} (${[
+                    ...((JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) > 0
+                      ? [
+                          t('planner.detail.durationReduction', {
+                            pct: (JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) * 100,
+                          }),
+                        ]
+                      : []),
+                    ...((JOB_TIER_YIELD_BONUS[jobTier] ?? 0) > 0
+                      ? [
+                          t('planner.detail.yieldBonus', {
+                            amount: JOB_TIER_YIELD_BONUS[jobTier],
+                          }),
+                        ]
+                      : []),
+                  ].join(', ')})`,
+                },
+              ]
+            : []),
+          ...passiveDetailRows(passive),
+          {
+            label: t('planner.detail.actions'),
+            value: formatAmount(actionsNeeded),
+            estimated: isEstimated,
+          },
+          {
+            label: t('planner.detail.stepTime'),
+            value: formatDuration(localTimeSeconds),
+            estimated: isEstimated,
+          },
+        ])
+      },
+      get formula() {
+        return passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          t('planner.detail.gatherFormula', {
+            amount: formatAmount(requiredAmount),
+            chance: formatChance(source.chance),
+            yield: formatAmount(expectedAmount(source.min, source.max)),
+            time: formatDuration(source.duration),
+          }),
+        )
+      },
+      notes: [t('planner.detail.gatherNote')],
+      children: [],
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  })
+
+  return methods
+}
+
+function buildGardenMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const gardenSource = gardenSourcesByItem.get(itemId)
+  if (!gardenSource) return []
+  const { modifiers, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  const entries = modifiers.gardenFlowers[gardenSource.flowerItemId] ?? []
+  const totalFlowers = entries.reduce((sum, e) => sum + e.count, 0)
+  const yieldPerCycle = entries.reduce((sum, e) => sum + e.count * e.level, 0)
+
+  if (yieldPerCycle > 0) {
+    const cyclesNeeded = requiredAmount / yieldPerCycle
+    const passive = getPassiveRate(itemId, modifiers)
+    const activeRate = yieldPerCycle / gardenSource.cycleSeconds
+    const localTimeSeconds = applyPassiveRate(
+      requiredAmount,
+      activeRate,
+      cyclesNeeded * gardenSource.cycleSeconds,
+      passive,
+    )
+    const breakdownParts = entries.filter((e) => e.count > 0).map((e) => `${e.count}×Lv${e.level}`)
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#garden`,
+      nodeId,
+      kind: 'garden',
+      title: gardenSource.flowerItemName,
+      subtitle: t('planner.detail.gardenGrowth'),
+      requiredAmount,
+      localTimeSeconds,
+      totalTimeSeconds: localTimeSeconds,
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          { label: t('planner.detail.flower'), value: gardenSource.flowerItemName },
+          {
+            label: t('planner.detail.setup'),
+            value: breakdownParts.join(' + ') || t('planner.detail.none'),
+          },
+          { label: t('planner.detail.totalFlowers'), value: String(totalFlowers) },
+          {
+            label: t('planner.detail.yieldPerCycle'),
+            value: t('planner.detail.yieldPer60s', { amount: formatAmount(yieldPerCycle) }),
+          },
+          ...passiveDetailRows(passive),
+          { label: t('planner.detail.cycles'), value: formatAmount(cyclesNeeded) },
+          { label: t('planner.detail.stepTime'), value: formatDuration(localTimeSeconds) },
+        ])
+      },
+      get formula() {
+        return passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          t('planner.detail.gardenFormula', {
+            amount: formatAmount(requiredAmount),
+            yield: formatAmount(yieldPerCycle),
+            time: formatDuration(gardenSource.cycleSeconds),
+          }),
+        )
+      },
+      notes: [
+        t('planner.detail.gardenNote', {
+          setup: breakdownParts.join(' + '),
+          rate: yieldPerCycle,
+        }),
+      ],
+      children: [],
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  } else {
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#garden`,
+      nodeId,
+      kind: 'garden',
+      title: gardenSource.flowerItemName,
+      subtitle: t('planner.detail.gardenNoFlowers'),
+      requiredAmount,
+      localTimeSeconds: null,
+      totalTimeSeconds: null,
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          { label: t('planner.detail.flower'), value: gardenSource.flowerItemName },
+          { label: t('planner.detail.setup'), value: t('planner.detail.none') },
+          { label: t('planner.detail.totalFlowers'), value: '0' },
+        ])
+      },
+      notes: [t('planner.detail.gardenConfigureNote')],
+      children: [],
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  }
+
+  return methods
+}
+
+function buildContainerMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  depth: number,
+  nextAncestry: string[],
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const { modifiers, methodsById, remainingStock } = ctx
+  const methods: PlannerMethod[] = []
+
+  ;(containerSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    const expectedYield = source.amount * source.chance
+    if (expectedYield <= 0) return
+
+    const passive = getPassiveRate(itemId, modifiers)
+    const fullOpeningsNeeded = requiredAmount / expectedYield
+    let openingsNeeded = fullOpeningsNeeded
+    const childPath = `${nodeId}/container-${sourceIndex}:${source.containerId}`
+
+    // When passive production (machines/fabrication) contributes to this item,
+    // reduce containers needed. Two-pass: probe with full amount for a
+    // time-per-container estimate, then rebuild the child with reduced amount.
+    if (passive.rate > 0) {
+      const stockSnapshot = new Map(remainingStock)
+      const probeNode = ctx.recurse(
+        source.containerId,
+        fullOpeningsNeeded,
+        depth + 1,
+        nextAncestry,
+        childPath,
+      )
+      // Restore inventory — we'll rebuild with the adjusted amount
+      remainingStock.clear()
+      for (const [k, v] of stockSnapshot) remainingStock.set(k, v)
+
+      const probeMethodId = probeNode.defaultMethodId
+      const probeTime = probeMethodId
+        ? (methodsById.get(probeMethodId)?.totalTimeSeconds ?? null)
+        : null
+
+      if (probeTime != null && probeTime > 0) {
+        // activeRate = items/sec obtained through container openings
+        const activeRate = requiredAmount / probeTime
+        const adjustedTime = applyPassiveRate(requiredAmount, activeRate, probeTime, passive)
+        openingsNeeded = Math.max(0, (adjustedTime / probeTime) * fullOpeningsNeeded)
+      }
+    }
+
+    const containerNode = ctx.recurse(
+      source.containerId,
+      openingsNeeded,
+      depth + 1,
+      nextAncestry,
+      childPath,
+    )
+
+    const childMethodId = containerNode.defaultMethodId
+    const childTime = childMethodId
+      ? (methodsById.get(childMethodId)?.totalTimeSeconds ?? null)
+      : null
+    const totalTimeSeconds = childTime
+    const isContainerEstimated = source.chance !== 1
+    const passiveReduced = passive.rate > 0 && openingsNeeded < fullOpeningsNeeded
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#container-${sourceIndex}`,
+      nodeId,
+      kind: 'container',
+      title: source.containerName,
+      subtitle: t('planner.detail.containerSubtitle', { count: formatAmount(openingsNeeded) }),
+      requiredAmount,
+      localTimeSeconds: 0,
+      totalTimeSeconds,
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          {
+            label: t('planner.detail.yieldPerOpen'),
+            value: `${formatChance(source.chance)} × ${source.amount}`,
+          },
+          {
+            label: t('planner.detail.containersNeeded'),
+            value: formatAmount(openingsNeeded),
+            estimated: isContainerEstimated,
+          },
+          ...passiveDetailRows(passive),
+          {
+            label: t('planner.detail.totalTime'),
+            value: formatTimeOrUnknown(totalTimeSeconds),
+            estimated: isContainerEstimated,
+          },
+        ])
+      },
+      get formula() {
+        return passiveReduced
+          ? t('planner.detail.containerFormulaPassive', {
+              amount: formatAmount(requiredAmount),
+              openings: formatAmount(openingsNeeded),
+              container: source.containerName.toLowerCase(),
+            })
+          : t('planner.detail.containerFormula', {
+              amount: formatAmount(requiredAmount),
+              chance: formatChance(source.chance),
+              yield: source.amount,
+              container: source.containerName.toLowerCase(),
+            })
+      },
+      notes: [
+        t('planner.detail.containerNote'),
+        ...(passiveReduced
+          ? [
+              t('planner.detail.containerPassiveNote', {
+                from: formatAmount(fullOpeningsNeeded),
+                to: formatAmount(openingsNeeded),
+              }),
+            ]
+          : []),
+      ],
+      children: [
+        {
+          itemId: source.containerId,
+          amount: openingsNeeded,
+          nodeId: containerNode.id,
+        },
+      ],
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  })
+
+  return methods
+}
+
+function buildExpeditionMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const { modifiers, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  ;(expeditionSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    const lootAmount = source.amount * tierModifiers.loot[(modifiers.expeditionTier || 1) - 1]
+    const runsNeeded = requiredAmount / lootAmount
+    const estimatedTime = runsNeeded * source.baseDuration
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#expedition-${sourceIndex}`,
+      nodeId,
+      kind: 'expedition',
+      title: source.expeditionName,
+      subtitle: t('planner.detail.expeditionSubtitle', { count: formatAmount(runsNeeded) }),
+      requiredAmount,
+      localTimeSeconds: estimatedTime,
+      totalTimeSeconds: estimatedTime,
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          {
+            label: t('planner.detail.rewardPerRun'),
+            value: `${formatAmount(lootAmount)}${lootAmount !== source.amount ? ` (T${modifiers.expeditionTier})` : ''}`,
+          },
+          { label: t('planner.detail.baseDuration'), value: formatDuration(source.baseDuration) },
+          { label: t('planner.detail.runsNeeded'), value: formatAmount(runsNeeded) },
+          {
+            label: t('planner.detail.totalTime'),
+            value: formatDuration(estimatedTime),
+            estimated: true,
+          },
+        ])
+      },
+      get formula() {
+        return t('planner.detail.expeditionFormula', {
+          runs: formatAmount(runsNeeded),
+          time: formatDuration(source.baseDuration),
+        })
+      },
+      notes: [t('planner.detail.expeditionNote')],
+      children: [],
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  })
+
+  return methods
+}
+
+function buildMachineMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  depth: number,
+  nextAncestry: string[],
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const { modifiers, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  // Machine methods (processors and generators)
+  ;(machineRecipeIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
+    // A2 gate (method level): only offer a processor's machine method for the recipe it's
+    // actually set to. Generators (no input) always run; 'all' or a matching output → offer;
+    // a different selected output / null → skip (switching it is a Phase C advisory, not a method).
+    if (source.inputItemId !== null) {
+      const selected = (modifiers.machineRecipes ?? {})[source.machineId]
+      if (selected == null || (selected !== 'all' && selected !== itemId)) return
+    }
+    const machineLevel = modifiers.machineLevels[source.machineId] ?? 0
+    const speedMultiplier =
+      machineSpeedMultipliers[Math.min(machineLevel, machineSpeedMultipliers.length - 1)]
+    const effectiveInterval = Math.max(1, Math.floor(source.baseInterval * speedMultiplier))
+    const cyclesNeeded = Math.ceil(requiredAmount / source.outputAmount)
+    const passive = getPassiveRate(itemId, modifiers, source.machineId)
+    const activeRate = source.outputAmount / effectiveInterval
+    const localTimeSeconds = applyPassiveRate(
+      requiredAmount,
+      activeRate,
+      cyclesNeeded * effectiveInterval,
+      passive,
+    )
+
+    const children: PlannerMethodChild[] = []
+
+    // Input items (processors have inputs, generators don't)
+    if (source.inputItemId) {
+      const inputAmount = source.inputAmount * cyclesNeeded
+      const childPath = `${nodeId}/machine-${sourceIndex}-input:${source.inputItemId}`
+      const childNode = ctx.recurse(
+        source.inputItemId,
+        inputAmount,
+        depth + 1,
+        nextAncestry,
+        childPath,
+      )
+      children.push({
+        itemId: source.inputItemId,
+        amount: inputAmount,
+        nodeId: childNode.id,
+      })
+    }
+
+    // Secondary input (e.g., Bakery: flour + egg, Refinery: essence + stone)
+    if (source.secondaryInputItemId) {
+      const secondaryAmount = (source.secondaryInputAmount ?? 0) * cyclesNeeded
+      if (secondaryAmount > 0) {
+        const childPath = `${nodeId}/machine-${sourceIndex}-secondary:${source.secondaryInputItemId}`
+        const childNode = ctx.recurse(
+          source.secondaryInputItemId,
+          secondaryAmount,
+          depth + 1,
+          nextAncestry,
+          childPath,
+        )
+        children.push({
+          itemId: source.secondaryInputItemId,
+          amount: secondaryAmount,
+          nodeId: childNode.id,
+        })
+      }
+    }
+
+    // Calculate total time including children
+    const totalTimeSeconds = rollUpChildTimes(children, localTimeSeconds, ctx)
+
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#machine-${sourceIndex}`,
+      nodeId,
+      kind: 'machine',
+      title: source.machineName,
+      subtitle: t(
+        cyclesNeeded === 1
+          ? 'planner.detail.machineSubtitle'
+          : 'planner.detail.machineSubtitlePlural',
+        { count: cyclesNeeded, output: formatAmount(requiredAmount) },
+      ),
+      requiredAmount,
+      localTimeSeconds,
+      totalTimeSeconds,
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          {
+            label: t('planner.detail.output'),
+            value: t('planner.detail.eachValue', { amount: source.outputAmount }),
+          },
+          { label: t('planner.detail.cycles'), value: formatAmount(cyclesNeeded) },
+          {
+            label: t('planner.detail.level'),
+            value: `${machineLevel}/${machineSpeedMultipliers.length - 1}`,
+          },
+          {
+            label: t('planner.detail.interval'),
+            value: t('planner.detail.intervalValue', { seconds: effectiveInterval }),
+          },
+          ...passiveDetailRows(passive),
+          { label: t('planner.detail.stepTime'), value: formatDuration(localTimeSeconds) },
+          { label: t('planner.detail.totalTime'), value: formatTimeOrUnknown(totalTimeSeconds) },
+          ...(totalTimeSeconds != null && totalTimeSeconds > localTimeSeconds
+            ? [
+                {
+                  label: t('planner.detail.depsTime'),
+                  value: formatDuration(totalTimeSeconds - localTimeSeconds),
+                },
+              ]
+            : []),
+        ])
+      },
+      get formula() {
+        return passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          t('planner.detail.machineFormula', {
+            cycles: formatAmount(cyclesNeeded),
+            seconds: effectiveInterval,
+          }),
+        )
+      },
+      notes:
+        machineLevel > 0
+          ? [
+              t('planner.detail.machineNote', {
+                level: machineLevel,
+                from: source.baseInterval,
+                to: effectiveInterval,
+              }),
+            ]
+          : [],
+      children,
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  })
+
+  return methods
+}
+
+function buildFabricationMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const { modifiers, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  // Fabrication method (passive item generation)
+  const allocationPoints = modifiers.fabricationAllocations[itemId] ?? 0
+  if (allocationPoints > 0) {
+    const itemsPerCycle = allocationPoints
+    const cyclesNeeded = requiredAmount / itemsPerCycle
+    const passive = getPassiveRate(itemId, modifiers, undefined, true)
+    const activeRate = itemsPerCycle / FABRICATION_CYCLE_SECONDS
+    const localTimeSeconds = applyPassiveRate(
+      requiredAmount,
+      activeRate,
+      cyclesNeeded * FABRICATION_CYCLE_SECONDS,
+      passive,
+    )
+    const itemsPerHour = itemsPerCycle * (3600 / FABRICATION_CYCLE_SECONDS)
+
+    let detailRowsCache: PlannerMethodDetail[] | undefined
+    const method: PlannerMethod = {
+      id: `${nodeId}#fabrication`,
+      nodeId,
+      kind: 'fabrication',
+      title: 'Fabrication',
+      subtitle: t(
+        allocationPoints === 1
+          ? 'planner.detail.fabricationSubtitle'
+          : 'planner.detail.fabricationSubtitlePlural',
+        { count: allocationPoints },
+      ),
+      requiredAmount,
+      localTimeSeconds,
+      totalTimeSeconds: localTimeSeconds,
+      cost: null,
+      get detailRows() {
+        return (detailRowsCache ??= [
+          { label: t('planner.detail.points'), value: String(allocationPoints) },
+          { label: t('planner.detail.itemsPerCycle'), value: String(itemsPerCycle) },
+          {
+            label: t('planner.detail.cycleTime'),
+            value: t('planner.detail.secondsValue', { seconds: FABRICATION_CYCLE_SECONDS }),
+          },
+          {
+            label: t('planner.detail.rate'),
+            value: t('planner.detail.perHourValue', { amount: formatAmount(itemsPerHour) }),
+          },
+          ...passiveDetailRows(passive),
+          { label: t('planner.detail.stepTime'), value: formatDuration(localTimeSeconds) },
+        ])
+      },
+      get formula() {
+        return passiveFormula(
+          requiredAmount,
+          activeRate,
+          passive,
+          t('planner.detail.fabricationFormula', {
+            amount: formatAmount(requiredAmount),
+            perCycle: itemsPerCycle,
+            seconds: FABRICATION_CYCLE_SECONDS,
+          }),
+        )
+      },
+      notes: [t('planner.detail.fabricationNote')],
+      children: [],
+    }
+
+    methods.push(method)
+    methodsById.set(method.id, method)
+  }
+
+  return methods
+}
+
+function buildBuyMethods(
+  itemId: string,
+  requiredAmount: number,
+  nodeId: string,
+  ctx: BuildMethodsCtx,
+): PlannerMethod[] {
+  const item = itemById.get(itemId)
+  if (!item || item.buyValue == null) return []
+  const { modifiers, inventory, methodsById } = ctx
+  const methods: PlannerMethod[] = []
+
+  // Capture the narrowed value — the lazy `detailRows` getter below is a closure, and
+  // TS doesn't carry the `!= null` narrowing of `item.buyValue` into nested functions.
+  const buyValue = item.buyValue
+  const cost = requiredAmount * buyValue
+  const currentGold = inventory['gold'] ?? 0
+  const remainingCost = Math.max(0, cost - currentGold)
+  const goldTime =
+    modifiers.goldPerMinute > 0 && remainingCost > 0
+      ? goldToSeconds(remainingCost, modifiers.goldPerMinute)
+      : remainingCost <= 0
+        ? 0
+        : null
+  let detailRowsCache: PlannerMethodDetail[] | undefined
+  const method: PlannerMethod = {
+    id: `${nodeId}#buy`,
+    nodeId,
+    kind: 'buy',
+    title: t('planner.detail.merchant'),
+    subtitle: t('planner.detail.buySubtitle', { amount: formatAmount(requiredAmount) }),
+    requiredAmount,
+    localTimeSeconds: goldTime ?? 0,
+    totalTimeSeconds: goldTime ?? 0,
+    cost,
+    get detailRows() {
+      return (detailRowsCache ??= [
+        {
+          label: t('planner.detail.unitPrice'),
+          value: t('planner.detail.goldValue', {
+            amount: formatNumber(buyValue),
+          }),
+        },
+        {
+          label: t('planner.detail.totalCost'),
+          value: t('planner.detail.goldValue', {
+            amount: formatNumber(Math.round(cost)),
+          }),
+        },
+        ...(currentGold > 0
+          ? [
+              {
+                label: t('planner.detail.onHand'),
+                value: t('planner.detail.goldValue', {
+                  amount: formatNumber(Math.round(currentGold)),
+                }),
+              },
+              {
+                label: t('planner.detail.stillNeed'),
+                value: t('planner.detail.goldValue', {
+                  amount: formatNumber(Math.round(remainingCost)),
+                }),
+              },
+            ]
+          : []),
+        ...(goldTime != null && goldTime > 0
+          ? [
+              {
+                label: t('planner.detail.goldRate'),
+                value: t('planner.detail.goldPerMinValue', {
+                  rate: modifiers.goldPerMinute.toFixed(0),
+                }),
+              },
+              {
+                label: t('planner.detail.goldTime'),
+                value: t('planner.detail.goldTimeToEarn', { time: formatDuration(goldTime) }),
+                estimated: true,
+              },
+            ]
+          : remainingCost <= 0
+            ? [
+                {
+                  label: t('planner.detail.goldTime'),
+                  value: t('planner.detail.affordableNow'),
+                },
+              ]
+            : [
+                {
+                  label: t('planner.detail.goldRate'),
+                  value: t('planner.detail.notConfigured'),
+                },
+              ]),
+      ])
+    },
+    notes:
+      remainingCost <= 0
+        ? [t('planner.detail.buyAffordableNote')]
+        : goldTime != null && goldTime > 0
+          ? [
+              t('planner.detail.buyGoldIncomeNote', {
+                rate: modifiers.goldPerMinute.toFixed(0),
+              }),
+            ]
+          : [t('planner.detail.buyConfigureNote')],
+    children: [],
+  }
+
+  methods.push(method)
+  methodsById.set(method.id, method)
+
+  return methods
+}
+
+// `detailRows` and `formula` on every method are only read when a node is actually
+// rendered (modifier chips) or its popover opens — never by `summary`/`schedule`. Trees
+// default collapsed, so on mount/reload almost nothing renders. We build them lazily via
+// memoized getters (one closure cache per method) so the graph build that blocks first
+// paint skips this i18n-heavy formatting work. The graph rebuilds whole on locale change
+// (eager `t()` in subtitles/notes), so each method's cache can't outlive its locale.
 export function buildPlannerGraph(
   targetItemId: string,
   targetQuantity: number,
@@ -235,7 +1254,7 @@ export function buildPlannerGraph(
         depth,
         defaultMethodId: null,
         methods: [],
-        issues: ['Item data not found.'],
+        issues: [t('planner.detail.itemDataNotFound')],
         fulfilled: false,
       }
       nodesById.set(nodeId, unknownNode)
@@ -247,14 +1266,14 @@ export function buildPlannerGraph(
         id: `${nodeId}#cycle`,
         nodeId,
         kind: 'cycle',
-        title: 'Cycle detected',
-        subtitle: 'This dependency loops back to an ancestor item.',
+        title: t('planner.detail.cycleDetected'),
+        subtitle: t('planner.detail.cycleSubtitle'),
         requiredAmount,
         localTimeSeconds: null,
         totalTimeSeconds: null,
         cost: null,
         detailRows: [],
-        notes: ['Planner expansion stopped here to avoid an infinite loop.'],
+        notes: [t('planner.detail.cycleNote')],
         children: [],
       }
       const cycleNode: PlannerNode = {
@@ -267,7 +1286,7 @@ export function buildPlannerGraph(
         depth,
         defaultMethodId: cycleMethod.id,
         methods: [cycleMethod],
-        issues: ['Cycle detected in dependency chain.'],
+        issues: [t('planner.detail.cycleInChain')],
         fulfilled: false,
       }
       nodesById.set(nodeId, cycleNode)
@@ -275,634 +1294,29 @@ export function buildPlannerGraph(
       return cycleNode
     }
 
-    const methods: PlannerMethod[] = []
     const nextAncestry = [...ancestry, itemId]
-
-    item.recipes.forEach((recipe, recipeIndex) => {
-      const craftsNeeded = Math.ceil(requiredAmount / recipe.outputAmount)
-      const children: PlannerMethodChild[] = recipe.ingredients.map((ingredient, childIndex) => {
-        const childPath = `${nodeId}/recipe-${recipeIndex}/ingredient-${childIndex}:${ingredient.id}`
-        const childNode = buildNode(
-          ingredient.id,
-          ingredient.amount * craftsNeeded,
-          depth + 1,
-          nextAncestry,
-          childPath,
-        )
-        return {
-          itemId: ingredient.id,
-          amount: ingredient.amount * craftsNeeded,
-          nodeId: childNode.id,
-        }
-      })
-
-      const awakenReduction = (modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) * 0.15
-      const toolSpeedBonus = modifiers.toolSpeedBonuses[recipe.workstation] ?? 0
-      const speedReduction = awakenReduction + toolSpeedBonus
-      const effectiveCraftTime = Math.max(
-        recipe.craftTime * 0.01,
-        recipe.craftTime * (1 - speedReduction),
-      )
-      const passive = getPassiveRate(itemId, modifiers)
-      const activeRate = recipe.outputAmount / effectiveCraftTime
-      const localTimeSeconds = applyPassiveRate(
-        requiredAmount,
-        activeRate,
-        craftsNeeded * effectiveCraftTime,
-        passive,
-      )
-      const childTimes = children.map((child) => {
-        const childNode = nodesById.get(child.nodeId)
-        if (!childNode) return null
-        if (childNode.fulfilled) return 0
-        if (!childNode.defaultMethodId) return null
-        const childMethod = methodsById.get(childNode.defaultMethodId)
-        if (!childMethod) return null
-        return childMethod.totalTimeSeconds ?? null
-      })
-      const knownChildTimes = childTimes.filter((time): time is number => time != null)
-      const maxChildTime = knownChildTimes.length > 0 ? Math.max(...knownChildTimes) : 0
-      const totalTimeSeconds =
-        knownChildTimes.length !== childTimes.length ? null : localTimeSeconds + maxChildTime
-
-      const method: PlannerMethod = {
-        id: `${nodeId}#recipe-${recipeIndex}`,
-        nodeId,
-        kind: 'craft',
-        title: recipe.workstation,
-        subtitle: `${craftsNeeded} craft${craftsNeeded === 1 ? '' : 's'} for ${formatAmount(requiredAmount)} output`,
-        requiredAmount,
-        localTimeSeconds,
-        totalTimeSeconds,
-        cost: null,
-        detailRows: [
-          { label: 'Output', value: `${recipe.outputAmount} each` },
-          { label: 'Crafts', value: formatAmount(craftsNeeded) },
-          { label: 'Level', value: `Lv${recipe.levelRequirement}` },
-          ...((modifiers.awakenSpeedTiers[recipe.workstation] ?? 0) > 0
-            ? [
-                {
-                  label: 'Speed Tier',
-                  value: `+${modifiers.awakenSpeedTiers[recipe.workstation] * 15}% Speed`,
-                },
-              ]
-            : []),
-          ...((modifiers.toolSpeedBonuses[recipe.workstation] ?? 0) > 0
-            ? [
-                {
-                  label: 'Tool Speed',
-                  value: `+${Math.round(modifiers.toolSpeedBonuses[recipe.workstation] * 100)}% Speed`,
-                },
-              ]
-            : []),
-          ...passiveDetailRows(passive),
-          { label: 'Step time', value: formatDuration(localTimeSeconds) },
-          { label: 'Total time', value: formatTimeOrUnknown(totalTimeSeconds) },
-          ...(totalTimeSeconds != null && totalTimeSeconds > localTimeSeconds
-            ? [{ label: 'Deps time', value: formatDuration(totalTimeSeconds - localTimeSeconds) }]
-            : []),
-        ],
-        formula: passiveFormula(
-          requiredAmount,
-          activeRate,
-          passive,
-          `${formatAmount(craftsNeeded)} crafts × ${formatDuration(recipe.craftTime)}`,
-        ),
-        notes: [],
-        children,
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    })
-
-    ;(jobActivityIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
-      // Cumulative duration reduction percentage per tier (0-5)
-      const JOB_TIER_DURATION_REDUCTION = [0, 0, 0.1, 0.1, 0.2, 0.2]
-      // Cumulative yield bonus per tier (0-5)
-      const JOB_TIER_YIELD_BONUS = [0, 0, 0, 0, 0, 1]
-
-      const awakenGather = modifiers.awakenGatherUpgrades[source.jobId]
-      const yieldBonus = awakenGather?.yieldBonus ?? 0
-      const jobTier = modifiers.jobTiers[source.jobId] ?? 0
-      const jobYieldBonus = JOB_TIER_YIELD_BONUS[jobTier] ?? 0
-      const baseYield = source.chance * expectedAmount(source.min, source.max)
-      const expectedYield = baseYield + yieldBonus + jobYieldBonus
-      if (expectedYield <= 0) return
-
-      const actionsNeeded = requiredAmount / expectedYield
-      const awakenReduction = (awakenGather?.durationTier ?? 0) * 0.05
-      const jobReduction = JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0
-      const effectiveDuration = Math.max(
-        Math.max(source.duration * 0.01, 1),
-        source.duration * (1 - awakenReduction) * (1 - jobReduction),
-      )
-      const passive = getPassiveRate(itemId, modifiers)
-      const activeRate = expectedYield / effectiveDuration
-      const localTimeSeconds = applyPassiveRate(
-        requiredAmount,
-        activeRate,
-        actionsNeeded * effectiveDuration,
-        passive,
-      )
-      const isEstimated = source.chance !== 1 || source.min !== source.max
-      const method: PlannerMethod = {
-        id: `${nodeId}#gather-${sourceIndex}`,
-        nodeId,
-        kind: 'gather',
-        title: source.jobId,
-        subtitle: source.activityName,
-        requiredAmount,
-        localTimeSeconds,
-        totalTimeSeconds: localTimeSeconds,
-        cost: null,
-        actionsNeeded,
-        detailRows: [
-          { label: 'Activity', value: source.activityName },
-          { label: 'Level', value: `Lv${source.levelRequirement}` },
-          {
-            label: 'Yield / action',
-            value: `${formatChance(source.chance)} × ${formatAmount(expectedAmount(source.min, source.max))}`,
-          },
-          ...(yieldBonus > 0 || (awakenGather?.durationTier ?? 0) > 0
-            ? [
-                {
-                  label: 'Awaken Tree',
-                  value: [
-                    ...(yieldBonus > 0 ? [`+${yieldBonus} yield`] : []),
-                    ...((awakenGather?.durationTier ?? 0) > 0
-                      ? [`-${(awakenGather?.durationTier ?? 0) * 5}% duration`]
-                      : []),
-                  ].join(', '),
-                },
-              ]
-            : []),
-          ...((JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) > 0 ||
-          (JOB_TIER_YIELD_BONUS[jobTier] ?? 0) > 0
-            ? [
-                {
-                  label: 'Sanctuary',
-                  value: `T${jobTier} (${[
-                    ...((JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) > 0
-                      ? [`-${(JOB_TIER_DURATION_REDUCTION[jobTier] ?? 0) * 100}% duration`]
-                      : []),
-                    ...((JOB_TIER_YIELD_BONUS[jobTier] ?? 0) > 0
-                      ? [`+${JOB_TIER_YIELD_BONUS[jobTier]} yield`]
-                      : []),
-                  ].join(', ')})`,
-                },
-              ]
-            : []),
-          ...passiveDetailRows(passive),
-          { label: 'Actions', value: formatAmount(actionsNeeded), estimated: isEstimated },
-          { label: 'Step time', value: formatDuration(localTimeSeconds), estimated: isEstimated },
-        ],
-        formula: passiveFormula(
-          requiredAmount,
-          activeRate,
-          passive,
-          `${formatAmount(requiredAmount)} ÷ (${formatChance(source.chance)} × ${formatAmount(expectedAmount(source.min, source.max))}) actions × ${formatDuration(source.duration)}`,
-        ),
-        notes: ['Expected time uses average yield from chance and output range.'],
-        children: [],
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    })
-
-    const gardenSource = gardenSourcesByItem.get(itemId)
-    if (gardenSource) {
-      const entries = modifiers.gardenFlowers[gardenSource.flowerItemId] ?? []
-      const totalFlowers = entries.reduce((sum, e) => sum + e.count, 0)
-      const yieldPerCycle = entries.reduce((sum, e) => sum + e.count * e.level, 0)
-
-      if (yieldPerCycle > 0) {
-        const cyclesNeeded = requiredAmount / yieldPerCycle
-        const passive = getPassiveRate(itemId, modifiers)
-        const activeRate = yieldPerCycle / gardenSource.cycleSeconds
-        const localTimeSeconds = applyPassiveRate(
-          requiredAmount,
-          activeRate,
-          cyclesNeeded * gardenSource.cycleSeconds,
-          passive,
-        )
-        const breakdownParts = entries
-          .filter((e) => e.count > 0)
-          .map((e) => `${e.count}×Lv${e.level}`)
-        const method: PlannerMethod = {
-          id: `${nodeId}#garden`,
-          nodeId,
-          kind: 'garden',
-          title: gardenSource.flowerItemName,
-          subtitle: 'Garden growth',
-          requiredAmount,
-          localTimeSeconds,
-          totalTimeSeconds: localTimeSeconds,
-          cost: null,
-          detailRows: [
-            { label: 'Flower', value: gardenSource.flowerItemName },
-            { label: 'Setup', value: breakdownParts.join(' + ') || 'None' },
-            { label: 'Total flowers', value: String(totalFlowers) },
-            { label: 'Yield / cycle', value: `${formatAmount(yieldPerCycle)} per 60s` },
-            ...passiveDetailRows(passive),
-            { label: 'Cycles', value: formatAmount(cyclesNeeded) },
-            { label: 'Step time', value: formatDuration(localTimeSeconds) },
-          ],
-          formula: passiveFormula(
-            requiredAmount,
-            activeRate,
-            passive,
-            `${formatAmount(requiredAmount)} ÷ ${formatAmount(yieldPerCycle)} per cycle × ${formatDuration(gardenSource.cycleSeconds)}`,
-          ),
-          notes: [`Garden yield: ${breakdownParts.join(' + ')} = ${yieldPerCycle}/min.`],
-          children: [],
-        }
-
-        methods.push(method)
-        methodsById.set(method.id, method)
-      } else {
-        const method: PlannerMethod = {
-          id: `${nodeId}#garden`,
-          nodeId,
-          kind: 'garden',
-          title: gardenSource.flowerItemName,
-          subtitle: 'Garden — no flowers configured',
-          requiredAmount,
-          localTimeSeconds: null,
-          totalTimeSeconds: null,
-          cost: null,
-          detailRows: [
-            { label: 'Flower', value: gardenSource.flowerItemName },
-            { label: 'Setup', value: 'None' },
-            { label: 'Total flowers', value: '0' },
-          ],
-          notes: ['Configure the flowers under Planner Settings > Garden to calculate time.'],
-          children: [],
-        }
-
-        methods.push(method)
-        methodsById.set(method.id, method)
-      }
+    const ctx: BuildMethodsCtx = {
+      modifiers,
+      inventory,
+      nodesById,
+      methodsById,
+      remainingStock,
+      recurse: buildNode,
     }
 
-    ;(containerSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
-      const expectedYield = source.amount * source.chance
-      if (expectedYield <= 0) return
-
-      const passive = getPassiveRate(itemId, modifiers)
-      const fullOpeningsNeeded = requiredAmount / expectedYield
-      let openingsNeeded = fullOpeningsNeeded
-      const childPath = `${nodeId}/container-${sourceIndex}:${source.containerId}`
-
-      // When passive production (machines/fabrication) contributes to this item,
-      // reduce containers needed. Two-pass: probe with full amount for a
-      // time-per-container estimate, then rebuild the child with reduced amount.
-      if (passive.rate > 0) {
-        const stockSnapshot = new Map(remainingStock)
-        const probeNode = buildNode(
-          source.containerId,
-          fullOpeningsNeeded,
-          depth + 1,
-          nextAncestry,
-          childPath,
-        )
-        // Restore inventory — we'll rebuild with the adjusted amount
-        remainingStock.clear()
-        for (const [k, v] of stockSnapshot) remainingStock.set(k, v)
-
-        const probeMethodId = probeNode.defaultMethodId
-        const probeTime = probeMethodId
-          ? (methodsById.get(probeMethodId)?.totalTimeSeconds ?? null)
-          : null
-
-        if (probeTime != null && probeTime > 0) {
-          // activeRate = items/sec obtained through container openings
-          const activeRate = requiredAmount / probeTime
-          const adjustedTime = applyPassiveRate(requiredAmount, activeRate, probeTime, passive)
-          openingsNeeded = Math.max(0, (adjustedTime / probeTime) * fullOpeningsNeeded)
-        }
-      }
-
-      const containerNode = buildNode(
-        source.containerId,
-        openingsNeeded,
-        depth + 1,
-        nextAncestry,
-        childPath,
-      )
-
-      const childMethodId = containerNode.defaultMethodId
-      const childTime = childMethodId
-        ? (methodsById.get(childMethodId)?.totalTimeSeconds ?? null)
-        : null
-      const totalTimeSeconds = childTime
-      const isContainerEstimated = source.chance !== 1
-      const passiveReduced = passive.rate > 0 && openingsNeeded < fullOpeningsNeeded
-      const method: PlannerMethod = {
-        id: `${nodeId}#container-${sourceIndex}`,
-        nodeId,
-        kind: 'container',
-        title: source.containerName,
-        subtitle: `Expected ${formatAmount(openingsNeeded)} openings`,
-        requiredAmount,
-        localTimeSeconds: 0,
-        totalTimeSeconds,
-        cost: null,
-        detailRows: [
-          {
-            label: 'Yield / open',
-            value: `${formatChance(source.chance)} × ${source.amount}`,
-          },
-          {
-            label: 'Containers needed',
-            value: formatAmount(openingsNeeded),
-            estimated: isContainerEstimated,
-          },
-          ...passiveDetailRows(passive),
-          {
-            label: 'Total time',
-            value: formatTimeOrUnknown(totalTimeSeconds),
-            estimated: isContainerEstimated,
-          },
-        ],
-        formula: passiveReduced
-          ? `${formatAmount(requiredAmount)} need − passive → ${formatAmount(openingsNeeded)} openings of ${source.containerName.toLowerCase()}`
-          : `${formatAmount(requiredAmount)} ÷ (${formatChance(source.chance)} × ${source.amount}) per ${source.containerName.toLowerCase()} opening`,
-        notes: [
-          'Opening time is treated as negligible; only obtaining the container contributes time.',
-          ...(passiveReduced
-            ? [
-                `Passive production reduces containers from ${formatAmount(fullOpeningsNeeded)} to ${formatAmount(openingsNeeded)}.`,
-              ]
-            : []),
-        ],
-        children: [
-          {
-            itemId: source.containerId,
-            amount: openingsNeeded,
-            nodeId: containerNode.id,
-          },
-        ],
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    })
-
-    ;(expeditionSourceIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
-      const lootAmount = source.amount * tierModifiers.loot[(modifiers.expeditionTier || 1) - 1]
-      const runsNeeded = requiredAmount / lootAmount
-      const estimatedTime = runsNeeded * source.baseDuration
-      const method: PlannerMethod = {
-        id: `${nodeId}#expedition-${sourceIndex}`,
-        nodeId,
-        kind: 'expedition',
-        title: source.expeditionName,
-        subtitle: `${formatAmount(runsNeeded)} expected runs`,
-        requiredAmount,
-        localTimeSeconds: estimatedTime,
-        totalTimeSeconds: estimatedTime,
-        cost: null,
-        detailRows: [
-          {
-            label: 'Reward / run',
-            value: `${formatAmount(lootAmount)}${lootAmount !== source.amount ? ` (T${modifiers.expeditionTier})` : ''}`,
-          },
-          { label: 'Base duration', value: formatDuration(source.baseDuration) },
-          { label: 'Runs needed', value: formatAmount(runsNeeded) },
-          { label: 'Total time', value: formatDuration(estimatedTime), estimated: true },
-        ],
-        formula: `${formatAmount(runsNeeded)} runs × ${formatDuration(source.baseDuration)} base duration`,
-        notes: ['Estimated using base duration — actual time depends on party strength and tier.'],
-        children: [],
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    })
-
-    // Machine methods (processors and generators)
-    ;(machineRecipeIndex.get(itemId) ?? []).forEach((source, sourceIndex) => {
-      const machineLevel = modifiers.machineLevels[source.machineId] ?? 0
-      const speedMultiplier =
-        machineSpeedMultipliers[Math.min(machineLevel, machineSpeedMultipliers.length - 1)]
-      const effectiveInterval = Math.max(1, Math.floor(source.baseInterval * speedMultiplier))
-      const cyclesNeeded = Math.ceil(requiredAmount / source.outputAmount)
-      const passive = getPassiveRate(itemId, modifiers, source.machineId)
-      const activeRate = source.outputAmount / effectiveInterval
-      const localTimeSeconds = applyPassiveRate(
-        requiredAmount,
-        activeRate,
-        cyclesNeeded * effectiveInterval,
-        passive,
-      )
-
-      const children: PlannerMethodChild[] = []
-
-      // Input items (processors have inputs, generators don't)
-      if (source.inputItemId) {
-        const inputAmount = source.inputAmount * cyclesNeeded
-        const childPath = `${nodeId}/machine-${sourceIndex}-input:${source.inputItemId}`
-        const childNode = buildNode(
-          source.inputItemId,
-          inputAmount,
-          depth + 1,
-          nextAncestry,
-          childPath,
-        )
-        children.push({
-          itemId: source.inputItemId,
-          amount: inputAmount,
-          nodeId: childNode.id,
-        })
-      }
-
-      // Secondary input (e.g., Bakery: flour + egg, Refinery: essence + stone)
-      if (source.secondaryInputItemId) {
-        const secondaryAmount = (source.secondaryInputAmount ?? 0) * cyclesNeeded
-        if (secondaryAmount > 0) {
-          const childPath = `${nodeId}/machine-${sourceIndex}-secondary:${source.secondaryInputItemId}`
-          const childNode = buildNode(
-            source.secondaryInputItemId,
-            secondaryAmount,
-            depth + 1,
-            nextAncestry,
-            childPath,
-          )
-          children.push({
-            itemId: source.secondaryInputItemId,
-            amount: secondaryAmount,
-            nodeId: childNode.id,
-          })
-        }
-      }
-
-      // Calculate total time including children
-      const childTimes = children.map((child) => {
-        const childNode = nodesById.get(child.nodeId)
-        if (!childNode) return null
-        if (childNode.fulfilled) return 0
-        if (!childNode.defaultMethodId) return null
-        const childMethod = methodsById.get(childNode.defaultMethodId)
-        if (!childMethod) return null
-        return childMethod.totalTimeSeconds ?? null
-      })
-      const knownChildTimes = childTimes.filter((time): time is number => time != null)
-      const maxChildTime = knownChildTimes.length > 0 ? Math.max(...knownChildTimes) : 0
-      const totalTimeSeconds =
-        knownChildTimes.length !== childTimes.length ? null : localTimeSeconds + maxChildTime
-
-      const method: PlannerMethod = {
-        id: `${nodeId}#machine-${sourceIndex}`,
-        nodeId,
-        kind: 'machine',
-        title: source.machineName,
-        subtitle: `${cyclesNeeded} cycle${cyclesNeeded === 1 ? '' : 's'} for ${formatAmount(requiredAmount)} output`,
-        requiredAmount,
-        localTimeSeconds,
-        totalTimeSeconds,
-        cost: null,
-        detailRows: [
-          { label: 'Output', value: `${source.outputAmount} each` },
-          { label: 'Cycles', value: formatAmount(cyclesNeeded) },
-          { label: 'Level', value: `${machineLevel}/${machineSpeedMultipliers.length - 1}` },
-          { label: 'Interval', value: `${effectiveInterval}s per cycle` },
-          ...passiveDetailRows(passive),
-          { label: 'Step time', value: formatDuration(localTimeSeconds) },
-          { label: 'Total time', value: formatTimeOrUnknown(totalTimeSeconds) },
-          ...(totalTimeSeconds != null && totalTimeSeconds > localTimeSeconds
-            ? [{ label: 'Deps time', value: formatDuration(totalTimeSeconds - localTimeSeconds) }]
-            : []),
-        ],
-        formula: passiveFormula(
-          requiredAmount,
-          activeRate,
-          passive,
-          `${formatAmount(cyclesNeeded)} cycles × ${effectiveInterval}s`,
-        ),
-        notes:
-          machineLevel > 0
-            ? [
-                `Machine level ${machineLevel} reduces interval from ${source.baseInterval}s to ${effectiveInterval}s.`,
-              ]
-            : [],
-        children,
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    })
-
-    // Fabrication method (passive item generation)
-    const allocationPoints = modifiers.fabricationAllocations[itemId] ?? 0
-    if (allocationPoints > 0) {
-      const itemsPerCycle = allocationPoints
-      const cyclesNeeded = requiredAmount / itemsPerCycle
-      const passive = getPassiveRate(itemId, modifiers, undefined, true)
-      const activeRate = itemsPerCycle / FABRICATION_CYCLE_SECONDS
-      const localTimeSeconds = applyPassiveRate(
-        requiredAmount,
-        activeRate,
-        cyclesNeeded * FABRICATION_CYCLE_SECONDS,
-        passive,
-      )
-      const itemsPerHour = itemsPerCycle * (3600 / FABRICATION_CYCLE_SECONDS)
-
-      const method: PlannerMethod = {
-        id: `${nodeId}#fabrication`,
-        nodeId,
-        kind: 'fabrication',
-        title: 'Fabrication',
-        subtitle: `${allocationPoints} point${allocationPoints === 1 ? '' : 's'} allocated`,
-        requiredAmount,
-        localTimeSeconds,
-        totalTimeSeconds: localTimeSeconds,
-        cost: null,
-        detailRows: [
-          { label: 'Points', value: String(allocationPoints) },
-          { label: 'Items / cycle', value: String(itemsPerCycle) },
-          { label: 'Cycle time', value: `${FABRICATION_CYCLE_SECONDS}s` },
-          { label: 'Rate', value: `${formatAmount(itemsPerHour)}/hr` },
-          ...passiveDetailRows(passive),
-          { label: 'Step time', value: formatDuration(localTimeSeconds) },
-        ],
-        formula: passiveFormula(
-          requiredAmount,
-          activeRate,
-          passive,
-          `${formatAmount(requiredAmount)} ÷ ${itemsPerCycle}/cycle × ${FABRICATION_CYCLE_SECONDS}s`,
-        ),
-        notes: ['Fabrication generates items passively every 3 minutes.'],
-        children: [],
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    }
-
-    if (item.buyValue != null) {
-      const cost = requiredAmount * item.buyValue
-      const currentGold = inventory['gold'] ?? 0
-      const remainingCost = Math.max(0, cost - currentGold)
-      const goldTime =
-        modifiers.goldPerMinute > 0 && remainingCost > 0
-          ? goldToSeconds(remainingCost, modifiers.goldPerMinute)
-          : remainingCost <= 0
-            ? 0
-            : null
-      const method: PlannerMethod = {
-        id: `${nodeId}#buy`,
-        nodeId,
-        kind: 'buy',
-        title: 'Merchant',
-        subtitle: `Buy ${formatAmount(requiredAmount)} directly`,
-        requiredAmount,
-        localTimeSeconds: goldTime ?? 0,
-        totalTimeSeconds: goldTime ?? 0,
-        cost,
-        detailRows: [
-          { label: 'Unit price', value: `${item.buyValue.toLocaleString(activeLocale())} gold` },
-          { label: 'Total cost', value: `${Math.round(cost).toLocaleString(activeLocale())} gold` },
-          ...(currentGold > 0
-            ? [
-                {
-                  label: 'On hand',
-                  value: `${Math.round(currentGold).toLocaleString(activeLocale())} gold`,
-                },
-                {
-                  label: 'Still need',
-                  value: `${Math.round(remainingCost).toLocaleString(activeLocale())} gold`,
-                },
-              ]
-            : []),
-          ...(goldTime != null && goldTime > 0
-            ? [
-                { label: 'Gold rate', value: `${modifiers.goldPerMinute.toFixed(0)} gold/min` },
-                {
-                  label: 'Gold time',
-                  value: `~${formatDuration(goldTime)} to earn`,
-                  estimated: true,
-                },
-              ]
-            : remainingCost <= 0
-              ? [{ label: 'Gold time', value: 'Affordable now' }]
-              : [{ label: 'Gold rate', value: 'Not configured' }]),
-        ],
-        notes:
-          remainingCost <= 0
-            ? ['You have enough gold on hand to buy this now.']
-            : goldTime != null && goldTime > 0
-              ? [
-                  `Time estimated from passive gold income (${modifiers.goldPerMinute.toFixed(0)} gold/min).`,
-                ]
-              : ['Configure gold income in Settings for time estimates.'],
-        children: [],
-      }
-
-      methods.push(method)
-      methodsById.set(method.id, method)
-    }
+    // Assemble methods in the original push order: craft, gather, garden, container,
+    // expedition, machine, fabrication, buy. Each builder also registers its methods in
+    // methodsById (preserving the original side effect). Order matters for the planner graph.
+    const methods: PlannerMethod[] = [
+      ...buildCraftMethods(itemId, requiredAmount, nodeId, depth, nextAncestry, ctx),
+      ...buildGatherMethods(itemId, requiredAmount, nodeId, ctx),
+      ...buildGardenMethods(itemId, requiredAmount, nodeId, ctx),
+      ...buildContainerMethods(itemId, requiredAmount, nodeId, depth, nextAncestry, ctx),
+      ...buildExpeditionMethods(itemId, requiredAmount, nodeId, ctx),
+      ...buildMachineMethods(itemId, requiredAmount, nodeId, depth, nextAncestry, ctx),
+      ...buildFabricationMethods(itemId, requiredAmount, nodeId, ctx),
+      ...buildBuyMethods(itemId, requiredAmount, nodeId, ctx),
+    ]
 
     methods.sort((a, b) => {
       const kindOrder = [
@@ -920,16 +1334,45 @@ export function buildPlannerGraph(
       return kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind)
     })
 
+    // B1 — active hands-on time. Only manual gathering counts as active; crafting
+    // (queue & walk away), machine/fabrication/garden/expedition (passive) and buy
+    // (instant) cost 0 active locally. Children SUM (the player acts serially).
+    // Bottom-up: child nodes are already finalized, so their methods carry activeTimeSeconds.
+    for (const method of methods) {
+      const activeLocal = method.kind === 'gather' ? (method.localTimeSeconds ?? 0) : 0
+      let childActive = 0
+      let known = true
+      for (const child of method.children) {
+        const childNode = nodesById.get(child.nodeId)
+        if (!childNode) {
+          known = false
+          break
+        }
+        if (childNode.fulfilled) continue
+        const cm = childNode.defaultMethodId
+          ? methodsById.get(childNode.defaultMethodId)
+          : undefined
+        if (!cm || cm.activeTimeSeconds == null) {
+          known = false
+          break
+        }
+        childActive += cm.activeTimeSeconds
+      }
+      method.activeTimeSeconds = known ? activeLocal + childActive : null
+    }
+
+    // Select the lowest active-time method. Buy is de-prioritized until the gold-budget
+    // model (B2) lands — otherwise instant (0-active) buys would dominate everything.
     const nonBuyMethods = methods.filter((method) => method.kind !== 'buy')
-    const knownTimeMethods = (nonBuyMethods.length > 0 ? nonBuyMethods : methods).filter(
-      (method) => method.totalTimeSeconds != null,
+    const knownActiveMethods = (nonBuyMethods.length > 0 ? nonBuyMethods : methods).filter(
+      (method) => method.activeTimeSeconds != null,
     )
     const defaultMethodId =
-      knownTimeMethods.length > 0
-        ? knownTimeMethods.toSorted(
+      knownActiveMethods.length > 0
+        ? knownActiveMethods.toSorted(
             (a, b) =>
-              (a.totalTimeSeconds ?? Number.POSITIVE_INFINITY) -
-              (b.totalTimeSeconds ?? Number.POSITIVE_INFINITY),
+              (a.activeTimeSeconds ?? Number.POSITIVE_INFINITY) -
+              (b.activeTimeSeconds ?? Number.POSITIVE_INFINITY),
           )[0].id
         : ((nonBuyMethods[0] ?? methods[0])?.id ?? null)
 
@@ -943,7 +1386,7 @@ export function buildPlannerGraph(
       depth,
       defaultMethodId,
       methods,
-      issues: methods.length === 0 ? [`No planner source found for ${item.name}.`] : [],
+      issues: methods.length === 0 ? [t('planner.detail.noSourceFound', { name: item.name })] : [],
       fulfilled: false,
     }
 
@@ -962,10 +1405,98 @@ export function buildPlannerGraph(
 
   const root = buildNode(rootItem.id, Math.max(targetQuantity, 1), 0, [], `node:${rootItem.id}`)
 
+  allocateGoldBudget(nodesById, methodsById, inventory)
+
   return {
     root,
     nodesById: Object.fromEntries(nodesById.entries()),
     methodsById: Object.fromEntries(methodsById.entries()),
+  }
+}
+
+/**
+ * B2 — gold spendable-budget allocation. Gold is a finite shared budget
+ * (on-hand + sellable surplus), NOT a free per-purchase cost. Over the produce-optimal
+ * baseline (B1), greedily swap a node's default to `buy` for the purchases that save the
+ * most active time per gold, until the budget is spent. Ancestor/descendant buys are
+ * skipped so the same subtree isn't paid for twice.
+ *
+ * v1 limits: by-product surplus isn't modelled (only un-referenced inventory is sold);
+ * greedy-by-deal may pick a child buy over a better parent buy.
+ */
+function allocateGoldBudget(
+  nodesById: Map<string, PlannerNode>,
+  methodsById: Map<string, PlannerMethod>,
+  inventory: Record<string, number>,
+): void {
+  const onHandGold = inventory['gold'] ?? 0
+  const referenced = new Set<string>()
+  for (const node of nodesById.values()) referenced.add(node.itemId)
+  let surplusGold = 0
+  for (const [id, count] of Object.entries(inventory)) {
+    if (id === 'gold' || count <= 0 || referenced.has(id)) continue
+    surplusGold += count * (itemById.get(id)?.sellValue ?? 0)
+  }
+  const budget = onHandGold + surplusGold
+  if (budget <= 0) return
+
+  // Static produce-subtree descendants, captured before any buy mutation.
+  const descCache = new Map<string, Set<string>>()
+  function descendants(nodeId: string, stack = new Set<string>()): Set<string> {
+    const cached = descCache.get(nodeId)
+    if (cached) return cached
+    if (stack.has(nodeId)) return new Set()
+    stack.add(nodeId)
+    const out = new Set<string>()
+    const node = nodesById.get(nodeId)
+    const method = node?.defaultMethodId ? methodsById.get(node.defaultMethodId) : undefined
+    for (const child of method?.children ?? []) {
+      out.add(child.nodeId)
+      for (const d of descendants(child.nodeId, stack)) out.add(d)
+    }
+    stack.delete(nodeId)
+    descCache.set(nodeId, out)
+    return out
+  }
+
+  type Candidate = { nodeId: string; buyId: string; cost: number; deal: number }
+  const candidates: Candidate[] = []
+  for (const node of nodesById.values()) {
+    const def = node.defaultMethodId ? methodsById.get(node.defaultMethodId) : undefined
+    if (!def || def.kind === 'buy') continue
+    const buyMethod = node.methods.find((m) => m.kind === 'buy')
+    if (!buyMethod || buyMethod.cost == null || buyMethod.cost <= 0) continue
+    const activeSaved = def.activeTimeSeconds ?? 0
+    if (activeSaved <= 0) continue // buying a passive/instant node saves no hands-on time
+    candidates.push({
+      nodeId: node.id,
+      buyId: buyMethod.id,
+      cost: buyMethod.cost,
+      deal: activeSaved / buyMethod.cost,
+    })
+  }
+  for (const c of candidates) descendants(c.nodeId) // freeze subtrees before mutating
+  candidates.sort((a, b) => b.deal - a.deal)
+
+  const bought = new Set<string>()
+  const coveredByBought = new Set<string>()
+  let spent = 0
+  for (const c of candidates) {
+    if (coveredByBought.has(c.nodeId)) continue // already inside a bought subtree
+    const cDesc = descendants(c.nodeId)
+    let ancestorOfBought = false
+    for (const b of bought) {
+      if (cDesc.has(b)) {
+        ancestorOfBought = true
+        break
+      }
+    }
+    if (ancestorOfBought) continue // buying this would re-pay for an already-bought descendant
+    if (spent + c.cost > budget) continue
+    nodesById.get(c.nodeId)!.defaultMethodId = c.buyId
+    spent += c.cost
+    bought.add(c.nodeId)
+    for (const d of cDesc) coveredByBought.add(d)
   }
 }
 
@@ -975,7 +1506,9 @@ export function buildPlannerGraph(
  * the shared pool so that cross-tree items are only counted once.
  */
 export function computeInventoryBudgets(
-  targets: { itemId: string; quantity: number }[],
+  // `key` (optional) names the result entry — pass it when the same itemId appears for
+  // several targets (e.g. one per creature) so their budgets don't overwrite each other.
+  targets: { itemId: string; quantity: number; key?: string }[],
   inventory: Record<string, number>,
   modifiers: PlannerModifiers,
 ): Record<string, Record<string, number>> {
@@ -988,7 +1521,7 @@ export function computeInventoryBudgets(
     for (const [id, amount] of remainingStock.entries()) {
       if (amount > 0) currentInventory[id] = amount
     }
-    budgets[target.itemId] = currentInventory
+    budgets[target.key ?? target.itemId] = currentInventory
 
     // Build the graph to determine what this tree consumes
     const graph = buildPlannerGraph(
@@ -1011,17 +1544,6 @@ export function computeInventoryBudgets(
 
   return budgets
 }
-
-const resourceSortPriority = (r: string) =>
-  r.startsWith('Machine:')
-    ? 1.5
-    : r.startsWith('Garden:')
-      ? 2
-      : r.startsWith('Fabrication:')
-        ? 2.5
-        : r.startsWith('Expedition:')
-          ? 3
-          : 1
 
 export function computeSchedule(
   root: PlannerNode,
@@ -1214,7 +1736,7 @@ export function computeSchedule(
     }
   }
 
-  const resourceOrder = [...new Set(tasks.map((t) => t.resource))].toSorted((a, b) => {
+  const resourceOrder = [...new Set(tasks.map((task) => task.resource))].toSorted((a, b) => {
     return resourceSortPriority(a) - resourceSortPriority(b) || a.localeCompare(b)
   })
 
@@ -1235,6 +1757,44 @@ interface CraftPlannerOptions {
   inventoryBudget?: Readonly<Ref<Record<string, number> | null>>
 }
 
+/**
+ * Roll up locked gates (keyed by itemId, already deduped) into a plan-level summary:
+ * how many distinct resources are blocked and the single most-blocking gate. Returns
+ * null when nothing is locked. Exported so multi-target views (summoning) can union
+ * several plans' gates before summarizing.
+ */
+export function summarizeLockedGates(
+  byItem: Record<string, PlannerLockedGate>,
+): PlannerSkillGateSummary | null {
+  const entries = Object.values(byItem)
+  if (entries.length === 0) return null
+  let highest = entries[0]
+  for (const e of entries) {
+    if (e.level > highest.level || (e.level === highest.level && e.current < highest.current)) {
+      highest = e
+    }
+  }
+  return { count: entries.length, highest: { skill: highest.skill, level: highest.level } }
+}
+
+/**
+ * Merges queued workstation amounts into a base inventory record.
+ * Returns `base` unchanged when `queued` is empty (no allocation).
+ */
+function mergeQueuedInto(
+  base: Record<string, number>,
+  queued: Record<string, Record<string, number>>,
+): Record<string, number> {
+  if (Object.keys(queued).length === 0) return base
+  const merged = { ...base }
+  for (const stationItems of Object.values(queued)) {
+    for (const [id, amount] of Object.entries(stationItems)) {
+      if (amount > 0) merged[id] = (merged[id] ?? 0) + amount
+    }
+  }
+  return merged
+}
+
 export function useCraftPlanner(
   targetItemId: Readonly<Ref<string>>,
   targetQuantity: Readonly<Ref<number>>,
@@ -1243,12 +1803,14 @@ export function useCraftPlanner(
   const pinnedMethodIds = ref<Record<string, string>>({})
 
   const {
+    skillLevels,
     inventoryAmounts: baseInventory,
     queuedAmounts: baseQueuedAmounts,
     queuedTimes: baseQueuedTimes,
     gardenFlowers: baseGarden,
     jobTiers: baseJobTiers,
     machineLevels: baseMachineLevels,
+    machineRecipes: baseMachineRecipes,
     fabricationAllocations: baseFabricationAllocations,
     toolSpeedModes: baseToolSpeedModes,
     toolLevels: baseToolLevels,
@@ -1278,19 +1840,9 @@ export function useCraftPlanner(
   const toolLevelOverrides = ref<Record<string, number> | null>(null)
 
   const rawInventoryAmounts = computed(() => inventoryOverrides.value ?? baseInventory.value)
-  const queuedAmounts = computed(() => baseQueuedAmounts.value)
-  const mergedInventoryAmounts = computed(() => {
-    const inv = rawInventoryAmounts.value
-    const queued = queuedAmounts.value
-    if (Object.keys(queued).length === 0) return inv
-    const merged = { ...inv }
-    for (const stationItems of Object.values(queued)) {
-      for (const [id, amount] of Object.entries(stationItems)) {
-        if (amount > 0) merged[id] = (merged[id] ?? 0) + amount
-      }
-    }
-    return merged
-  })
+  const mergedInventoryAmounts = computed(() =>
+    mergeQueuedInto(rawInventoryAmounts.value, baseQueuedAmounts.value),
+  )
   const inventoryAmounts = computed(
     () => options.inventoryBudget?.value ?? mergedInventoryAmounts.value,
   )
@@ -1343,8 +1895,9 @@ export function useCraftPlanner(
     jobTiers: jobTiers.value,
     goldPerMinute: goldPerMinute.value,
     machineLevels: machineLevels.value,
+    machineRecipes: baseMachineRecipes.value,
     fabricationAllocations: fabricationAllocations.value,
-    expeditionTier: 5,
+    expeditionTier: DEFAULT_EXPEDITION_TIER,
   }))
 
   const graph = computed(() =>
@@ -1692,26 +2245,62 @@ export function useCraftPlanner(
     return [...treeItems.values()].toSorted((a, b) => a.itemName.localeCompare(b.itemName))
   })
 
+  // #2 skill-gate surfacing: which planned resources the player can't yet acquire.
+  // Walk the *active* plan (the nodes the UI actually renders) and flag any node whose
+  // chosen method is gated above the player's current level in that skill.
+  const skillGates = computed(() => {
+    const root = graph.value.root
+    const levels = skillLevels.value
+    const byNode: Record<string, PlannerLockedGate> = {}
+    const byItem: Record<string, PlannerLockedGate> = {}
+
+    if (root) {
+      const visited = new Set<string>()
+      const walk = (node: PlannerNode) => {
+        if (visited.has(node.id)) return
+        visited.add(node.id)
+        const method = getActiveMethod(node.id)
+        if (!method) return
+        const gate = method.skillGate
+        if (gate && !node.fulfilled) {
+          const current = levels[gate.skill] ?? 1
+          if (current < gate.level) {
+            const locked: PlannerLockedGate = { skill: gate.skill, level: gate.level, current }
+            byNode[node.id] = locked
+            byItem[node.itemId] = locked
+          }
+        }
+        for (const child of method.children) {
+          const childNode = graph.value.nodesById[child.nodeId]
+          if (childNode) walk(childNode)
+        }
+      }
+      walk(root)
+    }
+
+    const gateSummary = summarizeLockedGates(byItem)
+    return { byNode, byItem, summary: gateSummary }
+  })
+
+  const lockedGateByNode = computed(() => skillGates.value.byNode)
+  const lockedGateByItem = computed(() => skillGates.value.byItem)
+  const skillGateSummary = computed(() => skillGates.value.summary)
+
   return {
     rootNode: computed(() => graph.value.root),
     nodesById: computed(() => graph.value.nodesById),
     methodsById: computed(() => graph.value.methodsById),
     activeMethodIdByNode,
+    lockedGateByNode,
+    lockedGateByItem,
+    skillGateSummary,
     schedule,
     summary,
     shoppingListText,
     pinnedMethodIds,
     inventoryAmounts,
-    queuedAmounts,
-    flatQueuedAmounts: computed(() => {
-      const flat: Record<string, number> = {}
-      for (const stationItems of Object.values(queuedAmounts.value)) {
-        for (const [id, amount] of Object.entries(stationItems)) {
-          if (amount > 0) flat[id] = (flat[id] ?? 0) + amount
-        }
-      }
-      return flat
-    }),
+    queuedAmounts: baseQueuedAmounts,
+    flatQueuedAmounts: computed(() => mergeQueuedInto({}, baseQueuedAmounts.value)),
     gardenFlowers,
     awakenGatherUpgrades,
     awakenSpeedTiers,
@@ -1752,6 +2341,7 @@ export function usePlannerModifiers() {
     gardenFlowers: baseGarden,
     jobTiers: baseJobTiers,
     machineLevels: baseMachineLevels,
+    machineRecipes: baseMachineRecipes,
     fabricationAllocations: baseFabricationAllocations,
     toolSpeedModes: baseToolSpeedModes,
     toolLevels: baseToolLevels,
@@ -1768,18 +2358,9 @@ export function usePlannerModifiers() {
 
   const fabricationSimulated = useLocalStorage<Record<string, number>>('fabrication-simulated', {})
 
-  const mergedInventory = computed(() => {
-    const inv = baseInventory.value
-    const queued = baseQueuedAmounts.value
-    if (Object.keys(queued).length === 0) return inv
-    const merged = { ...inv }
-    for (const stationItems of Object.values(queued)) {
-      for (const [id, amount] of Object.entries(stationItems)) {
-        if (amount > 0) merged[id] = (merged[id] ?? 0) + amount
-      }
-    }
-    return merged
-  })
+  const mergedInventory = computed(() =>
+    mergeQueuedInto(baseInventory.value, baseQueuedAmounts.value),
+  )
 
   const toolSpeedBonuses = computed(() => {
     const bonuses: Record<string, number> = {}
@@ -1815,8 +2396,9 @@ export function usePlannerModifiers() {
     jobTiers: baseJobTiers.value,
     goldPerMinute: goldPerMinute.value,
     machineLevels: baseMachineLevels.value,
+    machineRecipes: baseMachineRecipes.value,
     fabricationAllocations: { ...baseFabricationAllocations.value, ...fabricationSimulated.value },
-    expeditionTier: 5,
+    expeditionTier: DEFAULT_EXPEDITION_TIER,
   }))
 
   return { mergedInventory, modifiers }
