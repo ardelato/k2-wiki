@@ -2,8 +2,8 @@ import { useLocalStorage } from '@vueuse/core'
 import { computed } from 'vue'
 
 import { useGameConfig } from '@/composables/useGameConfig'
-import { getMaxUnlockedTier, getTotalCompletedExpeditions } from '@/utils/expeditionUnlocks'
-import { expeditions as allExpeditions } from '@/utils/precomputedTables'
+import { getMaxUnlockedTier, getTotalCompletedExpeditions } from '@/utils/planner/expeditionUnlocks'
+import { expeditions as allExpeditions } from '@/utils/save/precomputedTables'
 
 function tiersUpTo(max: number): number[] {
   const result: number[] = []
