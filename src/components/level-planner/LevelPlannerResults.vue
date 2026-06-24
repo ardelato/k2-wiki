@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 
 import type { Creature } from '@/types'
-import type { LevelingPlan } from '@/utils/levelPlanner'
+import type { LevelingPlan } from '@/utils/planner/levelPlanner'
 
 import LevelPlannerSummary from './LevelPlannerSummary.vue'
 import LevelPlannerTimelineStep from './LevelPlannerTimelineStep.vue'
@@ -37,11 +37,12 @@ const toLevel = computed(() => props.plan.steps[props.plan.steps.length - 1]?.to
 
 
 const timePercents = computed(() =>
-  props.plan.steps.map((step) =>
-    props.plan.totalTimeSeconds > 0
-      ? (step.timeSeconds / props.plan.totalTimeSeconds) * 100
-      : 100 / props.plan.steps.length,
-  ),
+  props.plan.steps.map((step) => {
+    const timeSeconds = step.kind === 'run' ? step.timeSeconds : 0
+    return props.plan.totalTimeSeconds > 0
+      ? (timeSeconds / props.plan.totalTimeSeconds) * 100
+      : 100 / props.plan.steps.length
+  }),
 )
 </script>
 

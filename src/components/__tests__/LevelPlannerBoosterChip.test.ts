@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import LevelPlannerBoosterChip from '@/components/level-planner/LevelPlannerBoosterChip.vue'
 import type { Creature } from '@/types'
 
-vi.mock('@/utils/creatureImages', () => ({
+vi.mock('@/utils/images/creatureImages', () => ({
   getCreatureImage: (c: Creature | undefined) => `mock://${c?.id ?? 'unknown'}.png`,
 }))
 
@@ -31,7 +31,7 @@ describe('LevelPlannerBoosterChip', () => {
     expect(wrapper.find('img').attributes('src')).toBe('mock://c1.png')
   })
 
-  test('emits inspect with the creature when right-clicked (delegates drawer to parent)', async () => {
+  test('emits inspect with the creature when inspected (delegates drawer to parent)', async () => {
     const creature = makeCreature('c1', 'Helper')
     const wrapper = mount(LevelPlannerBoosterChip, { props: { creature } })
 
@@ -45,7 +45,7 @@ describe('LevelPlannerBoosterChip', () => {
     expect(events![0][0]).toEqual(creature)
   })
 
-  test('does not emit inspect on plain (left) click — chip is right-click only', async () => {
+  test('does not emit inspect on plain (left) click — chip is inspect-only', async () => {
     const creature = makeCreature('c1', 'Helper')
     const wrapper = mount(LevelPlannerBoosterChip, { props: { creature } })
     await wrapper.find('div.contents').trigger('click')

@@ -4,10 +4,10 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import expeditionsData from '@/data/expeditions.json'
-import { activeLocale } from '@/i18n'
+import { isRunPartyStep } from '@/types'
 import type { PartyLevelingPlan } from '@/types'
 import type { Creature } from '@/types'
-import { formatDuration } from '@/utils/format'
+import { formatDuration, formatNumber } from '@/utils/format/format'
 
 const { t } = useI18n()
 
@@ -19,10 +19,7 @@ const props = defineProps<{
 
 
 const usedExpeditionCount = computed(
-  () =>
-    new Set(
-      props.plan.steps.filter((step) => !step.isAwakeningStep).map((step) => step.expedition.id),
-    ).size,
+  () => new Set(props.plan.steps.filter(isRunPartyStep).map((step) => step.expedition.id)).size,
 )
 
 
@@ -30,7 +27,7 @@ const totalExpeditionCount = (expeditionsData as { id: string }[]).length
 
 
 const swapCount = computed(
-  () => props.plan.steps.filter((s) => !s.isAwakeningStep && s.wasReconfigured).length,
+  () => props.plan.steps.filter((s) => s.kind === 'run' && s.wasReconfigured).length,
 )
 </script>
 
@@ -44,7 +41,7 @@ const swapCount = computed(
       </span>
       <span
         class="inline-flex items-center gap-1.5"
-        :class="plan.isComplete ? 'text-sky-400' : 'text-amber-400'"
+        :class="plan.isComplete ? 'text-info-strong' : 'text-warning-strong'"
       >
         <Users class="size-4" />
         {{
@@ -54,11 +51,11 @@ const swapCount = computed(
           })
         }}
       </span>
-      <span class="inline-flex items-center gap-1.5 text-amber-400">
+      <span class="inline-flex items-center gap-1.5 text-warning-strong">
         <Repeat class="size-4" />
         {{
           t('levelPlannerComponents.partySummary.runs', {
-            total: plan.totalRuns.toLocaleString(activeLocale()),
+            total: formatNumber(plan.totalRuns),
           })
         }}
       </span>
@@ -80,7 +77,7 @@ const swapCount = computed(
     </div>
     <div
       v-if="!plan.isComplete"
-      class="mt-3 rounded-lg bg-amber-400/10 px-4 py-3 text-center text-sm text-amber-400"
+      class="mt-3 rounded-lg bg-warning/10 px-4 py-3 text-center text-sm text-warning-strong"
     >
       <p class="font-semibold">
         {{
@@ -89,7 +86,7 @@ const swapCount = computed(
           })
         }}
       </p>
-      <p class="mt-1 text-xs text-amber-400/70">
+      <p class="mt-1 text-xs text-warning-strong/70">
         {{ t('levelPlannerComponents.partySummary.incompleteHint') }}
       </p>
     </div>

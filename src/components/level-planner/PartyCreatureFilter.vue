@@ -158,7 +158,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
       @click="expanded = !expanded"
     >
       <label
-        class="pointer-events-none text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
+        class="pointer-events-none text-2xs font-semibold uppercase tracking-wider text-muted-foreground/70"
         >{{ t('levelPlannerComponents.partyCreatureFilter.label') }}</label
       >
       <template v-if="!selectMode">
@@ -172,7 +172,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
         </span>
         <span
           v-if="hasOverrides"
-          class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary"
+          class="rounded-full bg-primary/15 px-2 py-0.5 text-3xs font-bold text-primary"
         >
           {{ t('levelPlannerComponents.partyCreatureFilter.filtered') }}
         </span>
@@ -180,7 +180,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
       <div class="ml-auto flex items-center gap-2">
         <button
           v-if="!selectMode"
-          class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold transition"
+          class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-semibold transition"
           :class="
             hasOverrides
               ? 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
@@ -217,7 +217,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
           class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
         >
           <button
-            class="focus-ring h-8 px-2.5 text-[11px] font-semibold transition"
+            class="focus-ring h-8 px-2.5 text-2xs font-semibold transition"
             :class="
               sortBy === 'tier'
                 ? 'bg-primary/15 text-primary'
@@ -228,7 +228,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             {{ t('levelPlannerComponents.partyCreatureFilter.sortTier') }}
           </button>
           <button
-            class="focus-ring h-8 px-2.5 text-[11px] font-semibold transition"
+            class="focus-ring h-8 px-2.5 text-2xs font-semibold transition"
             :class="
               sortBy === 'name'
                 ? 'bg-primary/15 text-primary'
@@ -239,7 +239,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             {{ t('levelPlannerComponents.partyCreatureFilter.sortName') }}
           </button>
           <button
-            class="focus-ring flex h-8 items-center gap-1 px-2.5 text-[11px] font-semibold transition"
+            class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
             :class="
               sortBy === 'level-desc' || sortBy === 'level-asc'
                 ? 'bg-primary/15 text-primary'
@@ -264,14 +264,14 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
             class="mb-3 last:mb-0"
           >
             <div class="mb-1.5 flex items-center gap-2">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+              <p class="text-3xs font-bold uppercase tracking-wider text-muted-foreground/60">
                 {{
                   t('levelPlannerComponents.partyCreatureFilter.tierGroup', { n: group.tier + 1 })
                 }}
               </p>
               <button
                 v-if="!selectMode"
-                class="focus-ring inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold transition"
+                class="focus-ring inline-flex items-center rounded-md border px-2 py-0.5 text-3xs font-semibold transition"
                 :class="
                   isAllIncluded(group.creatures)
                     ? 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -324,7 +324,7 @@ function groupByTier(list: Creature[]): { tier: number; creatures: Creature[] }[
           <div class="my-3 flex items-center gap-2">
             <div class="h-px flex-1 bg-border/40" />
             <span
-              class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60"
+              class="text-3xs font-semibold uppercase tracking-wider text-muted-foreground/60"
               >{{ t('levelPlannerComponents.partyCreatureFilter.excludedByConfig') }}</span
             >
             <div class="h-px flex-1 bg-border/40" />

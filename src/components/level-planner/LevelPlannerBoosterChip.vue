@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import Badge from '@/components/shared/Badge.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import type { Creature } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 defineProps<{
   creature: Creature
@@ -15,9 +16,7 @@ defineEmits<{
 
 <template>
   <RightClickHint @contextmenu="$emit('inspect', creature)">
-    <div
-      class="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/35 py-1 pl-1 pr-3"
-    >
+    <Badge variant="neutral" :pill="false" size="sm">
       <div class="size-6 overflow-hidden rounded-full bg-card">
         <img
           :src="getCreatureImage(creature)"
@@ -26,7 +25,7 @@ defineEmits<{
           loading="lazy"
         />
       </div>
-      <span class="text-xs font-semibold">{{ creature.name }}</span>
-    </div>
+      <span>{{ creature.name }}</span>
+    </Badge>
   </RightClickHint>
 </template>

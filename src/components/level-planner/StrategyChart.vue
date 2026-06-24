@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import type { ChartPoint } from '@/utils/strategyChartData'
+import type { ChartPoint } from '@/utils/planner/strategyChartData'
 
 const { t } = useI18n()
 
@@ -202,7 +202,7 @@ function onPointLeave() {
         :x="PAD.left - 6"
         :y="y(tick) + 3"
         text-anchor="end"
-        class="fill-muted-foreground text-[10px]"
+        class="fill-muted-foreground text-3xs"
       >
         {{ fmt(tick) }}
       </text>
@@ -214,7 +214,7 @@ function onPointLeave() {
         :x="x(tick)"
         :y="PAD.top + plotH + 16"
         text-anchor="middle"
-        class="fill-muted-foreground text-[10px]"
+        class="fill-muted-foreground text-3xs"
       >
         {{ formatTime(tick) }}
       </text>
@@ -225,7 +225,7 @@ function onPointLeave() {
         :y="SVG_H / 2"
         text-anchor="middle"
         :transform="`rotate(-90, 12, ${SVG_H / 2})`"
-        class="fill-muted-foreground text-[11px] font-semibold"
+        class="fill-muted-foreground text-2xs font-semibold"
       >
         {{ yLabel }}
       </text>
@@ -291,13 +291,13 @@ function onPointLeave() {
           stroke-width="1"
         />
         <circle cx="-28" cy="-38" r="3" :fill="hover.color" />
-        <text x="-22" y="-35" text-anchor="start" class="fill-foreground text-[9px] font-semibold">
+        <text x="-22" y="-35" text-anchor="start" class="fill-foreground text-3xs font-semibold">
           {{ hover.series }}
         </text>
-        <text x="0" y="-23" text-anchor="middle" class="fill-foreground text-[10px] font-semibold">
+        <text x="0" y="-23" text-anchor="middle" class="fill-foreground text-3xs font-semibold">
           {{ hover.value }}
         </text>
-        <text x="0" y="-13" text-anchor="middle" class="fill-muted-foreground text-[9px]">
+        <text x="0" y="-13" text-anchor="middle" class="fill-muted-foreground text-3xs">
           {{ hover.label }}
         </text>
       </g>

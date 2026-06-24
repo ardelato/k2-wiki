@@ -7,7 +7,14 @@ import { useRouter } from 'vue-router'
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
 import { useGameConfig } from '@/composables/useGameConfig'
 import biomesData from '@/data/biomes.json'
-import type { PartyLevelingPlan, Creature, PartyPlanStep, PlannerStrategy } from '@/types'
+import { isRunPartyStep } from '@/types'
+import type {
+  PartyLevelingPlan,
+  Creature,
+  PartyPlanStep,
+  RunPartyStep,
+  PlannerStrategy,
+} from '@/types'
 import type { Biome } from '@/types'
 import {
   calculateCreatureRating,
@@ -29,6 +36,16 @@ const props = defineProps<{
   strategy: PlannerStrategy
   otherComputing: boolean
   targetLevel: number
+  /** Externally-controlled per-creature focus (e.g. the Awaken queue rail). */
+  focusCreatureId?: string
+  /** Initial view tab. */
+  initialView?: 'timeline' | 'steps' | 'chart'
+  /** Hide the Chart tab (e.g. the Awaken Rush page has no strategy comparison). */
+  hideChart?: boolean
+  /** Hide the built-in creature-filter dropdown (e.g. the Awaken queue rail is the selector). */
+  hideCreatureFilter?: boolean
+  /** Hide the built-in metrics summary (e.g. the Awaken Rush page shows its own hero instead). */
+  hideSummary?: boolean
 }>()
 
 
@@ -44,17 +61,28 @@ const {
   setExpeditionTiers,
   setExpeditionLoopCounts,
 } = useGameConfig()
-const viewMode = ref<'timeline' | 'steps' | 'chart'>('timeline')
+const viewMode = ref<'timeline' | 'steps' | 'chart'>(props.initialView ?? 'timeline')
 const expandedIndex = ref<number | null>(null)
 const copied = ref(false)
-const filterCreatureId = ref('')
+// Copy JSON is a dev/debug affordance — only surface it in development builds.
+const isDev = import.meta.env.DEV
+const filterCreatureId = ref(props.focusCreatureId ?? '')
 
 
-// Reset filter when plan recomputes
+// Reset filter when plan recomputes (back to the controlled focus if any).
 watch(
   () => props.plan,
   () => {
-    filterCreatureId.value = ''
+    filterCreatureId.value = props.focusCreatureId ?? ''
+  },
+)
+
+
+// Follow an externally-controlled focus (e.g. the Awaken queue rail selection).
+watch(
+  () => props.focusCreatureId,
+  (id) => {
+    filterCreatureId.value = id ?? ''
   },
 )
 
@@ -102,7 +130,7 @@ function receivingMembers(step: PartyPlanStep) {
 
 
 function computeXpPerMinute(
-  step: PartyPlanStep,
+  step: RunPartyStep,
   biome: Biome | undefined,
   levelFn: (p: (typeof step.party)[0]) => number,
   loopCount: number,
@@ -125,7 +153,7 @@ const filteredSortedIndices = computed(() => {
   return sortedIndices.value.filter((i) => {
     const step = props.plan.steps[i]
     // Awakening steps: include only if this creature is the one awakening
-    if (step.isAwakeningStep) return step.party[0]?.creatureId === filterCreatureId.value
+    if (step.kind === 'awaken') return step.party[0]?.creatureId === filterCreatureId.value
     return step.party.some((m) => m.creatureId === filterCreatureId.value)
   })
 })
@@ -148,8 +176,10 @@ const sortedIndices = computed(() => {
     const timeA = props.plan.steps[a].startTime ?? 0
     const timeB = props.plan.steps[b].startTime ?? 0
     if (timeA !== timeB) return timeA - timeB
-    const expA = props.plan.steps[a].expedition
-    const expB = props.plan.steps[b].expedition
+    const stepA = props.plan.steps[a]
+    const stepB = props.plan.steps[b]
+    const expA = isRunPartyStep(stepA) ? stepA.expedition : undefined
+    const expB = isRunPartyStep(stepB) ? stepB.expedition : undefined
     const completionDiff =
       (expA?.requiredExpeditionCompletions ?? 0) - (expB?.requiredExpeditionCompletions ?? 0)
     if (completionDiff !== 0) return completionDiff
@@ -166,33 +196,24 @@ const stepsAsPlanSteps = computed(() => {
     const step = props.plan.steps[i]
 
     // Awakening steps are pass-through markers
-    if (step.isAwakeningStep) {
-      const creatureId = step.party[0]?.creatureId ?? ''
+    if (step.kind === 'awaken') {
+      const member = step.party[0]
+      const creatureId = member?.creatureId ?? ''
       const creature = props.creatures.get(creatureId)
+      const fromLevel = member?.fromLevel ?? 70
+      const toLevel = member?.toLevel ?? 1
       return {
+        kind: 'awaken' as const,
         originalIndex: i,
-        isAwakeningStep: true,
         creatureName: creature?.name ?? creatureId,
-        expedition: step.expedition,
-        tier: 0,
-        fromLevel: 70,
-        toLevel: 1,
-        runs: 0,
-        timeSeconds: 0,
-        xpPerRun: 0,
-        durationPerRun: 0,
-        xpPerMinute: 0,
-        startXpPerMinute: 0,
-        endXpPerMinute: 0,
-        biomeName: '',
-        traitMatch: false,
-        biomeStatus: 'neutral' as const,
+        fromLevel,
+        toLevel,
         partyMembers: [
           {
             creatureId,
             creature,
-            fromLevel: 70,
-            toLevel: 1,
+            fromLevel,
+            toLevel,
             xpGained: 0,
           },
         ],
@@ -201,8 +222,8 @@ const stepsAsPlanSteps = computed(() => {
     }
 
     return {
+      kind: 'run' as const,
       originalIndex: i,
-      isAwakeningStep: false,
       creatureName: '',
       expedition: step.expedition,
       tier: step.tier,
@@ -274,7 +295,7 @@ const stepsAsPlanSteps = computed(() => {
 })
 
 
-function writeExpeditionSetup(steps: PartyPlanStep[], merge: boolean) {
+function writeExpeditionSetup(steps: RunPartyStep[], merge: boolean) {
   const parties: Record<string, string[]> = merge ? { ...expeditionParties.value } : {}
   const levels: Record<string, number> = merge ? { ...expeditionCreatureLevels.value } : {}
   const tiers: Record<string, number> = merge ? { ...expeditionTiers.value } : {}
@@ -315,6 +336,7 @@ function writeExpeditionSetup(steps: PartyPlanStep[], merge: boolean) {
 
 
 function viewStepInExpeditions(step: PartyPlanStep) {
+  if (!isRunPartyStep(step)) return
   writeExpeditionSetup([step], true)
   const resolved = router.resolve({
     path: '/expeditions',
@@ -326,7 +348,9 @@ function viewStepInExpeditions(step: PartyPlanStep) {
 
 function viewInitialSetupInExpeditions() {
   const firstStartTime = props.plan.steps[0]?.startTime ?? 0
-  const initialSteps = props.plan.steps.filter((s) => (s.startTime ?? 0) === firstStartTime)
+  const initialSteps = props.plan.steps
+    .filter(isRunPartyStep)
+    .filter((s) => (s.startTime ?? 0) === firstStartTime)
   writeExpeditionSetup(initialSteps, false)
   const resolved = router.resolve({ path: '/expeditions' })
   window.open(resolved.href, '_blank')
@@ -362,7 +386,7 @@ const stepsByWave = computed(() => {
     if (info.isFirst) {
       waves.push({
         waveIndex: info.wave,
-        isAwakening: stepsAsPlanSteps.value[i].isAwakeningStep,
+        isAwakening: stepsAsPlanSteps.value[i].kind === 'awaken',
         steps: [],
       })
     }
@@ -374,10 +398,10 @@ const stepsByWave = computed(() => {
 
 <template>
   <div class="space-y-5">
-    <PartyPlannerSummary :plan="plan" :creatures="creatures" />
+    <PartyPlannerSummary v-if="!hideSummary" :plan="plan" :creatures="creatures" />
 
     <!-- Creature filter -->
-    <div class="flex items-center gap-3">
+    <div v-if="!hideCreatureFilter" class="flex items-center gap-3">
       <div class="min-w-0 flex-1">
         <LevelPlannerCreaturePicker
           v-model="filterCreatureId"
@@ -398,7 +422,10 @@ const stepsByWave = computed(() => {
 
     <!-- View mode toggle + actions -->
     <div class="flex items-center justify-between">
-      <div class="inline-flex overflow-hidden rounded-lg border border-border/70 bg-background/70">
+      <div
+        data-tour="awaken-views"
+        class="inline-flex overflow-hidden rounded-lg border border-border/70 bg-background/70"
+      >
         <button
           class="focus-ring flex h-8 items-center gap-1.5 px-3 text-sm font-semibold transition"
           :class="
@@ -424,27 +451,31 @@ const stepsByWave = computed(() => {
           <List class="size-3.5" />
           {{ t('levelPlannerComponents.partyResults.steps') }}
         </button>
-        <div class="w-px self-stretch bg-border/40" />
-        <button
-          class="focus-ring flex h-8 items-center gap-1.5 px-3 text-sm font-semibold transition"
-          :class="
-            viewMode === 'chart'
-              ? 'bg-primary/15 text-primary'
-              : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
-          "
-          @click="viewMode = 'chart'"
-        >
-          <BarChart3 class="size-3.5" />
-          {{ t('levelPlannerComponents.partyResults.chart') }}
-        </button>
+        <template v-if="!hideChart">
+          <div class="w-px self-stretch bg-border/40" />
+          <button
+            class="focus-ring flex h-8 items-center gap-1.5 px-3 text-sm font-semibold transition"
+            :class="
+              viewMode === 'chart'
+                ? 'bg-primary/15 text-primary'
+                : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+            "
+            @click="viewMode = 'chart'"
+          >
+            <BarChart3 class="size-3.5" />
+            {{ t('levelPlannerComponents.partyResults.chart') }}
+          </button>
+        </template>
       </div>
 
       <div class="flex items-center gap-2">
         <button
-          class="focus-ring flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-primary"
+          v-if="isDev"
+          class="focus-ring flex h-8 items-center gap-1.5 rounded-lg border border-warning/40 bg-warning/5 px-3 text-sm font-semibold text-warning-strong/90 transition hover:border-warning/60 hover:text-warning-strong"
+          title="Dev only — copy the raw plan JSON"
           @click="copyPlanJson"
         >
-          <Check v-if="copied" class="size-3.5 text-emerald-400" />
+          <Check v-if="copied" class="size-3.5 text-success-strong" />
           <Copy v-else class="size-3.5" />
           {{
             copied
@@ -453,6 +484,7 @@ const stepsByWave = computed(() => {
           }}
         </button>
         <button
+          data-tour="awaken-setup"
           class="focus-ring flex h-8 items-center gap-1.5 rounded-lg border border-border/70 bg-background/70 px-3 text-sm font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-primary"
           @click="viewInitialSetupInExpeditions"
         >
@@ -463,12 +495,13 @@ const stepsByWave = computed(() => {
     </div>
 
     <!-- Timeline view -->
-    <PartyPlannerGantt
-      v-if="viewMode === 'timeline'"
-      :plan="plan"
-      :creatures="creatures"
-      :filter-creature-id="filterCreatureId"
-    />
+    <div v-if="viewMode === 'timeline'" data-tour="awaken-timeline">
+      <PartyPlannerGantt
+        :plan="plan"
+        :creatures="creatures"
+        :filter-creature-id="filterCreatureId"
+      />
+    </div>
 
     <!-- Steps view (grouped by wave with shared sticky gutter) -->
     <div v-if="viewMode === 'steps'">
@@ -531,7 +564,7 @@ const stepsByWave = computed(() => {
 
     <!-- Chart view -->
     <StrategyComparisonCharts
-      v-if="viewMode === 'chart'"
+      v-if="!hideChart && viewMode === 'chart'"
       :plan="plan"
       :other-plan="otherPlan"
       :strategy="strategy"
