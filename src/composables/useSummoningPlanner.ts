@@ -2,9 +2,10 @@ import { ref, computed, watch } from 'vue'
 
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
-import { itemName as resolveItemName } from '@/utils/format'
+import { itemName as resolveItemName } from '@/utils/format/format'
 
-const STORAGE_KEY = 'summoning-planner-selection'
+export const SUMMONING_SELECTION_KEY = 'summoning-planner-selection'
+const STORAGE_KEY = SUMMONING_SELECTION_KEY
 
 function loadSelection(): Set<string> {
   try {
@@ -43,7 +44,7 @@ export function useSummoningPlanner() {
 
   watch(selectedIds, (ids) => saveSelection(ids), { deep: true })
 
-  // Remove owned creatures from selection (they've been summoned)
+  // Remove owned creatures from selection (they've been summoned).
   watch(ownedCreatureIds, (owned) => {
     const next = new Set([...selectedIds.value].filter((id) => !owned.has(id)))
     if (next.size !== selectedIds.value.size) selectedIds.value = next
@@ -85,6 +86,10 @@ export function useSummoningPlanner() {
     selectedIds.value = next
   }
 
+  function selectOnly(id: string) {
+    selectedIds.value = new Set([id])
+  }
+
   function toggleTier(ids: string[], select: boolean) {
     const next = new Set(selectedIds.value)
     for (const id of ids) {
@@ -104,6 +109,7 @@ export function useSummoningPlanner() {
     selectedCreatures,
     aggregatedCosts,
     toggleCreature,
+    selectOnly,
     toggleTier,
     clearSelection,
   }
