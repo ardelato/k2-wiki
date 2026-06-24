@@ -1,7 +1,12 @@
 import type { PlannerSchedule, ScheduledTask } from '@/types'
+import { isResourceType, parseResourceType } from '@/utils/save/resourceType'
 
-const resourceSortPriority = (r: string) =>
-  r.startsWith('Garden:') ? 2 : r.startsWith('Expedition:') ? 3 : 1
+// Note: distinct from useCraftPlanner's resourceSortPriority — here only garden/expedition
+// stagger (machine/fabrication/buy stay at 1). Preserved exactly via the shared classifier.
+const resourceSortPriority = (r: string) => {
+  const type = parseResourceType(r)
+  return type === 'garden' ? 2 : type === 'expedition' ? 3 : 1
+}
 
 interface MergeTask extends ScheduledTask {
   treeIndex: number
@@ -91,10 +96,10 @@ export function mergeSchedules(
     // method times. They don't block active tasks — active tasks can preempt them.
     // But passive machine tasks serialize with each other (one recipe at a time).
     const isFullyPassive =
-      (!!task.passive && !task.resource.startsWith('Machine:')) ||
-      task.resource.startsWith('Garden:') ||
-      task.resource.startsWith('Expedition:')
-    const isMachinePassive = !!task.passive && task.resource.startsWith('Machine:')
+      (!!task.passive && !isResourceType(task.resource, 'machine')) ||
+      isResourceType(task.resource, 'garden') ||
+      isResourceType(task.resource, 'expedition')
+    const isMachinePassive = !!task.passive && isResourceType(task.resource, 'machine')
 
     // Start time = max of all dependency completion times + resource availability
     let depsReady = 0
@@ -188,7 +193,7 @@ export function mergeSchedules(
   const finalTasks: ScheduledTask[] = []
   const activeByResource = new Map<string, { start: number; end: number }[]>()
   for (const t of filteredTasks) {
-    if (!t.passive && t.resource.startsWith('Machine:')) {
+    if (!t.passive && isResourceType(t.resource, 'machine')) {
       const ranges = activeByResource.get(t.resource) ?? []
       ranges.push({ start: t.startTime, end: t.endTime })
       activeByResource.set(t.resource, ranges)
@@ -196,7 +201,7 @@ export function mergeSchedules(
   }
 
   for (const t of filteredTasks) {
-    if (!t.passive || !t.resource.startsWith('Machine:')) {
+    if (!t.passive || !isResourceType(t.resource, 'machine')) {
       finalTasks.push(t)
       continue
     }

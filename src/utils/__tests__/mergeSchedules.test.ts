@@ -1,5 +1,5 @@
 import type { PlannerSchedule, ScheduledTask } from '@/types'
-import { mergeSchedules } from '@/utils/mergeSchedules'
+import { mergeSchedules } from '@/utils/planner/mergeSchedules'
 
 function makeTask(
   overrides: Partial<ScheduledTask> & { nodeId: string; resource: string },

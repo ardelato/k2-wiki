@@ -1,5 +1,4 @@
-import biomesData from '@/data/biomes.json'
-import expeditionsData from '@/data/expeditions.json'
+import { biomeMap, expeditions } from '@/data/entityMaps'
 import type { Creature, Expedition, Biome } from '@/types'
 import {
   calculateCreatureRating,
@@ -35,6 +34,12 @@ interface LevelPlannerInput {
   stepOverrides?: Map<number, { expeditionId: string; tier: number; toLevel: number }>
   /** Owned max-level creatures available to boost the target via party expeditions */
   boosterCandidates?: BoosterCandidate[]
+  /**
+   * How much faster a different expedition must be before the plan switches to it
+   * (fraction, e.g. 0.15 = 15%). Higher = stickier = fewer swaps. Defaults to the
+   * standard threshold; the hands-free Awaken mode passes a large value.
+   */
+  swapThreshold?: number
 }
 
 export interface AlternativeRoute {
@@ -59,11 +64,17 @@ export interface AlternativeRoute {
   partySize?: number
 }
 
-export interface PlanStep {
-  expedition: Expedition
-  tier: number
+/** Fields common to every plan step, regardless of kind. */
+interface PlanStepBase {
   fromLevel: number
   toLevel: number
+}
+
+/** A normal expedition run step that levels the creature. */
+export interface RunStep extends PlanStepBase {
+  kind: 'run'
+  expedition: Expedition
+  tier: number
   runs: number
   timeSeconds: number
   xpPerRun: number
@@ -75,7 +86,6 @@ export interface PlanStep {
   traitMatch: boolean
   biomeStatus: 'advantage' | 'disadvantage' | 'neutral'
   partyTip?: string
-  isAwakeningStep?: boolean
   alternatives?: AlternativeRoute[]
   /** Recommended booster creatures to bring along (max-level owned) */
   boosters?: BoosterInfo[]
@@ -83,6 +93,18 @@ export interface PlanStep {
   partySize?: number
   /** Seconds saved over the level range vs running solo */
   boosterTimeSavings?: number
+}
+
+/** A marker step representing a creature awakening (no expedition is run). */
+export interface AwakenStep extends PlanStepBase {
+  kind: 'awaken'
+}
+
+export type PlanStep = RunStep | AwakenStep
+
+/** Narrowing guard: true when the plan step is a normal expedition run. */
+export function isRunStep(step: PlanStep): step is RunStep {
+  return step.kind === 'run'
 }
 
 export interface LevelingPlan {
@@ -145,23 +167,11 @@ type EvaluateComboFn = (
   loopCount: number,
 ) => EvalResult | null
 
-function makeAwakeningStep(fromLevel: number): PlanStep {
+function makeAwakeningStep(fromLevel: number): AwakenStep {
   return {
-    expedition: {} as Expedition,
-    tier: 0,
+    kind: 'awaken',
     fromLevel,
     toLevel: 1,
-    runs: 0,
-    timeSeconds: 0,
-    xpPerRun: 0,
-    durationPerRun: 0,
-    xpPerMinute: 0,
-    startXpPerMinute: 0,
-    endXpPerMinute: 0,
-    biomeName: '',
-    traitMatch: false,
-    biomeStatus: 'neutral',
-    isAwakeningStep: true,
   }
 }
 
@@ -172,10 +182,6 @@ function makeAwakeningStep(fromLevel: number): PlanStep {
  * 3. Only switch if the new option is >15% faster (to account for loop bonus loss)
  */
 export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
-  const expeditions = expeditionsData as Expedition[]
-  const biomes = biomesData as Biome[]
-  const biomeMap = new Map(biomes.map((b) => [b.id, b]))
-
   const { creature, startLevel, targetLevel, isAwakened, expeditionTierSelections } = settings
   const swordXpMultiplier = settings.swordXpMultiplier ?? 1
   const tierSelections = expeditionTierSelections ?? {}
@@ -183,6 +189,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   const allTiers = [1, 2, 3, 4, 5]
   const stepOverrides = settings.stepOverrides
   const boosterCandidates = settings.boosterCandidates ?? []
+  const switchThreshold = settings.swapThreshold ?? SWITCH_THRESHOLD
 
   const candidates: ExpeditionWithBiome[] = expeditions
     .filter((exp) => !hasTierRestrictions || (tierSelections[exp.id] ?? allTiers).length > 0)
@@ -233,8 +240,9 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
   /**
    * Find the highest-rated booster candidates for a given expedition+biome.
    * Excludes the target creature by ID. Returns up to maxBoosters sorted by rating desc.
-   * Memoized per expedition: ratings depend only on expedition+biome+candidates+maxBoosters,
-   * none of which vary across the planning loop for a single call.
+   * Memoizes the full sorted candidate list per expedition (ratings depend only on
+   * expedition+biome+candidates), then slices to maxBoosters at the call site — so
+   * a later call with a larger maxBoosters is not capped by an earlier smaller slice.
    */
   const boosterMemo = new Map<string, BoosterInfo[]>()
   function findBestBoosters(
@@ -243,19 +251,20 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     maxBoosters: number,
   ): BoosterInfo[] {
     if (maxBoosters <= 0 || boosterCandidates.length === 0) return []
-    const cached = boosterMemo.get(expedition.id)
-    if (cached) return cached
-    const infos: BoosterInfo[] = []
-    for (const cand of boosterCandidates) {
-      if (cand.creature.id === creature.id) continue
-      const rating = calculateCreatureRating(cand.creature, expedition, cand.level, biome)
-      if (rating <= 0) continue
-      infos.push({ creature: cand.creature, level: cand.level, rating })
+    let sorted = boosterMemo.get(expedition.id)
+    if (!sorted) {
+      const infos: BoosterInfo[] = []
+      for (const cand of boosterCandidates) {
+        if (cand.creature.id === creature.id) continue
+        const rating = calculateCreatureRating(cand.creature, expedition, cand.level, biome)
+        if (rating <= 0) continue
+        infos.push({ creature: cand.creature, level: cand.level, rating })
+      }
+      infos.sort((a, b) => b.rating - a.rating)
+      sorted = infos
+      boosterMemo.set(expedition.id, sorted)
     }
-    infos.sort((a, b) => b.rating - a.rating)
-    const top = infos.slice(0, maxBoosters)
-    boosterMemo.set(expedition.id, top)
-    return top
+    return sorted.slice(0, maxBoosters)
   }
 
   /**
@@ -432,7 +441,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
         const improvement = 1 - bestFresh.timeForLevel / currentResult.timeForLevel
         const xpImprovement = bestFresh.xpPerMinute / currentResult.xpPerMinute - 1
         chosen =
-          improvement > SWITCH_THRESHOLD || (improvement >= 0 && xpImprovement > SWITCH_THRESHOLD)
+          improvement > switchThreshold || (improvement >= 0 && xpImprovement > switchThreshold)
             ? bestFresh
             : currentResult
       }
@@ -469,6 +478,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
 
       const usingBoosters = chosen.partySize > 1 && chosen.boosters.length > 0
       rawSteps.push({
+        kind: 'run',
         expedition: chosen.expedition,
         tier: chosen.tier,
         fromLevel: level,
@@ -529,6 +539,7 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
 
   // Add party tips to merged steps (skip when concrete boosters were already chosen)
   for (const step of steps) {
+    if (step.kind !== 'run') continue
     if (step.expedition.maxPartySize <= 1) continue
     if (step.boosters && step.boosters.length > 0) continue
 
@@ -554,10 +565,13 @@ export function planLevelingPath(settings: LevelPlannerInput): LevelingPlan {
     }
   }
 
-  const totalTime = steps.reduce((sum, s) => sum + s.timeSeconds, 0)
-  const totalRuns = steps.reduce((sum, s) => sum + s.runs, 0)
+  const runSteps = steps.filter(isRunStep)
+  const totalTime = runSteps.reduce((sum, s) => sum + s.timeSeconds, 0)
+  const totalRuns = runSteps.reduce((sum, s) => sum + s.runs, 0)
   const xpPerMinute =
-    totalTime > 0 ? steps.reduce((sum, s) => sum + s.xpPerMinute * s.timeSeconds, 0) / totalTime : 0
+    totalTime > 0
+      ? runSteps.reduce((sum, s) => sum + s.xpPerMinute * s.timeSeconds, 0) / totalTime
+      : 0
 
   return { steps, totalTimeSeconds: totalTime, totalRuns, xpPerMinute }
 }
@@ -575,18 +589,18 @@ function mergeStepsWithAlternatives(
   if (steps.length === 0) return []
 
   const merged: PlanStep[] = []
-  let current = { ...steps[0] }
-  let currentXpEarned = current.runs * current.xpPerRun
+  let current: PlanStep = { ...steps[0] }
+  let currentXpEarned = current.kind === 'run' ? current.runs * current.xpPerRun : 0
   let currentLevelRange = [current.fromLevel]
 
   for (let i = 1; i < steps.length; i++) {
     const step = steps[i]
     // Never merge awakening steps with adjacent steps
-    if (step.isAwakeningStep || current.isAwakeningStep) {
+    if (step.kind === 'awaken' || current.kind === 'awaken') {
       attachAlternatives(current, currentLevelRange, levelAlternatives, evaluateCombo, creature)
       merged.push(current)
       current = { ...step }
-      currentXpEarned = current.runs * current.xpPerRun
+      currentXpEarned = current.kind === 'run' ? current.runs * current.xpPerRun : 0
       currentLevelRange = [current.fromLevel]
     } else if (step.expedition.id === current.expedition.id && step.tier === current.tier) {
       current.toLevel = step.toLevel
@@ -625,7 +639,7 @@ function attachAlternatives(
   evaluateCombo: EvaluateComboFn,
   creature: Creature,
 ): void {
-  if (step.isAwakeningStep) return
+  if (step.kind === 'awaken') return
 
   // Collect unique alternative expeditions (best tier per expedition) across the range
   const altCombos = new Map<
