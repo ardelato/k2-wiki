@@ -484,7 +484,7 @@ defineExpose({ awakenQueueCreatures })
 </script>
 
 <template>
-  <!-- ===== AWAKEN-RUSH (queue-driven) ===== -->>
+  <!-- ===== AWAKEN-RUSH (queue-driven) ===== -->
   <!-- Reused Summon picker, scoped to unawakened creatures -->
   <SummonCreaturePicker
     :open="awakenPickerOpen"
