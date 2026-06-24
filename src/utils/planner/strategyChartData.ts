@@ -1,4 +1,4 @@
-import type { PartyLevelingPlan } from '@/types'
+import { isRunPartyStep, type PartyLevelingPlan } from '@/types'
 
 export interface ChartPoint {
   time: number
@@ -17,7 +17,7 @@ export function deriveTimeSeries(
   filterCreatureId?: string,
 ): StrategyTimeSeries {
   const steps = plan.steps
-    .filter((s) => !s.isAwakeningStep)
+    .filter(isRunPartyStep)
     .filter((s) => !filterCreatureId || s.party.some((m) => m.creatureId === filterCreatureId))
 
   // Collect all unique time boundaries

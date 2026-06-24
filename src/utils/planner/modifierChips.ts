@@ -6,7 +6,7 @@ import {
   itemGridIcon,
   sourceIcons,
   toolIcons,
-} from '@/utils/icons'
+} from '@/utils/format/icons'
 
 export interface ModifierChip {
   label: string
@@ -76,8 +76,8 @@ export function extractModifierChips(
         value: row.value,
         icon: sanctuaryIcon,
         color:
-          'border-amber-600/35 bg-amber-100 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/20 dark:text-amber-100',
-        accentColor: 'bg-amber-500',
+          'border-warning/35 bg-warning/10 text-warning-strong dark:border-warning/40 dark:bg-warning/20 dark:text-warning-strong',
+        accentColor: 'bg-warning',
         subtitle: tierMatch
           ? t('modifiers.tierJobBonus', { n: tierMatch[1] })
           : t('modifiers.jobTierBonus'),
@@ -101,8 +101,8 @@ export function extractModifierChips(
         value: row.value,
         icon: itemGridIcon,
         color:
-          'border-violet-600/35 bg-violet-100 text-violet-800 dark:border-violet-400/40 dark:bg-violet-400/20 dark:text-violet-100',
-        accentColor: 'bg-violet-500',
+          'border-reserved/35 bg-reserved/10 text-reserved-strong dark:border-reserved/40 dark:bg-reserved/20 dark:text-reserved-strong',
+        accentColor: 'bg-reserved',
         subtitle: t('modifiers.passiveFabricationOutput'),
         stats: [localizeModifierValue(row.value)],
       })
@@ -112,8 +112,8 @@ export function extractModifierChips(
         value: row.value,
         icon: upgradesIcon,
         color:
-          'border-emerald-600/35 bg-emerald-100 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/20 dark:text-emerald-100',
-        accentColor: 'bg-emerald-500',
+          'border-success/35 bg-success/10 text-success-strong dark:border-success/40 dark:bg-success/20 dark:text-success-strong',
+        accentColor: 'bg-success',
         subtitle: t('modifiers.awakenSpeedUpgrade'),
         stats: [localizeModifierValue(row.value)],
       })

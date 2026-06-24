@@ -1,15 +1,12 @@
-import biomesData from '@/data/biomes.json'
+import { biomeMap } from '@/data/entityMaps'
 import { expeditionSourceIndex } from '@/data/indexes'
-import type { Creature, Expedition, Biome } from '@/types'
+import type { Creature, Expedition } from '@/types'
 import {
   calculateDuration,
   calculatePartyScore,
   getRecommendedCreatures,
   getLootAmount,
 } from '@/utils/formulas'
-
-const biomes = biomesData as Biome[]
-const biomeMap = new Map(biomes.map((b) => [b.id, b]))
 
 export interface ExpeditionPlan {
   expedition: Expedition

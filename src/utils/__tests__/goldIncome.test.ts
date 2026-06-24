@@ -1,4 +1,4 @@
-import { computeGoldPerMinute, goldToSeconds } from '@/utils/goldIncome'
+import { computeGoldPerMinute, goldToSeconds } from '@/utils/planner/goldIncome'
 
 describe('computeGoldPerMinute', () => {
   test('zero awakened creatures and no flowers returns 0', () => {
