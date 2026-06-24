@@ -5,9 +5,9 @@ import { useI18n } from 'vue-i18n'
 
 import { useGameConfig } from '@/composables/useGameConfig'
 import { itemById } from '@/data/indexes'
-import { activeLocale } from '@/i18n'
 import type { PlannerNode } from '@/types'
-import { getItemImage } from '@/utils/itemImages'
+import { formatNumber } from '@/utils/format/format'
+import { getItemImage } from '@/utils/images/itemImages'
 
 import type SummoningMaterialTree from './SummoningMaterialTree.vue'
 
@@ -159,9 +159,7 @@ const filteredNodes = computed(() => {
 })
 
 
-function fmt(n: number): string {
-  return n.toLocaleString(activeLocale())
-}
+const fmt = formatNumber
 </script>
 
 <template>
@@ -174,10 +172,8 @@ function fmt(n: number): string {
       >
         <!-- Header -->
         <div class="flex items-center gap-2 border-b border-border px-4 py-3">
-          <Bug class="size-4 text-amber-500" />
-          <span
-            class="text-sm font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400"
-          >
+          <Bug class="size-4 text-warning-strong" />
+          <span class="text-sm font-bold uppercase tracking-wider text-warning-strong">
             {{ t('summoningPlannerComponents.debugPanel.title') }}
           </span>
           <button
@@ -194,7 +190,7 @@ function fmt(n: number): string {
             class="flex-1 px-4 py-2 text-xs font-medium transition"
             :class="
               activeTab === 'inventory'
-                ? 'border-b-2 border-amber-500 text-amber-600 dark:text-amber-400'
+                ? 'border-b-2 border-warning text-warning-strong'
                 : 'text-muted-foreground hover:text-foreground'
             "
             @click="activeTab = 'inventory'"
@@ -207,7 +203,7 @@ function fmt(n: number): string {
             class="flex-1 px-4 py-2 text-xs font-medium transition"
             :class="
               activeTab === 'nodes'
-                ? 'border-b-2 border-amber-500 text-amber-600 dark:text-amber-400'
+                ? 'border-b-2 border-warning text-warning-strong'
                 : 'text-muted-foreground hover:text-foreground'
             "
             @click="activeTab = 'nodes'"
@@ -226,7 +222,7 @@ function fmt(n: number): string {
                 ? t('summoningPlannerComponents.debugPanel.filterItems')
                 : t('summoningPlannerComponents.debugPanel.filterNodes')
             "
-            class="w-full rounded-lg border border-border/40 bg-background/60 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+            class="w-full rounded-lg border border-border/40 bg-background/60 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/40 focus:border-warning/50 focus:outline-none focus:ring-1 focus:ring-warning/30"
           />
         </div>
 
@@ -246,7 +242,7 @@ function fmt(n: number): string {
           <table v-else class="w-full text-xs">
             <thead class="sticky top-0 bg-card">
               <tr
-                class="border-b border-border/40 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60"
+                class="border-b border-border/40 text-left text-3xs font-semibold uppercase tracking-wider text-muted-foreground/60"
               >
                 <th class="px-4 py-2">{{ t('summoningPlannerComponents.debugPanel.item') }}</th>
                 <th class="px-3 py-2 text-right">
@@ -279,7 +275,7 @@ function fmt(n: number): string {
                       <span class="block truncate font-medium text-foreground">
                         {{ entry.itemName }}
                       </span>
-                      <span class="block truncate text-[10px] text-muted-foreground/40">
+                      <span class="block truncate text-3xs text-muted-foreground/40">
                         {{ entry.itemId }}
                       </span>
                     </div>
@@ -291,7 +287,7 @@ function fmt(n: number): string {
                   </span>
                 </td>
                 <td class="px-3 py-1.5 text-right font-mono">
-                  <span :class="entry.queued > 0 ? 'text-sky-500' : 'text-muted-foreground/30'">
+                  <span :class="entry.queued > 0 ? 'text-info-strong' : 'text-muted-foreground/30'">
                     {{ fmt(entry.queued) }}
                   </span>
                 </td>
@@ -315,7 +311,7 @@ function fmt(n: number): string {
               <div class="flex items-center gap-2">
                 <span
                   v-if="entry.depth > 0"
-                  class="text-[10px] text-muted-foreground/40"
+                  class="text-3xs text-muted-foreground/40"
                   :style="{ paddingLeft: (entry.depth - 1) * 12 + 'px' }"
                 >
                   └
@@ -330,25 +326,25 @@ function fmt(n: number): string {
                 <span class="text-xs font-medium text-foreground">{{ entry.itemName }}</span>
                 <span
                   v-if="entry.fulfilled"
-                  class="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"
+                  class="rounded bg-success/20 px-1.5 py-0.5 text-3xs font-semibold text-success-strong"
                 >
                   {{ t('summoningPlannerComponents.debugPanel.fulfilled') }}
                 </span>
                 <span
                   v-else-if="entry.methodCount === 0"
-                  class="rounded bg-red-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400"
+                  class="rounded bg-danger/20 px-1.5 py-0.5 text-3xs font-semibold text-danger-strong"
                 >
                   {{ t('summoningPlannerComponents.debugPanel.noMethods') }}
                 </span>
                 <span
                   v-if="entry.depth === 0"
-                  class="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+                  class="rounded bg-primary/10 px-1.5 py-0.5 text-3xs font-medium text-primary"
                 >
                   {{ t('summoningPlannerComponents.debugPanel.root') }}
                 </span>
               </div>
               <div
-                class="mt-0.5 flex items-center gap-3 text-[10px] text-muted-foreground/60"
+                class="mt-0.5 flex items-center gap-3 text-3xs text-muted-foreground/60"
                 :style="{ paddingLeft: entry.depth > 0 ? (entry.depth - 1) * 12 + 16 + 'px' : '0' }"
               >
                 <span
