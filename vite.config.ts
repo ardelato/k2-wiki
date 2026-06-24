@@ -10,6 +10,11 @@ export default defineConfig({
     vue(),
     VueI18nPlugin({
       include: [path.resolve(__dirname, './src/locales/**')],
+      // The planner guided tour (driver.js) renders popover copy as HTML, so a few
+      // tour messages contain <b> tags. All messages are developer-authored static
+      // strings (no user input), so relax the AOT HTML guard rather than escaping it.
+      strictMessage: false,
+      escapeHtml: false,
     }),
   ],
   base: process.env.CF_PAGES === '1' ? '/' : '/k2-wiki/app/',

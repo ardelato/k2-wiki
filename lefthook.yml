@@ -15,3 +15,7 @@ pre-push:
       run: npx vue-tsc -b
     knip:
       run: npx knip
+    i18n-frozen:
+      run: node scripts/sync-frozen-locales.mjs --check
+    i18n-check:
+      run: node scripts/check-i18n.mjs

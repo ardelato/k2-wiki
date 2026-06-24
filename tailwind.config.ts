@@ -32,6 +32,19 @@ export default {
         'type-water': 'hsl(var(--type-water))',
         'type-wind': 'hsl(var(--type-wind))',
         'type-earth': 'hsl(var(--type-earth))',
+        // Semantic palette — bare-channel oklch vars support /<alpha-value> modifiers.
+        success: 'oklch(var(--success) / <alpha-value>)',
+        warning: 'oklch(var(--warning) / <alpha-value>)',
+        danger: 'oklch(var(--danger) / <alpha-value>)',
+        info: 'oklch(var(--info) / <alpha-value>)',
+        reserved: 'oklch(var(--reserved) / <alpha-value>)',
+        gold: 'oklch(var(--gold) / <alpha-value>)',
+        'success-strong': 'oklch(var(--success-strong) / <alpha-value>)',
+        'warning-strong': 'oklch(var(--warning-strong) / <alpha-value>)',
+        'danger-strong': 'oklch(var(--danger-strong) / <alpha-value>)',
+        'info-strong': 'oklch(var(--info-strong) / <alpha-value>)',
+        'reserved-strong': 'oklch(var(--reserved-strong) / <alpha-value>)',
+        'gold-strong': 'oklch(var(--gold-strong) / <alpha-value>)',
       },
       borderRadius: {
         lg: 'var(--radius)',
@@ -41,6 +54,11 @@ export default {
       fontFamily: {
         sans: ['Manrope', 'IBM Plex Sans', 'Segoe UI', 'sans-serif'],
         mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      fontSize: {
+        // Micro steps for data-dense planner/gantt/chip UI; xs+ keep Tailwind defaults.
+        '3xs': ['0.625rem', { lineHeight: '0.875rem' }], // 10px — micro labels
+        '2xs': ['0.6875rem', { lineHeight: '1rem' }], // 11px — dense data text
       },
       boxShadow: {
         card: '0 10px 40px -24px hsl(var(--accent) / 0.35)',
