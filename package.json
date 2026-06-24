@@ -44,6 +44,7 @@
     "@vitest/coverage-v8": "^4.1.2",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.27",
+    "colorjs.io": "^0.6.1",
     "happy-dom": "^20.8.9",
     "knip": "^6.4.1",
     "lefthook": "^2.1.4",
