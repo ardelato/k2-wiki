@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 
+import Badge from '@/components/shared/Badge.vue'
 import { useGoldIncome } from '@/composables/useGoldIncome'
-import { getItemImage } from '@/utils/itemImages'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 const { goldPerMinute, breakdown } = useGoldIncome()
@@ -10,9 +11,7 @@ const { goldPerMinute, breakdown } = useGoldIncome()
 
 <template>
   <div v-if="goldPerMinute > 0" class="group relative inline-flex">
-    <div
-      class="inline-flex cursor-help items-center gap-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/5 px-2.5 py-1 text-xs font-semibold text-yellow-700 dark:text-yellow-400"
-    >
+    <Badge variant="gold" size="sm" class="cursor-help">
       <img
         v-if="getItemImage({ id: 'gold' })"
         :src="getItemImage({ id: 'gold' })"
@@ -20,13 +19,13 @@ const { goldPerMinute, breakdown } = useGoldIncome()
         class="size-3.5 object-contain"
       />
       {{ goldPerMinute }} {{ t('plannerComponents.goldRate.goldPerMin') }}
-    </div>
+    </Badge>
 
     <!-- Popover -->
     <div
       class="pointer-events-none absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-border bg-card p-3 opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
     >
-      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+      <p class="mb-2 text-3xs font-bold uppercase tracking-wider text-muted-foreground/60">
         {{ t('plannerComponents.goldRate.breakdown') }}
       </p>
       <div class="space-y-1.5 text-xs">
@@ -57,7 +56,7 @@ const { goldPerMinute, breakdown } = useGoldIncome()
             <span class="font-semibold text-foreground">{{
               t('plannerComponents.goldRate.total')
             }}</span>
-            <span class="font-bold text-yellow-700 dark:text-yellow-400"
+            <span class="font-bold text-gold-strong"
               >{{ breakdown.totalGoldPerMin }}
               {{ t('plannerComponents.goldRate.goldPerMin') }}</span
             >
