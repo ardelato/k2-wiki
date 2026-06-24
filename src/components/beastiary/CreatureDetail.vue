@@ -12,7 +12,7 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type { Creature, CreatureStats, Jobs } from '@/types'
 import { itemName, toTitleCase, typeColor, typeColorVar } from '@/utils/format/format'
-import { jobIcons } from '@/utils/format/icons'
+import { expeditionTierIcons, jobIcons } from '@/utils/format/icons'
 import {
   getBestExpeditionsForCreature,
   jobColors,
@@ -87,7 +87,7 @@ const selectedCreatureStats = computed<CreatureStats | undefined>(() => {
 
 const bestExpeditions = computed(() => {
   if (!props.creature) return []
-  return getBestExpeditionsForCreature(props.creature)
+  return getBestExpeditionsForCreature(props.creature, 5, getLevel(props.creature.id))
 })
 
 
@@ -401,6 +401,12 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                 <div
                   class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground"
                 >
+                  <img
+                    :src="expeditionTierIcons[entry.tier]"
+                    :alt="`Tier ${entry.tier}`"
+                    class="size-4 shrink-0 object-contain"
+                    loading="lazy"
+                  />
                   <span>{{ entry.biomeName }}</span>
                   <span v-if="entry.traitMatch" class="text-primary">{{
                     t('beastiary.detail.traitMatch')
