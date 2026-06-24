@@ -1,108 +1,71 @@
 import { test, expect, type Page } from '@playwright/test'
 
+// v2 moved the summoning planner into the Creature planner shell (/planner/creature,
+// the default "Summon" tab) and put creature selection inside an "Add / Remove creatures"
+// modal (the old inline tier filter and List/Tree/Timeline view tabs were removed).
+// Landing on the creature planner auto-launches the first-run tour, so suppress it first.
 test.beforeEach(async ({ page }) => {
-  await page.goto('./planner?tab=summoning')
-  await page.evaluate(() => localStorage.clear())
-  await page.goto('./planner?tab=summoning')
+  await page.goto('./planner/creature')
+  await page.evaluate(() => {
+    localStorage.clear()
+    localStorage.setItem('planner-tour-seen-v2', 'true')
+  })
+  await page.goto('./planner/creature')
   await page.getByText('Creatures').first().waitFor()
 })
 
-/** Helper to get the "N selected" text element */
-function selectedCount(page: Page) {
-  return page.getByText(/\d+ selected/)
+/** Open the "Add / Remove creatures" picker modal. */
+async function openCreaturePicker(page: Page) {
+  await page
+    .getByRole('button', { name: /Add \/ Remove creatures/ })
+    .first()
+    .click()
 }
 
-/** Select all creatures in the first tier */
-async function selectFirstTier(page: Page) {
-  await page.getByRole('button', { name: 'Select all' }).first().click()
+/** The "N selected" counter (lives inside the picker modal). */
+function selectedCount(page: Page) {
+  return page.getByText(/\d+ selected/).first()
 }
 
 // ── Tab navigation ──────────────────────────────────────────────────
 
 test.describe('tab navigation', () => {
-  test('summoning tab is active when navigated via URL', async ({ page }) => {
-    const summoningTab = page.getByRole('button', { name: 'Summoning' })
-    await expect(summoningTab).toHaveClass(/bg-primary/)
+  test('Summon tab is active on the creature planner', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Summon', exact: true })).toHaveClass(
+      /bg-primary/,
+    )
   })
 
-  test('creature filter is visible', async ({ page }) => {
+  test('creature section and picker trigger are visible', async ({ page }) => {
     await expect(page.getByText('Creatures').first()).toBeVisible()
-    await expect(selectedCount(page)).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /Add \/ Remove creatures/ }).first(),
+    ).toBeVisible()
   })
 })
 
-// ── Creature selection ──────────────────────────────────────────────
+// ── Creature selection (picker modal) ───────────────────────────────
 
 test.describe('creature selection', () => {
   test('starts with 0 selected', async ({ page }) => {
+    await openCreaturePicker(page)
     await expect(selectedCount(page)).toHaveText(/^0 selected/)
   })
 
-  test('tier bulk selection increases count', async ({ page }) => {
+  test('tier bulk selection increases the count', async ({ page }) => {
+    await openCreaturePicker(page)
     await expect(selectedCount(page)).toHaveText(/^0 selected/)
 
-    await selectFirstTier(page)
-
-    // After selecting a tier, count should show a non-zero number
+    await page.getByRole('button', { name: 'Select all' }).first().click()
     await expect(selectedCount(page)).not.toHaveText(/^0 selected/)
   })
 
-  test('reset clears all selections', async ({ page }) => {
-    await selectFirstTier(page)
+  test('deselect all clears the selection', async ({ page }) => {
+    await openCreaturePicker(page)
+    await page.getByRole('button', { name: 'Select all' }).first().click()
     await expect(selectedCount(page)).not.toHaveText(/^0 selected/)
 
-    // Click reset (only visible when selections exist)
-    await page.getByRole('button', { name: 'Reset', exact: true }).click()
+    await page.getByRole('button', { name: 'Deselect all' }).first().click()
     await expect(selectedCount(page)).toHaveText(/^0 selected/)
-  })
-})
-
-// ── Cost accuracy after toggling tiers ───────────────────────────────
-
-test.describe('cost accuracy', () => {
-  test('selected count returns to original after toggling a second tier', async ({ page }) => {
-    // 1. Select tier 1 and capture the selected count
-    await selectFirstTier(page)
-    await page.getByRole('button', { name: 'List' }).waitFor()
-    const originalText = await selectedCount(page).textContent()
-
-    // 2. Select tier 2 — count changes
-    const selectButtons = page.getByRole('button', { name: 'Select all' })
-    await selectButtons.nth(1).click()
-    await expect(selectedCount(page)).not.toHaveText(originalText!)
-
-    // 3. Deselect tier 2 — count must return to the original
-    const deselectButtons = page.getByRole('button', { name: 'Deselect all' })
-    await deselectButtons.nth(1).click()
-    await expect(selectedCount(page)).toHaveText(originalText!)
-  })
-})
-
-// ── View tab switching ──────────────────────────────────────────────
-
-test.describe('view tabs', () => {
-  test.beforeEach(async ({ page }) => {
-    await selectFirstTier(page)
-    // Wait for view tabs to appear (List is the default)
-    await page.getByRole('button', { name: 'List' }).waitFor()
-  })
-
-  test('list tab shows source groups', async ({ page }) => {
-    // List view groups materials by source type (Refined, Gathered, Expedition, etc.)
-    // At least one group header should be visible
-    await expect(
-      page.getByText(/Refined Materials|Gathered Resources|Expedition Rewards/).first(),
-    ).toBeVisible()
-  })
-
-  test('tree tab renders material trees', async ({ page }) => {
-    await page.getByRole('button', { name: 'Tree' }).click()
-    // Tree view shows crafting dependency trees with item names
-    await expect(page.locator('.surface-card').first()).toBeVisible()
-  })
-
-  test('timeline tab renders', async ({ page }) => {
-    await page.getByRole('button', { name: 'Timeline' }).click()
-    await expect(page.getByText(/Priority Steps/).first()).toBeVisible()
   })
 })
