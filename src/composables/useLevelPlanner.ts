@@ -4,7 +4,11 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { xpForLevel, maxLevelForState, PRE_AWAKEN_MAX } from '@/utils/formulas'
-import { planLevelingPath, type BoosterCandidate, type LevelingPlan } from '@/utils/levelPlanner'
+import {
+  planLevelingPath,
+  type BoosterCandidate,
+  type LevelingPlan,
+} from '@/utils/planner/levelPlanner'
 
 export function useLevelPlanner(
   creatureId: Ref<string>,

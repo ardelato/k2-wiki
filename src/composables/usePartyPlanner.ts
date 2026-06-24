@@ -25,6 +25,12 @@ export function usePartyPlanner(
     plannerExcluded: { value: Set<string> }
     plannerIncluded: { value: Set<string> }
   },
+  options?: {
+    /** Cap on levelers per expedition party (1 = solo levelers + boosters). */
+    maxLevelersPerParty?: number
+    /** Separate cache bucket so distinct callers (e.g. Awaken) don't clobber each other. */
+    cacheNamespace?: string
+  },
 ) {
   const { creatures } = useCreatures()
   const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
@@ -34,7 +40,9 @@ export function usePartyPlanner(
   const { effectiveExpeditionTierSelections } = useExpeditionTierSelections()
 
   function cachePrefix(): string {
-    return `party-planner-cache-${strategy.value}-${timeBudget.value}`
+    const ns = options?.cacheNamespace ? `-${options.cacheNamespace}` : ''
+    const solo = options?.maxLevelersPerParty === 1 ? '-solo' : ''
+    return `party-planner-cache-${strategy.value}-${timeBudget.value}${ns}${solo}`
   }
 
   function readCachedPlan(): { key: string; plan: PartyLevelingPlan } | null {
@@ -136,16 +144,20 @@ export function usePartyPlanner(
       .toSorted(([a], [b]) => a.localeCompare(b))
       .map(([id, tiers]) => `${id}:${tiers.join('+')}`)
       .join(',')
-    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${expeditionToolXpBonus.value}||${tierSelectionsKey}`
+    return `${creatureKey}||${expKey}||${strategy.value}||${timeBudget.value}||${expeditionToolXpBonus.value}||${tierSelectionsKey}||${options?.maxLevelersPerParty ?? ''}||${options?.cacheNamespace ?? ''}`
   }
 
-  // Load cached plan immediately if available (all inputs are localStorage-backed so fingerprint is stable on init)
-  {
+  // Restore the cached plan whenever the current inputs match it, and clear it otherwise. Used at
+  // init and from every invalidation watch, so a refresh — or a reactive input that merely settles
+  // back to the cached fingerprint right after mount — keeps the plan instead of wiping it and
+  // forcing a recompute.
+  function syncPlanFromCache() {
     const cached = readCachedPlan()
-    if (cached && buildInputFingerprint() === cached.key) {
-      plan.value = cached.plan
-    }
+    plan.value = cached && buildInputFingerprint() === cached.key ? cached.plan : null
   }
+
+  // Load cached plan immediately if available (all inputs are localStorage-backed so fingerprint is stable on init).
+  syncPlanFromCache()
 
   function buildPlannerInput(): PartyPlannerInput {
     const selections = effectiveExpeditionTierSelections.value
@@ -154,6 +166,7 @@ export function usePartyPlanner(
       strategy: strategy.value,
       timeBudget: timeBudget.value,
       swordXpMultiplier: expeditionToolXpBonus.value,
+      maxLevelersPerParty: options?.maxLevelersPerParty,
       expeditionTierSelections: Object.keys(selections).length > 0 ? selections : undefined,
       expeditions: Object.fromEntries(
         Object.keys({
@@ -218,28 +231,27 @@ export function usePartyPlanner(
     cleanupWorker()
     isComputing.value = false
     progress.value = null
-
-    const cached = readCachedPlan()
-    const currentKey = buildInputFingerprint()
-    plan.value = cached && currentKey === cached.key ? cached.plan : null
+    syncPlanFromCache()
   })
 
-  // Terminate in-flight workers when expedition tier selections change
+  // Terminate in-flight workers when expedition tier selections change; restore the cached plan if
+  // the new inputs still match it (e.g. selections settling to their stored value after mount).
   watch(effectiveExpeditionTierSelections, () => {
     cleanupWorker()
     isComputing.value = false
     progress.value = null
-    plan.value = null
+    syncPlanFromCache()
   })
 
-  // Terminate in-flight workers when creature data changes (collection edits invalidate results)
+  // Terminate in-flight workers when creature data changes (collection edits invalidate results);
+  // restore the cached plan when the new roster still matches the cached fingerprint.
   watch(
     partyCreatures,
     () => {
       cleanupWorker()
       isComputing.value = false
       progress.value = null
-      plan.value = null
+      syncPlanFromCache()
     },
     { deep: true },
   )
