@@ -1,8 +1,8 @@
 import type { PlannerNode, PlannerSchedule } from '@/types'
 
-export type StepKind = 'gather' | 'craft' | 'expedition' | 'garden' | 'buy' | 'container'
+type StepKind = 'gather' | 'craft' | 'expedition' | 'garden' | 'buy' | 'container'
 
-export interface PriorityStepCard {
+interface PriorityStepCard {
   label: string
   description: string
   timeEstimate: number // seconds
@@ -13,7 +13,7 @@ export interface PriorityStepCard {
   amount?: number
 }
 
-export interface PriorityWave {
+interface PriorityWave {
   waveNumber: number
   cards: PriorityStepCard[]
 }

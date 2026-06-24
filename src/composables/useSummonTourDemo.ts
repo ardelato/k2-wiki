@@ -21,7 +21,7 @@ import type { Creature } from '@/types'
 // flushes, so a direct write is the only guarantee the demo doesn't leak into the user's
 // saved selection. The view snapshot is in-memory (viewMode/materialsView aren't persisted).
 
-export interface UseSummonTourDemoOptions {
+interface UseSummonTourDemoOptions {
   unsummonedCreatures: Ref<Creature[]>
   selectedIds: Ref<Set<string>>
   viewMode: Ref<'plan' | 'materials'>

@@ -20,10 +20,10 @@ import type { ModifierChip } from '@/utils/planner/modifierChips'
 
 type TreeRef = InstanceType<typeof SummoningMaterialTree>
 
-export type PlanSort = 'step' | 'ready' | 'name'
-export type PlanSortDir = 'asc' | 'desc'
+type PlanSort = 'step' | 'ready' | 'name'
+type PlanSortDir = 'asc' | 'desc'
 
-export interface PlanRequirement {
+interface PlanRequirement {
   itemId: string
   itemName: string
   itemType: ItemType
@@ -47,7 +47,7 @@ export interface PlanRequirement {
   sourceIcon: string | null
 }
 
-export interface PlanEntry {
+interface PlanEntry {
   creature: Creature
   image: string | null
   requirements: PlanRequirement[]
@@ -57,19 +57,19 @@ export interface PlanEntry {
   blocked: boolean
 }
 
-export interface FocusRequirement extends PlanRequirement {
+interface FocusRequirement extends PlanRequirement {
   effectiveRemaining: number | null
 }
 
 /** Per-creature cost group as enriched by the view's by-creature grouping. */
-export interface CreatureCostGroup {
+interface CreatureCostGroup {
   creatureId: string
   creatureName: string
   creatureImage: string | null
   costs: FlatListEntry[]
 }
 
-export interface UseCreaturePlanOptions {
+interface UseCreaturePlanOptions {
   selectedCreatures: Ref<Creature[]>
   byCreatureGroups: Ref<CreatureCostGroup[]>
   sortedCosts: Ref<{ itemId: string; itemName: string; amount: number }[]>

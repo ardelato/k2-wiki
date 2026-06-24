@@ -31,10 +31,6 @@ const XP_COEF = 50
 const TIERS = [1, 2, 3, 4, 5]
 const MAX_PARTY = 3
 
-/** Published 9a horizon/warmup — the configuration the validation numbers came from. */
-export const DEFAULT_HORIZON_SEC = 4000 * 3600
-export const DEFAULT_WARMUP_SEC = 1000 * 3600
-
 /**
  * Lighter horizon for the live planner: the warmup still discards the transient so the
  * steady-state tokens/hour and the relative strategy/cadence ordering stay accurate, but
@@ -42,14 +38,14 @@ export const DEFAULT_WARMUP_SEC = 1000 * 3600
  * seconds in a worker). The fidelity test passes the published config explicitly, so it is
  * unaffected by this value.
  */
-export const APP_HORIZON_SEC = 1500 * 3600
-export const APP_WARMUP_SEC = 500 * 3600
+const APP_HORIZON_SEC = 1500 * 3600
+const APP_WARMUP_SEC = 500 * 3600
 
 /** Cadences surfaced as presets + used for the comparison grid. */
 export const COMPARISON_CADENCE_HOURS = [5, 12, 24] as const
 
 /** Number of consecutive steady-state check-ins captured for the rotation timeline. */
-export const TIMELINE_STEPS = 8
+const TIMELINE_STEPS = 8
 
 // ── Public types ───────────────────────────────────────────────────────────
 export type PrestigeStrategy = 'anchor' | 'rotation' | 'individual' | 'batch'
@@ -144,7 +140,7 @@ export interface PoolUnit {
   startXp: number
 }
 
-export interface SimConfig {
+interface SimConfig {
   mode: PrestigeStrategy
   K: number
   cadenceSec: number
@@ -178,7 +174,7 @@ export interface SimConfig {
   hybridClimbers?: { expeditionId: string; memberIdx: number[] }[]
 }
 
-export interface SimOutput {
+interface SimOutput {
   tokensPerHour: number
   wastedSlotFraction: number
   /** Party layout from the steady-state check-in — the setup the player applies. */

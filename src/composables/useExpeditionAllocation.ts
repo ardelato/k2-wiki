@@ -30,12 +30,12 @@ export interface ExpeditionAllocation {
   alternatives: ExpeditionPartyVariant[]
 }
 
-export interface CreatureExpeditionEntry {
+interface CreatureExpeditionEntry {
   name: string
   rewardItemId: string
 }
 
-export interface UseExpeditionAllocationOptions {
+interface UseExpeditionAllocationOptions {
   sortedCosts: Ref<{ itemId: string; itemName: string; amount: number }[]>
   treeRefs: Ref<TreeRef[]>
   ownedCreaturesList: Ref<Creature[]>

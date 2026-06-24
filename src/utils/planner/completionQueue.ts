@@ -29,7 +29,7 @@ export interface QueueInputCreature {
   requirements: QueueRequirement[]
 }
 
-export interface QueueOutputCreature {
+interface QueueOutputCreature {
   id: string
   name: string
   image: string | null

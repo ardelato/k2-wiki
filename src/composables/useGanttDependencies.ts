@@ -10,7 +10,7 @@ type MergeableTask = ScheduledTask & { _mergedNodeIds?: string[] }
  * centralizing the `as ScheduledTask & { _mergedNodeIds?: string[] }` cast in one place.
  * Falls back to the supplied default ids when no merge metadata is present.
  */
-export function mergedNodeIdsOf(task: ScheduledTask, fallback: string[]): string[] {
+function mergedNodeIdsOf(task: ScheduledTask, fallback: string[]): string[] {
   return (task as MergeableTask)._mergedNodeIds ?? fallback
 }
 

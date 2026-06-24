@@ -13,7 +13,7 @@ import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { formatDuration } from '@/utils/format/format'
 
-export interface AwakenRailEntry {
+interface AwakenRailEntry {
   id: string
   name: string
   image: string | null

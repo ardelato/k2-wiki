@@ -2,7 +2,7 @@ import { useGameConfig } from '@/composables/useGameConfig'
 
 /** Why a creature isn't freely available for the sanctuary: assigned to another job
  * ("busy"), or user-excluded. `role` is the busy assignment; `excluded` is the flag. */
-export interface CreatureStatus {
+interface CreatureStatus {
   role: 'sanctuary' | 'helper' | 'machine' | 'expedition' | 'dungeon' | null
   excluded: boolean
 }

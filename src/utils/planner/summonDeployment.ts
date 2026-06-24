@@ -40,7 +40,7 @@ export function creatureJobScores(id: string): Record<string, number> {
   return out
 }
 
-export function creatureName(id: string): string {
+function creatureName(id: string): string {
   return byId.get(id)?.name ?? id
 }
 
@@ -166,7 +166,7 @@ export function recommendSanctuarySwap(params: {
   return { ...base, action: 'hold' }
 }
 
-export interface RoleRec {
+interface RoleRec {
   /** Strongest gather job (capitalized) if it's a real strength. */
   helper: { job: string; score: number } | null
   /** Top stats — fresh creatures level via expeditions toward awaken. */

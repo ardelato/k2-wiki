@@ -21,7 +21,7 @@ export function createIdIndex<T extends { id: string }>(items: readonly T[]): Ma
 }
 
 export const expeditions = expeditionsData as Expedition[]
-export const biomes = biomesData as Biome[]
+const biomes = biomesData as Biome[]
 
 export const expeditionMap = createIdIndex(expeditions)
 export const biomeMap = createIdIndex(biomes)

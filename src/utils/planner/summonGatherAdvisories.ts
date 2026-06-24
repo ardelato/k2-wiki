@@ -36,7 +36,7 @@ type Graph = ReturnType<typeof buildPlannerGraph>
 type Node = NonNullable<Graph['root']>
 
 /** A single gatherable resource and the volume of it this plan needs by hand. */
-export interface JobVolume {
+interface JobVolume {
   itemId: string
   need: number
 }
@@ -70,7 +70,7 @@ function nextBeneficialTier(cur: number): number | null {
   return null
 }
 
-export interface GatherVolumes {
+interface GatherVolumes {
   /** Capitalized job name → the resources gathered for it (aggregated per item). */
   itemsByJob: Map<string, JobVolume[]>
   /** Capitalized job name → the TOP-LEVEL need ids whose tree uses that job. This is the
@@ -80,7 +80,7 @@ export interface GatherVolumes {
 
 /** Walk the planner graphs for a set of needs; collect the by-hand gather volume per job and
  * remember which top-level need each job's gather serves (so advisories can name the parent). */
-export function walkGatherVolumes(
+function walkGatherVolumes(
   needs: { id: string; amount: number }[],
   mods: PlannerModifiers,
 ): GatherVolumes {
@@ -154,7 +154,7 @@ export function gatherVolumesByJob(
   return walkGatherVolumes(needs, mods).itemsByJob
 }
 
-export interface GatherSavingsOptions {
+interface GatherSavingsOptions {
   /** Resolve the Sanctuary tier this lever targets for `job` (currently at `currentTier`).
    * Return null to omit the Sanctuary lever. Defaults to the next beneficial tier. */
   resolveSanctuaryTarget?: (job: string, currentTier: number) => number | null
@@ -166,7 +166,7 @@ const AWAKEN_ROMAN = ['i', 'ii', 'iii', 'iv', 'v', 'vi']
 
 /** What it costs to fund an awaken node and how to earn the point — the same data the
  * Skill Planner surfaces, scoped to the Summon plan. Supplied by the playbook. */
-export interface AwakenFundingContext {
+interface AwakenFundingContext {
   /** Unspent Awaken Points the player holds. */
   pointsAvailable: number
   /** Owned, not-yet-awakened creatures — awakening any one earns +1 point. */
@@ -251,7 +251,7 @@ function buildGatherSavings(
   return savings
 }
 
-export interface SummonGatherAdvisoryParams {
+interface SummonGatherAdvisoryParams {
   /** This creature's net still-needed ingredients (after the depleting pool). */
   remaining: { id: string; amount: number }[]
   /** Live planner modifiers, but with jobTiers set to the chapter's simulated Sanctuary. */
@@ -363,7 +363,7 @@ export function buildSummonGatherAdvisories(params: SummonGatherAdvisoryParams):
   return advisories
 }
 
-export interface ChapterEtas {
+interface ChapterEtas {
   /** Hands-on seconds to gather everything this creature still needs (serial across
    * resources, passive supply credited in parallel). */
   totalSeconds: number

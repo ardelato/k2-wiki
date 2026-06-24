@@ -1,7 +1,7 @@
 import type { MemberRole, PrestigeTimelineStep } from '@/utils/planner/prestigeLoopPlanner'
 
 /** One creature's level at a single check-in in the steady-state window. */
-export interface PrestigeLevelPoint {
+interface PrestigeLevelPoint {
   /** Zero-based check-in index within the captured window. */
   checkIn: number
   /** Elapsed hours since the first captured check-in (window-relative). */
@@ -15,7 +15,7 @@ export interface PrestigeLevelPoint {
 }
 
 /** Per-creature level trajectory across the captured check-in window. */
-export interface PrestigeLevelSeries {
+interface PrestigeLevelSeries {
   creatureId: string
   /** Role used for colouring — dominant role across the window, anchors overridden. */
   role: MemberRole

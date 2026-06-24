@@ -15,7 +15,7 @@ import { nextTick, reactive, ref } from 'vue'
  * (FloatingPanel forwards it) so the vertical-flip step can measure real panel
  * height (gotcha #2).
  */
-export interface PopoverOptions {
+interface PopoverOptions {
   width: number
   gap?: number
   /** Horizontal anchoring relative to the element rect. Default 'center'. */

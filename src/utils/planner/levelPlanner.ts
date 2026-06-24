@@ -103,7 +103,7 @@ export interface AwakenStep extends PlanStepBase {
 export type PlanStep = RunStep | AwakenStep
 
 /** Narrowing guard: true when the plan step is a normal expedition run. */
-export function isRunStep(step: PlanStep): step is RunStep {
+function isRunStep(step: PlanStep): step is RunStep {
   return step.kind === 'run'
 }
 

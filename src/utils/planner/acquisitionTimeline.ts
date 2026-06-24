@@ -29,7 +29,7 @@ export interface TimelineCreatureInput {
   requirements: TimelineRequirementInput[]
 }
 
-export interface TimelineRequirementResult {
+interface TimelineRequirementResult {
   /** Amount you'll still actively get after passive accrual is credited. */
   effectiveRemaining: number
   /** Amount the shared passive pool delivers for this creature by the time you reach it. */
@@ -45,7 +45,7 @@ export interface TimelineRequirementResult {
 }
 
 /** creatureId → (itemId → result). */
-export type AcquisitionTimeline = Map<string, Map<string, TimelineRequirementResult>>
+type AcquisitionTimeline = Map<string, Map<string, TimelineRequirementResult>>
 
 /**
  * Forward accrual pass over the given sequence (already in rail order).

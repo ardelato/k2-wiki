@@ -11,7 +11,7 @@ import type { TourObjective } from './usePlannerTour'
  * unregisters on unmount, so the registry only ever holds handlers for the
  * currently-mounted objective.
  */
-export type TourDemoHandlers = {
+type TourDemoHandlers = {
   /** Populate sample data so the section renders. Returns true if it actually seeded. */
   seed: () => boolean
   /** Restore the user's real state. Must be safe to call more than once. */

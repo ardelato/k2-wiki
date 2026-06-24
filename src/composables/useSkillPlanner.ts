@@ -35,18 +35,8 @@ import {
 
 // Re-export the public types/values consumers import from this module so the
 // decomposition stays invisible to callers (SkillPlanner, components, tests).
-export type {
-  AwakenOwnedCandidate,
-  AwakenPointSources,
-  AwakenSummonCandidate,
-  SummonShortfall,
-} from '@/composables/useAwakenPointSources'
-export type {
-  PlayerLevelStepTime,
-  SkillAdvisory,
-  SkillBoost,
-} from '@/composables/useSkillAdvisories'
-export type { SkillBonusOverrides } from '@/composables/useSkillOverrides'
+export type { AwakenPointSources, AwakenSummonCandidate } from '@/composables/useAwakenPointSources'
+export type { SkillAdvisory, SkillBoost } from '@/composables/useSkillAdvisories'
 
 export const WORKSTATION_IDS = ['Furnace', 'Stove', 'Workbench']
 
@@ -99,10 +89,10 @@ for (const item of items) {
 }
 
 /** Skill level cap — always offered as a "max out" target preset. */
-export const MAX_SKILL_LEVEL = 99
+const MAX_SKILL_LEVEL = 99
 
 /** A target preset: a tier-unlock level plus the resource it unlocks (none for max). */
-export interface SkillTierPreset {
+interface SkillTierPreset {
   level: number
   itemId?: string
   itemName?: string
@@ -152,7 +142,7 @@ for (const [ws, recipes] of workstationRecipes) {
   )
 }
 
-export interface SkillBonusBreakdown {
+interface SkillBonusBreakdown {
   sanctuaryXp: number
   awakenXp: number
   playerLevelXp: number

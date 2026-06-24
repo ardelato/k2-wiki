@@ -18,12 +18,12 @@ const ADVISORY_DESTINATIONS: Record<BonusAdvisory['routeName'], () => string> = 
   tools: () => 'Tools',
 } as const
 
-export function advisoryDestination(adv: BonusAdvisory): string {
+function advisoryDestination(adv: BonusAdvisory): string {
   return ADVISORY_DESTINATIONS[adv.routeName]()
 }
 
 /** Deep-links a bonus advisory to its destination, highlighting the node/tool. */
-export function advisoryLink(adv: BonusAdvisory): RouteLocationRaw {
+function advisoryLink(adv: BonusAdvisory): RouteLocationRaw {
   if (adv.routeName === 'awaken')
     return { name: 'awaken', query: { tree: adv.awakenTreeId, node: adv.awakenNodeId } }
   if (adv.routeName === 'tools') return { name: 'tools', query: { tool: adv.toolId } }
@@ -36,7 +36,7 @@ export function advisoryLink(adv: BonusAdvisory): RouteLocationRaw {
 }
 
 /** The presentational shape every advisory row renders from. */
-export interface AdvisoryPresentation {
+interface AdvisoryPresentation {
   /** Real in-game asset image for the lever (sanctuary / awaken tree / the specific
    * tool). Preferred over `glyph` when present. */
   iconSrc?: string

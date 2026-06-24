@@ -41,7 +41,7 @@ export interface CreatureDemand {
   needs: { itemId: string; amount: number }[]
 }
 
-export interface ResourcePlan {
+interface ResourcePlan {
   itemId: string
   totalNeed: number
   passiveRatePerSecond: number
@@ -58,7 +58,7 @@ export interface ResourcePlan {
   assignment: 'active' | 'passive'
 }
 
-export interface ActiveStep {
+interface ActiveStep {
   order: number
   itemId: string
   /** Units gathered in this campaign (the shortfall). */
@@ -69,13 +69,13 @@ export interface ActiveStep {
   creatureIds: string[]
 }
 
-export interface CreatureEta {
+interface CreatureEta {
   creatureId: string
   /** Clock seconds from t=0 until all this creature's resources are satisfied. */
   etaSeconds: number
 }
 
-export interface AcquisitionPlan {
+interface AcquisitionPlan {
   /** Fixpoint active horizon: total hands-on time across active campaigns. */
   horizonSeconds: number
   resources: ResourcePlan[]
@@ -83,7 +83,7 @@ export interface AcquisitionPlan {
   creatureEtas: CreatureEta[]
 }
 
-export interface AcquisitionPlanOptions {
+interface AcquisitionPlanOptions {
   /**
    * Order active campaigns. Default: largest active shortfall first.
    * (Optimal ordering — gather low-passive-rate items first so high-rate ones accrue —

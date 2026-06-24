@@ -20,7 +20,7 @@ export interface SortState {
 }
 
 // --- Tree (backing-tree) grouping entry: a sortedCosts row enriched with its tree index. ---
-export interface GroupedCostEntry {
+interface GroupedCostEntry {
   itemId: string
   itemName: string
   amount: number
@@ -43,12 +43,12 @@ export interface FlatListEntry {
   maxDepth: number
 }
 
-export interface CostSubGroup<T> {
+interface CostSubGroup<T> {
   label: string
   costs: T[]
 }
 
-export interface CostGroup<T> {
+interface CostGroup<T> {
   group: SourceGroup
   label: string
   costs: T[]
@@ -103,7 +103,7 @@ function buildSourceGroups<T>(
     })
 }
 
-export interface UseGroupedMaterialsOptions {
+interface UseGroupedMaterialsOptions {
   sortState: Ref<SortState>
   /** sortedCosts: the aggregate-cost rows (index-aligned with treeRefs). */
   sortedCosts: Ref<{ itemId: string; itemName: string; amount: number }[]>

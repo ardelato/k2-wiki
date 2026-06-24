@@ -50,7 +50,7 @@ type AwakenDemoSnapshot = {
   mode: 'optimal' | 'hands-free'
 }
 
-export type UseAwakenTourDemoOptions = {
+type UseAwakenTourDemoOptions = {
   /** Whether this view instance is the awaken-rush objective (only it registers). */
   isAwaken: Ref<boolean>
   /** Whether this view instance owns the awaken-rush objective at setup (registration gate). */

@@ -1,7 +1,7 @@
 import { computed, reactive, readonly } from 'vue'
 
 /** Session-only what-if overrides; null means "use the live config value". */
-export interface SkillBonusOverrides {
+interface SkillBonusOverrides {
   currentLevel: number | null
   jobTier: number | null
   awakenXpTier: number | null

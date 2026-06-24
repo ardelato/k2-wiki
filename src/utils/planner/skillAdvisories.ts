@@ -10,7 +10,7 @@ export interface PlayerLevelBoostStep {
   levelsAdded: number
 }
 
-export interface PlayerLevelBoost {
+interface PlayerLevelBoost {
   steps: PlayerLevelBoostStep[]
   /** Total XP to raise the listed skills (the cheap source levels). */
   totalXpCost: number
@@ -88,7 +88,7 @@ export interface JobPartyPick {
   contribution: number
 }
 
-export interface JobPartyRecommendation {
+interface JobPartyRecommendation {
   party: JobPartyPick[]
   score: number
   reachedTier: number
@@ -200,7 +200,7 @@ export function buildSanctuaryDiff(
   return { target, keep, swapOut, swapIn, sideEffects: ordered }
 }
 
-export interface BoostValuation {
+interface BoostValuation {
   timeBefore: number
   timeAfter: number
   timeSaved: number

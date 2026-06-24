@@ -28,7 +28,7 @@ export const JOB_TIER_BENEFITS = [
   { xpBonus: 120, durationReduction: 20, yieldBonus: 1 },
 ]
 
-export interface JobTierBenefits {
+interface JobTierBenefits {
   xpBonus: number
   durationReduction: number
   yieldBonus: number
