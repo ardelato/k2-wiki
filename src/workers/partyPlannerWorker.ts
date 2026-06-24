@@ -1,5 +1,5 @@
 import type { PartyPlannerInput, PartyPlannerWorkerMessage } from '@/types'
-import { planPartyLevelingPath } from '@/utils/partyPlanner'
+import { planPartyLevelingPath } from '@/utils/planner/partyPlanner'
 
 self.addEventListener('message', (e: MessageEvent<PartyPlannerInput>) => {
   const result = planPartyLevelingPath(e.data, (progress) => {

@@ -44,6 +44,22 @@ describe('useAwakenSimulation', () => {
     expect(savedIds.value.has('furnace-speed-ii')).toBe(true)
   })
 
+  test('savedIds reflects workstation XP nodes', () => {
+    const { setAwakenWorkstationXpTier } = useGameConfig()
+    setAwakenWorkstationXpTier('Furnace', 2)
+    const { savedIds } = useAwakenSimulation()
+    expect(savedIds.value.has('furnace-xp-i')).toBe(true)
+    expect(savedIds.value.has('furnace-xp-ii')).toBe(true)
+  })
+
+  test('savedIds reflects gather XP nodes', () => {
+    const { setAwakenGatherXpTier } = useGameConfig()
+    setAwakenGatherXpTier('Mining', 2)
+    const { savedIds } = useAwakenSimulation()
+    expect(savedIds.value.has('mining-xp-i')).toBe(true)
+    expect(savedIds.value.has('mining-xp-ii')).toBe(true)
+  })
+
   test('savedIds reflects awaken gold level', () => {
     const { setAwakenGoldLevel } = useGameConfig()
     setAwakenGoldLevel(3)

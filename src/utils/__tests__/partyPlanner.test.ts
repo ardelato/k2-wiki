@@ -2,12 +2,13 @@
 import { describe, expect, test } from 'vitest'
 
 import expeditionsData from '@/data/expeditions.json'
+import { isRunPartyStep } from '@/types'
 import type { Expedition, PartyLevelingPlan, PartyPlanStep } from '@/types'
-import { planPartyLevelingPath } from '@/utils/partyPlanner'
+import { planPartyLevelingPath } from '@/utils/planner/partyPlanner'
 
 const allExpeditions = expeditionsData as Expedition[]
-import type { PlanScore } from '@/utils/planScorer'
-import { scorePlan } from '@/utils/planScorer'
+import type { PlanScore } from '@/utils/planner/planScorer'
+import { scorePlan } from '@/utils/planner/planScorer'
 
 import collectionFull from './fixtures/collection-full.json'
 import collectionMixedAwaken from './fixtures/collection-mixed-awaken.json'
@@ -115,7 +116,7 @@ describe('expedition tier selection filtering', () => {
     input.expeditionTierSelections = { [firstExpId]: [] }
 
     const plan = planPartyLevelingPath(input)
-    for (const step of plan.steps) {
+    for (const step of plan.steps.filter(isRunPartyStep)) {
       expect(step.expedition.id).not.toBe(firstExpId)
     }
   })
@@ -129,7 +130,7 @@ describe('expedition tier selection filtering', () => {
     input.expeditionTierSelections = tierSelections
 
     const plan = planPartyLevelingPath(input)
-    for (const step of plan.steps) {
+    for (const step of plan.steps.filter(isRunPartyStep)) {
       expect(step.tier).toBeLessThanOrEqual(2)
     }
   })
@@ -151,7 +152,7 @@ describe('expedition tier selection filtering', () => {
     input.expeditionTierSelections = tierSelections
 
     const plan = planPartyLevelingPath(input)
-    for (const step of plan.steps) {
+    for (const step of plan.steps.filter(isRunPartyStep)) {
       expect(step.tier).toBeGreaterThanOrEqual(3)
     }
   })

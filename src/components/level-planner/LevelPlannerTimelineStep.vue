@@ -12,7 +12,6 @@ import {
 import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
-import { activeLocale } from '@/i18n'
 
 const { t } = useI18n()
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
@@ -20,11 +19,11 @@ import LevelPlannerBoosterChip from '@/components/level-planner/LevelPlannerBoos
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Creature } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { formatDuration, itemName } from '@/utils/format'
-import { expeditionTierIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
-import type { PlanStep } from '@/utils/levelPlanner'
+import { formatDecimal, formatDuration, formatNumber, itemName } from '@/utils/format/format'
+import { expeditionTierIcons } from '@/utils/format/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
+import { getItemImage } from '@/utils/images/itemImages'
+import type { PlanStep } from '@/utils/planner/levelPlanner'
 
 interface PartyMember {
   creatureId: string
@@ -93,7 +92,7 @@ function formatDelta(value: number): string {
       <template v-if="!hideNode">
         <div class="sticky top-[calc(var(--header-height)+0.75rem)] z-10 flex justify-center">
           <div
-            v-if="step.isAwakeningStep"
+            v-if="step.kind === 'awaken'"
             class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
             style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
           >
@@ -115,9 +114,9 @@ function formatDelta(value: number): string {
     </div>
 
     <!-- Awakening step card -->
-    <div v-if="step.isAwakeningStep" class="mb-2 min-w-0 flex-1 pb-1">
+    <div v-if="step.kind === 'awaken'" class="mb-2 min-w-0 flex-1 pb-1">
       <div
-        class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-amber-500/10"
+        class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-warning/10"
       >
         <div class="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
           <RightClickHint
@@ -206,13 +205,10 @@ function formatDelta(value: number): string {
                   class="size-5 shrink-0 object-contain"
                   loading="lazy"
                 />
-                <span
-                  v-if="step.traitMatch"
-                  class="shrink-0 text-[10px] font-semibold text-primary"
-                >
+                <span v-if="step.traitMatch" class="shrink-0 text-3xs font-semibold text-primary">
                   {{ t('levelPlannerComponents.timelineStep.traitMatch') }}
                 </span>
-                <span v-if="hasOverride" class="shrink-0 text-[10px] font-semibold text-primary">
+                <span v-if="hasOverride" class="shrink-0 text-3xs font-semibold text-primary">
                   {{ t('levelPlannerComponents.timelineStep.override') }}
                 </span>
               </div>
@@ -258,7 +254,7 @@ function formatDelta(value: number): string {
                     />
                     <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
                       <p
-                        class="truncate text-center text-[10px] font-semibold"
+                        class="truncate text-center text-3xs font-semibold"
                         :class="
                           highlightCreatureId && member.creatureId === highlightCreatureId
                             ? 'text-primary'
@@ -272,7 +268,7 @@ function formatDelta(value: number): string {
                   <template v-else>
                     <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5">
                       <p
-                        class="truncate text-center text-[10px] font-semibold"
+                        class="truncate text-center text-3xs font-semibold"
                         :class="
                           highlightCreatureId && member.creatureId === highlightCreatureId
                             ? 'text-primary'
@@ -285,7 +281,7 @@ function formatDelta(value: number): string {
                   </template>
                 </div>
                 <span
-                  class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
+                  class="rounded-full bg-muted/40 px-2 py-0.5 text-3xs font-semibold text-foreground"
                 >
                   <template v-if="member.isBooster">{{
                     t('levelPlannerComponents.timelineStep.booster')
@@ -324,9 +320,11 @@ function formatDelta(value: number): string {
                   <Clock3 class="size-3" />
                   {{ formatDuration(step.timeSeconds) }}
                 </span>
-                <span class="inline-flex items-center gap-1 text-xs font-semibold text-amber-400">
+                <span
+                  class="inline-flex items-center gap-1 text-xs font-semibold text-warning-strong"
+                >
                   <Repeat class="size-3" />
-                  {{ step.runs.toLocaleString(activeLocale()) }}
+                  {{ formatNumber(step.runs) }}
                 </span>
                 <span
                   class="inline-flex items-center gap-1 text-xs font-semibold"
@@ -334,8 +332,8 @@ function formatDelta(value: number): string {
                     scoreRatioMet === undefined
                       ? 'text-purple-400'
                       : scoreRatioMet
-                        ? 'text-emerald-400'
-                        : 'text-amber-400'
+                        ? 'text-success-strong'
+                        : 'text-warning-strong'
                   "
                 >
                   <Zap class="size-3" />
@@ -345,31 +343,18 @@ function formatDelta(value: number): string {
                       (step.endXpPerMinute / 60).toFixed(2)
                     "
                   >
-                    {{
-                      (step.startXpPerMinute / 60).toLocaleString(activeLocale(), {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }}&rarr;{{
-                      (step.endXpPerMinute / 60).toLocaleString(activeLocale(), {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
+                    {{ formatDecimal(step.startXpPerMinute / 60, 2) }}&rarr;{{
+                      formatDecimal(step.endXpPerMinute / 60, 2)
                     }}
                   </template>
                   <template v-else>
-                    {{
-                      (step.xpPerMinute / 60).toLocaleString(activeLocale(), {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })
-                    }}
+                    {{ formatDecimal(step.xpPerMinute / 60, 2) }}
                   </template>
                   {{ t('levelPlannerComponents.timelineStep.xpPerSec') }}
                 </span>
                 <span
                   v-if="partyMembers"
-                  class="inline-flex items-center gap-1 text-xs font-semibold text-sky-400"
+                  class="inline-flex items-center gap-1 text-xs font-semibold text-info-strong"
                 >
                   <Users class="size-3" />
                   {{ partyMembers.length }}
@@ -382,7 +367,7 @@ function formatDelta(value: number): string {
               v-if="!partyMembers && step.boosters && step.boosters.length > 0"
               class="mt-2 flex flex-wrap items-center gap-2"
             >
-              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400">
+              <span class="inline-flex items-center gap-1 text-2xs font-semibold text-info-strong">
                 <Users class="size-3" />
                 {{ t('levelPlannerComponents.timelineStep.bring') }}
               </span>
@@ -398,7 +383,7 @@ function formatDelta(value: number): string {
                   step.boosterTimeSavings > 0 &&
                   step.timeSeconds + step.boosterTimeSavings > 0
                 "
-                class="ml-auto text-[11px] font-semibold"
+                class="ml-auto text-2xs font-semibold"
                 style="color: var(--color-green)"
               >
                 {{
@@ -421,7 +406,7 @@ function formatDelta(value: number): string {
                   }"
                 />
               </div>
-              <span v-if="timePercent >= 5" class="text-[10px] font-semibold text-muted-foreground">
+              <span v-if="timePercent >= 5" class="text-3xs font-semibold text-muted-foreground">
                 {{ Math.round(timePercent) }}%
               </span>
             </div>
@@ -429,7 +414,7 @@ function formatDelta(value: number): string {
             <!-- Party tip -->
             <p
               v-if="step.partyTip && !partyMembers && !(step.boosters && step.boosters.length > 0)"
-              class="mt-1.5 flex items-center gap-1 text-[11px] text-sky-400"
+              class="mt-1.5 flex items-center gap-1 text-2xs text-info-strong"
             >
               <Users class="size-3" />
               {{ step.partyTip }}
@@ -460,7 +445,7 @@ function formatDelta(value: number): string {
                 </p>
                 <button
                   v-if="hasOverride"
-                  class="focus-ring flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
+                  class="focus-ring flex items-center gap-1 rounded px-1.5 py-0.5 text-3xs font-semibold text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
                   @click.stop="$emit('resetOverride', step.fromLevel)"
                 >
                   <RotateCcw class="size-3" />
@@ -530,12 +515,7 @@ function formatDelta(value: number): string {
                         }"
                       >
                         <Zap class="size-3" />
-                        {{
-                          (alt.xpPerMinute / 60).toLocaleString(activeLocale(), {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })
-                        }}
+                        {{ formatDecimal(alt.xpPerMinute / 60, 2) }}
                         <span class="opacity-60">{{
                           formatDelta(alt.xpPerMinuteDeltaPercent)
                         }}</span>
@@ -549,7 +529,7 @@ function formatDelta(value: number): string {
                     class="flex flex-wrap items-center gap-2 pl-5"
                   >
                     <span
-                      class="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400"
+                      class="inline-flex items-center gap-1 text-2xs font-semibold text-info-strong"
                     >
                       <Users class="size-3" />
                       {{ t('levelPlannerComponents.timelineStep.bring') }}

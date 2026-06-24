@@ -6,10 +6,9 @@ import { useI18n } from 'vue-i18n'
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
-import { activeLocale } from '@/i18n'
 import type { Creature } from '@/types'
-import { formatDuration } from '@/utils/format'
-import type { LevelingPlan } from '@/utils/levelPlanner'
+import { formatDuration, formatNumber } from '@/utils/format/format'
+import type { LevelingPlan } from '@/utils/planner/levelPlanner'
 
 const { t } = useI18n()
 
@@ -20,7 +19,7 @@ const props = defineProps<{
   toLevel: number
   creatureName?: string
   creatureImage?: string
-  /** When provided, the avatar becomes right-clickable to open the creature drawer */
+  /** When provided, the avatar can be inspected to open the creature drawer */
   creature?: Creature | null
   hasRouteOverrides?: boolean
 }>()
@@ -35,19 +34,23 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
 
 
 const segments = computed(() =>
-  props.plan.steps.map((step) => ({
-    percent:
-      props.plan.totalTimeSeconds > 0
-        ? (step.timeSeconds / props.plan.totalTimeSeconds) * 100
-        : 100 / props.plan.steps.length,
-    biomeStatus: step.biomeStatus,
-    toLevel: step.toLevel,
-  })),
+  props.plan.steps.map((step) => {
+    const timeSeconds = step.kind === 'run' ? step.timeSeconds : 0
+    return {
+      percent:
+        props.plan.totalTimeSeconds > 0
+          ? (timeSeconds / props.plan.totalTimeSeconds) * 100
+          : 100 / props.plan.steps.length,
+      biomeStatus: step.kind === 'run' ? step.biomeStatus : ('neutral' as const),
+      toLevel: step.toLevel,
+    }
+  }),
 )
 
 
 const boostedStepCount = computed(
-  () => props.plan.steps.filter((s) => s.boosters && s.boosters.length > 0).length,
+  () =>
+    props.plan.steps.filter((s) => s.kind === 'run' && s.boosters && s.boosters.length > 0).length,
 )
 
 
@@ -99,20 +102,20 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
         <Clock3 class="size-3.5" />
         {{ formatDuration(plan.totalTimeSeconds) }}
       </span>
-      <span class="inline-flex items-center gap-1.5 text-sky-400">
+      <span class="inline-flex items-center gap-1.5 text-info-strong">
         <Layers class="size-3.5" />
         {{ plan.steps.length }} {{ t('levelPlannerComponents.summary.steps') }}
       </span>
-      <span class="inline-flex items-center gap-1.5 text-amber-400">
+      <span class="inline-flex items-center gap-1.5 text-warning-strong">
         <Repeat class="size-3.5" />
-        {{ plan.totalRuns.toLocaleString(activeLocale()) }}
+        {{ formatNumber(plan.totalRuns) }}
         {{ t('levelPlannerComponents.summary.runs') }}
       </span>
       <span class="inline-flex items-center gap-1.5 text-purple-400">
         <Zap class="size-3.5" />
         {{ Math.round(plan.xpPerMinute) }} {{ t('levelPlannerComponents.summary.xpPerMin') }}
       </span>
-      <span v-if="boostedStepCount > 0" class="inline-flex items-center gap-1.5 text-sky-400">
+      <span v-if="boostedStepCount > 0" class="inline-flex items-center gap-1.5 text-info-strong">
         <Users class="size-3.5" />
         {{ boostedStepCount }} {{ t('levelPlannerComponents.summary.boostedSteps') }}
       </span>
@@ -120,7 +123,7 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
 
     <!-- Segmented progress bar -->
     <div class="space-y-1 pb-4">
-      <div class="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
+      <div class="flex items-center justify-between text-2xs font-bold text-muted-foreground">
         <span>{{ t('levelPlannerComponents.summary.levelFrom', { n: fromLevel }) }}</span>
         <span class="inline-flex items-center gap-1 text-foreground">
           <Flag class="size-3" />
@@ -158,7 +161,7 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
           >
             <div class="h-2.5 w-px bg-background/70" />
             <div class="h-2 w-px bg-muted-foreground/30" />
-            <span class="mt-0.5 text-[9px] font-semibold text-muted-foreground/70">
+            <span class="mt-0.5 text-3xs font-semibold text-muted-foreground/70">
               {{ seg.toLevel }}
             </span>
           </div>

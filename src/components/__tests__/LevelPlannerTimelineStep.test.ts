@@ -2,21 +2,23 @@ import { mount } from '@vue/test-utils'
 
 import LevelPlannerTimelineStep from '@/components/level-planner/LevelPlannerTimelineStep.vue'
 import type { Creature, Expedition } from '@/types'
-import type { AlternativeRoute, BoosterInfo, PlanStep } from '@/utils/levelPlanner'
+import type { AlternativeRoute, BoosterInfo, PlanStep } from '@/utils/planner/levelPlanner'
 
-vi.mock('@/utils/creatureImages', () => ({
+vi.mock('@/utils/images/creatureImages', () => ({
   getCreatureImage: (c: Creature | undefined) => `mock://${c?.id ?? 'unknown'}.png`,
 }))
 
-vi.mock('@/utils/itemImages', () => ({
+vi.mock('@/utils/images/itemImages', () => ({
   getItemImage: () => undefined,
 }))
 
-vi.mock('@/utils/icons', () => ({
+vi.mock('@/utils/format/icons', () => ({
   expeditionTierIcons: { 1: '', 2: '', 3: '', 4: '', 5: '' },
 }))
 
-vi.mock('@/utils/format', () => ({
+vi.mock('@/utils/format/format', () => ({
+  formatNumber: (n: number) => n.toLocaleString('en-US'),
+  formatDecimal: (n: number, d = 2) => n.toFixed(d),
   formatDuration: (s: number) => `${s}s`,
   itemName: (id: string) => id,
 }))
@@ -74,6 +76,7 @@ function makeExpedition(id: string, name: string): Expedition {
 function makeStep(overrides: Partial<PlanStep> = {}): PlanStep {
   const expedition = makeExpedition('exp-a', 'Forest Expedition')
   return {
+    kind: 'run',
     expedition,
     tier: 1,
     fromLevel: 1,

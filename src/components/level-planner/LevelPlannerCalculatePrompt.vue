@@ -13,7 +13,7 @@ const { t } = useI18n()
 defineProps<{
   creatureName: string
   creatureImage?: string
-  /** When provided, the avatar becomes right-clickable to open the creature drawer */
+  /** When provided, the avatar can be inspected to open the creature drawer */
   creature?: Creature | null
   fromLevel: number
   toLevel: number

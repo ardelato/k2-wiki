@@ -8,6 +8,7 @@ import type {
   PartyPlannerInput,
   PartyPlannerProgress,
   PartyPlanStep,
+  RunPartyStep,
   PlannerStrategy,
   PlannerTimeBudget,
 } from '@/types'
@@ -26,7 +27,7 @@ import {
   getLevelTransitions,
   getPrecomputedSoloRate,
   getTopExpeditions,
-} from '@/utils/precomputedTables'
+} from '@/utils/save/precomputedTables'
 
 const BEAM_WIDTH = 32
 const INITIAL_WIDE_ITERATIONS = 3
@@ -130,6 +131,95 @@ function remainingXpToFinalTarget(progress: CreatureProgress): number {
   return currentSegment + (xpForLevel(progress.fullTargetLevel) - xpForLevel(1))
 }
 
+function scoreHandsFreeCandidate(
+  state: SearchState,
+  expedition: Expedition,
+  memberIds: string[],
+  levelerIds: string[],
+  duration: number,
+  xpPerCreature: number,
+  preservedLoopBonus: boolean,
+  loopCountStart: number,
+  hadExistingAssignment: boolean,
+): { priorityScore: number; usefulXpPerSecond: number } {
+  // Hands-free: optimize for stable, long-running assignments
+  // Use full XP rate (not capped at remaining) since we care about sustained throughput
+  const usefulXp = xpPerCreature * levelerIds.length
+  const usefulXpPerSecond = usefulXp / duration
+
+  // How many runs before ANY creature finishes or hits a transition point
+  // where its best expedition changes (and reassignment would improve quality)
+  let minRunsBeforeSwap = Infinity
+  for (const creatureId of levelerIds) {
+    const progress = state.creatures[creatureId]
+    const remaining = remainingXpToFinalTarget(progress)
+    const runsToFinish = Math.ceil(remaining / xpPerCreature)
+    if (runsToFinish < minRunsBeforeSwap) minRunsBeforeSwap = runsToFinish
+  }
+  if (!Number.isFinite(minRunsBeforeSwap)) minRunsBeforeSwap = 1
+
+  // Amortized XP rate: bake in a fixed swap overhead so short-lived assignments are penalized.
+  // A party that sustains 50 runs barely notices the overhead; one that lasts 2 runs loses ~half its effective rate.
+  const SWAP_OVERHEAD_SECONDS = 720
+  const sessionSeconds = duration * minRunsBeforeSwap
+  const amortizedXpPerSecond =
+    (xpPerCreature * levelerIds.length * minRunsBeforeSwap) /
+    (sessionSeconds + SWAP_OVERHEAD_SECONDS)
+  // Stability bonus: flat 20% boost for keeping the same party on the same expedition,
+  // plus loop bonus. This rewards stability even at low loop counts.
+  const preserveBonus = preservedLoopBonus
+    ? amortizedXpPerSecond * 0.2 + getLoopXpBonus(loopCountStart) * 0.5
+    : 0
+
+  // Creature-level reassignment penalty: penalize pulling creatures from other expeditions.
+  // The per-expedition reconfiguration penalty misses the case where a creature is FREE
+  // (its old expedition completed) and gets assigned to a NEW expedition with no penalty.
+  let reassignedCount = 0
+  for (const cid of memberIds) {
+    for (const [expId, asgn] of Object.entries(state.expeditionAssignments)) {
+      if (expId === expedition.id || !asgn) continue
+      if (asgn.memberIds.includes(cid)) {
+        reassignedCount++
+        break
+      }
+    }
+  }
+  const reassignmentPenalty =
+    reassignedCount > 0 ? amortizedXpPerSecond * 0.25 * (reassignedCount / memberIds.length) : 0
+
+  // Per-expedition reconfiguration penalty (party composition changed on this expedition)
+  const reconfigPenalty =
+    hadExistingAssignment && !preservedLoopBonus ? amortizedXpPerSecond * 0.25 : 0
+
+  const priorityScore = amortizedXpPerSecond + preserveBonus - reconfigPenalty - reassignmentPenalty
+  return { priorityScore, usefulXpPerSecond }
+}
+
+function scoreOptimalCandidate(
+  state: SearchState,
+  levelerIds: string[],
+  duration: number,
+  xpPerCreature: number,
+  preservedLoopBonus: boolean,
+  loopCountStart: number,
+): { priorityScore: number; usefulXpPerSecond: number } | null {
+  // Optimal: maximize XP efficiency per run
+  let usefulXp = 0
+  let completionCount = 0
+  for (const creatureId of levelerIds) {
+    const remainingXp = remainingXpToCurrentTarget(state.creatures[creatureId])
+    usefulXp += Math.min(xpPerCreature, remainingXp)
+    if (remainingXp > 0 && xpPerCreature >= remainingXp) completionCount += 1
+  }
+  if (usefulXp <= 0) return null
+
+  const usefulXpPerSecond = usefulXp / duration
+  const completionBonus = completionCount / Math.max(1, levelerIds.length)
+  const preserveBonus = preservedLoopBonus ? getLoopXpBonus(loopCountStart) * 0.05 : 0
+  const priorityScore = usefulXpPerSecond / levelerIds.length + completionBonus + preserveBonus
+  return { priorityScore, usefulXpPerSecond }
+}
+
 function availableCreatureIds(state: SearchState): string[] {
   const busy = new Set(state.activeRuns.flatMap((run) => run.memberIds))
   return Object.keys(state.creatures).filter((creatureId) => !busy.has(creatureId))
@@ -205,28 +295,24 @@ function cloneState(state: SearchState): SearchState {
   }
 }
 
-function hashCacheKey(
+// Builds a collision-free string signature for the candidate cache. A previous
+// numeric rolling hash could collide, silently returning the wrong cached
+// candidate; a concatenated signature keys exactly on the inputs that matter.
+function buildCacheKey(
   expeditionId: string,
   orderedMemberIds: string[],
   creatures: Record<string, CreatureProgress>,
   prevKey: string | undefined,
   prevTier: number,
   loopCount: number,
-): number {
-  let h = 0
-  for (let i = 0; i < expeditionId.length; i++) h = (h * 31 + expeditionId.charCodeAt(i)) | 0
+): string {
+  let key = expeditionId
   for (const id of orderedMemberIds) {
     const p = creatures[id]
-    h = (h * 31 + p.level) | 0
-    h = (h * 31 + p.targetLevel) | 0
-    h = (h * 31 + p.fullTargetLevel) | 0
-    h = (h * 31 + (p.awakened ? 1 : 0)) | 0
-    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+    key += `|${id}:${p.level},${p.targetLevel},${p.fullTargetLevel},${p.awakened ? 1 : 0}`
   }
-  if (prevKey) for (let i = 0; i < prevKey.length; i++) h = (h * 31 + prevKey.charCodeAt(i)) | 0
-  h = (h * 31 + prevTier) | 0
-  h = (h * 31 + loopCount) | 0
-  return h
+  key += `|prev:${prevKey ?? ''}|tier:${prevTier}|loop:${loopCount}`
+  return key
 }
 
 export function planPartyLevelingPath(
@@ -236,6 +322,9 @@ export function planPartyLevelingPath(
   const normalized = normalizePlannerInput(input)
   const strategy: PlannerStrategy = normalized.strategy ?? 'optimal'
   const swordXpMultiplier = normalized.swordXpMultiplier ?? 1
+  // When capped to one leveler per party, fill remaining slots with boosters
+  // (finished creatures) instead of stacking additional levelers together.
+  const soloLevelers = (normalized.maxLevelersPerParty ?? Number.POSITIVE_INFINITY) <= 1
   const maxIterations = ITERATION_BUDGET_MAP[normalized.timeBudget ?? 'quick']
   const creaturesInput = normalized.creatures
   const levelers = creaturesInput.filter((entry) => entry.startLevel < entry.targetLevel)
@@ -327,10 +416,7 @@ export function planPartyLevelingPath(
   const creatureMap = new Map(creaturesInput.map((entry) => [entry.creature.id, entry.creature]))
   const trackedCreatureIds = levelers.map((entry) => entry.creature.id)
   const trackedCreatureSet = new Set(trackedCreatureIds)
-  const partyCandidateCache = new Map<
-    number,
-    { expeditionId: string; result: RunCandidate | null }
-  >()
+  const partyCandidateCache = new Map<string, RunCandidate | null>()
   const tierSelections = normalized.expeditionTierSelections ?? {}
   const hasTierRestrictions = Object.keys(tierSelections).length > 0
   const allTiers = [1, 2, 3, 4, 5]
@@ -848,7 +934,15 @@ export function planPartyLevelingPath(
   ): RunCandidate[] {
     const parties = new Map(seeds.map((seed) => [seed.expeditionId, seed]))
     const assignedMembers = new Set(seeds.flatMap((seed) => seed.memberIds))
-    const remainingLevelers = unfinishedIds.filter((creatureId) => !assignedMembers.has(creatureId))
+    // Solo-leveler mode fills empty party slots with idle boosters (finished
+    // creatures) so each party keeps its single seeded leveler; otherwise the
+    // remaining unfinished levelers are packed in to share XP.
+    const fillPool = soloLevelers
+      ? availableCreatureIds(state).filter(
+          (creatureId) =>
+            !assignedMembers.has(creatureId) && isCreatureFinished(state.creatures[creatureId]),
+        )
+      : unfinishedIds.filter((creatureId) => !assignedMembers.has(creatureId))
 
     function fillCreatures(remaining: string[]) {
       while (remaining.length > 0) {
@@ -889,12 +983,16 @@ export function planPartyLevelingPath(
         }
 
         if (!bestFill) break
+        // Boosters are optional helpers — stop once they no longer speed the
+        // leveler up. Levelers (uncapped mode) are added even at a slight loss
+        // because covering them at all is the point.
+        if (soloLevelers && bestFill.gain <= 0) break
         parties.set(bestFill.expeditionId, bestFill.candidate)
         remaining.splice(remaining.indexOf(bestFill.creatureId), 1)
       }
     }
 
-    fillCreatures(remainingLevelers)
+    fillCreatures(fillPool)
     return [...parties.values()].toSorted((a, b) => a.expeditionId.localeCompare(b.expeditionId))
   }
 
@@ -905,7 +1003,7 @@ export function planPartyLevelingPath(
   ): RunCandidate | null {
     const orderedMemberIds = orderMembersForExpedition(state, expedition, inputMemberIds)
     const previousAssignment = state.expeditionAssignments[expedition.id]
-    const cacheKey = hashCacheKey(
+    const cacheKey = buildCacheKey(
       expedition.id,
       orderedMemberIds,
       state.creatures,
@@ -914,7 +1012,7 @@ export function planPartyLevelingPath(
       state.expeditionLoops[expedition.id] ?? 0,
     )
     const cached = partyCandidateCache.get(cacheKey)
-    if (cached !== undefined && cached.expeditionId === expedition.id) return cached.result
+    if (cached !== undefined) return cached
 
     let best: RunCandidate | null = null
     const tiers = tierSelections[expedition.id] ?? allTiers
@@ -924,7 +1022,7 @@ export function planPartyLevelingPath(
       if (!best || isBetterCandidate(candidate, best, strategy)) best = candidate
     }
 
-    partyCandidateCache.set(cacheKey, { expeditionId: expedition.id, result: best })
+    partyCandidateCache.set(cacheKey, best)
     return best
   }
 
@@ -960,81 +1058,29 @@ export function planPartyLevelingPath(
     )
     if (duration <= 0 || xpPerCreature <= 0) return null
 
-    let usefulXp = 0
-    let completionCount = 0
-    let priorityScore: number
-    let usefulXpPerSecond: number
-
-    if (strategy === 'hands-free') {
-      // Hands-free: optimize for stable, long-running assignments
-      // Use full XP rate (not capped at remaining) since we care about sustained throughput
-      usefulXp = xpPerCreature * levelerIds.length
-      usefulXpPerSecond = usefulXp / duration
-
-      // How many runs before ANY creature finishes or hits a transition point
-      // where its best expedition changes (and reassignment would improve quality)
-      let minRunsBeforeSwap = Infinity
-      for (const creatureId of levelerIds) {
-        const progress = state.creatures[creatureId]
-        const remaining = remainingXpToFinalTarget(progress)
-        const runsToFinish = Math.ceil(remaining / xpPerCreature)
-        if (runsToFinish < minRunsBeforeSwap) minRunsBeforeSwap = runsToFinish
-
-        // Transition awareness: getLevelTransitions() is available for future
-        // use to detect when a creature's best expedition changes at a level-up.
-        // Tightening minRunsBeforeSwap at transitions was tested but proved
-        // counterproductive — it tanks the amortized XP rate, leading to worse plans.
-      }
-      if (!Number.isFinite(minRunsBeforeSwap)) minRunsBeforeSwap = 1
-
-      // Amortized XP rate: bake in a fixed swap overhead so short-lived assignments are penalized.
-      // A party that sustains 50 runs barely notices the overhead; one that lasts 2 runs loses ~half its effective rate.
-      const SWAP_OVERHEAD_SECONDS = strategy === 'hands-free' ? 720 : 300
-      const sessionSeconds = duration * minRunsBeforeSwap
-      const amortizedXpPerSecond =
-        (xpPerCreature * levelerIds.length * minRunsBeforeSwap) /
-        (sessionSeconds + SWAP_OVERHEAD_SECONDS)
-      // Stability bonus: flat 20% boost for keeping the same party on the same expedition,
-      // plus loop bonus. This rewards stability even at low loop counts.
-      const preserveBonus = preservedLoopBonus
-        ? amortizedXpPerSecond * 0.2 + getLoopXpBonus(loopCountStart) * 0.5
-        : 0
-
-      // Creature-level reassignment penalty: penalize pulling creatures from other expeditions.
-      // The per-expedition reconfiguration penalty misses the case where a creature is FREE
-      // (its old expedition completed) and gets assigned to a NEW expedition with no penalty.
-      let reassignedCount = 0
-      for (const cid of memberIds) {
-        for (const [expId, asgn] of Object.entries(state.expeditionAssignments)) {
-          if (expId === expedition.id || !asgn) continue
-          if (asgn.memberIds.includes(cid)) {
-            reassignedCount++
-            break
-          }
-        }
-      }
-      const reassignmentPenalty =
-        reassignedCount > 0 ? amortizedXpPerSecond * 0.25 * (reassignedCount / memberIds.length) : 0
-
-      // Per-expedition reconfiguration penalty (party composition changed on this expedition)
-      const reconfigPenalty =
-        hadExistingAssignment && !preservedLoopBonus ? amortizedXpPerSecond * 0.25 : 0
-
-      priorityScore = amortizedXpPerSecond + preserveBonus - reconfigPenalty - reassignmentPenalty
-    } else {
-      // Optimal: maximize XP efficiency per run
-      for (const creatureId of levelerIds) {
-        const remainingXp = remainingXpToCurrentTarget(state.creatures[creatureId])
-        usefulXp += Math.min(xpPerCreature, remainingXp)
-        if (remainingXp > 0 && xpPerCreature >= remainingXp) completionCount += 1
-      }
-      if (usefulXp <= 0) return null
-
-      usefulXpPerSecond = usefulXp / duration
-      const completionBonus = completionCount / Math.max(1, levelerIds.length)
-      const preserveBonus = preservedLoopBonus ? getLoopXpBonus(loopCountStart) * 0.05 : 0
-      priorityScore = usefulXpPerSecond / levelerIds.length + completionBonus + preserveBonus
-    }
+    const scored =
+      strategy === 'hands-free'
+        ? scoreHandsFreeCandidate(
+            state,
+            expedition,
+            memberIds,
+            levelerIds,
+            duration,
+            xpPerCreature,
+            preservedLoopBonus,
+            loopCountStart,
+            hadExistingAssignment,
+          )
+        : scoreOptimalCandidate(
+            state,
+            levelerIds,
+            duration,
+            xpPerCreature,
+            preservedLoopBonus,
+            loopCountStart,
+          )
+    if (!scored) return null
+    const { priorityScore, usefulXpPerSecond } = scored
 
     return {
       expeditionId: expedition.id,
@@ -1259,6 +1305,7 @@ export function planPartyLevelingPath(
     })
 
     state.steps.push({
+      kind: 'run',
       expedition,
       tier: run.tier,
       party: updatedMembers,
@@ -1292,6 +1339,9 @@ export function planPartyLevelingPath(
       if (progress.fullTargetLevel <= progress.targetLevel) continue
       if (progress.level < progress.targetLevel) continue
 
+      // Level reached at the moment of awakening (the pre-awaken cap).
+      const awakenFromLevel = progress.targetLevel
+
       progress.awakened = true
       progress.level = 1
       progress.xpInLevel = 0
@@ -1299,12 +1349,11 @@ export function planPartyLevelingPath(
 
       state.awakenEvents.push({ creatureId, clockTime: state.clock })
       state.steps.push({
-        expedition: {} as Expedition,
-        tier: 0,
+        kind: 'awaken',
         party: [
           {
             creatureId,
-            fromLevel: 70,
+            fromLevel: awakenFromLevel,
             toLevel: 1,
             xpGained: 0,
             isBooster: false,
@@ -1313,15 +1362,9 @@ export function planPartyLevelingPath(
         runs: 0,
         timeSeconds: 0,
         xpPerMinute: 0,
-        biomeName: '',
-        loopCount: 0,
-        loopCountStart: 0,
-        loopCountEnd: 0,
-        preservedLoopBonus: false,
         wasReconfigured: false,
         startTime: state.clock,
         endTime: state.clock,
-        isAwakeningStep: true,
       })
     }
   }
@@ -1439,10 +1482,10 @@ function mergePartySteps(steps: PartyPlanStep[]): PartyPlanStep[] {
   const sorted = [...steps].toSorted((a, b) => (a.startTime ?? 0) - (b.startTime ?? 0))
 
   // Track last merged step per expedition lane for merging across interleaved parallel steps
-  const laneLastStep = new Map<string, PartyPlanStep>()
+  const laneLastStep = new Map<string, RunPartyStep>()
 
   for (const step of sorted) {
-    if (step.isAwakeningStep) {
+    if (step.kind === 'awaken') {
       merged.push(deepCloneStep(step))
       // Clear lane entries involving the awakened creature so post-awakening
       // steps don't merge with pre-awakening steps
@@ -1459,10 +1502,7 @@ function mergePartySteps(steps: PartyPlanStep[]): PartyPlanStep[] {
 
     const laneKey = `${step.expedition.id}:${step.tier}:${step.party.map((m) => m.creatureId).join(',')}`
     const previous = laneLastStep.get(laneKey)
-    const canMerge =
-      previous &&
-      !previous.isAwakeningStep &&
-      Math.abs((previous.endTime ?? 0) - (step.startTime ?? 0)) < 0.01
+    const canMerge = previous && Math.abs((previous.endTime ?? 0) - (step.startTime ?? 0)) < 0.01
 
     if (canMerge && previous) {
       previous.runs += step.runs
@@ -1490,7 +1530,7 @@ function mergePartySteps(steps: PartyPlanStep[]): PartyPlanStep[] {
   return merged
 }
 
-function deepCloneStep(step: PartyPlanStep): PartyPlanStep {
+function deepCloneStep<T extends PartyPlanStep>(step: T): T {
   return {
     ...step,
     party: step.party.map((member) => ({ ...member })),

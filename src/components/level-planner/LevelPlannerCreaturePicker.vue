@@ -9,8 +9,8 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import type { Creature } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { typeColor, typeColorVar } from '@/utils/format'
+import { typeColor, typeColorVar } from '@/utils/format/format'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 const { t } = useI18n()
 
@@ -140,7 +140,7 @@ function close() {
             <span
               v-if="ownedCreatureIds.has(selected.id)"
               class="text-xs"
-              :class="isAwakened(selected.id) ? 'text-pink-400' : 'text-amber-400'"
+              :class="isAwakened(selected.id) ? 'text-pink-400' : 'text-warning-strong'"
               >★</span
             >
             <span
@@ -228,7 +228,7 @@ function close() {
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1">
                 <p
-                  class="truncate text-[15px] font-semibold"
+                  class="truncate text-sm font-semibold"
                   :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-foreground'"
                 >
                   {{ creature.name }}
@@ -236,7 +236,7 @@ function close() {
                 <span
                   v-if="ownedCreatureIds.has(creature.id)"
                   class="text-xs"
-                  :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
+                  :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-warning-strong'"
                   >★</span
                 >
               </div>
