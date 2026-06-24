@@ -2,7 +2,7 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import { useSanctuary } from '@/composables/useSanctuary'
-import { MAX_SANCTUARY_SLOTS, SANCTUARY_JOBS } from '@/utils/sanctuaryConstants'
+import { MAX_SANCTUARY_SLOTS, SANCTUARY_JOBS } from '@/utils/planner/sanctuaryConstants'
 
 describe('useSanctuary', () => {
   beforeEach(() => {
@@ -81,6 +81,43 @@ describe('useSanctuary', () => {
     test('does nothing when removing from an empty slot', () => {
       const { sanctuaryCreatureIds, removeCreatureFromSlot } = useSanctuary()
       removeCreatureFromSlot(0)
+      expect(sanctuaryCreatureIds.value).toHaveLength(0)
+    })
+  })
+
+  describe('setParty', () => {
+    test('replaces the party with the given creatures', () => {
+      const { creatures } = useCreatures()
+      const { sanctuaryCreatureIds, setParty } = useSanctuary()
+      const { setSanctuaryCreatures } = useGameConfig()
+
+      const [c1, c2, c3] = creatures.value
+      setSanctuaryCreatures([c1.id])
+
+      setParty([c2, c3])
+      expect(sanctuaryCreatureIds.value).toEqual([c2.id, c3.id])
+    })
+
+    test('caps the party at MAX_SANCTUARY_SLOTS', () => {
+      const { creatures } = useCreatures()
+      const { sanctuaryCreatureIds, setParty } = useSanctuary()
+
+      const tooMany = creatures.value.slice(0, MAX_SANCTUARY_SLOTS + 3)
+      setParty(tooMany)
+
+      expect(sanctuaryCreatureIds.value).toHaveLength(MAX_SANCTUARY_SLOTS)
+      expect(sanctuaryCreatureIds.value).toEqual(
+        tooMany.slice(0, MAX_SANCTUARY_SLOTS).map((c) => c.id),
+      )
+    })
+
+    test('clears the party when given an empty list', () => {
+      const { creatures } = useCreatures()
+      const { sanctuaryCreatureIds, setParty } = useSanctuary()
+      const { setSanctuaryCreatures } = useGameConfig()
+
+      setSanctuaryCreatures([creatures.value[0].id, creatures.value[1].id])
+      setParty([])
       expect(sanctuaryCreatureIds.value).toHaveLength(0)
     })
   })

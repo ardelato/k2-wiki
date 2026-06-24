@@ -28,6 +28,22 @@ export const JOB_TIER_BENEFITS = [
   { xpBonus: 120, durationReduction: 20, yieldBonus: 1 },
 ]
 
+export interface JobTierBenefits {
+  xpBonus: number
+  durationReduction: number
+  yieldBonus: number
+}
+
+/**
+ * Cumulative sanctuary benefits for a job at the given tier (0–MAX_TIER).
+ * `JOB_TIER_BENEFITS` is already cumulative-by-tier, so this just indexes it
+ * with clamping. Matches the game's `SanctuaryHelpers.getJobBenefits`.
+ */
+export function getJobBenefits(tier: number): JobTierBenefits {
+  const idx = Math.max(0, Math.min(Math.floor(tier), MAX_TIER))
+  return JOB_TIER_BENEFITS[idx] ?? JOB_TIER_BENEFITS[0]
+}
+
 export function jobTierLabel(tier: number, shortDuration = false): string {
   const b = JOB_TIER_BENEFITS[tier] ?? JOB_TIER_BENEFITS[0]
   if (tier === 0) return t('sanctuary.noBonuses')

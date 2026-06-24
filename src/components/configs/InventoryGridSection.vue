@@ -2,7 +2,8 @@
 import { useI18n } from 'vue-i18n'
 
 import AppTooltip from '@/components/shared/AppTooltip.vue'
-import { getItemImage } from '@/utils/itemImages'
+import { formatNumber, formatNumberCompact } from '@/utils/format/format'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 
@@ -19,18 +20,11 @@ interface InventoryGridEntry {
 defineProps<{
   items: InventoryGridEntry[]
 }>()
-
-
-function formatAmount(amount: number): string {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
-  if (amount >= 1_000) return `${(amount / 1_000).toFixed(1).replace(/\.0$/, '')}k`
-  return String(amount)
-}
 </script>
 
 <template>
   <section>
-    <div class="rounded-2xl border border-border bg-card/50 p-5">
+    <div class="rounded-xl border border-border bg-card/50 p-5">
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex items-start gap-2 text-left">
           <h3 class="text-sm font-extrabold">{{ t('configs.inventoryGrid.title') }}</h3>
@@ -56,7 +50,7 @@ function formatAmount(amount: number): string {
             <AppTooltip
               v-for="item in items"
               :key="item.id"
-              :text="item.owned ? `${item.name} · ${item.amount.toLocaleString()}` : item.name"
+              :text="item.owned ? `${item.name} · ${formatNumber(item.amount)}` : item.name"
             >
               <div
                 class="relative aspect-square shrink-0 overflow-hidden rounded-md border"
@@ -79,12 +73,12 @@ function formatAmount(amount: number): string {
                 </div>
                 <template v-if="item.owned">
                   <span
-                    class="absolute right-0 top-0 rounded-bl-md bg-black/85 px-1 py-px font-mono text-[9px] font-bold tabular-nums leading-none text-white shadow"
+                    class="absolute right-0 top-0 rounded-bl-md bg-black/85 px-1 py-px font-mono text-3xs font-bold tabular-nums leading-none text-white shadow"
                   >
-                    {{ formatAmount(item.amount) }}
+                    {{ formatNumberCompact(item.amount) }}
                   </span>
                   <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-px">
-                    <p class="truncate text-center text-[9px] font-bold leading-tight text-white">
+                    <p class="truncate text-center text-3xs font-bold leading-tight text-white">
                       {{ item.name }}
                     </p>
                   </div>

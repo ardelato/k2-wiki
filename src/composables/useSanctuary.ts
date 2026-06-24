@@ -12,7 +12,7 @@ import {
   TIER_THRESHOLDS,
   TIER_THRESHOLDS_RAW,
   MAX_TIER,
-} from '@/utils/sanctuaryConstants'
+} from '@/utils/planner/sanctuaryConstants'
 
 interface JobProgress {
   job: string
@@ -43,12 +43,14 @@ export function useSanctuary() {
   const showExcludedCreatures = ref(false)
   const ownedOnly = ref(true)
 
+  // Rebuilds only when the creature roster changes — not on every party reshuffle.
+  const creatureMap = computed(() => new Map(creatures.value.map((c) => [c.id, c])))
+
   // Party slots (8 fixed slots)
   const partySlots = computed<(Creature | null)[]>(() => {
-    const creatureMap = new Map(creatures.value.map((c) => [c.id, c]))
     const slots: (Creature | null)[] = Array(MAX_SANCTUARY_SLOTS).fill(null)
     for (let i = 0; i < sanctuaryCreatureIds.value.length && i < MAX_SANCTUARY_SLOTS; i++) {
-      slots[i] = creatureMap.get(sanctuaryCreatureIds.value[i]) ?? null
+      slots[i] = creatureMap.value.get(sanctuaryCreatureIds.value[i]) ?? null
     }
     return slots
   })
@@ -56,7 +58,7 @@ export function useSanctuary() {
   const partyCreatureIds = computed(() => new Set(sanctuaryCreatureIds.value))
 
   const isFull = computed(() => sanctuaryCreatureIds.value.length >= MAX_SANCTUARY_SLOTS)
-  const hasEmptySlot = computed(() => sanctuaryCreatureIds.value.length < MAX_SANCTUARY_SLOTS)
+  const hasEmptySlot = computed(() => !isFull.value)
 
   // Raw job scores from sanctuary creatures
   const jobScores = computed(() => {
@@ -310,6 +312,14 @@ export function useSanctuary() {
     setSanctuaryCreatures([])
   }
 
+  // Replace the whole sanctuary party with the given creatures, capped at the slot
+  // limit. `assignCreatureToSlot` is active-slot-based and awkward for bulk swaps, so
+  // this clears the prior roster and fills the first N slots in the given order.
+  // Accepts anything carrying an `id` (full Creature or a recommendation pick).
+  function setParty(party: { id: string }[]) {
+    setSanctuaryCreatures(party.slice(0, MAX_SANCTUARY_SLOTS).map((c) => c.id))
+  }
+
   function getCreatureStatus(id: string): 'helper' | 'machine' | 'expedition' | 'dungeon' | null {
     if (helperCreatureIds.value.includes(id)) return 'helper'
     if (machineCreatureIds.value.includes(id)) return 'machine'
@@ -342,6 +352,7 @@ export function useSanctuary() {
     setTargetTier,
     setAllTargets,
     clearSanctuary,
+    setParty,
 
     // Helpers
     isOwned,
