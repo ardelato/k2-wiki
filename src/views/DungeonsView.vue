@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
-import { ChevronDown, Info, Minus, Plus, Swords, X } from 'lucide-vue-next'
+import { CheckCircle2, ChevronDown, Info, Lock, Minus, Plus, Swords, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -15,13 +15,18 @@ import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
 import { useDungeons } from '@/composables/useDungeons'
 import { useGameConfig } from '@/composables/useGameConfig'
-import { activeLocale } from '@/i18n'
 import type { Creature, ElementType, ExpeditionStatKey, GatheringSubFocus } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { itemName, toTitleCase, typeColor } from '@/utils/format'
+import { formatNumber, itemName, toTitleCase, typeColor } from '@/utils/format/format'
+import {
+  sanctuaryIcon,
+  helpersIcon,
+  machinesIcon,
+  expeditionsIcon,
+  jobIcons,
+} from '@/utils/format/icons'
 import { statAbbreviations, statLabels } from '@/utils/formulas'
-import { sanctuaryIcon, helpersIcon, machinesIcon, expeditionsIcon, jobIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { getCreatureImage } from '@/utils/images/creatureImages'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 
@@ -32,8 +37,14 @@ const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 
 const { creatures } = useCreatures()
-const { sanctuaryCreatureIds, helperCreatureIds, machineCreatureIds, expeditionCreatureIds } =
-  useGameConfig()
+const {
+  sanctuaryCreatureIds,
+  helperCreatureIds,
+  machineCreatureIds,
+  expeditionCreatureIds,
+  playerLevel,
+  skillLevels,
+} = useGameConfig()
 const { isOwned, isAwakened, collectionLevels } = useCreatureCollection()
 const {
   selectedCreature: inspectedCreature,
@@ -333,10 +344,31 @@ function toggleCreatureTier(tier: number) {
 }
 
 
-const tierLevelReq = computed(() => {
+// Level the tier requirement is checked against: the average player level for
+// combat dungeons, the specific gathering skill level for gathering dungeons.
+const relevantLevel = computed(() =>
+  selectedFocus.value === 'combat'
+    ? playerLevel.value
+    : (skillLevels.value[selectedSubFocus.value] ?? 1),
+)
+
+
+function tierRequirement(tier: number): number {
   const reqs = config.tierLevelRequirements[selectedFocus.value]
-  return reqs?.[String(selectedTier.value)] ?? 0
-})
+  return reqs?.[String(tier)] ?? 0
+}
+
+
+function meetsTierRequirement(tier: number): boolean {
+  return relevantLevel.value >= tierRequirement(tier)
+}
+
+
+const tierLevelReq = computed(() => tierRequirement(selectedTier.value))
+const meetsSelectedTier = computed(() => meetsTierRequirement(selectedTier.value))
+const requirementLabel = computed(() =>
+  selectedFocus.value === 'combat' ? t('dungeons.player') : selectedSubFocus.value,
+)
 </script>
 
 <template>
@@ -464,24 +496,34 @@ const tierLevelReq = computed(() => {
               {{ t('dungeons.tier') }}
               <span
                 v-if="tierLevelReq > 0"
-                class="text-[11px] font-semibold normal-case tracking-normal text-muted-foreground/70"
+                class="inline-flex items-center gap-1 text-2xs font-semibold normal-case tracking-normal"
+                :class="meetsSelectedTier ? 'text-success-strong' : 'text-danger-strong'"
               >
-                {{ t('dungeons.tierRequiresLevel', { n: tierLevelReq }) }}
+                <CheckCircle2 v-if="meetsSelectedTier" class="size-3" />
+                <Lock v-else class="size-3" />
+                {{ t('dungeons.tierRequiresLevel', { label: requirementLabel, n: tierLevelReq }) }}
               </span>
             </h4>
             <div class="inline-flex rounded-lg border border-border bg-muted/45 p-1">
               <button
-                v-for="t_val in 5"
-                :key="t_val"
-                class="focus-ring rounded-md px-3 py-1.5 text-xs font-semibold transition"
-                :class="
-                  selectedTier === t_val
+                v-for="t in 5"
+                :key="t"
+                class="focus-ring inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold transition"
+                :class="[
+                  selectedTier === t
                     ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                  !meetsTierRequirement(t) && selectedTier !== t ? 'opacity-50' : '',
+                ]"
+                :title="
+                  meetsTierRequirement(t)
+                    ? undefined
+                    : `Requires ${requirementLabel} LVL ${tierRequirement(t)}`
                 "
-                @click="selectedTier = t_val"
+                @click="selectedTier = t"
               >
-                {{ TIER_LABELS[t_val - 1] }}
+                {{ TIER_LABELS[t - 1] }}
+                <Lock v-if="!meetsTierRequirement(t)" class="size-2.5 shrink-0" />
               </button>
             </div>
           </div>
@@ -538,10 +580,10 @@ const tierLevelReq = computed(() => {
                   >
                     <td class="px-3 py-1.5 font-semibold">{{ TIER_LABELS[tier.tier - 1] }}</td>
                     <td class="px-3 py-1.5 text-right font-mono">
-                      {{ tier.baseRating.toLocaleString(activeLocale()) }}
+                      {{ formatNumber(tier.baseRating) }}
                     </td>
                     <td class="px-3 py-1.5 text-right font-mono">
-                      {{ tier.xpReward.toLocaleString(activeLocale()) }}
+                      {{ formatNumber(tier.xpReward) }}
                     </td>
                   </tr>
                 </tbody>
@@ -585,11 +627,7 @@ const tierLevelReq = computed(() => {
                       </span>
                     </td>
                     <td class="px-3 py-1.5 text-right font-mono">
-                      {{
-                        Math.floor(grade.minRatio * currentTierConfig.baseRating).toLocaleString(
-                          activeLocale(),
-                        )
-                      }}
+                      {{ formatNumber(Math.floor(grade.minRatio * currentTierConfig.baseRating)) }}
                     </td>
                     <td class="px-3 py-1.5 text-right font-mono">{{ grade.multiplier }}x</td>
                   </tr>
@@ -600,7 +638,7 @@ const tierLevelReq = computed(() => {
 
           <!-- Requirements -->
           <div class="rounded-lg border border-border bg-muted/30 p-3">
-            <p class="text-[11px] text-muted-foreground">
+            <p class="text-2xs text-muted-foreground">
               {{
                 t('dungeons.requiresNote', {
                   item: itemName(config.requiresItem),
@@ -627,7 +665,7 @@ const tierLevelReq = computed(() => {
           <!-- Current Config Summary -->
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('dungeons.focus') }}
               </p>
               <p class="font-semibold">
@@ -638,27 +676,26 @@ const tierLevelReq = computed(() => {
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('dungeons.tier') }}
               </p>
               <p class="font-semibold">
                 {{ TIER_LABELS[selectedTier - 1] }}
                 <span class="text-xs text-muted-foreground">
-                  ({{ currentTierConfig.baseRating.toLocaleString(activeLocale()) }}
-                  {{ t('dungeons.rating') }})
+                  ({{ formatNumber(currentTierConfig.baseRating) }} {{ t('dungeons.rating') }})
                 </span>
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('dungeons.xpPerCreature') }}
               </p>
               <p class="font-mono font-semibold">
-                {{ predictedXP ? predictedXP.toLocaleString(activeLocale()) : '—' }}
+                {{ predictedXP ? formatNumber(predictedXP) : '—' }}
               </p>
             </div>
             <div class="rounded-lg border border-border bg-muted/35 px-3 py-2">
-              <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
+              <p class="text-2xs uppercase tracking-wide text-muted-foreground">
                 {{ t('dungeons.entryCost') }}
               </p>
               <p class="flex items-center gap-1.5 font-semibold">
@@ -737,12 +774,12 @@ const tierLevelReq = computed(() => {
                         loading="lazy"
                       />
                       <span
-                        class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-cyan-300"
+                        class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-3xs font-semibold text-cyan-300"
                       >
                         {{ getCreatureSlotScore(slot) }}
                       </span>
                       <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1.5 py-1">
-                        <p class="truncate text-center text-[10px] font-semibold text-white">
+                        <p class="truncate text-center text-3xs font-semibold text-white">
                           {{ slot.name }}
                         </p>
                       </div>
@@ -757,7 +794,7 @@ const tierLevelReq = computed(() => {
                   <template v-else>
                     <div class="flex size-full flex-col items-center justify-center gap-1">
                       <Plus class="size-4 text-muted-foreground/50" />
-                      <span v-if="activeSlotIndex === index" class="text-[9px] text-primary">{{
+                      <span v-if="activeSlotIndex === index" class="text-3xs text-primary">{{
                         t('common.select')
                       }}</span>
                     </div>
@@ -765,7 +802,7 @@ const tierLevelReq = computed(() => {
                 </div>
                 <span
                   v-if="slot"
-                  class="rounded-full bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-foreground"
+                  class="rounded-full bg-muted/40 px-2 py-0.5 text-3xs font-semibold text-foreground"
                 >
                   LVL {{ effectiveLevels[slot.id] || 1 }}
                 </span>
@@ -785,13 +822,13 @@ const tierLevelReq = computed(() => {
               <div class="rounded-md bg-card px-2 py-2">
                 <p class="text-muted-foreground">{{ t('dungeons.partyScore') }}</p>
                 <p class="font-mono text-sm font-semibold text-primary">
-                  {{ partyScore.toLocaleString(activeLocale()) }}
+                  {{ formatNumber(partyScore) }}
                 </p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
                 <p class="text-muted-foreground">{{ t('dungeons.baseRating') }}</p>
                 <p class="font-mono text-sm font-semibold">
-                  {{ currentTierConfig.baseRating.toLocaleString(activeLocale()) }}
+                  {{ formatNumber(currentTierConfig.baseRating) }}
                 </p>
               </div>
               <div class="rounded-md bg-card px-2 py-2">
@@ -799,9 +836,7 @@ const tierLevelReq = computed(() => {
                 <p
                   class="font-mono text-sm font-semibold"
                   :class="
-                    scoreRatio && scoreRatio >= 1
-                      ? 'text-emerald-700 dark:text-emerald-400'
-                      : 'text-amber-700 dark:text-amber-400'
+                    scoreRatio && scoreRatio >= 1 ? 'text-success-strong' : 'text-warning-strong'
                   "
                 >
                   {{ scoreRatio ? scoreRatio.toFixed(2) : '—' }}
@@ -844,7 +879,7 @@ const tierLevelReq = computed(() => {
                 <span
                   v-for="grade in config.grades.filter((g) => g.minRatio > 0)"
                   :key="grade.grade"
-                  class="absolute -translate-x-1/2 text-[9px] font-bold"
+                  class="absolute -translate-x-1/2 text-3xs font-bold"
                   :class="GRADE_COLORS[grade.grade].text"
                   :style="{ left: `${(grade.minRatio / 2) * 100}%` }"
                 >
@@ -981,7 +1016,7 @@ const tierLevelReq = computed(() => {
 
           <div class="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2">
             <Info class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-            <p class="text-[11px] text-muted-foreground">
+            <p class="text-2xs text-muted-foreground">
               {{ t('dungeons.levelHint') }}
             </p>
           </div>
@@ -1013,28 +1048,28 @@ const tierLevelReq = computed(() => {
                     v-if="sanctuaryCreatureIds.includes(creature.id)"
                     :src="sanctuaryIcon"
                     alt="Sanctuary"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                   <img
                     v-else-if="helperCreatureIds.includes(creature.id)"
                     :src="helpersIcon"
                     alt="Helper"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                   <img
                     v-else-if="machineCreatureIds.includes(creature.id)"
                     :src="machinesIcon"
                     alt="Machine"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                   <img
                     v-else-if="expeditionCreatureIds.has(creature.id)"
                     :src="expeditionsIcon"
                     alt="Expedition"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                 </div>
@@ -1057,7 +1092,7 @@ const tierLevelReq = computed(() => {
                       :class="
                         isAwakened(creature.id)
                           ? 'text-pink-600 dark:text-pink-400'
-                          : 'text-amber-700 dark:text-amber-400'
+                          : 'text-warning-strong'
                       "
                       >★</span
                     >
@@ -1078,17 +1113,13 @@ const tierLevelReq = computed(() => {
 
               <div class="text-right" @click.stop>
                 <p
-                  class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
+                  class="mb-1 text-3xs font-semibold uppercase tracking-[0.16em] text-muted-foreground"
                 >
                   {{ t('common.lvl') }}
                   <span
                     v-if="suggestedLevel != null"
                     class="ml-1 normal-case tracking-normal"
-                    :class="
-                      level >= suggestedLevel
-                        ? 'text-emerald-700 dark:text-emerald-400'
-                        : 'text-amber-700 dark:text-amber-400'
-                    "
+                    :class="level >= suggestedLevel ? 'text-success-strong' : 'text-warning-strong'"
                   >
                     {{ t('common.suggested', { n: suggestedLevel }) }}
                   </span>
@@ -1132,7 +1163,7 @@ const tierLevelReq = computed(() => {
                 :key="key"
                 class="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2"
               >
-                <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{{
+                <span class="text-3xs font-bold uppercase tracking-wide text-muted-foreground">{{
                   statAbbreviations[key]
                 }}</span>
                 <div class="h-1.5 rounded-full bg-muted">

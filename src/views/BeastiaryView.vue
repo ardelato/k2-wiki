@@ -14,8 +14,8 @@ import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useCreatures } from '@/composables/useCreatures'
-import { toTitleCase, typeColor } from '@/utils/format'
-import { jobIcons } from '@/utils/icons'
+import { toTitleCase, typeColor } from '@/utils/format/format'
+import { jobIcons } from '@/utils/format/icons'
 
 const {
   filteredCreatures,
