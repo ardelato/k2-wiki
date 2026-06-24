@@ -243,9 +243,7 @@ test.describe('suggested level validation', () => {
 
   test('suggested level has color indicator', async ({ page }) => {
     const suggestedSpan = page
-      .locator(
-        '[class*="text-emerald-700"], [class*="text-amber-700"], [class*="text-emerald-400"], [class*="text-amber-400"]',
-      )
+      .locator('[class*="text-success-strong"], [class*="text-warning-strong"]')
       .filter({ hasText: /Suggested/ })
     await expect(suggestedSpan.first()).toBeVisible()
   })

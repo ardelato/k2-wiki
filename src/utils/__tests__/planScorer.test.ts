@@ -1,5 +1,5 @@
 import type { PartyLevelingPlan, PartyPlanStep, PartyPlanMember } from '@/types'
-import { scorePlan } from '@/utils/planScorer'
+import { scorePlan } from '@/utils/planner/planScorer'
 
 function makeMember(overrides: Partial<PartyPlanMember> = {}): PartyPlanMember {
   return {
@@ -14,6 +14,7 @@ function makeMember(overrides: Partial<PartyPlanMember> = {}): PartyPlanMember {
 
 function makeStep(overrides: Partial<PartyPlanStep> = {}): PartyPlanStep {
   return {
+    kind: 'run',
     expedition: { id: 'exp-1', name: 'Test Expedition' } as any,
     tier: 1,
     party: [makeMember()],

@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import RightClickHint from '@/components/shared/RightClickHint.vue'
-import { getCreatureImage } from '@/utils/creatureImages'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 const { t } = useI18n()
 
@@ -35,11 +35,11 @@ defineEmits<{
 <template>
   <div class="bg-bg/30 space-y-2 rounded-xl border border-border/70 p-3">
     <div class="flex items-center justify-between gap-1.5">
-      <h3 class="flex items-center gap-1.5 text-[12px] font-extrabold">
+      <h3 class="flex items-center gap-1.5 text-xs font-extrabold">
         <img :src="icon" alt="" class="size-3.5" loading="lazy" />
         {{ label }}
       </h3>
-      <span class="font-mono text-[10px] text-muted-foreground">
+      <span class="font-mono text-3xs text-muted-foreground">
         <template v-if="showDiff && targetCount !== undefined">
           {{ currentCount }} &rarr; {{ targetCount }}
         </template>
@@ -69,13 +69,13 @@ defineEmits<{
               {{ slot.name.charAt(0) }}
             </div>
             <div class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-1 py-px">
-              <p class="truncate text-center text-[9px] font-bold leading-tight text-white">
+              <p class="truncate text-center text-3xs font-bold leading-tight text-white">
                 {{ slot.name }}
               </p>
             </div>
             <span
               v-if="slot.isNew"
-              class="absolute left-0.5 top-0.5 rounded bg-emerald-500/85 px-1 text-[8px] font-bold uppercase leading-none text-white shadow"
+              class="absolute left-0.5 top-0.5 rounded bg-success/85 px-1 text-3xs font-bold uppercase leading-none text-white shadow"
             >
               {{ t('configs.newBadge') }}
             </span>

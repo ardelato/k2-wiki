@@ -3,8 +3,8 @@ import { Check, ChevronDown, Languages } from 'lucide-vue-next'
 import { nextTick, onMounted, ref } from 'vue'
 
 import AppTooltip from '@/components/shared/AppTooltip.vue'
-import { useLocale, type SupportedLocale } from '@/composables/useLocale'
-import { useLocaleOnboarding } from '@/composables/useLocaleOnboarding'
+import { useLocale, type SupportedLocale } from '@/composables/core/useLocale'
+import { useLocaleOnboarding } from '@/composables/core/useLocaleOnboarding'
 import { t } from '@/i18n'
 
 defineProps<{ collapsed: boolean }>()
@@ -86,7 +86,7 @@ async function choose(code: SupportedLocale) {
         <Languages class="size-4 shrink-0" />
         <span
           v-if="collapsed"
-          class="absolute -bottom-0.5 -right-0.5 rounded-sm bg-muted px-0.5 text-[8px] font-bold leading-[1.3] text-foreground ring-1 ring-border"
+          class="absolute -bottom-0.5 -right-0.5 rounded-sm bg-muted px-0.5 text-3xs font-bold leading-[1.3] text-foreground ring-1 ring-border"
           >{{ currentLocaleShort }}</span
         >
         <template v-else>

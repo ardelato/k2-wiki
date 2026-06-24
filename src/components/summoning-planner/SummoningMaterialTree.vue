@@ -3,15 +3,16 @@ import { ChevronDown, ChevronRight, Clock3, Compass, GitBranch } from 'lucide-vu
 import { computed, ref, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import PlannerBadge from '@/components/planner/PlannerBadge.vue'
-import PlannerTreeNode from '@/components/planner/PlannerTreeNode.vue'
+import DungeonSourceCallout from '@/components/craft-planner/DungeonSourceCallout.vue'
+import PlannerBadge from '@/components/craft-planner/PlannerBadge.vue'
+import PlannerTreeNode from '@/components/craft-planner/PlannerTreeNode.vue'
 import SummoningExpeditionPlan from '@/components/summoning-planner/SummoningExpeditionPlan.vue'
 import { useCraftPlanner } from '@/composables/useCraftPlanner'
-import { activeLocale } from '@/i18n'
-import type { Creature, Expedition } from '@/types'
-import { findExpeditionPlans } from '@/utils/expeditionOptimizer'
-import { formatDuration } from '@/utils/format'
-import { getItemImage } from '@/utils/itemImages'
+import { dungeonCombatRewardIds } from '@/data/indexes'
+import type { Creature, Expedition, ItemType } from '@/types'
+import { formatDuration, formatNumber, itemTypeColor } from '@/utils/format/format'
+import { getItemImage } from '@/utils/images/itemImages'
+import { findExpeditionPlans } from '@/utils/planner/expeditionOptimizer'
 
 const { t } = useI18n()
 
@@ -23,6 +24,10 @@ const props = defineProps<{
   creatureLevels: Record<string, number>
   expeditions: Expedition[]
   inventoryBudget?: Record<string, number> | null
+  itemType?: ItemType
+  /** Opt-in (Summon focus pane): global owned stock per item, forwarded to each tree node so
+   * a sub-item depleted by earlier creatures shows the violet reserved/earmarked treatment. */
+  ownedTotalByItem?: Record<string, number>
 }>()
 
 
@@ -35,6 +40,8 @@ const {
   rootNode,
   nodesById,
   activeMethodIdByNode,
+  lockedGateByNode,
+  lockedGateByItem,
   schedule,
   summary,
   inventoryAmounts,
@@ -170,6 +177,8 @@ defineExpose({
   expeditionResult,
   rootNode,
   activeMethodIdByNode,
+  lockedGateByNode,
+  lockedGateByItem,
   collapsedNodeIds,
   selectedNodeId,
   selectedMethodId,
@@ -178,26 +187,45 @@ defineExpose({
 </script>
 
 <template>
-  <div v-if="rootNode" class="surface-card overflow-hidden">
+  <div v-if="rootNode" class="overflow-hidden rounded-xl border border-border/40 bg-card/60">
     <button
-      class="focus-ring flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-muted/15"
+      class="focus-ring flex w-full items-center gap-3 p-3.5 text-left transition hover:bg-muted/15"
       @click="toggleOpen"
     >
-      <component :is="isOpen ? ChevronDown : ChevronRight" class="size-4 text-muted-foreground" />
-      <img
-        v-if="itemImage"
-        :src="itemImage"
-        :alt="rootNode.itemName"
-        class="size-6 object-contain"
+      <component
+        :is="isOpen ? ChevronDown : ChevronRight"
+        class="size-4 shrink-0 text-muted-foreground"
       />
-      <span class="text-sm font-bold text-foreground">
-        {{ rootNode.itemName }}
-      </span>
-      <span class="font-mono text-sm font-semibold text-primary">
-        x{{ quantity.toLocaleString(activeLocale()) }}
-      </span>
+      <div
+        class="flex size-16 shrink-0 items-center justify-center rounded-lg"
+        :class="itemType ? '' : 'bg-muted/30'"
+        :style="
+          itemType
+            ? {
+                backgroundColor: `color-mix(in oklch, ${itemTypeColor(itemType)} 10%, transparent)`,
+              }
+            : {}
+        "
+      >
+        <img
+          v-if="itemImage"
+          :src="itemImage"
+          :alt="rootNode.itemName"
+          class="size-9 object-contain"
+        />
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+          <span class="min-w-0 truncate text-sm font-semibold text-foreground">
+            {{ rootNode.itemName }}
+          </span>
+          <span class="shrink-0 font-mono text-sm font-semibold text-primary">
+            ×{{ formatNumber(rootNode.requiredAmount) }}
+          </span>
+        </div>
+      </div>
 
-      <div v-if="summary" class="ml-auto flex items-center gap-2">
+      <div v-if="summary" class="flex shrink-0 items-center gap-2">
         <PlannerBadge v-if="summary.totalTimeSeconds != null" color="var(--color-green)">
           <Clock3 class="size-3" />
           {{ formatDuration(summary.totalTimeSeconds) }}
@@ -209,7 +237,7 @@ defineExpose({
             alt="Gold"
             class="size-3 object-contain"
           />
-          {{ Math.round(summary.totalCost).toLocaleString(activeLocale()) }}
+          {{ formatNumber(Math.round(summary.totalCost)) }}
         </PlannerBadge>
         <PlannerBadge v-if="summary.branchPointCount > 0" color="var(--color-primary)">
           <GitBranch class="size-3" />
@@ -221,6 +249,12 @@ defineExpose({
         </PlannerBadge>
       </div>
     </button>
+
+    <!-- Dungeon combat reward (e.g. Chronicle Rune): alternative-source hint for the root item.
+         Sits outside the header button since it's its own link. -->
+    <div v-if="dungeonCombatRewardIds.has(itemId)" class="px-3.5 pb-3.5">
+      <DungeonSourceCallout :item-id="itemId" />
+    </div>
 
     <div
       v-if="isOpen && rootChildren.length > 0"
@@ -238,6 +272,8 @@ defineExpose({
         :inventory-amounts="inventoryAmounts"
         :queued-amounts="flatQueuedAmounts"
         :completion-time-by-node="schedule?.completionTimeByNode ?? {}"
+        :locked-gate-by-node="lockedGateByNode"
+        :owned-total-by-item="ownedTotalByItem"
         @select-node="selectNode"
         @select-method="selectMethod"
         @pin-method="pinMethod"
@@ -246,7 +282,11 @@ defineExpose({
     </div>
 
     <div
-      v-if="isOpen && rootChildren.length === 0 && rootNode && !rootNode.fulfilled"
+      v-if="
+        isOpen &&
+        rootChildren.length === 0 &&
+        !(expeditionResult.best && expeditionResult.all.length > 0)
+      "
       class="border-t border-border/40 px-4 py-3 text-xs text-muted-foreground"
     >
       {{ t('summoningPlannerComponents.materialTree.leafItem') }}

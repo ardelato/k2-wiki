@@ -1,25 +1,20 @@
 <script setup lang="ts">
-import { ChevronDown, Info, Minus, Plus, Target } from 'lucide-vue-next'
+import { ChevronDown, Info, Target } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import CreatureAssignmentBadge from '@/components/shared/CreatureAssignmentBadge.vue'
+import LevelStepper from '@/components/shared/LevelStepper.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import type { Creature, ElementType, Expedition, ExpeditionStatWeights } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase, typeColor } from '@/utils/format'
+import { toTitleCase, typeColor } from '@/utils/format/format'
 import { statAbbreviations } from '@/utils/formulas'
-import {
-  sanctuaryIcon,
-  helpersIcon,
-  machinesIcon,
-  expeditionsIcon,
-  dungeonsIcon,
-} from '@/utils/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 const { t } = useI18n()
 
@@ -338,7 +333,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
 
       <div class="flex items-start gap-2 rounded-lg bg-muted/30 px-3 py-2">
         <Info class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-        <p class="text-[11px] text-muted-foreground">
+        <p class="text-2xs text-muted-foreground">
           {{ t('expeditions.selector.levelHint') }}
         </p>
       </div>
@@ -365,40 +360,14 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
                 class="size-10 rounded-md border border-border object-cover"
                 loading="lazy"
               />
-              <img
-                v-if="sanctuaryCreatureIds.includes(creature.id)"
-                :src="sanctuaryIcon"
-                alt="Sanctuary"
-                class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                loading="lazy"
-              />
-              <img
-                v-else-if="helperCreatureIds.includes(creature.id)"
-                :src="helpersIcon"
-                alt="Helper"
-                class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                loading="lazy"
-              />
-              <img
-                v-else-if="machineCreatureIds.includes(creature.id)"
-                :src="machinesIcon"
-                alt="Machine"
-                class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                loading="lazy"
-              />
-              <img
-                v-else-if="expeditionCreatureIds.has(creature.id)"
-                :src="expeditionsIcon"
-                alt="Expedition"
-                class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                loading="lazy"
-              />
-              <img
-                v-else-if="dungeonParty.includes(creature.id)"
-                :src="dungeonsIcon"
-                alt="Dungeon"
-                class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
-                loading="lazy"
+              <CreatureAssignmentBadge
+                :creature-id="creature.id"
+                :sanctuary-creature-ids="sanctuaryCreatureIds"
+                :helper-creature-ids="helperCreatureIds"
+                :machine-creature-ids="machineCreatureIds"
+                :expedition-creature-ids="expeditionCreatureIds"
+                :dungeon-party="dungeonParty"
+                img-class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
               />
             </div>
 
@@ -418,7 +387,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
                   :class="
                     isAwakened(creature.id)
                       ? 'text-pink-600 dark:text-pink-400'
-                      : 'text-amber-700 dark:text-amber-400'
+                      : 'text-warning-strong'
                   "
                   >★</span
                 >
@@ -439,50 +408,28 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
 
           <div class="text-right" @click.stop>
             <p
-              class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
+              class="mb-1 text-3xs font-semibold uppercase tracking-[0.16em] text-muted-foreground"
             >
               {{ t('common.lvl') }}
               <span
                 v-if="suggestedLevel != null"
                 class="ml-1 normal-case tracking-normal"
-                :class="
-                  level >= suggestedLevel
-                    ? 'text-emerald-700 dark:text-emerald-400'
-                    : 'text-amber-700 dark:text-amber-400'
-                "
+                :class="level >= suggestedLevel ? 'text-success-strong' : 'text-warning-strong'"
               >
                 {{ t('common.suggested', { n: suggestedLevel }) }}
               </span>
             </p>
-            <div
-              class="inline-flex items-center overflow-hidden rounded-md border border-input bg-background/85"
-            >
-              <button
-                class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="level <= 1"
-                :aria-label="t('common.decreaseLevel')"
-                @click.stop="emit('step-level', creature.id, level, -1)"
-              >
-                <Minus class="size-3" />
-              </button>
-              <input
-                type="text"
-                inputmode="numeric"
-                pattern="[0-9]*"
-                class="focus-ring h-7 w-11 border-x border-input bg-transparent text-center font-mono text-xs"
-                :value="level"
-                :aria-label="t('common.creatureLevel')"
-                @blur="emit('normalize-level', creature.id, level, $event)"
-              />
-              <button
-                class="focus-ring inline-flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-muted/60 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                :disabled="level >= 120"
-                :aria-label="t('common.increaseLevel')"
-                @click.stop="emit('step-level', creature.id, level, 1)"
-              >
-                <Plus class="size-3" />
-              </button>
-            </div>
+            <LevelStepper
+              :model-value="level"
+              :min="1"
+              :max="120"
+              :decrease-label="t('common.decreaseLevel')"
+              :increase-label="t('common.increaseLevel')"
+              :input-label="t('common.creatureLevel')"
+              @click.stop
+              @step="emit('step-level', creature.id, level, $event)"
+              @normalize="emit('normalize-level', creature.id, level, $event)"
+            />
             <p class="mt-1 font-mono text-sm font-semibold text-primary">{{ rating }}</p>
           </div>
         </div>
@@ -493,7 +440,7 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
             :key="key"
             class="grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2"
           >
-            <span class="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">{{
+            <span class="text-3xs font-bold uppercase tracking-wide text-muted-foreground">{{
               statAbbreviations[key]
             }}</span>
             <div class="h-1.5 rounded-full bg-muted">

@@ -5,8 +5,8 @@ import { useI18n } from 'vue-i18n'
 import type { PartyLevelingPlan, PlannerStrategy } from '@/types'
 
 const { t } = useI18n()
-import { formatDuration } from '@/utils/format'
-import { deriveTimeSeries } from '@/utils/strategyChartData'
+import { formatDuration } from '@/utils/format/format'
+import { deriveTimeSeries } from '@/utils/planner/strategyChartData'
 
 import StrategyChart from './StrategyChart.vue'
 

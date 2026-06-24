@@ -28,3 +28,12 @@ lefthook-local.yml
 coverage/
 test-results/
 playwright-report/
+
+# Local design reference (Claude Design handoff bundle — not tracked)
+design-mockups/
+
+# Recovered game source — local reference only (not tracked)
+recovered-source/
+
+# Brainstorming visual-companion artifacts
+.superpowers/

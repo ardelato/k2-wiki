@@ -1,28 +1,25 @@
 <script setup lang="ts">
-import { Clock3, Minus, Plus, Repeat, RotateCcw, Users, Zap } from 'lucide-vue-next'
-import { computed, ref, nextTick } from 'vue'
+import { Clock3, Repeat } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import awakenedSummonedIcon from '@/assets/icons/awakened_summoned.webp'
-import { activeLocale } from '@/i18n'
-
-const { t } = useI18n()
 import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
+import FloatingPanel from '@/components/shared/FloatingPanel.vue'
+import GanttZoomControls from '@/components/shared/GanttZoomControls.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { usePopover } from '@/composables/core/usePopover'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useGanttZoom, niceTimeStep } from '@/composables/useGanttZoom'
-import biomesData from '@/data/biomes.json'
-import type { PartyLevelingPlan, PartyPlanStep, Creature, AwakenEvent } from '@/types'
-import type { Biome } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { formatDuration } from '@/utils/format'
-import {
-  calculateCreatureRating,
-  calculateDifficultyRating,
-  getLoopXpBonus,
-} from '@/utils/formulas'
-import { expeditionTierIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { isRunPartyStep } from '@/types'
+import type { PartyLevelingPlan, RunPartyStep, Creature, AwakenEvent } from '@/types'
+import { formatDuration, formatNumber } from '@/utils/format/format'
+import { expeditionTierIcons } from '@/utils/format/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
+import { getItemImage } from '@/utils/images/itemImages'
+
+const { t } = useI18n()
+
 
 const props = withDefaults(
   defineProps<{
@@ -45,7 +42,7 @@ const {
 
 
 interface GanttBar {
-  step: PartyPlanStep
+  step: RunPartyStep
   startTime: number
   endTime: number
   expeditionName: string
@@ -60,7 +57,8 @@ interface GanttBar {
 
 const bars = computed<GanttBar[]>(() => {
   return props.plan.steps
-    .filter((s) => s.startTime != null && !s.isAwakeningStep)
+    .filter(isRunPartyStep)
+    .filter((s) => s.startTime != null)
     .filter(
       (s) =>
         !props.filterCreatureId || s.party.some((m) => m.creatureId === props.filterCreatureId),
@@ -88,7 +86,7 @@ const bars = computed<GanttBar[]>(() => {
 
 
 const lanes = computed(() => {
-  const laneExp = new Map<string, PartyPlanStep['expedition']>()
+  const laneExp = new Map<string, RunPartyStep['expedition']>()
   for (const bar of bars.value) {
     if (!laneExp.has(bar.lane)) {
       laneExp.set(bar.lane, bar.step.expedition)
@@ -174,66 +172,27 @@ const hoveredBar = ref<GanttBar | null>(null)
 
 // Popover state
 const activeBar = ref<GanttBar | null>(null)
-const popoverStyle = ref<Record<string, string>>({})
-const popoverRef = ref<HTMLElement | null>(null)
+const barPop = usePopover({ width: 288, gap: 8, allowVerticalFlip: true })
 
 
 function togglePopover(bar: GanttBar, event: MouseEvent) {
   activeAwakenMarker.value = null
+  markerPop.close()
   if (activeBar.value === bar) {
     activeBar.value = null
+    barPop.close()
     return
   }
   activeBar.value = bar
-
-
-  const target = event.currentTarget as HTMLElement
+  const target = event.currentTarget as HTMLElement | null
   if (!target) return
-
-
-  const barRect = target.getBoundingClientRect()
-  const POPOVER_WIDTH = 288 // w-72 = 18rem = 288px
-  const GAP = 8
-
-
-  // Position below the bar, centered horizontally (using fixed/viewport coords)
-  let top = barRect.bottom + GAP
-  let left = barRect.left + barRect.width / 2 - POPOVER_WIDTH / 2
-
-
-  // Clamp to viewport edges
-  if (left + POPOVER_WIDTH > window.innerWidth - GAP) {
-    left = window.innerWidth - POPOVER_WIDTH - GAP
-  }
-  if (left < GAP) {
-    left = GAP
-  }
-
-
-  // If not enough room below, position above
-  popoverStyle.value = {
-    position: 'fixed',
-    top: `${top}px`,
-    left: `${left}px`,
-  }
-
-
-  nextTick(() => {
-    if (!popoverRef.value) return
-    const popRect = popoverRef.value.getBoundingClientRect()
-    if (popRect.bottom > window.innerHeight - GAP) {
-      popoverStyle.value = {
-        position: 'fixed',
-        top: `${barRect.top - popRect.height - GAP}px`,
-        left: `${left}px`,
-      }
-    }
-  })
+  barPop.open(target)
 }
 
 
 function closePopover() {
   activeBar.value = null
+  barPop.close()
 }
 
 
@@ -261,76 +220,28 @@ const awakenMarkers = computed<AwakenMarker[]>(() => {
 
 // Awaken marker popover state
 const activeAwakenMarker = ref<AwakenMarker | null>(null)
-const awakenPopoverStyle = ref<Record<string, string>>({})
-const awakenPopoverRef = ref<HTMLElement | null>(null)
+const markerPop = usePopover({ width: 240, gap: 8, allowVerticalFlip: true })
 
 
 function toggleAwakenPopover(marker: AwakenMarker, event: MouseEvent) {
   activeBar.value = null
+  barPop.close()
   if (activeAwakenMarker.value === marker) {
     activeAwakenMarker.value = null
+    markerPop.close()
     return
   }
   activeAwakenMarker.value = marker
-
-
-  const target = event.currentTarget as HTMLElement
+  const target = event.currentTarget as HTMLElement | null
   if (!target) return
-
-
-  const rect = target.getBoundingClientRect()
-  const POPOVER_WIDTH = 240
-  const GAP = 8
-
-
-  let top = rect.bottom + GAP
-  let left = rect.left + rect.width / 2 - POPOVER_WIDTH / 2
-
-
-  if (left + POPOVER_WIDTH > window.innerWidth - GAP) {
-    left = window.innerWidth - POPOVER_WIDTH - GAP
-  }
-  if (left < GAP) left = GAP
-
-
-  awakenPopoverStyle.value = {
-    position: 'fixed',
-    top: `${top}px`,
-    left: `${left}px`,
-  }
-
-
-  nextTick(() => {
-    if (!awakenPopoverRef.value) return
-    const popRect = awakenPopoverRef.value.getBoundingClientRect()
-    if (popRect.bottom > window.innerHeight - GAP) {
-      awakenPopoverStyle.value = {
-        position: 'fixed',
-        top: `${rect.top - popRect.height - GAP}px`,
-        left: `${left}px`,
-      }
-    }
-  })
+  markerPop.open(target)
 }
 
 
 function closeAwakenPopover() {
   activeAwakenMarker.value = null
+  markerPop.close()
 }
-
-
-const activeBarScoreRatio = computed(() => {
-  if (!activeBar.value) return null
-  const step = activeBar.value.step
-  const biome = biomesData.find((b) => b.name === step.biomeName) as Biome | undefined
-  const partyScore = step.party.reduce((sum, p) => {
-    const creature = props.creatures.get(p.creatureId)
-    if (!creature) return sum
-    return sum + calculateCreatureRating(creature, step.expedition, p.fromLevel, biome)
-  }, 0)
-  const diff = calculateDifficultyRating(step.expedition, step.tier)
-  return diff > 0 ? partyScore / diff : null
-})
 </script>
 
 <template>
@@ -342,34 +253,18 @@ const activeBarScoreRatio = computed(() => {
     <!-- Header -->
     <div class="flex items-center justify-end border-b border-border/40 px-4 py-2">
       <div class="flex items-center gap-2">
-        <button
-          class="focus-ring flex h-7 items-center gap-1 rounded-lg border border-border/60 px-2 text-[11px] font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-          :class="isDefaultZoom ? 'invisible' : ''"
-          :title="t('levelPlannerComponents.partyGantt.resetZoom')"
-          @click="resetZoom"
-        >
-          <RotateCcw class="size-3" />
-          {{ t('levelPlannerComponents.partyGantt.resetZoom') }}
-        </button>
-        <span class="text-[11px] font-semibold text-muted-foreground">{{ zoom }}x</span>
-        <div class="inline-flex items-center overflow-hidden rounded-lg border border-border/60">
-          <button
-            class="focus-ring flex h-7 w-7 items-center justify-center text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-            :disabled="!canZoomOut"
-            :title="t('levelPlannerComponents.partyGantt.zoomOut')"
-            @click="zoomOut"
-          >
-            <Minus class="size-3.5" />
-          </button>
-          <button
-            class="focus-ring flex h-7 w-7 items-center justify-center border-l border-border/60 text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
-            :disabled="!canZoomIn"
-            :title="t('levelPlannerComponents.partyGantt.zoomIn')"
-            @click="zoomIn"
-          >
-            <Plus class="size-3.5" />
-          </button>
-        </div>
+        <GanttZoomControls
+          :zoom="zoom"
+          :can-zoom-in="canZoomIn"
+          :can-zoom-out="canZoomOut"
+          :is-default-zoom="isDefaultZoom"
+          :reset-label="t('levelPlannerComponents.partyGantt.resetZoom')"
+          :zoom-out-label="t('levelPlannerComponents.partyGantt.zoomOut')"
+          :zoom-in-label="t('levelPlannerComponents.partyGantt.zoomIn')"
+          @reset-zoom="resetZoom"
+          @zoom-in="zoomIn"
+          @zoom-out="zoomOut"
+        />
       </div>
     </div>
 
@@ -472,7 +367,7 @@ const activeBarScoreRatio = computed(() => {
               class="size-5 shrink-0 object-contain"
               loading="lazy"
             />
-            <span class="ml-auto shrink-0 pl-1 font-mono text-[11px] opacity-70">{{
+            <span class="ml-auto shrink-0 pl-1 font-mono text-2xs opacity-70">{{
               formatDuration(bar.step.timeSeconds)
             }}</span>
           </div>
@@ -489,234 +384,170 @@ const activeBarScoreRatio = computed(() => {
 
     <!-- Popover -->
     <Teleport to="body">
-      <div v-if="activeBar" class="fixed inset-0 z-40" @click="closePopover" />
-      <Transition name="popover">
-        <div
-          v-if="activeBar"
-          ref="popoverRef"
-          class="z-50 w-72 rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
-          :style="popoverStyle"
-          @click.stop
-        >
-          <!-- Header -->
-          <div class="border-b border-border/40 px-4 py-3">
-            <div class="flex items-center gap-2">
-              <img
-                v-if="activeBar.rewardItemId"
-                :src="getItemImage({ id: activeBar.rewardItemId })"
-                :alt="activeBar.expeditionName"
-                class="size-5 shrink-0 object-contain"
-                loading="lazy"
-              />
-              <p class="truncate text-sm font-bold text-foreground">
-                {{ activeBar.expeditionName }}
-              </p>
-              <img
-                :src="expeditionTierIcons[activeBar.tier]"
-                :alt="`Tier ${activeBar.tier}`"
-                class="size-5 shrink-0 object-contain"
-                loading="lazy"
-              />
-            </div>
-            <p class="mt-1 text-xs text-muted-foreground">{{ activeBar.step.biomeName }}</p>
-          </div>
-
-          <!-- Stats -->
-          <div class="grid grid-cols-2 gap-x-4 gap-y-2 border-b border-border/40 px-4 py-3">
-            <div class="flex items-center gap-1.5 text-xs">
-              <Clock3 class="size-3 shrink-0" style="color: var(--color-green)" />
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.duration')
-              }}</span>
-              <span class="ml-auto font-mono font-semibold text-foreground">{{
-                formatDuration(activeBar.step.timeSeconds)
-              }}</span>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs">
-              <Repeat class="size-3 shrink-0 text-amber-400" />
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.runs')
-              }}</span>
-              <span class="ml-auto font-mono font-semibold text-foreground">{{
-                activeBar.runs.toLocaleString(activeLocale())
-              }}</span>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs">
-              <Zap class="size-3 shrink-0 text-purple-400" />
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.loopBonus')
-              }}</span>
-              <span class="ml-auto font-mono font-semibold text-foreground">
-                +{{ Math.round(getLoopXpBonus(activeBar.step.loopCountStart) * 100) }}%&rarr;+{{
-                  Math.round(getLoopXpBonus(activeBar.step.loopCountEnd) * 100)
-                }}%
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs">
-              <Users class="size-3 shrink-0 text-sky-400" />
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.party')
-              }}</span>
-              <span class="ml-auto font-mono font-semibold text-foreground">{{
-                activeBar.step.party.length
-              }}</span>
-            </div>
-            <div class="col-span-2 flex items-center gap-1.5 text-xs">
-              <Repeat class="size-3 shrink-0 text-amber-400" />
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.loopStreak')
-              }}</span>
-              <span class="ml-auto font-mono font-semibold text-foreground">
-                {{ activeBar.step.loopCountStart }}&rarr;{{ activeBar.step.loopCountEnd }}
-              </span>
-            </div>
-            <div class="col-span-2 flex items-center gap-1.5 text-xs">
-              <RotateCcw class="size-3 shrink-0 text-muted-foreground" />
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.routeState')
-              }}</span>
-              <span class="ml-auto font-mono font-semibold text-foreground">
-                {{
-                  activeBar.step.preservedLoopBonus
-                    ? t('levelPlannerComponents.partyGantt.preserved')
-                    : activeBar.step.wasReconfigured
-                      ? t('levelPlannerComponents.partyGantt.reset')
-                      : t('levelPlannerComponents.partyGantt.fresh')
-                }}
-              </span>
-            </div>
-            <div class="flex items-center gap-1.5 text-xs">
-              <span
-                class="size-3 shrink-0 text-center text-[10px] font-black"
-                :class="
-                  activeBarScoreRatio && activeBarScoreRatio >= 1
-                    ? 'text-emerald-400'
-                    : 'text-amber-400'
-                "
-                >%</span
-              >
-              <span class="text-muted-foreground">{{
-                t('levelPlannerComponents.partyGantt.scoreRatio')
-              }}</span>
-              <span
-                class="ml-auto font-mono font-semibold"
-                :class="
-                  activeBarScoreRatio && activeBarScoreRatio >= 1
-                    ? 'text-emerald-400'
-                    : 'text-amber-400'
-                "
-              >
-                {{ activeBarScoreRatio ? activeBarScoreRatio.toFixed(2) : '—' }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Party members -->
-          <div class="px-4 py-3">
-            <p class="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-              {{ t('levelPlannerComponents.partyGantt.creatures') }}
+      <div v-if="barPop.isOpen && activeBar" class="fixed inset-0 z-40" @click="closePopover" />
+    </Teleport>
+    <FloatingPanel
+      :is-open="barPop.isOpen"
+      :el-ref="barPop.setPanelEl"
+      :style="barPop.style"
+      class="z-50 w-72 rounded-xl border border-border/70 bg-card shadow-xl shadow-black/30"
+      @click.stop
+    >
+      <template v-if="activeBar">
+        <!-- Header -->
+        <div class="border-b border-border/40 px-4 py-3">
+          <div class="flex items-center gap-2">
+            <img
+              v-if="activeBar.rewardItemId"
+              :src="getItemImage({ id: activeBar.rewardItemId })"
+              :alt="activeBar.expeditionName"
+              class="size-5 shrink-0 object-contain"
+              loading="lazy"
+            />
+            <p class="truncate text-sm font-bold text-foreground">
+              {{ activeBar.expeditionName }}
             </p>
-            <div class="space-y-2">
-              <div
-                v-for="member in activeBar.step.party"
-                :key="member.creatureId"
-                class="flex items-center gap-2"
-              >
-                <RightClickHint
-                  v-if="creatures.get(member.creatureId)"
-                  @contextmenu="ganttToggleCreature(creatures.get(member.creatureId)!)"
-                >
-                  <img
-                    :src="getCreatureImage(creatures.get(member.creatureId)!)"
-                    :alt="creatures.get(member.creatureId)?.name"
-                    class="size-7 shrink-0 rounded-full border border-border object-cover transition hover:ring-1 hover:ring-accent/40"
-                    loading="lazy"
-                  />
-                </RightClickHint>
-                <div class="min-w-0 flex-1">
-                  <p class="truncate text-xs font-semibold text-foreground">
-                    {{ creatures.get(member.creatureId)?.name ?? member.creatureId }}
-                  </p>
-                  <p class="text-[10px] text-muted-foreground">
-                    <template v-if="member.isBooster">
-                      {{
-                        t('levelPlannerComponents.partyGantt.boosterAt', { from: member.fromLevel })
-                      }}
-                    </template>
-                    <template v-else>
-                      {{
-                        t('levelPlannerComponents.partyGantt.levelRange', {
-                          from: member.fromLevel,
-                          to: member.toLevel,
-                          xp: member.xpGained.toLocaleString(activeLocale()),
-                        })
-                      }}
-                    </template>
-                  </p>
-                </div>
-              </div>
-            </div>
+            <img
+              :src="expeditionTierIcons[activeBar.tier]"
+              :alt="`Tier ${activeBar.tier}`"
+              class="size-5 shrink-0 object-contain"
+              loading="lazy"
+            />
+          </div>
+          <p class="mt-1 text-xs text-muted-foreground">{{ activeBar.step.biomeName }}</p>
+        </div>
+
+        <!-- Stats: one per row so long durations never wrap/squish -->
+        <div class="flex flex-col gap-2 border-b border-border/40 px-4 py-3">
+          <div class="flex items-center gap-2 text-sm">
+            <Clock3 class="size-4 shrink-0" style="color: var(--color-green)" />
+            <span class="text-muted-foreground">{{
+              t('levelPlannerComponents.partyGantt.duration')
+            }}</span>
+            <span class="ml-auto whitespace-nowrap font-mono font-semibold text-foreground">{{
+              formatDuration(activeBar.step.timeSeconds)
+            }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <Repeat class="size-4 shrink-0 text-warning-strong" />
+            <span class="text-muted-foreground">{{
+              t('levelPlannerComponents.partyGantt.runs')
+            }}</span>
+            <span class="ml-auto whitespace-nowrap font-mono font-semibold text-foreground">{{
+              formatNumber(activeBar.runs)
+            }}</span>
           </div>
         </div>
-      </Transition>
-    </Teleport>
 
-    <!-- Awaken marker popover -->
-    <Teleport to="body">
-      <div v-if="activeAwakenMarker" class="fixed inset-0 z-40" @click="closeAwakenPopover" />
-      <Transition name="popover">
-        <div
-          v-if="activeAwakenMarker"
-          ref="awakenPopoverRef"
-          class="z-50 w-60 rounded-xl border border-pink-500/30 bg-card shadow-xl shadow-black/30"
-          :style="awakenPopoverStyle"
-          @click.stop
-        >
-          <div class="px-4 py-3">
-            <div class="flex items-center gap-3">
+        <!-- Party members -->
+        <div class="px-4 py-3">
+          <p class="mb-2 text-2xs font-bold uppercase tracking-wider text-muted-foreground">
+            {{ t('levelPlannerComponents.partyGantt.creatures') }}
+          </p>
+          <div class="space-y-2">
+            <div
+              v-for="member in activeBar.step.party"
+              :key="member.creatureId"
+              class="flex items-center gap-2"
+            >
               <RightClickHint
-                v-if="activeAwakenMarker.creature"
-                @contextmenu="ganttToggleCreature(activeAwakenMarker.creature)"
+                v-if="creatures.get(member.creatureId)"
+                @contextmenu="ganttToggleCreature(creatures.get(member.creatureId)!)"
               >
-                <div
-                  class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card transition hover:ring-1 hover:ring-pink-500/50"
-                >
-                  <img
-                    :src="getCreatureImage(activeAwakenMarker.creature)"
-                    :alt="activeAwakenMarker.creature.name"
-                    class="size-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
+                <img
+                  :src="getCreatureImage(creatures.get(member.creatureId)!)"
+                  :alt="creatures.get(member.creatureId)?.name"
+                  class="size-7 shrink-0 rounded-full border border-border object-cover transition hover:ring-1 hover:ring-accent/40"
+                  loading="lazy"
+                />
               </RightClickHint>
-              <div
-                v-else
-                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card"
-              />
               <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1.5">
-                  <img
-                    :src="awakenedSummonedIcon"
-                    alt="Awaken"
-                    class="size-4 shrink-0 object-contain"
-                    loading="lazy"
-                  />
-                  <p class="text-sm font-bold text-pink-400">
-                    {{ t('levelPlannerComponents.partyGantt.manuallyAwaken') }}
-                  </p>
-                </div>
-                <p class="mt-0.5 truncate text-xs text-foreground">
-                  {{ activeAwakenMarker.creature?.name ?? activeAwakenMarker.event.creatureId }}
+                <p class="truncate text-xs font-semibold text-foreground">
+                  {{ creatures.get(member.creatureId)?.name ?? member.creatureId }}
+                </p>
+                <p class="text-3xs text-muted-foreground">
+                  <template v-if="member.isBooster">
+                    {{
+                      t('levelPlannerComponents.partyGantt.boosterAt', { from: member.fromLevel })
+                    }}
+                  </template>
+                  <template v-else>
+                    {{
+                      t('levelPlannerComponents.partyGantt.levelRange', {
+                        from: member.fromLevel,
+                        to: member.toLevel,
+                        xp: formatNumber(member.xpGained),
+                      })
+                    }}
+                  </template>
                 </p>
               </div>
             </div>
-            <p class="mt-2 text-xs text-muted-foreground">
-              {{ t('levelPlannerComponents.partyGantt.awakenHint') }}
-            </p>
           </div>
         </div>
-      </Transition>
+      </template>
+    </FloatingPanel>
+
+    <!-- Awaken marker popover -->
+    <Teleport to="body">
+      <div
+        v-if="markerPop.isOpen && activeAwakenMarker"
+        class="fixed inset-0 z-40"
+        @click="closeAwakenPopover"
+      />
     </Teleport>
+    <FloatingPanel
+      :is-open="markerPop.isOpen"
+      :el-ref="markerPop.setPanelEl"
+      :style="markerPop.style"
+      class="z-50 w-60 rounded-xl border border-pink-500/30 bg-card shadow-xl shadow-black/30"
+      @click.stop
+    >
+      <template v-if="activeAwakenMarker">
+        <div class="px-4 py-3">
+          <div class="flex items-center gap-3">
+            <RightClickHint
+              v-if="activeAwakenMarker.creature"
+              @contextmenu="ganttToggleCreature(activeAwakenMarker.creature)"
+            >
+              <div
+                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card transition hover:ring-1 hover:ring-pink-500/50"
+              >
+                <img
+                  :src="getCreatureImage(activeAwakenMarker.creature)"
+                  :alt="activeAwakenMarker.creature.name"
+                  class="size-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </RightClickHint>
+            <div
+              v-else
+              class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card"
+            />
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <img
+                  :src="awakenedSummonedIcon"
+                  alt="Awaken"
+                  class="size-4 shrink-0 object-contain"
+                  loading="lazy"
+                />
+                <p class="text-sm font-bold text-pink-400">
+                  {{ t('levelPlannerComponents.partyGantt.manuallyAwaken') }}
+                </p>
+              </div>
+              <p class="mt-0.5 truncate text-xs text-foreground">
+                {{ activeAwakenMarker.creature?.name ?? activeAwakenMarker.event.creatureId }}
+              </p>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-muted-foreground">
+            {{ t('levelPlannerComponents.partyGantt.awakenHint') }}
+          </p>
+        </div>
+      </template>
+    </FloatingPanel>
 
     <!-- Footer -->
     <div
@@ -737,21 +568,3 @@ const activeBarScoreRatio = computed(() => {
     @close="ganttCloseDrawer"
   />
 </template>
-
-<style scoped>
-.popover-enter-active {
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
-}
-.popover-leave-active {
-  transition:
-    opacity 0.1s ease,
-    transform 0.1s ease;
-}
-.popover-enter-from,
-.popover-leave-to {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-</style>

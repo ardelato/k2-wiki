@@ -2,9 +2,8 @@
 import { useI18n } from 'vue-i18n'
 
 import { useItems } from '@/composables/useItems'
-import { activeLocale } from '@/i18n'
-import { toTitleCase } from '@/utils/format'
-import { getItemImage } from '@/utils/itemImages'
+import { formatNumber, toTitleCase } from '@/utils/format/format'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 
@@ -39,7 +38,7 @@ const { getItemById } = useItems()
           getItemById(cost.id)?.name ?? toTitleCase(cost.id)
         }}</span>
         <span class="font-mono text-sm font-semibold text-muted-foreground"
-          >x{{ cost.amount.toLocaleString(activeLocale()) }}</span
+          >x{{ formatNumber(cost.amount) }}</span
         >
       </router-link>
     </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
 import { AlertCircle, ChevronDown, Clock3, Layers, Plus, Trash2, X, Zap } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -11,12 +11,20 @@ import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
 import AppTooltip from '@/components/shared/AppTooltip.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
+import SanctuaryPlannerSuggestion from '@/components/skill-planner/SanctuaryPlannerSuggestion.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
+import { useCreatures } from '@/composables/useCreatures'
 import { useSanctuary } from '@/composables/useSanctuary'
 import type { Creature, ElementType, Jobs } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { typeColor } from '@/utils/format'
-import { helpersIcon, machinesIcon, expeditionsIcon, dungeonsIcon, jobIcons } from '@/utils/icons'
+import { typeColor } from '@/utils/format/format'
+import {
+  helpersIcon,
+  machinesIcon,
+  expeditionsIcon,
+  dungeonsIcon,
+  jobIcons,
+} from '@/utils/format/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 import {
   MAX_SANCTUARY_SLOTS,
   SANCTUARY_JOBS,
@@ -29,7 +37,9 @@ import {
   progressPercent,
   targetPercent,
   isScoreAtThreshold,
-} from '@/utils/sanctuaryConstants'
+} from '@/utils/planner/sanctuaryConstants'
+import { buildSanctuaryDiff, recommendPartyForJob } from '@/utils/planner/skillAdvisories'
+import { calculateJobTiersFromSanctuary } from '@/utils/save/parseSave'
 
 const { t } = useI18n()
 
@@ -55,12 +65,14 @@ const {
   setTargetTier,
   setAllTargets,
   clearSanctuary,
+  setParty,
   isOwned,
   isAwakened,
   getCreatureStatus,
   jobScores,
   jobTiers,
 } = useSanctuary()
+const { creatures } = useCreatures()
 const {
   selectedCreature: inspectedCreature,
   drawerOpen: creatureDrawerOpen,
@@ -98,7 +110,86 @@ const creatureTypes: ElementType[] = ['Fire', 'Water', 'Wind', 'Earth']
 const sortByJob = ref<string>('recommended')
 
 
-const hasTargets = computed(() => Object.values(targetTiers.value).some((t_val) => t_val > 0))
+// Deep-link from a planner "Open in Sanctuary" advisory: ?job=<Job>&target=<tier>.
+// Rather than silently overwriting the player's target tier, we surface a visible
+// suggestion panel (so original vs suggested is obvious) with the recommended party,
+// the remove/add/keep swap, and the shared-slot trade-off. The picker is still sorted
+// by the job; on mobile the picker is its own section, so switch to it and scroll in.
+const suggestionJob = ref<string | null>(null)
+const suggestionTier = ref(0)
+
+
+onMounted(() => {
+  const job = typeof route.query.job === 'string' ? route.query.job : null
+  if (!job || !(SANCTUARY_JOBS as readonly string[]).includes(job)) return
+  sortByJob.value = job
+  const target = Number(route.query.target)
+  if (Number.isFinite(target) && target > 0) {
+    suggestionJob.value = job
+    suggestionTier.value = target
+    // Suggestions can include excluded/busy creatures, so reveal them in the picker.
+    showExcludedCreatures.value = true
+  }
+  if (!isDesktop.value) mobileSection.value = 'creatures'
+  nextTick(() => {
+    document
+      .getElementById('creature-browser')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  })
+})
+
+
+// Recommended single-job party + the concrete roster diff (remove/add/keep + the
+// collateral tier moves on other shared-slot jobs) for the suggested job.
+const suggestion = computed(() => {
+  const job = suggestionJob.value
+  if (!job) return null
+  const rec = recommendPartyForJob(
+    creatures.value,
+    job.toLowerCase(),
+    TIER_THRESHOLDS_RAW,
+    MAX_SANCTUARY_SLOTS,
+    // Include excluded/busy creatures — they're still the best fit; the tiles flag
+    // their status and we auto-enable "Show Excluded" so they appear in the picker.
+    (id) => isOwned(id) && isAwakened(id),
+  )
+  const diff = buildSanctuaryDiff(
+    creatures.value,
+    sanctuaryCreatureIds.value,
+    rec.party,
+    job.toLowerCase(),
+    job,
+    calculateJobTiersFromSanctuary,
+  )
+  // Order the Add list to match the "Select Creature" picker (displayRecommended),
+  // so the two line up; creatures not in the picker (filtered out) sort last.
+  const pickerOrder = new Map(displayRecommended.value.map((r, i) => [r.creature.id, i]))
+  const swapIn = [...diff.swapIn].toSorted(
+    (a, b) =>
+      (pickerOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+      (pickerOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+  )
+  return { job, rec, diff: { ...diff, swapIn } }
+})
+
+
+function applySuggestion() {
+  const s = suggestion.value
+  if (!s) return
+  setTargetTier(s.job, suggestionTier.value)
+  setParty(s.rec.party)
+  suggestionJob.value = null
+  suggestionTier.value = 0
+}
+
+
+function dismissSuggestion() {
+  suggestionJob.value = null
+  suggestionTier.value = 0
+}
+
+
+const hasTargets = computed(() => Object.values(targetTiers.value).some((t) => t > 0))
 
 
 const highlightedJobs = computed<Set<string>>(() => {
@@ -129,7 +220,16 @@ const allCreatureTiersSelected = computed(() => {
 
 watch(
   creatureTierOptions,
-  (tiers) => {
+  (tiers, oldTiers) => {
+    // If the user had every previous tier selected (i.e. no active tier filter), keep
+    // selecting all — otherwise a newly-appearing tier would silently make the filter
+    // look partial ("all but one or two"). Only preserve a genuine partial selection.
+    const wasAllSelected =
+      !oldTiers || oldTiers.every((tier) => selectedCreatureTiers.value.includes(tier))
+    if (wasAllSelected) {
+      selectedCreatureTiers.value = [...tiers]
+      return
+    }
     const preserved = selectedCreatureTiers.value.filter((tier) => tiers.includes(tier))
     selectedCreatureTiers.value = preserved.length ? preserved : [...tiers]
   },
@@ -333,13 +433,29 @@ function chooseCreature(creature: Creature) {
       </div>
       <button
         v-if="sanctuaryCreatureIds.length > 0"
-        class="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20"
+        class="focus-ring inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-xs font-semibold text-danger-strong transition hover:bg-danger/20"
         @click="clearAll"
       >
         <Trash2 class="size-3.5" />
         {{ t('sanctuaryView.clearAll') }}
       </button>
     </div>
+
+    <!-- Skill Planner suggestion (deep-link arrival) -->
+    <SanctuaryPlannerSuggestion
+      v-if="suggestion"
+      :job="suggestion.job"
+      :suggested-tier="suggestionTier"
+      :diff="suggestion.diff"
+      @apply="applySuggestion"
+      @dismiss="dismissSuggestion"
+      @inspect="
+        (id) => {
+          const c = creatures.find((cr) => cr.id === id)
+          if (c) toggleInspectCreature(c)
+        }
+      "
+    />
 
     <!-- Mobile tabs -->
     <div class="surface-card p-2 lg:hidden">
@@ -389,7 +505,7 @@ function chooseCreature(creature: Creature) {
                 </span>
               </h3>
               <button
-                class="focus-ring inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] font-semibold text-red-400 transition hover:bg-red-500/20"
+                class="focus-ring inline-flex items-center gap-1 rounded-md border border-danger/30 bg-danger/10 px-2 py-1 text-3xs font-semibold text-danger-strong transition hover:bg-danger/20"
                 :class="sanctuaryCreatureIds.length === 0 ? 'invisible' : ''"
                 @click="clearSanctuary"
               >
@@ -425,7 +541,7 @@ function chooseCreature(creature: Creature) {
                       <div
                         class="absolute inset-x-0 bottom-0 select-none bg-black/75 px-0.5 py-0.5"
                       >
-                        <p class="truncate text-center text-[8px] font-semibold text-white">
+                        <p class="truncate text-center text-3xs font-semibold text-white">
                           {{ slot.name }}
                         </p>
                       </div>
@@ -440,7 +556,7 @@ function chooseCreature(creature: Creature) {
                   <template v-else>
                     <div class="flex size-full flex-col items-center justify-center">
                       <Plus class="size-3 text-muted-foreground/50" />
-                      <span v-if="activeSlotIndex === index" class="text-[8px] text-primary">
+                      <span v-if="activeSlotIndex === index" class="text-3xs text-primary">
                         {{ t('sanctuaryView.select') }}
                       </span>
                     </div>
@@ -462,9 +578,7 @@ function chooseCreature(creature: Creature) {
                   :text="t('sanctuaryView.unreachableTooltip')"
                   position="bottom"
                 >
-                  <div
-                    class="flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400"
-                  >
+                  <div class="flex items-center gap-1 text-3xs font-semibold text-warning-strong">
                     <AlertCircle class="size-3 shrink-0" />
                     <template v-for="(job, i) in unreachableTargets" :key="job">
                       <span v-if="i > 0">,</span>
@@ -479,7 +593,7 @@ function chooseCreature(creature: Creature) {
                   </div>
                 </AppTooltip>
                 <button
-                  class="focus-ring inline-flex items-center gap-1 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] font-semibold text-red-400 transition hover:bg-red-500/20"
+                  class="focus-ring inline-flex items-center gap-1 rounded-md border border-danger/30 bg-danger/10 px-2 py-1 text-3xs font-semibold text-danger-strong transition hover:bg-danger/20"
                   :class="hasTargets ? '' : 'invisible'"
                   @click="setAllTargets(0)"
                 >
@@ -506,27 +620,27 @@ function chooseCreature(creature: Creature) {
                   <div v-if="jp.tier > 0" class="ml-auto flex flex-wrap justify-end gap-1">
                     <span
                       v-if="JOB_TIER_BENEFITS[jp.tier].xpBonus > 0"
-                      class="inline-flex items-center gap-0.5 rounded-full border border-emerald-500/25 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+                      class="inline-flex items-center gap-0.5 rounded-full border border-success/25 bg-success/10 px-1.5 py-0.5 text-3xs font-semibold text-success-strong dark:bg-success/15 dark:text-success-strong"
                     >
                       <Zap class="size-2.5" />
                       {{ t('sanctuary.xpBonus', { n: JOB_TIER_BENEFITS[jp.tier].xpBonus }) }}
                     </span>
                     <span
                       v-if="JOB_TIER_BENEFITS[jp.tier].durationReduction > 0"
-                      class="inline-flex items-center gap-0.5 rounded-full border border-amber-500/25 bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400"
+                      class="inline-flex items-center gap-0.5 rounded-full border border-warning/25 bg-warning/10 px-1.5 py-0.5 text-3xs font-semibold text-warning-strong dark:bg-warning/15 dark:text-warning-strong"
                     >
                       <Clock3 class="size-2.5" />
                       -{{ JOB_TIER_BENEFITS[jp.tier].durationReduction }}%
                     </span>
                     <span
                       v-if="JOB_TIER_BENEFITS[jp.tier].yieldBonus > 0"
-                      class="inline-flex items-center gap-0.5 rounded-full border border-violet-500/25 bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-400"
+                      class="inline-flex items-center gap-0.5 rounded-full border border-reserved/25 bg-reserved/10 px-1.5 py-0.5 text-3xs font-semibold text-reserved-strong dark:bg-reserved/15 dark:text-reserved-strong"
                     >
                       <Layers class="size-2.5" />
                       +{{ JOB_TIER_BENEFITS[jp.tier].yieldBonus }}
                     </span>
                   </div>
-                  <span v-else class="ml-auto text-[10px] text-muted-foreground/50">
+                  <span v-else class="ml-auto text-3xs text-muted-foreground/50">
                     {{ t('sanctuary.noBonuses') }}
                   </span>
                 </div>
@@ -565,12 +679,8 @@ function chooseCreature(creature: Creature) {
                     <span
                       v-for="t_val in [1, 2, 3, 4, 5]"
                       :key="t_val"
-                      class="absolute -translate-x-1/2 text-[8px] font-semibold"
-                      :class="
-                        jp.tier >= t_val
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-muted-foreground/50'
-                      "
+                      class="absolute -translate-x-1/2 text-3xs font-semibold"
+                      :class="jp.tier >= t_val ? 'text-success-strong' : 'text-muted-foreground/50'"
                       :style="{ left: `${targetPercent(t_val)}%` }"
                     >
                       <Zap v-if="tierBenefitType(t_val) === 'xp'" class="mx-auto size-2.5" />
@@ -584,10 +694,10 @@ function chooseCreature(creature: Creature) {
                 </div>
 
                 <!-- Score -->
-                <div class="text-[11px]">
+                <div class="text-2xs">
                   <span class="text-muted-foreground">
                     <template v-if="jp.isMaxed">
-                      <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{
+                      <span class="font-semibold text-success-strong">{{
                         t('sanctuaryView.allBonusesUnlocked')
                       }}</span>
                     </template>
@@ -603,22 +713,22 @@ function chooseCreature(creature: Creature) {
                 <!-- Target selector -->
                 <div class="mt-2">
                   <span
-                    class="mb-1 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+                    class="mb-1 block text-3xs font-bold uppercase tracking-widest text-muted-foreground"
                     >{{ t('sanctuaryView.setTarget') }}</span
                   >
                   <div class="flex gap-1">
                     <button
                       v-for="t_val in [1, 2, 3, 4, 5]"
                       :key="t_val"
-                      class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[10px] font-medium transition"
+                      class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-3xs font-medium transition"
                       :class="
                         (targetTiers[jp.job] ?? 0) === t_val
                           ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
                           : jp.tier >= t_val
-                            ? 'border-emerald-500/30 bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                            ? 'border-success/30 bg-success/10 text-success-strong dark:bg-success/20 dark:text-success-strong'
                             : 'border-border bg-muted/40 text-muted-foreground hover:border-primary/50 hover:text-foreground'
                       "
-                      :title="`Tier ${t_val}: ${jobTierLabel(t_val)}`"
+                      :title="`${t('sanctuaryView.tierLabel', { n: t_val })}: ${jobTierLabel(t_val)}`"
                       @click="
                         setTargetTier(jp.job, (targetTiers[jp.job] ?? 0) === t_val ? 0 : t_val)
                       "
@@ -632,7 +742,7 @@ function chooseCreature(creature: Creature) {
                         />
                         <Layers v-else class="size-2.5" />
                       </template>
-                      <span class="hidden text-[9px] sm:inline">{{
+                      <span class="hidden text-3xs sm:inline">{{
                         tierIncrementalLabel(t_val)
                       }}</span>
                     </button>
@@ -646,6 +756,7 @@ function chooseCreature(creature: Creature) {
 
       <!-- ═══ Right: Creature Browser ═══ -->
       <section
+        id="creature-browser"
         class="surface-card flex flex-col overflow-hidden"
         :class="!isDesktop && mobileSection !== 'creatures' ? 'hidden' : ''"
       >
@@ -753,7 +864,7 @@ function chooseCreature(creature: Creature) {
         <div class="flex items-center gap-3 border-b border-border/70 py-1.5 pl-[20px] pr-[20px]">
           <AppTooltip :text="t('sanctuaryView.recommended')" position="top">
             <button
-              class="focus-ring inline-flex w-12 shrink-0 items-center justify-center rounded-md border px-1 py-1 text-[10px] font-medium transition"
+              class="focus-ring inline-flex w-12 shrink-0 items-center justify-center rounded-md border px-1 py-1 text-3xs font-medium transition"
               :class="
                 sortByJob === 'recommended'
                   ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
@@ -768,7 +879,7 @@ function chooseCreature(creature: Creature) {
             <button
               v-for="job in SANCTUARY_JOBS"
               :key="job"
-              class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[10px] font-medium transition"
+              class="focus-ring inline-flex flex-1 items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-3xs font-medium transition"
               :class="
                 sortByJob === job
                   ? 'border-transparent bg-primary text-primary-foreground shadow-glow'
@@ -818,36 +929,36 @@ function chooseCreature(creature: Creature) {
                   />
                   <!-- Tier badge -->
                   <span
-                    class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
+                    class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-3xs font-bold text-muted-foreground shadow-sm"
                   >
                     T{{ creature.tier + 1 }}
                   </span>
                   <img
                     v-if="getCreatureStatus(creature.id) === 'helper'"
                     :src="helpersIcon"
-                    alt="Helper"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    :alt="t('sanctuaryView.statusHelper')"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                   <img
                     v-else-if="getCreatureStatus(creature.id) === 'machine'"
                     :src="machinesIcon"
-                    alt="Machine"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    :alt="t('sanctuaryView.statusMachine')"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                   <img
                     v-else-if="getCreatureStatus(creature.id) === 'expedition'"
                     :src="expeditionsIcon"
                     alt="Expedition"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                   <img
                     v-else-if="getCreatureStatus(creature.id) === 'dungeon'"
                     :src="dungeonsIcon"
-                    alt="Dungeon"
-                    class="absolute -bottom-1 -right-1 size-5 rounded-full border border-background bg-background"
+                    :alt="t('sanctuaryView.statusDungeon')"
+                    class="absolute -left-1 -top-1 size-5 rounded-full border border-background bg-background"
                     loading="lazy"
                   />
                 </div>
@@ -870,7 +981,7 @@ function chooseCreature(creature: Creature) {
                       :class="
                         isAwakened(creature.id)
                           ? 'text-pink-500 dark:text-pink-400'
-                          : 'text-amber-500 dark:text-amber-400'
+                          : 'text-warning-strong'
                       "
                       >★</span
                     >
@@ -880,13 +991,13 @@ function chooseCreature(creature: Creature) {
                       position="top"
                     >
                       <span
-                        class="shrink-0 cursor-help rounded border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[9px] font-semibold text-amber-500 dark:text-amber-400"
+                        class="shrink-0 cursor-help rounded border border-warning/30 bg-warning/10 px-1 py-px text-3xs font-semibold text-warning-strong"
                         >{{ t('sanctuaryView.notAwakened') }}</span
                       >
                     </AppTooltip>
                     <span v-if="score > 0" class="ml-auto flex shrink-0 items-baseline gap-1">
                       <span class="font-mono text-sm font-semibold text-primary">{{ score }}</span>
-                      <span class="text-[10px] text-muted-foreground">{{
+                      <span class="text-3xs text-muted-foreground">{{
                         hasTargets ? t('sanctuaryView.value') : t('sanctuaryView.total')
                       }}</span>
                     </span>
@@ -911,7 +1022,7 @@ function chooseCreature(creature: Creature) {
                         loading="lazy"
                       />
                       <span
-                        class="w-3 shrink-0 font-mono text-[10px] font-semibold"
+                        class="w-3 shrink-0 font-mono text-3xs font-semibold"
                         :class="
                           highlightedJobs.has(job)
                             ? 'text-primary'

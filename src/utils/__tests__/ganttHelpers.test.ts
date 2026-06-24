@@ -4,7 +4,7 @@ import {
   mergePassiveTasks,
   mergeConsecutiveSameItem,
   getResourceGroupKey,
-} from '@/utils/ganttHelpers'
+} from '@/utils/planner/ganttHelpers'
 
 function makeTask(
   overrides: Partial<ScheduledTask> & { nodeId: string; resource: string },

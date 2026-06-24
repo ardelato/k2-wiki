@@ -96,7 +96,7 @@ function hide() {
         v-if="visible"
         ref="tooltipRef"
         :style="style"
-        class="pointer-events-none z-50 max-w-xs rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium leading-snug text-card-foreground shadow-lg"
+        class="pointer-events-none z-50 w-max max-w-xs rounded-md border border-border bg-card px-2.5 py-1.5 text-xs font-medium leading-snug text-card-foreground shadow-lg"
         role="tooltip"
       >
         <slot name="content">{{ text }}</slot>

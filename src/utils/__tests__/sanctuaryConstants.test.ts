@@ -8,7 +8,7 @@ import {
   JOB_TIER_BENEFITS,
   JOB_COLORS,
   jobTierLabel,
-} from '@/utils/sanctuaryConstants'
+} from '@/utils/planner/sanctuaryConstants'
 
 describe('sanctuaryConstants', () => {
   test('MAX_SANCTUARY_SLOTS is 8', () => {

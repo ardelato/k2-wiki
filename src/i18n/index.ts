@@ -8,6 +8,9 @@ const i18n = createI18n({
   legacy: false,
   locale: detectLocale(),
   fallbackLocale: 'en',
+  // A few planner-tour messages contain <b> tags rendered as HTML by driver.js.
+  // Messages are developer-authored static strings, so suppress the HTML warning.
+  warnHtmlMessage: false,
   messages: { en },
 })
 
@@ -20,8 +23,12 @@ const i18n = createI18n({
 export const localeAutoDetected =
   getStoredLocale() === null && (i18n.global.locale.value as string) !== 'en'
 
-export function t(key: string, named?: Record<string, unknown>): string {
-  return i18n.global.t(key, named ?? {})
+export function t(key: string, named?: Record<string, unknown>, plural?: number): string {
+  // Forward the optional plural count so pluralized messages ("{n} point | {n} points")
+  // select the right form, mirroring the component `$t(key, named, plural)` call shape.
+  return plural === undefined
+    ? i18n.global.t(key, named ?? {})
+    : i18n.global.t(key, named ?? {}, plural)
 }
 
 /**

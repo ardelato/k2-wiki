@@ -1,4 +1,5 @@
 import creaturesData from '@/data/creatures.json'
+import dungeonsData from '@/data/dungeons.json'
 import expeditionsData from '@/data/expeditions.json'
 import itemsData from '@/data/items.json'
 import jobsData from '@/data/jobs.json'
@@ -139,10 +140,10 @@ for (const machine of machinesData.machines) {
         baseInterval: machine.baseInterval,
         inputItemId: recipe.inputItemId,
         inputAmount: recipe.inputAmount,
-        ...((recipe as any).secondaryInputItemId
+        ...('secondaryInputItemId' in recipe && recipe.secondaryInputItemId
           ? {
-              secondaryInputItemId: (recipe as any).secondaryInputItemId,
-              secondaryInputAmount: (recipe as any).secondaryInputAmount,
+              secondaryInputItemId: recipe.secondaryInputItemId,
+              secondaryInputAmount: recipe.secondaryInputAmount,
             }
           : {}),
         outputAmount: recipe.outputAmount,
@@ -166,37 +167,15 @@ for (const machine of machinesData.machines) {
 
 export const machineSpeedMultipliers = machinesData.speedMultipliers
 
-interface ActivityOutput {
-  id: string
-  chance: number
-  min: number
-  max: number
-}
-
-interface ActivityInfo {
-  jobId: string
-  activityName: string
-  duration: number
-  outputs: ActivityOutput[]
-}
-
-/** Maps "jobId/activityName" → full activity info including all outputs */
-export const activityOutputIndex = new Map<string, ActivityInfo>()
-for (const job of jobsData) {
-  if (!job.activities) continue
-  for (const activity of job.activities) {
-    if (!activity.output) continue
-    const key = `${job.id}/${activity.name}`
-    activityOutputIndex.set(key, {
-      jobId: job.id,
-      activityName: activity.name,
-      duration: activity.duration,
-      outputs: activity.output.map((o) => ({
-        id: o.id,
-        chance: o.chance,
-        min: o.min,
-        max: o.max,
-      })),
-    })
+/**
+ * Items that drop as dungeon *combat* rewards (Chronicle Rune, Hide, Meat, Egg). Used by the
+ * planner to surface an "Also obtainable from the Dungeon" callout — these are the items where
+ * a dungeon run is a meaningful alternative source. Gathering rewards are intentionally excluded
+ * (nearly every gathered material drops in a dungeon, so flagging them all would be noise).
+ */
+export const dungeonCombatRewardIds = new Set<string>()
+for (const rewards of Object.values(dungeonsData.combatRewards)) {
+  for (const reward of rewards) {
+    dungeonCombatRewardIds.add(reward.itemId)
   }
 }

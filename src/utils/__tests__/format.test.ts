@@ -1,6 +1,7 @@
 import {
   formatChance,
   formatDuration,
+  formatNumberCompact,
   itemName,
   machineName,
   methodKindClasses,
@@ -9,7 +10,7 @@ import {
   sourceLabel,
   toolName,
   toTitleCase,
-} from '@/utils/format'
+} from '@/utils/format/format'
 
 describe('formatDuration', () => {
   test('zero seconds', () => {
@@ -188,9 +189,9 @@ describe('methodKindClasses', () => {
     expect(classes).toContain('orange')
   })
 
-  test('fabrication kind includes violet classes', () => {
+  test('fabrication kind includes reserved (violet) token classes', () => {
     const classes = methodKindClasses('fabrication')
-    expect(classes).toContain('violet')
+    expect(classes).toContain('reserved')
   })
 })
 
@@ -231,5 +232,27 @@ describe('machineName', () => {
 
   test('falls back to title-cased id for unknown id', () => {
     expect(machineName('totally-fake-machine')).toBe('Totally Fake Machine')
+  })
+})
+
+describe('formatNumberCompact', () => {
+  // Canonical house style (unifies the former PlannerGantt "1.0K" and InventoryGridSection "1k"
+  // helpers): uppercase K/M, trailing ".0" dropped, sub-1000 falls through to formatNumber.
+  test('abbreviates thousands with uppercase K', () => {
+    expect(formatNumberCompact(1_500)).toBe('1.5K')
+  })
+
+  test('abbreviates millions with uppercase M', () => {
+    expect(formatNumberCompact(2_000_000)).toBe('2M')
+  })
+
+  test('drops a trailing .0', () => {
+    expect(formatNumberCompact(3_000)).toBe('3K')
+    expect(formatNumberCompact(5_000_000)).toBe('5M')
+  })
+
+  test('passes values below 1000 through to formatNumber', () => {
+    expect(formatNumberCompact(999)).toBe('999')
+    expect(formatNumberCompact(0)).toBe('0')
   })
 })

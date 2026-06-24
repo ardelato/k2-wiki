@@ -9,9 +9,10 @@ import {
   Swords,
   Fence,
   FileCog,
-  GitBranch,
   Github,
+  Hammer,
   Moon,
+  PawPrint,
   Package,
   Sparkles,
   Sun,
@@ -26,7 +27,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import SteamIcon from '@/components/icons/SteamIcon.vue'
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher.vue'
 import AppTooltip from '@/components/shared/AppTooltip.vue'
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/composables/core/useTheme'
 import meta from '@/data/meta.json'
 
 const props = defineProps<{
@@ -48,9 +49,24 @@ const { preference, cycle } = useTheme()
 const activePath = computed(() => route.path)
 
 
+// True when `current` is `path` or a descendant segment of it (so `/planner` matches
+// `/planner/planks` but not the unrelated `/planners`).
+function segmentMatch(current: string, path: string) {
+  if (path === '/') return current === '/'
+  return current === path || current.startsWith(path + '/')
+}
+
+
 function isActive(path: string) {
-  if (path === '/') return activePath.value === '/'
-  return activePath.value.startsWith(path)
+  const current = activePath.value
+  if (!segmentMatch(current, path)) return false
+  // Longest matching prefix wins, so sibling pages that share a prefix — like
+  // `/planner` (Crafting) and `/planner/creature` (Creature) — don't both light up.
+  return !navGroups.value.some((group) =>
+    group.items.some(
+      (item) => item.to !== path && item.to.length > path.length && segmentMatch(current, item.to),
+    ),
+  )
 }
 
 
@@ -85,7 +101,8 @@ const navGroups = computed(() => [
   {
     label: t('nav.utilities'),
     items: [
-      { label: t('nav.planner'), to: '/planner', icon: GitBranch },
+      { label: t('nav.creaturePlanner'), to: '/planner/creature', icon: PawPrint },
+      { label: t('nav.craftingPlanner'), to: '/planner', icon: Hammer },
       { label: t('nav.configs'), to: '/configs', icon: FileCog },
     ],
   },
@@ -110,13 +127,13 @@ const navGroups = computed(() => [
               {{ t('common.koltera2') }}
               <span
                 v-if="meta.gameVersion === meta.latestGameVersion"
-                class="rounded-full bg-primary px-1.5 py-0.5 text-[0.5625rem] font-semibold leading-none text-primary-foreground"
+                class="rounded-full bg-primary px-1.5 py-0.5 text-3xs font-semibold leading-none text-primary-foreground"
                 :title="t('meta.gameVersionTooltip', { v: meta.gameVersion })"
                 >v{{ meta.gameVersion }}</span
               >
               <span
                 v-else
-                class="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[0.5625rem] font-semibold leading-none text-amber-600 dark:text-amber-400"
+                class="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-3xs font-semibold leading-none text-warning-strong"
                 :title="t('meta.wikiUpdateInProgress')"
                 >v{{ meta.gameVersion }} · game is v{{ meta.latestGameVersion }}</span
               >
@@ -130,13 +147,13 @@ const navGroups = computed(() => [
           <span class="text-base font-extrabold text-foreground">{{ t('common.k2') }}</span>
           <span
             v-if="meta.gameVersion === meta.latestGameVersion"
-            class="rounded-full bg-primary px-1.5 py-0.5 text-[0.5rem] font-semibold leading-none text-primary-foreground"
+            class="rounded-full bg-primary px-1.5 py-0.5 text-3xs font-semibold leading-none text-primary-foreground"
             :title="t('meta.gameVersionTooltip', { v: meta.gameVersion })"
             >v{{ meta.gameVersion }}</span
           >
           <span
             v-else
-            class="rounded-full border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[0.5rem] font-semibold leading-none text-amber-600 dark:text-amber-400"
+            class="rounded-full border border-warning/40 bg-warning/10 px-1.5 py-0.5 text-3xs font-semibold leading-none text-warning-strong"
             :title="
               t('meta.versionMismatch', {
                 wikiVersion: meta.gameVersion,
@@ -154,7 +171,7 @@ const navGroups = computed(() => [
       <div v-for="group in navGroups" :key="group.label">
         <h3
           v-if="!props.collapsed"
-          class="mb-1.5 px-2 text-[0.625rem] font-semibold uppercase tracking-widest text-muted-foreground/70"
+          class="mb-1.5 px-2 text-3xs font-semibold uppercase tracking-widest text-muted-foreground/70"
         >
           {{ group.label }}
         </h3>

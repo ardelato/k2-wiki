@@ -4,11 +4,12 @@ import { computed, watch } from 'vue'
 import {
   defaultAwakenGatherUpgrades,
   defaultAwakenSpeedTiers,
+  defaultAwakenWorkstationXpTiers,
   defaultGardenFlowers,
 } from '@/data/defaults'
 import type { GardenCell, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getPlayerLevel } from '@/utils/formulas'
-import { calculateJobTiersFromSanctuary } from '@/utils/parseSave'
+import { calculateJobTiersFromSanctuary, type SaveConfig } from '@/utils/save/parseSave'
 
 const sanctuaryCreatureIds = useLocalStorage<string[]>('config-sanctuary-creatures', [])
 const helperCreatureIds = useLocalStorage<string[]>('config-helper-creatures', [])
@@ -95,6 +96,10 @@ const awakenSpeedTiers = useLocalStorage<Record<string, number>>(
   'config-awaken-speed',
   defaultAwakenSpeedTiers(),
 )
+const awakenWorkstationXpTiers = useLocalStorage<Record<string, number>>(
+  'config-awaken-workstation-xp',
+  defaultAwakenWorkstationXpTiers(),
+)
 const expeditionCompletions = useLocalStorage<Record<string, Record<number, number>>>(
   'config-expedition-completions',
   {},
@@ -149,6 +154,24 @@ export function useGameConfig() {
   })
 
   const jobTiers = computed(() => calculateJobTiersFromSanctuary(sanctuaryCreatureIds.value))
+
+  // Awaken upgrade clamp bounds.
+  const AWAKEN_GATHER_YIELD_MAX = 2
+  const AWAKEN_GATHER_DURATION_MAX = 4
+  const AWAKEN_GATHER_XP_MAX = 6
+  const AWAKEN_SPEED_MAX = 4
+  const AWAKEN_WORKSTATION_XP_MAX = 5
+  const AWAKEN_GOLD_MAX = 5
+
+  /** Clamp a value to [0, max]. */
+  function clamp(value: number, max: number): number {
+    return Math.max(0, Math.min(max, value))
+  }
+
+  /** Zero-value default for a single AwakenGatherUpgrade entry. */
+  function defaultAwakenGatherUpgrade(): AwakenGatherUpgrade {
+    return { yieldBonus: 0, durationTier: 0, xpTier: 0 }
+  }
 
   function setSanctuaryCreatures(ids: string[]) {
     sanctuaryCreatureIds.value = ids
@@ -255,31 +278,47 @@ export function useGameConfig() {
   }
 
   function setAwakenGatherYieldBonus(jobId: string, yieldBonus: number) {
-    const current = awakenGatherUpgrades.value[jobId] ?? { yieldBonus: 0, durationTier: 0 }
+    const current = awakenGatherUpgrades.value[jobId] ?? defaultAwakenGatherUpgrade()
     awakenGatherUpgrades.value = {
       ...awakenGatherUpgrades.value,
-      [jobId]: { ...current, yieldBonus: Math.max(0, Math.min(2, yieldBonus)) },
+      [jobId]: { ...current, yieldBonus: clamp(yieldBonus, AWAKEN_GATHER_YIELD_MAX) },
     }
   }
 
   function setAwakenGatherDurationTier(jobId: string, tier: number) {
-    const current = awakenGatherUpgrades.value[jobId] ?? { yieldBonus: 0, durationTier: 0 }
+    const current = awakenGatherUpgrades.value[jobId] ?? defaultAwakenGatherUpgrade()
     awakenGatherUpgrades.value = {
       ...awakenGatherUpgrades.value,
-      [jobId]: { ...current, durationTier: Math.max(0, Math.min(4, tier)) },
+      [jobId]: { ...current, durationTier: clamp(tier, AWAKEN_GATHER_DURATION_MAX) },
+    }
+  }
+
+  function setAwakenGatherXpTier(jobId: string, tier: number) {
+    const current = awakenGatherUpgrades.value[jobId] ?? defaultAwakenGatherUpgrade()
+    awakenGatherUpgrades.value = {
+      ...awakenGatherUpgrades.value,
+      [jobId]: { ...current, xpTier: clamp(tier, AWAKEN_GATHER_XP_MAX) },
     }
   }
 
   function setAwakenSpeedTier(workstation: string, tier: number) {
     awakenSpeedTiers.value = {
       ...awakenSpeedTiers.value,
-      [workstation]: Math.max(0, Math.min(4, tier)),
+      [workstation]: clamp(tier, AWAKEN_SPEED_MAX),
+    }
+  }
+
+  function setAwakenWorkstationXpTier(workstation: string, tier: number) {
+    awakenWorkstationXpTiers.value = {
+      ...awakenWorkstationXpTiers.value,
+      [workstation]: clamp(tier, AWAKEN_WORKSTATION_XP_MAX),
     }
   }
 
   function resetAwaken() {
     awakenGatherUpgrades.value = defaultAwakenGatherUpgrades()
     awakenSpeedTiers.value = defaultAwakenSpeedTiers()
+    awakenWorkstationXpTiers.value = defaultAwakenWorkstationXpTiers()
   }
 
   function setExpeditionCompletions(completions: Record<string, Record<number, number>>) {
@@ -321,7 +360,7 @@ export function useGameConfig() {
   }
 
   function setAwakenGoldLevel(level: number) {
-    awakenGoldLevel.value = Math.max(0, Math.min(5, level))
+    awakenGoldLevel.value = clamp(level, AWAKEN_GOLD_MAX)
   }
 
   function setSkillLevels(levels: Record<string, number>) {
@@ -416,32 +455,99 @@ export function useGameConfig() {
     writeDungeonKey('dungeon-creature-levels', null)
   }
 
+  // Apply the config-owned portion of an imported save. Preserves the exact
+  // order and effect of the original ConfigsView.applyAll setter sequence.
+  // View-local concerns (creature collection, summon planner, applied-section
+  // tracking) stay in the view and are not touched here.
+  function applySaveConfig(save: SaveConfig) {
+    setSanctuaryCreatures(save.sanctuary)
+    setHelperCreatures(save.helpers)
+    setMachineCreatures(save.machines)
+    setDungeonParty(save.currentDungeon?.party ?? [])
+
+    inventoryAmounts.value = { ...save.inventory }
+    setCollectedItems([...save.collectedItems])
+
+    setQueuedAmounts({ ...save.queuedAmounts })
+    setQueuedTimes({ ...save.queuedTimes })
+
+    awakenGatherUpgrades.value = { ...save.awakenGatherUpgrades }
+    awakenSpeedTiers.value = { ...save.awakenSpeedTiers }
+    awakenWorkstationXpTiers.value = { ...save.awakenWorkstationXpTiers }
+    setAwakenGoldLevel(save.awakenGoldLevel)
+
+    setExpeditionToolXpBonus(((save.tools?.sword || 0) * 5) / 100 + 1)
+    setToolLevels({ ...save.toolLevels })
+    setToolSpeedModes({ ...save.toolSpeedModes })
+
+    setSkillLevels({ ...save.skillLevels })
+
+    setMachineLevels({ ...save.machineLevels })
+    setMachineRecipes({ ...save.machineRecipes })
+
+    setFabricationAllocations({ ...save.fabricationAllocations })
+
+    setExpeditionCompletions({ ...save.expeditionCompletions })
+
+    setExpeditionParties({ ...save.currentExpedition.parties })
+    setExpeditionCreatureLevels({ ...save.currentExpedition.levels })
+    setExpeditionTiers({ ...save.currentExpedition.tiers })
+    setExpeditionLoopCounts({ ...save.currentExpedition.loopCounts })
+
+    if (save.currentDungeon) applyDungeonStateFromSave(save.currentDungeon)
+  }
+
+  // Reset the config-owned portion of state. Preserves the exact order and
+  // effect of the original ConfigsView.resetAll config resets. View-local
+  // concerns (creature collection, garden, summon planner, saveConfig and
+  // metadata, applied-section tracking) stay in the view.
+  function resetAllConfig() {
+    setSanctuaryCreatures([])
+    setHelperCreatures([])
+    setMachineCreatures([])
+    inventoryAmounts.value = {}
+    resetCollectedItems()
+    resetQueuedAmounts()
+    resetAwaken()
+    setAwakenGoldLevel(0)
+    resetToolLevels()
+    setExpeditionToolXpBonus(1)
+    resetMachines()
+    resetFabrication()
+    expeditionCompletions.value = {}
+    resetExpeditionSetup()
+    resetSkillLevels()
+    resetDungeonParty()
+    resetDungeonStorage()
+  }
+
   return {
-    sanctuaryCreatureIds,
-    helperCreatureIds,
-    machineCreatureIds,
-    expeditionParties,
-    expeditionTiers,
-    expeditionCreatureLevels,
-    expeditionLoopCounts,
+    sanctuaryCreatureIds: sanctuaryCreatureIds,
+    helperCreatureIds: helperCreatureIds,
+    machineCreatureIds: machineCreatureIds,
+    expeditionParties: expeditionParties,
+    expeditionTiers: expeditionTiers,
+    expeditionCreatureLevels: expeditionCreatureLevels,
+    expeditionLoopCounts: expeditionLoopCounts,
     expeditionCreatureIds,
     excludedCreatureIds,
     jobTiers,
-    inventoryAmounts,
-    collectedItems,
+    inventoryAmounts: inventoryAmounts,
+    collectedItems: collectedItems,
     setCollectedItems,
     resetCollectedItems,
-    gardenFlowers,
-    gardenLayout,
-    gardenLayoutFromSave,
-    awakenGatherUpgrades,
-    awakenSpeedTiers,
-    expeditionCompletions,
-    toolLevels,
-    toolSpeedModes,
-    machineLevels,
-    machineRecipes,
-    fabricationAllocations,
+    gardenFlowers: gardenFlowers,
+    gardenLayout: gardenLayout,
+    gardenLayoutFromSave: gardenLayoutFromSave,
+    awakenGatherUpgrades: awakenGatherUpgrades,
+    awakenSpeedTiers: awakenSpeedTiers,
+    awakenWorkstationXpTiers: awakenWorkstationXpTiers,
+    expeditionCompletions: expeditionCompletions,
+    toolLevels: toolLevels,
+    toolSpeedModes: toolSpeedModes,
+    machineLevels: machineLevels,
+    machineRecipes: machineRecipes,
+    fabricationAllocations: fabricationAllocations,
     setSanctuaryCreatures,
     setHelperCreatures,
     setMachineCreatures,
@@ -451,11 +557,13 @@ export function useGameConfig() {
     setExpeditionCreatureLevels,
     setExpeditionLoopCounts,
     resetExpeditionSetup,
-    dungeonParty,
+    dungeonParty: dungeonParty,
     setDungeonParty,
     resetDungeonParty,
     applyDungeonStateFromSave,
     resetDungeonStorage,
+    applySaveConfig,
+    resetAllConfig,
     setInventory,
     resetInventory,
     setGardenFlowerEntries,
@@ -468,7 +576,9 @@ export function useGameConfig() {
     resetGarden,
     setAwakenGatherYieldBonus,
     setAwakenGatherDurationTier,
+    setAwakenGatherXpTier,
     setAwakenSpeedTier,
+    setAwakenWorkstationXpTier,
     resetAwaken,
     setToolLevels,
     setToolSpeedModes,
@@ -480,15 +590,15 @@ export function useGameConfig() {
     resetFabrication,
     resetGameConfig,
     setExpeditionToolXpBonus,
-    expeditionToolXpBonus,
-    awakenGoldLevel,
+    expeditionToolXpBonus: expeditionToolXpBonus,
+    awakenGoldLevel: awakenGoldLevel,
     setAwakenGoldLevel,
-    skillLevels,
+    skillLevels: skillLevels,
     playerLevel,
     setSkillLevels,
     resetSkillLevels,
-    queuedAmounts,
-    queuedTimes,
+    queuedAmounts: queuedAmounts,
+    queuedTimes: queuedTimes,
     setQueuedAmounts,
     setQueuedTimes,
     resetQueuedAmounts,

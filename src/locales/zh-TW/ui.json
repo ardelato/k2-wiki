@@ -61,7 +61,14 @@
     "tools": "Tools",
     "fabrication": "Fabrication",
     "planner": "規劃器",
-    "configs": "設定"
+    "configs": "設定",
+    "creaturePlanner": "生物規劃器",
+    "craftingPlanner": "合成規劃器",
+    "plannerAwaken": "規劃器 · Awaken",
+    "plannerSummon": "規劃器 · Summon",
+    "plannerPrestige": "規劃器 · Prestige",
+    "plannerSkills": "規劃器 · 技能",
+    "plannerCraft": "規劃器 · 製作"
   },
   "settings": {
     "themeSystem": "主題：系統",
@@ -242,7 +249,8 @@
       "disadvantage": "· ▼ 劣勢",
       "lvlBadge": "Lv {level}",
       "totalJobPoints": "共 {total}",
-      "baseStat": "（基礎 {value}）"
+      "baseStat": "（基礎 {value}）",
+      "planSummoning": "Plan Summoning"
     },
     "summoningCost": {
       "title": "召喚費用"
@@ -308,7 +316,17 @@
       "clearAll": "全部清除"
     },
     "rightClickHint": {
-      "label": "右鍵點擊"
+      "label": "查看"
+    },
+    "infoHint": {
+      "whatIs": "{term} 是什麼？",
+      "moreInfo": "更多資訊"
+    },
+    "learnMore": {
+      "label": "了解更多"
+    },
+    "advisory": {
+      "speedsUp": "加速"
     }
   },
   "expeditions": {
@@ -384,7 +402,8 @@
     "gathering": "採集",
     "gatheringSkill": "採集技能",
     "tier": "階級",
-    "tierRequiresLevel": "（需要玩家 Lv {n}）",
+    "tierRequiresLevel": "（需要 {label} Lv {n}）",
+    "player": "玩家",
     "statWeights": "屬性權重",
     "tierOverview": "階級總覽",
     "tierCol": "階級",
@@ -451,7 +470,11 @@
     "recommended": "推薦",
     "select": "選擇",
     "unreachableTooltip": "以目前可選的生物無法達成這些目標",
-    "recommendedAbbr": "推薦"
+    "recommendedAbbr": "推薦",
+    "statusHelper": "輔助",
+    "statusMachine": "機器",
+    "statusDungeon": "地城",
+    "tierLabel": "Tier {n}"
   },
   "machines": {
     "title": "Machines",
@@ -540,7 +563,219 @@
       "expandAll": "全部展開",
       "collapsed": "已收合"
     },
-    "pickerLabel": "道具"
+    "pickerLabel": "道具",
+    "tour": {
+      "welcome": {
+        "title": "歡迎使用生物規劃器",
+        "body": "上方有三個分頁。<b>Summon</b> 規劃新的召喚，<b>Awaken&nbsp;Rush</b> 讓生物升至 Lv&nbsp;70 以便覺醒，<b>Prestige&nbsp;Loop</b> 則以穩定的 Party 刷取威望代幣。此導覽將引導你當前所在的分頁。"
+      },
+      "summonHeader": {
+        "title": "規劃你的下一次召喚",
+        "body": "新增你想召喚的生物，規劃器會統計你仍需收集的所有材料，並標示出技能關卡等阻礙。"
+      },
+      "summonOrder": {
+        "title": "你的召喚順序",
+        "body": "你的召喚佇列，按處理順序編號——<b>#1 代表「現在做這個」</b>。可依步驟順序、準備度或名稱重新排序；用 + 列新增更多；點選任意列即可在右側聚焦其計畫。"
+      },
+      "summonFocus": {
+        "title": "聚焦的生物",
+        "body": "你目前所在的生物：其<b>準備倒計時</b>、仍需要的材料（被動供應與手動作業分開標示），以及加速收集的方法。"
+      },
+      "summonViews": {
+        "title": "兩種檢視方式",
+        "body": "<b>計畫</b>（你目前所見）依順序逐一呈現每個生物。<b>全部材料</b>——現在切換過去——是所有召喚所需材料的完整清單，依來源分組。"
+      },
+      "summonMaterials": {
+        "title": "所有待收集項目",
+        "body": "你佇列中所有召喚所需的每樣材料，彙整並依來源分組——是你唯一的採購清單。隨時切換回<b>計畫</b>，逐一生物作業。"
+      },
+      "awakenQueue": {
+        "title": "你的覺醒佇列",
+        "body": "新增你想升至 Lv&nbsp;70 的未覺醒生物。單一生物會顯示詳細計畫；新增多隻後，規劃器會將它們合併為一個 Party 共同優化。"
+      },
+      "awakenBoosters": {
+        "title": "可選加速者",
+        "body": "在此啟用的已覺醒生物可為佇列護航並加速，自身無需升級。"
+      },
+      "awakenStrategy": {
+        "title": "策略",
+        "body": "<b>免手動</b>讓每隻生物擁有穩定路線，幾乎不需重新調配——設定後數小時回來確認即可。<b>最優</b>協調整個佇列以最快完成全體，但需要更多交換次數。"
+      },
+      "awakenExpeditions": {
+        "title": "Expeditions",
+        "body": "規劃器可路由的遠征，以及納入範圍的數量。縮小範圍以符合你實際執行的項目。"
+      },
+      "awakenFocus": {
+        "title": "你的計畫",
+        "body": "升至 Lv&nbsp;70 的最快遠征路線會在此顯示，並附上每隻生物的抵達時間。"
+      },
+      "awakenViews": {
+        "title": "時間軸或步驟",
+        "body": "<b>時間軸</b>是整個佇列跨時間的甘特圖；<b>步驟</b>將相同計畫拆解為有序的逐波核對清單。"
+      },
+      "awakenTimeline": {
+        "title": "閱讀時間軸",
+        "body": "按住 <b>⌘/Ctrl</b> 並滾動以縮放；按住 <b>Shift</b> 並滾動以在時間軸上橫向平移。+/− 按鈕也可縮放，重設可回到預設值。"
+      },
+      "awakenSetup": {
+        "title": "推送至 Expeditions",
+        "body": "<b>在 Expeditions 中查看初始設定</b>會將計畫的第一波 Party 寫入你的 Expeditions 頁面，可直接在遊戲中套用。"
+      },
+      "loopRoster": {
+        "title": "循環名單",
+        "body": "執行循環的已覺醒生物。計算後，每列都會顯示其角色——<b>{anchor}</b>、<b>{booster}</b> 或 <b>{climber}</b>。"
+      },
+      "loopCadence": {
+        "title": "回來確認的頻率",
+        "body": "{cadence} 表格顯示每種頻率的每日代幣數，讓你一目了然地比較。"
+      },
+      "loopExpeditions": {
+        "title": "Expeditions",
+        "body": "循環可路由的遠征，以及納入範圍的數量。縮小範圍以符合你實際執行的項目。"
+      },
+      "loopHero": {
+        "title": "你的收益",
+        "body": "此設定每日獲得的威望代幣數。{prestige} 開啟「Learn&nbsp;more」以了解「設定後放置」策略的運作方式。"
+      },
+      "loopTabs": {
+        "title": "設定與等級",
+        "body": "<b>設定</b>是現在就要套用的 Party 分配。<b>等級</b>顯示每隻生物在各次確認間的升級圖表——{levelChart}"
+      },
+      "nav": {
+        "next": "下一步",
+        "back": "上一步",
+        "done": "完成"
+      }
+    },
+    "heading": "規劃器",
+    "subheading": "瀏覽任何物品的所有合成分支、容器路線與採集路徑，然後固定你想使用的方法以查看總計與預計時間。",
+    "takeTour": "開始導覽",
+    "noItemSelected": "尚未選擇任何物品。",
+    "desktopOnlyTreeHint": "請在更寬的螢幕上開啟此頁面，以瀏覽完整的依賴樹與檢視器。",
+    "additionalCraftsHint": "目標超出你目前庫存和已排程工作站物品的 {additional} 次額外合成。",
+    "additionalCraftsEmphasis": "額外",
+    "alreadyStocked": "庫存充足——無需合成。",
+    "clearSelectedItem": "清除已選物品",
+    "creatureTabs": {
+      "summon": "Summon",
+      "awaken": "Awaken",
+      "prestige": "Prestige"
+    },
+    "craftingTabs": {
+      "singleItem": "單一物品",
+      "skills": "技能"
+    },
+    "heroStats": {
+      "craftsLeft": "剩餘合成次數",
+      "estTime": "預計時間",
+      "stocked": "庫存充足"
+    },
+    "picker": {
+      "itemCount": "{count} 個物品",
+      "searchPlaceholder": "搜尋物品…",
+      "allTypes": "全部",
+      "noMatches": "無符合物品。"
+    },
+    "dungeonCallout": {
+      "title": "亦可從地城取得",
+      "subtitle": "開啟地城頁面"
+    },
+    "skillGate": {
+      "message": "{count} 個資源需要更高的技能等級——最高關卡：{gate} | {count} 個資源需要更高的技能等級——最高關卡：{gate}",
+      "plan": "規劃 →"
+    },
+    "detail": {
+      "actions": "操作",
+      "activity": "活動",
+      "affordableNow": "現在可購買",
+      "baseDuration": "基本時長",
+      "buyAffordableNote": "你目前的 gold 足夠直接購買。",
+      "buyConfigureNote": "請在設定中配置 gold 收入以估算時間。",
+      "buyGoldIncomeNote": "根據被動 gold 收入估算時間（{rate} gold/分鐘）。",
+      "buySubtitle": "直接購買 {amount}",
+      "containerFormula": "{amount} ÷ ({chance} × {yield}) 每次開啟 {container}",
+      "containerFormulaPassive": "{amount} 需求 − 被動產量 → 開啟 {container} {openings} 次",
+      "containerNote": "開啟時間視為可忽略；只有取得容器的時間計入。",
+      "containerPassiveNote": "被動生產將容器需求從 {from} 降至 {to}。",
+      "containersNeeded": "需要的容器數",
+      "containerSubtitle": "預計開啟 {count} 次",
+      "craftFormula": "{crafts} 次製造 × {time}",
+      "crafts": "製造",
+      "craftSubtitle": "{count} 次製造產出 {output}",
+      "craftSubtitlePlural": "{count} 次製造產出 {output}",
+      "cycleDetected": "偵測到循環",
+      "cycleInChain": "依賴鏈中偵測到循環。",
+      "cycleNote": "規劃器在此停止展開以避免無限迴圈。",
+      "cycles": "循環",
+      "cycleSubtitle": "此依賴項循環回到上層物品。",
+      "cycleTime": "循環時間",
+      "depsTime": "依賴時間",
+      "durationReduction": "-{pct}% 時長",
+      "eachValue": "每個 {amount}",
+      "expeditionFormula": "{runs} 次 Expedition × {time} 基本時長",
+      "expeditionNote": "使用基本時長估算 — 實際時間取決於 Party 實力與階級。",
+      "expeditionSubtitle": "預計 {count} 次 Expedition",
+      "fabricationFormula": "{amount} ÷ {perCycle}/循環 × {seconds}s",
+      "fabricationNote": "Fabrication 每 3 分鐘被動產生物品。",
+      "fabricationSource": "Fabrication（{points} 點）",
+      "fabricationSubtitle": "已分配 {count} 點",
+      "fabricationSubtitlePlural": "已分配 {count} 點",
+      "flower": "花卉",
+      "gardenConfigureNote": "請在規劃器設定 > Garden 中配置花卉以計算時間。",
+      "gardenFormula": "{amount} ÷ {yield} 每循環 × {time}",
+      "gardenGrowth": "Garden 生長",
+      "gardenNoFlowers": "Garden — 尚未配置花卉",
+      "gardenNote": "Garden 產量：{setup} = {rate}/分鐘。",
+      "gatherFormula": "{amount} ÷ ({chance} × {yield}) 次行動 × {time}",
+      "gatherNote": "預期時間使用機率與產出範圍的平均產量計算。",
+      "goldPerMinValue": "{rate} gold/分鐘",
+      "goldRate": "Gold 費率",
+      "goldTime": "Gold 時間",
+      "goldTimeToEarn": "~{time} 可賺得",
+      "goldValue": "{amount} gold",
+      "interval": "間隔",
+      "intervalValue": "每循環 {seconds}s",
+      "itemDataNotFound": "找不到物品資料。",
+      "itemsPerCycle": "每循環物品數",
+      "level": "等級",
+      "lvValue": "Lv{level}",
+      "machineFormula": "{cycles} 次循環 × {seconds}s",
+      "machineNote": "機器 Lv{level} 將間隔從 {from}s 縮短至 {to}s。",
+      "machineSource": "機器 — {name}",
+      "machineSubtitle": "{count} 次循環產出 {output}",
+      "machineSubtitlePlural": "{count} 次循環產出 {output}",
+      "merchant": "商人",
+      "none": "無",
+      "noSourceFound": "找不到 {name} 的規劃器來源。",
+      "notConfigured": "尚未配置",
+      "onHand": "手頭數量",
+      "output": "產出",
+      "passiveFormula": "{amount} ÷ ({active}/分鐘主動 + {passive}/分鐘被動)",
+      "perHourValue": "{amount}/小時",
+      "points": "點數",
+      "rate": "費率",
+      "ratePerMin": "+{rate}/分鐘",
+      "rewardPerRun": "每次獎勵",
+      "runsNeeded": "需要次數",
+      "secondsValue": "{seconds}s",
+      "setup": "設置",
+      "speedBonus": "+{pct}% 速度",
+      "speedTier": "速度階級",
+      "stepTime": "步驟時間",
+      "stillNeed": "仍需",
+      "toolSpeed": "工具速度",
+      "totalCost": "總費用",
+      "totalFlowers": "花卉總數",
+      "totalTime": "總時間",
+      "unitPrice": "單價",
+      "yieldBonus": "+{amount} 產量",
+      "yieldPer60s": "每 60s {amount}",
+      "yieldPerAction": "每次行動產量",
+      "yieldPerCycle": "每循環產量",
+      "yieldPerOpen": "每次開啟產量",
+      "awakenTree": "Awaken Tree",
+      "sanctuary": "Sanctuary"
+    }
   },
   "levelPlanner": {
     "title": "升級",
@@ -562,7 +797,9 @@
       "optimal": "最佳",
       "handsFree": "免持",
       "recalculate": "重新計算",
-      "calculate": "計算"
+      "calculate": "計算",
+      "addRemove": "新增 / 移除",
+      "manage": "管理"
     },
     "badges": {
       "toLevel": "至等級",
@@ -593,6 +830,136 @@
       "narrowing": "縮小最佳路線範圍…",
       "wrappingUp": "整理結果中…",
       "exploring": "探索路線組合…"
+    },
+    "eyebrow": {
+      "levelUp": "升級"
+    },
+    "learnMore": "了解更多",
+    "tier": "Tier {tier}",
+    "objective": {
+      "awakenRush": "Awaken-rush",
+      "prestigeLoop": "Prestige-loop"
+    },
+    "heading": {
+      "awakenRush": "Awaken Rush",
+      "awakenOne": "覺醒 {name}",
+      "awakenMany": "覺醒 {n} 隻生物",
+      "prestigeLoop": "Prestige Loop",
+      "creatureLeveling": "{name} 升級",
+      "partyLevelUp": "Party 升級",
+      "levelUpPlanner": "升級規劃器",
+      "subtitleAwaken": "升至 Lv 70 的最快路徑——覺醒以解鎖聖殿資格與覺醒樹代幣。",
+      "subtitlePrestige": "在確認間隔之間穩定刷取威望代幣的固定 Party。",
+      "subtitlePartyHandsFree": "穩定的遠征分配，可持續數小時運行而無需交換。",
+      "subtitlePartyOptimal": "最優遠征計畫，同時為你的所有收藏升級。",
+      "subtitleSingle": "以最快速度為你的生物升級的最優遠征路徑。"
+    },
+    "rail": {
+      "queue": "佇列",
+      "addRemoveCreatures": "新增 / 移除生物",
+      "sortEta": "預計到達時間",
+      "sortLevel": "等級",
+      "sortName": "名稱",
+      "sortTier": "Tier"
+    },
+    "awaken": {
+      "addCreaturesTitle": "新增待覺醒的生物",
+      "allowBoostersTitle": "允許生物擔任加速者",
+      "boosterRoster": "加速者名單",
+      "boosterHint": "預設自動選取最強的 {n} 隻已覺醒生物（依等級排序，再依 Tier 排序）。點選切換以自訂；重設可還原此預設值。",
+      "boosterChipTitle": "{name} — Lv {level}",
+      "removeBooster": "移除 {name}",
+      "handsFree": "免手動",
+      "handsFreeTitle": "設定一次後放置數小時——每隻生物重新調配次數極少",
+      "optimalTitle": "協調配合，最快完成——需要更多次重新調配",
+      "emptyTitle": "新增生物以規劃覺醒。",
+      "emptySubtitle": "從側欄選擇你想升至 Lv 70 的未覺醒生物。規劃器會找出最快的遠征路線，並告訴你每隻生物的預計完成時間。",
+      "alreadyMaxTitle": "已達 Lv 70。",
+      "alreadyMaxSubtitle": "{name} 現已可覺醒——無需額外升級。",
+      "toFinish": "完成所需時間",
+      "wholeQueue": "整個佇列",
+      "strategyShortHandsFree": "穩定路線，少量交換",
+      "strategyShortOptimal": "最快完成，較多交換",
+      "strategyExplainerHandsFree": "免手動讓每隻生物擁有穩定的升至 70 路線，幾乎不需重新調配——設定一次後數小時回來確認。",
+      "strategyExplainerOptimal": "最優協調整個佇列以達到最快整體完成速度，代價是在遠征之間需要更多次重新調配。",
+      "metricRuns": "次數",
+      "metricSwaps": "交換次數",
+      "incompleteWarning": "{n} 隻生物無法在規劃器的計算限制內達到 Lv 70——可能需要比單次模擬更多的次數。 | {n} 隻生物無法在規劃器的計算限制內達到 Lv 70——可能需要比單次模擬更多的次數。",
+      "coordinatingSubtitle": "正在跨遠征協調佇列…",
+      "readySubtitleHandsFree": "讓每隻生物擁有穩定的升至 70 路線，幾乎不需重新調配——設定一次後數小時回來確認。",
+      "readySubtitleOptimal": "同步將所有佇列中的生物升至 70——每隻各自運行，並帶上你最強的生物作為加速者。",
+      "targetBadge": "覺醒目標 · Lv 70",
+      "alreadyAwakenedTitle": "已覺醒。",
+      "alreadyAwakenedSubtitle": "{name} 已通過 Lv 70 里程碑——已擁有覺醒樹代幣和聖殿資格。可用其刷取威望代幣，或在「自訂」中繼續升至 Lv 120。",
+      "goToPrestige": "前往 Prestige-loop",
+      "keepLeveling": "繼續升級（自訂）"
+    },
+    "expeditionPicker": {
+      "title": "規劃器使用的 Expeditions",
+      "includedCount": "已納入 {included} / {total}",
+      "searchPlaceholder": "搜尋遠征…",
+      "includeAll": "全部納入",
+      "captionBefore": "預設狀態反映你在",
+      "captionConfigs": "設定",
+      "captionAfter": "頁面的存檔進度。點選列以納入或排除；點選 Tier 可僅切換該 Tier。",
+      "rowExcludeTitle": "{name}——點選以排除",
+      "rowIncludeTitle": "{name}——點選以納入",
+      "requiredCompletions": "（需 {n} 次）",
+      "toggleTier": "切換 Tier {tier}",
+      "noMatches": "無符合結果。"
+    },
+    "prestigeLoop": {
+      "roster": "名單",
+      "learnMore": "了解更多",
+      "checkInCadence": "確認頻率",
+      "choosePrestigeCreatures": "選擇威望生物",
+      "hoursShort": "{h}h",
+      "everyHours": "每 {h}h",
+      "perDay": "/ 天",
+      "noEligibleTitle": "目前尚無符合威望資格的生物。",
+      "noEligibleSubtitle": "Prestige Loop 需要已覺醒的生物（可達 Lv 120 並重置）。請先覺醒一些生物。",
+      "goToAwaken": "前往 Awaken-rush",
+      "simulating": "正在模擬 Prestige Loop…",
+      "readyTitle": "準備好規劃你的 Prestige Loop 了。",
+      "readySubtitle": "選擇確認頻率與策略，然後計算穩定的代幣刷取設定。",
+      "roles": {
+        "climber": "升級中",
+        "booster": "Booster",
+        "anchor": "Anchor"
+      },
+      "results": {
+        "strategySummary": "你最強的生物持續保持滿等作為永久 Booster；其他所有生物升至 Lv 120 並威望以獲取代幣。",
+        "strategyExplainer": "你最強的 {boosterCount} 隻生物固定停在 Lv 120 作為永久 Booster——它們加速 Party，但從不威望，因此自身不獲得代幣。其他所有生物升至 Lv 120，並在每次確認時威望以獲取代幣。最佳 Party 只需組建一次並保持不變，是真正的「設定後放置」循環。",
+        "tabSetup": "設定",
+        "tabLevels": "等級",
+        "prestigeTokenAlt": "Prestige token",
+        "tokensPerDay": "威望代幣 / 天",
+        "checkingInEvery": "每 {h}h 確認一次",
+        "recommendedSetup": "建議設定",
+        "viewSetup": "在 Expeditions 中查看設定",
+        "viewSetupTitle": "將此設定套用至 Expeditions 頁面並在新分頁中開啟",
+        "howToReadCharts": "如何閱讀這些圖表"
+      },
+      "timeline": {
+        "caption": "連續 {n} 次確認，每 {h}h 一次。",
+        "captionLegend": "= 威望並獲取代幣，從 Lv 1 重新開始。",
+        "creature": "生物",
+        "tokens": "代幣",
+        "checkInIndex": "#{n}",
+        "plusHours": "+{h}h",
+        "anchorTokensTooltip": "Anchor——固定在 Lv 120 以加速夥伴；自身不獲得代幣",
+        "tokensTooltip": "此窗口內 {n} 個威望代幣",
+        "prestigedTooltip": "此次確認已威望——從 Lv 1 重新開始",
+        "held": "保持"
+      },
+      "chart": {
+        "allHeld": "全部保持在 Lv 120——此遠征無升級。",
+        "lvl": "Lv {n}",
+        "wastedXp": "浪費的 XP",
+        "legendTokens": "{name}——{n} 個威望代幣 | {name}——{n} 個威望代幣",
+        "prestigeTokensAlt": "Prestige tokens",
+        "heldAt120": "保持在 Lv 120"
+      }
     }
   },
   "summoningPlanner": {
@@ -654,7 +1021,80 @@
       "fromCreatures": "+{n} Gold/分 來自生物",
       "fromFlowers": "+{n} Gold/分 來自花朵"
     },
-    "gold": "Gold"
+    "gold": "Gold",
+    "header": {
+      "empty": "選擇下一個要召喚的目標。",
+      "count": "正在召喚 {n} 隻生物。 | 正在召喚 {n} 隻生物。",
+      "subtitle": "跨所有已選召喚的彙整材料。阻礙——例如尚未達到的技能等級——會在內文及側邊欄中標示出來。"
+    },
+    "viewTabs": {
+      "plan": {
+        "label": "計畫",
+        "description": "逐一生物：每次召喚所需的內容，按處理順序排列，附預計完成時間。"
+      },
+      "materials": {
+        "label": "全部材料",
+        "description": "所有所需材料，依來源分組——以平面清單或完整製作樹呈現。"
+      }
+    },
+    "planSort": {
+      "step": "步驟順序",
+      "ready": "最接近完成"
+    },
+    "rail": {
+      "heading": "計畫",
+      "blocked": "受阻",
+      "addRemove": "新增 / 移除生物"
+    },
+    "picker": {
+      "defaultTitle": "新增待召喚的生物",
+      "close": "關閉",
+      "sortLevel": "等級",
+      "sortTitle": {
+        "tier": "依 Tier 排序",
+        "tierAsc": "Tier——升序（點選切換為降序）",
+        "tierDesc": "Tier——降序（點選清除）",
+        "name": "依名稱排序",
+        "nameAsc": "名稱——A→Z（點選切換為 Z→A）",
+        "nameDesc": "名稱——Z→A（點選清除）",
+        "level": "依等級排序",
+        "levelAsc": "等級——由低至高（點選切換為由高至低）",
+        "levelDesc": "等級——由高至低（點選清除）"
+      },
+      "excludeBusy": "排除忙碌中",
+      "includeBusy": "納入忙碌中",
+      "excludeBusyHint": "排除目前正在進行其他活動的所有生物",
+      "includeBusyHint": "重新納入正在進行其他活動的生物"
+    },
+    "focus": {
+      "doThisNow": "現在執行此步驟",
+      "requirementsStocked": "{fulfilled}/{total} 個需求已備齊",
+      "status": {
+        "blocked": "受阻",
+        "ready": "就緒",
+        "inProgress": "進行中"
+      },
+      "toReady": "{duration} 後就緒",
+      "waysToImprove": "改善方法",
+      "waysToImproveHint": "建議假設計畫中更早召喚的生物已在此步驟部署——因此可能提及你尚未召喚的生物。",
+      "requirements": "需求",
+      "alsoNeededBy": "同樣需要者",
+      "reservedNote": "此生物在你的計畫中排序較早，會優先使用此庫存 | 這些生物在你的計畫中排序較早，會優先使用此庫存",
+      "sequentialLegend": {
+        "text": "數量為{sequential}——共用材料由計畫中較早的生物優先消耗，因此此處的數字可能低於你的持有量。{violet} 色的長條段或 {need} 表示庫存已被{earmarked}，而非缺少。",
+        "sequential": "順序計算",
+        "violet": "紫",
+        "need": "需求",
+        "earmarked": "預留"
+      }
+    },
+    "expeditionCard": {
+      "tierAlt": "Tier {tier}"
+    },
+    "gatherAdvisory": {
+      "awakenPointCost": "{n} 個 Awaken Point | {n} 個 Awaken Points",
+      "openIn": "在 {feature} 中開啟"
+    }
   },
   "configs": {
     "title": "設定",
@@ -863,7 +1303,12 @@
       "buyAtTitle": "購買於",
       "categories": {
         "refining": "精煉"
-      }
+      },
+      "resourceQueue": "{resource} 佇列",
+      "active": "進行中",
+      "elapsed": "已用時間",
+      "alreadyQueued": "已在排程中 — 在此工站新任務開始前即可完成。",
+      "noQueuedItems": "此工作台沒有已排隊的道具詳情。"
     },
     "itemPicker": {
       "placeholder": "搜尋規劃器道具",
@@ -885,7 +1330,10 @@
       "need": "需要",
       "items": "個道具",
       "have2": "擁有",
-      "queued": "已排隊"
+      "queued": "已排隊",
+      "here": "此處",
+      "owned": "持有",
+      "usedByEarlierCreatures": "已被先前的生物使用"
     },
     "goldRate": {
       "goldPerMin": "Gold/分",
@@ -1080,7 +1528,13 @@
       "total": "總計",
       "need": "需要",
       "have2": "擁有",
-      "queued": "已排隊"
+      "queued": "已排隊",
+      "here": "此處 ",
+      "owned": "擁有 {n} 個",
+      "usedByEarlier": "被較早的生物使用",
+      "requiresSkill": "需要 {skill} Lv{level}",
+      "currentLevel": "（Lv {current}）",
+      "clickToPlan": "點選規劃 {skill}"
     }
   },
   "gardenView": {
@@ -1114,7 +1568,7 @@
     "merchantCostLead": "從 Merchant 購買的花費為",
     "perFlower": "每朵花",
     "plantAria": "種植 {name} Flower",
-    "flowerName": "{name} Flower",
+    "flowerName": "{name} 花朵",
     "levelOf": "等級 {level}/{max}",
     "removeAria": "從苗床移除花朵",
     "removeTooltip": "在遊戲中，移除花朵會將其退回你的物品欄——你不會失去花朵本身。但你會失去它所有的升級，也就是說用來升級它的肥料也會一併消失。",
@@ -1173,7 +1627,10 @@
     "awakenGatherDuration": "{jobId} 的 Awaken 時長階級可使 {itemName} 採集時間減少約 {pct}%",
     "awakenGatherYield": "{jobId} 的 Awaken 產量加成可提升 {itemName} 的採集產量",
     "awakenSpeed": "{workstation} 的 Awaken 速度階級可使製作時間減少約 5%",
-    "fabricationPoints": "再為 {itemName} 分配 {count} 點 fabrication 點數以加快被動產出"
+    "fabricationPoints": "再為 {itemName} 分配 {count} 點 fabrication 點數以加快被動產出",
+    "machineSwitch": "將 {machine} 從 {current} 切換至 {item} 以被動生產",
+    "machineSwitchContention": "——同時也需要用於 {items}{more}",
+    "machineSwitchIdle": "閒置"
   },
   "localeNotice": {
     "shownIn": "以 {language} 顯示",
@@ -1183,5 +1640,168 @@
   "localeHint": {
     "message": "現已支援多種語言",
     "gotIt": "知道了"
+  },
+  "skillPlanner": {
+    "eyebrow": "技能規劃器",
+    "heading": "{skill} 升級",
+    "subheading": "選擇目標等級，查看所需的 XP、循環次數與時間 — 已套用所有加成。",
+    "controls": {
+      "gathering": "採集",
+      "workstations": "工作站",
+      "targetLevel": "目標等級",
+      "maxOut": "升至滿級（Lv 99）",
+      "unlocksAtLevel": "在 Lv{level} 解鎖 {item}",
+      "atTopTier": "此技能已達最高階級。"
+    },
+    "empty": {
+      "title": "無可規劃",
+      "subtitle": "請選擇高於當前等級的目標等級以查看磨練計畫。"
+    },
+    "summary": {
+      "kicker": "計畫",
+      "title": "摘要",
+      "totalXp": "總 XP",
+      "totalCrafts": "製造總數",
+      "totalCycles": "循環總數",
+      "totalAutocraft": "自動製造總數",
+      "totalFocusTime": "專注時間總計",
+      "playerLevel": "玩家等級",
+      "xpBonusGain": "+{value}% XP"
+    },
+    "waysToImprove": {
+      "kicker": "效率",
+      "title": "提升方法"
+    },
+    "ingredients": {
+      "kicker": "材料",
+      "title": "材料費用",
+      "aside": "從你的背包中消耗"
+    },
+    "advisory": {
+      "allRequired": "全部 {count} 項皆為必需 — 每項都要提升："
+    },
+    "awakenSources": {
+      "banked": "你有 {count} 個未使用的 {points} — 開啟 Awaken Tree 進行分配。",
+      "awakenOwned": "Awaken 你擁有的 → +1 {point}：",
+      "summonThenAwaken": "Summon 後再 Awaken → +1 {point}：",
+      "readyTitle": "可以 Awaken",
+      "levelFirstTitle": "先升至 Lv 70，再進行 Awaken"
+    },
+    "summonChip": {
+      "canSummon": "可以 Summon",
+      "matsShort": "缺少 {count} 種材料 | 缺少 {count} 種材料",
+      "needsSkill": "需要 {skill} {level}",
+      "tierSummonThenAwaken": "Tier {tier} · Summon 後再 Awaken",
+      "stillNeed": "仍需",
+      "allInInventory": "所有材料已在背包中 — 可以 Summon。",
+      "blockedNeeds": "已封鎖 — 需要 {skill} Lv{level}",
+      "inspect": "查看"
+    },
+    "sanctuary": {
+      "benefitGatherSpeed": "採集速度",
+      "benefitYield": "產量",
+      "swapRoster": "更換你的 Sanctuary 名單：",
+      "remove": "移除",
+      "add": "加入",
+      "nothingToRemove": "無需移除 — 你有空閒欄位。",
+      "alreadySlotted": "已在欄位中 — 無需加入。",
+      "keepInPlace": "保持不動",
+      "resultingTierChanges": "階級變更結果",
+      "slotsSharedNote": "— Sanctuary 欄位在所有職業間共享：",
+      "tierMove": "Tier {from} → {to}"
+    },
+    "suggestion": {
+      "aria": "技能規劃器建議",
+      "suggests": "技能規劃器建議",
+      "jobToTier": "{job} → Tier {tier}",
+      "dismissAria": "關閉建議",
+      "dismiss": "關閉",
+      "apply": "套用"
+    },
+    "segments": {
+      "times": "次",
+      "cycles": "循環",
+      "stepByStep": "逐步說明",
+      "grindPath": "磨練路徑",
+      "inQueue": "排程中 {count} 個"
+    }
+  },
+  "advisories": {
+    "openIn": "在 {destination} 中開啟",
+    "benefit": {
+      "fasterGathering": "採集速度提升 {pct}%",
+      "yield": "+{amount} 產量",
+      "xp": "+{pct}% XP"
+    },
+    "cost": {
+      "tool": "{amount} {itemName}",
+      "awakenPoints": "{n} 個 Awaken Point | {n} 個 Awaken Points"
+    },
+    "sanctuary": {
+      "headline": "Sanctuary → Tier {tier}",
+      "headlineWithJob": "{job} Sanctuary → Tier {tier}"
+    },
+    "playerLevel": {
+      "headline": "提升低等技能 → +{levels} 玩家等級 | 提升低等技能 → +{levels} 玩家等級",
+      "benefit": "每項技能 +{pct}% XP"
+    },
+    "gather": {
+      "awakenNodeFallback": "Awaken 節點",
+      "sanctuaryHeadline": "{job} Sanctuary",
+      "sanctuaryHeadlineWithTier": "{job} Sanctuary → Tier {tier}",
+      "sanctuaryDetail": "更快速且更高產量的採集",
+      "yieldDetail": "每次行動 +1 採集",
+      "durationDetail": "−5% 採集時間"
+    },
+    "skill": {
+      "awakenNodeFallback": "Awaken {type} 節點 {from} → {to}",
+      "toolFallback": "工具",
+      "toolLevel": "{tool} Lv{from} → {to}",
+      "sanctuaryLabel": "Sanctuary - {skill} Tier {tier}"
+    }
+  },
+  "plannerGlossary": {
+    "awakenPoint": {
+      "term": "Awaken point",
+      "short": "覺醒生物時獲得，可花費在 awaken tree 的任意節點上。",
+      "long": "覺醒一隻生物正好獲得一個 Awaken point。這棵樹以工作為基礎（例如 Mining 持續時間、Chopping 經驗），而非以生物為基礎，因此一個點數可投入任何對你最有幫助的工作升級——它從不綁定於特定生物。"
+    },
+    "sanctuarySeat": {
+      "term": "Sanctuary 席位",
+      "short": "一個部署欄位。讓已覺醒的生物入座可提升某項工作階級，並加速該類採集。",
+      "long": "生物必須先覺醒，才能占用 Sanctuary 席位或擔任加速者。一旦入座，便會提升某項採集工作的階級，縮短該工作後續所有的採集時間。"
+    },
+    "checkIn": {
+      "term": "確認",
+      "short": "回來確認一次，收取 prestige token 並重新組建你的 Party。",
+      "long": "Prestige 循環假設你會離開，並依固定排程回來。每次確認就是其中一次回訪：你存入自上次確認以來賺得的代幣，規劃器則為下一段時間重新分配 Party。"
+    },
+    "cadence": {
+      "term": "確認頻率",
+      "short": "你回來確認的頻率——每 12h、24h 等。它會改變循環的優化方式。",
+      "long": "頻率決定每段無人看管時段的長度。較短的頻率讓生物更頻繁地 prestige 並重新組建；較長的頻率則會在生物於兩次確認間達到滿等後浪費更多時間。"
+    },
+    "prestige": {
+      "term": "Prestige",
+      "short": "當生物達到等級上限時，它會重置回 level 1 並獲得一個 prestige token。",
+      "long": "Prestige 是循環的收益所在：達到上限的生物會重置並產出一個代幣。整個規劃器都為了最大化你名單中每天發生的重置次數而調校。"
+    },
+    "rosterRoleAnchor": {
+      "term": "Anchor",
+      "short": "你最強的生物之一，固定停在 level 120 以加速其 Party。它從不 prestige，因此自身不獲得任何代幣。"
+    },
+    "rosterRoleBooster": {
+      "term": "Booster",
+      "short": "並非你親自挑選的生物——而是一隻已達到 level 120 的 Leveling 生物，在下次確認被 prestige 之前持續加速其 Party。"
+    },
+    "rosterRoleClimber": {
+      "term": "Leveling",
+      "short": "正在朝 level 120 攀升的生物。當它達到滿等時便會 prestige 以獲取一個代幣，然後從頭再來。"
+    },
+    "levelChart": {
+      "term": "升級圖表",
+      "short": "每條線代表一隻生物跨各次確認的等級。一條線掉回 1 即代表一次 prestige 重置。",
+      "long": "等級檢視會繪出某次遠征 Party 中每隻生物隨時間的變化。一條朝上限攀升、然後掉回 level 1 的線即是一次 prestige——那次重置正是獲得代幣的時刻。Anchor 會保持平直、貼近頂端，因為它們從不重置。"
+    }
   }
 }

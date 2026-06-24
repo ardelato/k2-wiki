@@ -8,7 +8,7 @@ import {
   MAX_TIER,
   MAX_SCORE,
   SCORE_DIVISOR,
-} from '@/utils/sanctuaryConstants'
+} from '@/utils/planner/sanctuaryConstants'
 
 describe('MAX_SCORE', () => {
   test('equals the last tier threshold', () => {

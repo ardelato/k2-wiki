@@ -8,14 +8,14 @@ const setLocale = vi.fn()
 async function load(autoDetected: boolean) {
   vi.resetModules()
   vi.doMock('@/i18n', () => ({ localeAutoDetected: autoDetected }))
-  vi.doMock('@/composables/useLocale', () => ({
+  vi.doMock('@/composables/core/useLocale', () => ({
     useLocale: () => ({
       currentLocale: { value: 'de' },
       currentLocaleName: { value: 'Deutsch' },
       setLocale,
     }),
   }))
-  return (await import('@/composables/useLocaleOnboarding')).useLocaleOnboarding()
+  return (await import('@/composables/core/useLocaleOnboarding')).useLocaleOnboarding()
 }
 
 describe('useLocaleOnboarding gating', () => {
@@ -23,7 +23,7 @@ describe('useLocaleOnboarding gating', () => {
     localStorage.clear()
     vi.clearAllMocks()
     vi.doUnmock('@/i18n')
-    vi.doUnmock('@/composables/useLocale')
+    vi.doUnmock('@/composables/core/useLocale')
   })
 
   it('auto-switched into a non-English UI → notice shows, hint hidden', async () => {

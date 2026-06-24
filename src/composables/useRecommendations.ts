@@ -1,8 +1,9 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { machineRecipeIndex, machineSpeedMultipliers } from '@/data/indexes'
+import { itemById, machineRecipeIndex, machineSpeedMultipliers } from '@/data/indexes'
 import type { PlannerMethod, PlannerNode } from '@/types'
+import { JOB_TIER_DURATION_REDUCTION } from '@/utils/formulas'
 
 import { useGameConfig } from './useGameConfig'
 
@@ -26,14 +27,31 @@ export function useRecommendations(
 
     const {
       machineLevels,
+      machineRecipes,
       awakenGatherUpgrades,
       awakenSpeedTiers,
       fabricationAllocations,
       jobTiers,
     } = gameConfig
 
-    // Job tier reduction/bonus constants (mirrors useCraftPlanner.ts)
-    const JOB_TIER_DURATION_REDUCTION = [0, 0, 0.1, 0.1, 0.2, 0.2]
+    // Phase C — machine switch advisory. A processor (one recipe at a time) that COULD make a
+    // planned item but is set to a different recipe (or idle) can be retasked to produce it
+    // passively. Pre-scan which processors are wanted by which plan items, to flag contention.
+    const switchWants = new Map<string, { nodeId: string; itemName: string }[]>()
+    for (const node of Object.values(nodesById.value)) {
+      if (node.fulfilled) continue
+      const m = getActiveMethod(node.id)
+      if (!m || m.kind === 'machine') continue // already produced passively by a machine
+      for (const source of machineRecipeIndex.get(node.itemId) ?? []) {
+        if (source.inputItemId == null) continue // generator: always running, nothing to switch
+        const selected = machineRecipes.value[source.machineId]
+        if (selected === 'all' || selected === node.itemId) continue // already makes this item
+        const list = switchWants.get(source.machineId) ?? []
+        list.push({ nodeId: node.id, itemName: node.itemName })
+        switchWants.set(source.machineId, list)
+      }
+    }
+
     const MAX_JOB_TIER = JOB_TIER_DURATION_REDUCTION.length - 1
 
     // Max constants from useGameConfig setters
@@ -49,6 +67,42 @@ export function useRecommendations(
       if (!method) continue
 
       const kind = method.kind
+
+      // --- Machine switch advisory (Phase C) ---
+      // If a processor could make this item but is set elsewhere, retasking it produces the
+      // item passively (saving active gather/craft). Advisory only — does not change selection.
+      if (kind !== 'machine') {
+        const switchable = (machineRecipeIndex.get(node.itemId) ?? []).find((s) => {
+          if (s.inputItemId == null) return false // generator
+          const sel = machineRecipes.value[s.machineId]
+          return sel !== 'all' && sel !== node.itemId
+        })
+        if (switchable) {
+          const sel = machineRecipes.value[switchable.machineId]
+          const current = sel
+            ? (itemById.get(sel)?.name ?? sel)
+            : t('recommendations.machineSwitchIdle')
+          const others = (switchWants.get(switchable.machineId) ?? [])
+            .filter((w) => w.nodeId !== node.id)
+            .map((w) => w.itemName)
+          const contention =
+            others.length > 0
+              ? t('recommendations.machineSwitchContention', {
+                  items: others.slice(0, 2).join(', '),
+                  more: others.length > 2 ? '…' : '',
+                })
+              : ''
+          result[node.id] = {
+            text:
+              t('recommendations.machineSwitch', {
+                machine: switchable.machineName,
+                current,
+                item: node.itemName,
+              }) + contention,
+          }
+          continue
+        }
+      }
 
       // --- Machine upgrade recommendation ---
       if (kind === 'machine') {

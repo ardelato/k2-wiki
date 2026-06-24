@@ -61,7 +61,14 @@
     "tools": "Tools",
     "fabrication": "Fabrication",
     "planner": "Planificador",
-    "configs": "Configuración"
+    "configs": "Configuración",
+    "creaturePlanner": "Planificador de Criaturas",
+    "craftingPlanner": "Planificador de Fabricación",
+    "plannerAwaken": "Planificador · Awaken",
+    "plannerSummon": "Planificador · Summon",
+    "plannerPrestige": "Planificador · Prestige",
+    "plannerSkills": "Planificador · Habilidades",
+    "plannerCraft": "Planificador · Fabricar"
   },
   "settings": {
     "themeSystem": "Tema: Sistema",
@@ -242,7 +249,8 @@
       "disadvantage": "· ▼ Desventaja",
       "lvlBadge": "Nvl {level}",
       "totalJobPoints": "Total {total}",
-      "baseStat": "(BASE {value})"
+      "baseStat": "(BASE {value})",
+      "planSummoning": "Plan Summoning"
     },
     "summoningCost": {
       "title": "Costo de invocación"
@@ -308,7 +316,17 @@
       "clearAll": "Borrar todo"
     },
     "rightClickHint": {
-      "label": "Clic derecho"
+      "label": "Inspeccionar"
+    },
+    "infoHint": {
+      "whatIs": "¿Qué es {term}?",
+      "moreInfo": "Más información"
+    },
+    "learnMore": {
+      "label": "Más información"
+    },
+    "advisory": {
+      "speedsUp": "Acelera"
     }
   },
   "expeditions": {
@@ -384,7 +402,8 @@
     "gathering": "Recolección",
     "gatheringSkill": "Habilidad de recolección",
     "tier": "Rango",
-    "tierRequiresLevel": "(Requiere jugador Nvl {n})",
+    "tierRequiresLevel": "(Requiere {label} Nvl {n})",
+    "player": "Jugador",
     "statWeights": "Pesos de estadísticas",
     "tierOverview": "Resumen de rango",
     "tierCol": "Rango",
@@ -451,7 +470,11 @@
     "recommended": "Recomendada",
     "select": "Seleccionar",
     "unreachableTooltip": "Estos objetivos no se pueden alcanzar con las criaturas seleccionables actuales",
-    "recommendedAbbr": "Rec."
+    "recommendedAbbr": "Rec.",
+    "statusHelper": "Ayudante",
+    "statusMachine": "Máquina",
+    "statusDungeon": "Dungeon",
+    "tierLabel": "Nivel {n}"
   },
   "machines": {
     "title": "Machines",
@@ -540,7 +563,219 @@
       "expandAll": "Expandir todo",
       "collapsed": "contraído"
     },
-    "pickerLabel": "Objeto"
+    "pickerLabel": "Objeto",
+    "tour": {
+      "welcome": {
+        "title": "Bienvenido al Planificador de Criaturas",
+        "body": "Tres pestañas arriba. <b>Summon</b> planifica nuevas invocaciones, <b>Awaken&nbsp;Rush</b> lleva criaturas al nivel&nbsp;70 para que puedan despertar, y <b>Prestige&nbsp;Loop</b> cultiva tokens de prestigio con un Party estable. Este recorrido explica la que estés usando."
+      },
+      "summonHeader": {
+        "title": "Planifica tus próximas invocaciones",
+        "body": "Añade las criaturas que quieres invocar y el planificador suma todo lo que aún necesitas reunir para ellas — señalando bloqueos como los requisitos de habilidad."
+      },
+      "summonOrder": {
+        "title": "Tu orden de invocación",
+        "body": "Tu cola de invocaciones, numerada en el orden en que abordarlas — <b>#1 es “haz esto ahora”</b>. Reordena por paso, disponibilidad o nombre; añade más con la fila +; y elige cualquier fila para enfocar su plan a la derecha."
+      },
+      "summonFocus": {
+        "title": "La criatura enfocada",
+        "body": "La criatura en la que estás: su <b>tiempo hasta estar lista</b>, los objetos que aún necesita (suministro pasivo marcado por separado del trabajo manual), y formas de acelerar esas recolecciones."
+      },
+      "summonViews": {
+        "title": "Dos formas de verlo",
+        "body": "<b>Plan</b> (lo que has visto hasta ahora) recorre cada criatura en orden. <b>All materials</b> — cambiando a él ahora — es la lista completa de recolección de todas las invocaciones, agrupada por fuente."
+      },
+      "summonMaterials": {
+        "title": "Todo lo que recolectar",
+        "body": "Cada material que necesitan tus invocaciones en cola, agrupado y organizado por procedencia — tu lista de compras única. Vuelve a <b>Plan</b> en cualquier momento para trabajar criatura por criatura."
+      },
+      "awakenQueue": {
+        "title": "Tu cola de despertar",
+        "body": "Añade las criaturas no despertadas que quieres llevar al nivel&nbsp;70. Una criatura muestra un plan detallado; añade varias y el planificador las optimiza juntas como un Party."
+      },
+      "awakenBoosters": {
+        "title": "Potenciadores opcionales",
+        "body": "Las criaturas Awakened que permitas aquí pueden acompañar la cola y acelerarla, sin que ellas mismas suban de nivel."
+      },
+      "awakenStrategy": {
+        "title": "Estrategia",
+        "body": "<b>Hands-free</b> da a cada criatura una ruta estable con pocas reasignaciones — configúralo y vuelve en horas. <b>Optimal</b> coordina toda la cola para el acabado más rápido en conjunto, a costa de más intercambios."
+      },
+      "awakenExpeditions": {
+        "title": "Expeditions",
+        "body": "Qué Expeditions puede usar el planificador, y cuántas están en alcance. Redúcelas para ajustarse a las que realmente ejecutas."
+      },
+      "awakenFocus": {
+        "title": "Tu plan",
+        "body": "La ruta de Expedition más rápida hasta el nivel&nbsp;70 aparece aquí, con cuándo llega cada criatura."
+      },
+      "awakenViews": {
+        "title": "Cronograma o Pasos",
+        "body": "<b>Timeline</b> es un Gantt de toda la cola a lo largo del tiempo; <b>Steps</b> desglosa el mismo plan en una lista de verificación ordenada por oleadas."
+      },
+      "awakenTimeline": {
+        "title": "Cómo leer el cronograma",
+        "body": "Mantén <b>⌘/Ctrl</b> y desplázate para acercar o alejar; mantén <b>Shift</b> y desplázate para desplazarte en el tiempo. Los botones +/− también hacen zoom, y restablecer vuelve al estado predeterminado."
+      },
+      "awakenSetup": {
+        "title": "Envíalo a Expeditions",
+        "body": "<b>View Initial Setup in Expeditions</b> escribe la primera oleada de parties del plan en tu página de Expeditions, listo para aplicar en el juego."
+      },
+      "loopRoster": {
+        "title": "Lista del Loop",
+        "body": "Las criaturas Awakened que ejecutan el loop. Tras calcular, cada fila muestra su rol — <b>{anchor}</b>, <b>{booster}</b>, o <b>{climber}</b>."
+      },
+      "loopCadence": {
+        "title": "Cadencia de revisión",
+        "body": "{cadence} La tabla muestra tokens por día para cada cadencia para que puedas comparar de un vistazo."
+      },
+      "loopExpeditions": {
+        "title": "Expeditions",
+        "body": "Qué Expeditions puede usar el loop, y cuántas están en alcance. Redúcelas para ajustarse a las que realmente ejecutas."
+      },
+      "loopHero": {
+        "title": "Tu recompensa",
+        "body": "Tokens de prestigio por día con esta configuración. {prestige} Abre “Más&nbsp;información” para ver cómo funciona la estrategia de configurar y dejar."
+      },
+      "loopTabs": {
+        "title": "Configuración y Niveles",
+        "body": "<b>Setup</b> es la asignación del Party a aplicar ahora mismo. <b>Levels</b> traza cada criatura a lo largo de las revisiones — {levelChart}"
+      },
+      "nav": {
+        "next": "Siguiente",
+        "back": "Atrás",
+        "done": "Listo"
+      }
+    },
+    "heading": "Planificador",
+    "subheading": "Explora cada rama de receta, ruta de contenedor y camino de recolección para cualquier objeto, luego fija el método que quieras usar para totales y tiempo estimado.",
+    "takeTour": "Tomar el recorrido",
+    "noItemSelected": "Ningún objeto seleccionado aún.",
+    "desktopOnlyTreeHint": "Abre esta página en una pantalla más ancha para explorar el árbol de dependencias completo y el inspector.",
+    "additionalCraftsHint": "Apunta a {additional} fabricaciones más allá de tu inventario actual y los objetos en cola de la estación de trabajo.",
+    "additionalCraftsEmphasis": "adicionales",
+    "alreadyStocked": "Ya abastecido — nada que fabricar.",
+    "clearSelectedItem": "Limpiar objeto seleccionado",
+    "creatureTabs": {
+      "summon": "Summon",
+      "awaken": "Awaken",
+      "prestige": "Prestige"
+    },
+    "craftingTabs": {
+      "singleItem": "Objeto único",
+      "skills": "Habilidades"
+    },
+    "heroStats": {
+      "craftsLeft": "Fabricaciones restantes",
+      "estTime": "Tiempo est.",
+      "stocked": "Abastecido"
+    },
+    "picker": {
+      "itemCount": "{count} objetos",
+      "searchPlaceholder": "Buscar objetos...",
+      "allTypes": "Todos",
+      "noMatches": "Ningún objeto coincide."
+    },
+    "dungeonCallout": {
+      "title": "También obtenible de la Mazmorra",
+      "subtitle": "Abrir la página de la Mazmorra"
+    },
+    "skillGate": {
+      "message": "{count} recurso necesita un nivel de habilidad más alto — requisito más alto: {gate} | {count} recursos necesitan un nivel de habilidad más alto — requisito más alto: {gate}",
+      "plan": "Planificar →"
+    },
+    "detail": {
+      "actions": "Acciones",
+      "activity": "Actividad",
+      "affordableNow": "Asequible ahora",
+      "baseDuration": "Duración base",
+      "buyAffordableNote": "Tienes suficiente gold en mano para comprarlo ahora.",
+      "buyConfigureNote": "Configura los ingresos de gold en Ajustes para estimaciones de tiempo.",
+      "buyGoldIncomeNote": "Tiempo estimado según ingresos pasivos de gold ({rate} gold/min).",
+      "buySubtitle": "Comprar {amount} directamente",
+      "containerFormula": "{amount} ÷ ({chance} × {yield}) por apertura de {container}",
+      "containerFormulaPassive": "{amount} necesarios − pasivo → {openings} aperturas de {container}",
+      "containerNote": "El tiempo de apertura se considera insignificante; solo obtener el contenedor contribuye al tiempo.",
+      "containerPassiveNote": "La producción pasiva reduce los contenedores de {from} a {to}.",
+      "containersNeeded": "Contenedores necesarios",
+      "containerSubtitle": "Se esperan {count} aperturas",
+      "craftFormula": "{crafts} elaboraciones × {time}",
+      "crafts": "Elaboraciones",
+      "craftSubtitle": "{count} elaboración para {output} de producción",
+      "craftSubtitlePlural": "{count} elaboraciones para {output} de producción",
+      "cycleDetected": "Ciclo detectado",
+      "cycleInChain": "Ciclo detectado en la cadena de dependencias.",
+      "cycleNote": "La expansión del planificador se detuvo aquí para evitar un bucle infinito.",
+      "cycles": "Ciclos",
+      "cycleSubtitle": "Esta dependencia forma un bucle que regresa a un elemento ancestro.",
+      "cycleTime": "Tiempo de ciclo",
+      "depsTime": "Tiempo de dependencias",
+      "durationReduction": "-{pct}% de duración",
+      "eachValue": "{amount} cada uno",
+      "expeditionFormula": "{runs} ejecuciones × {time} de duración base",
+      "expeditionNote": "Estimado usando la duración base — el tiempo real depende de la fortaleza del Party y el nivel.",
+      "expeditionSubtitle": "{count} ejecuciones esperadas",
+      "fabricationFormula": "{amount} ÷ {perCycle}/ciclo × {seconds}s",
+      "fabricationNote": "La fabricación genera objetos pasivamente cada 3 minutos.",
+      "fabricationSource": "Fabricación ({points} pts)",
+      "fabricationSubtitle": "{count} punto asignado",
+      "fabricationSubtitlePlural": "{count} puntos asignados",
+      "flower": "Flor",
+      "gardenConfigureNote": "Configura las flores en Ajustes del Planificador > Jardín para calcular el tiempo.",
+      "gardenFormula": "{amount} ÷ {yield} por ciclo × {time}",
+      "gardenGrowth": "Crecimiento del jardín",
+      "gardenNoFlowers": "Jardín — sin flores configuradas",
+      "gardenNote": "Rendimiento del jardín: {setup} = {rate}/min.",
+      "gatherFormula": "{amount} ÷ ({chance} × {yield}) acciones × {time}",
+      "gatherNote": "El tiempo esperado usa el rendimiento promedio de la probabilidad y el rango de producción.",
+      "goldPerMinValue": "{rate} gold/min",
+      "goldRate": "Tasa de gold",
+      "goldTime": "Tiempo de gold",
+      "goldTimeToEarn": "~{time} para ganar",
+      "goldValue": "{amount} gold",
+      "interval": "Intervalo",
+      "intervalValue": "{seconds}s por ciclo",
+      "itemDataNotFound": "Datos del objeto no encontrados.",
+      "itemsPerCycle": "Objetos / ciclo",
+      "level": "Nivel",
+      "lvValue": "Nv{level}",
+      "machineFormula": "{cycles} ciclos × {seconds}s",
+      "machineNote": "El nivel {level} de la máquina reduce el intervalo de {from}s a {to}s.",
+      "machineSource": "Máquina — {name}",
+      "machineSubtitle": "{count} ciclo para {output} de producción",
+      "machineSubtitlePlural": "{count} ciclos para {output} de producción",
+      "merchant": "Mercader",
+      "none": "Ninguno",
+      "noSourceFound": "No se encontró fuente del planificador para {name}.",
+      "notConfigured": "No configurado",
+      "onHand": "En mano",
+      "output": "Producción",
+      "passiveFormula": "{amount} ÷ ({active}/min activo + {passive}/min pasivo)",
+      "perHourValue": "{amount}/hr",
+      "points": "Puntos",
+      "rate": "Tasa",
+      "ratePerMin": "+{rate}/min",
+      "rewardPerRun": "Recompensa / ejecución",
+      "runsNeeded": "Ejecuciones necesarias",
+      "secondsValue": "{seconds}s",
+      "setup": "Configuración",
+      "speedBonus": "+{pct}% de Velocidad",
+      "speedTier": "Nivel de Velocidad",
+      "stepTime": "Tiempo de paso",
+      "stillNeed": "Aún se necesitan",
+      "toolSpeed": "Velocidad de Herramienta",
+      "totalCost": "Costo total",
+      "totalFlowers": "Flores totales",
+      "totalTime": "Tiempo total",
+      "unitPrice": "Precio unitario",
+      "yieldBonus": "+{amount} de rendimiento",
+      "yieldPer60s": "{amount} por 60s",
+      "yieldPerAction": "Rendimiento / acción",
+      "yieldPerCycle": "Rendimiento / ciclo",
+      "yieldPerOpen": "Rendimiento / apertura",
+      "awakenTree": "Awaken Tree",
+      "sanctuary": "Sanctuary"
+    }
   },
   "levelPlanner": {
     "title": "Subir de nivel",
@@ -562,7 +797,9 @@
       "optimal": "Óptimo",
       "handsFree": "Sin manos",
       "recalculate": "Recalcular",
-      "calculate": "Calcular"
+      "calculate": "Calcular",
+      "addRemove": "Añadir / Eliminar",
+      "manage": "Gestionar"
     },
     "badges": {
       "toLevel": "al nivel",
@@ -593,6 +830,136 @@
       "narrowing": "Reduciendo las mejores rutas...",
       "wrappingUp": "Finalizando...",
       "exploring": "Explorando combinaciones de rutas..."
+    },
+    "eyebrow": {
+      "levelUp": "Subir de Nivel"
+    },
+    "learnMore": "Más información",
+    "tier": "Tier {tier}",
+    "objective": {
+      "awakenRush": "Awaken-rush",
+      "prestigeLoop": "Prestige-loop"
+    },
+    "heading": {
+      "awakenRush": "Awaken Rush",
+      "awakenOne": "Awaken {name}",
+      "awakenMany": "Awaken {n} Criaturas",
+      "prestigeLoop": "Prestige Loop",
+      "creatureLeveling": "Nivelación de {name}",
+      "partyLevelUp": "Subida de Nivel del Party",
+      "levelUpPlanner": "Planificador de Subida de Nivel",
+      "subtitleAwaken": "El camino más rápido al nivel 70 — despierta para desbloquear la elegibilidad del Santuario y el token del Árbol de Despertar.",
+      "subtitlePrestige": "Un Party estable que cultiva tokens de prestigio entre revisiones.",
+      "subtitlePartyHandsFree": "Asignaciones de Expedition estables que funcionan durante horas sin necesitar intercambios.",
+      "subtitlePartyOptimal": "Plan de Expedition óptimo para nivelar toda tu colección simultáneamente.",
+      "subtitleSingle": "Ruta de Expedition óptima para nivelar tu criatura lo más rápido posible."
+    },
+    "rail": {
+      "queue": "Cola",
+      "addRemoveCreatures": "Añadir / Eliminar criaturas",
+      "sortEta": "ETA",
+      "sortLevel": "Nivel",
+      "sortName": "Nombre",
+      "sortTier": "Tier"
+    },
+    "awaken": {
+      "addCreaturesTitle": "Añadir criaturas para despertar",
+      "allowBoostersTitle": "Permitir criaturas como potenciadores",
+      "boosterRoster": "Lista de Potenciadores",
+      "boosterHint": "Por defecto se seleccionan automáticamente las {n} criaturas Awakened más fuertes (por nivel, luego tier). Activa para personalizar; Restablecer devuelve este valor predeterminado.",
+      "boosterChipTitle": "{name} — NVL {level}",
+      "removeBooster": "Eliminar {name}",
+      "handsFree": "Sin intervención",
+      "handsFreeTitle": "Configura una vez y déjalo por horas — pocas reasignaciones por criatura",
+      "optimalTitle": "Coordinado, acabado más rápido — más reasignaciones",
+      "emptyTitle": "Añade una criatura para planificar un despertar.",
+      "emptySubtitle": "Elige las criaturas no despertadas que quieres llevar al nivel 70 desde el panel. El planificador encuentra la ruta de Expedition más rápida y te dice cuándo llega cada una.",
+      "alreadyMaxTitle": "Ya está en el nivel 70.",
+      "alreadyMaxSubtitle": "{name} está lista para despertar ahora — no necesita nivelación.",
+      "toFinish": "para terminar",
+      "wholeQueue": "Cola completa",
+      "strategyShortHandsFree": "rutas estables, pocos intercambios",
+      "strategyShortOptimal": "acabado más rápido, más intercambios",
+      "strategyExplainerHandsFree": "Hands-free da a cada criatura una ruta estable hasta el 70 con pocas reasignaciones — configúralo una vez y vuelve en horas.",
+      "strategyExplainerOptimal": "Optimal coordina toda la cola para el acabado más rápido en conjunto, a costa de más reasignaciones entre Expeditions.",
+      "metricRuns": "Ejecuciones",
+      "metricSwaps": "Intercambios",
+      "incompleteWarning": "{n} criatura no puede llegar al 70 dentro del límite de cálculo del planificador — puede necesitar más ejecuciones de las que una pasada puede simular. | {n} criaturas no pueden llegar al 70 dentro del límite de cálculo del planificador — pueden necesitar más ejecuciones de las que una pasada puede simular.",
+      "coordinatingSubtitle": "Coordinando la cola a través de Expeditions…",
+      "readySubtitleHandsFree": "Da a cada criatura una ruta estable hasta el 70 con pocas reasignaciones — configúralo una vez y vuelve en horas.",
+      "readySubtitleOptimal": "Lleva cada criatura de la cola al nivel 70 en paralelo — cada una corre sola con tus criaturas más fuertes como potenciadores.",
+      "targetBadge": "Objetivo Awaken · NVL 70",
+      "alreadyAwakenedTitle": "Ya Awakened.",
+      "alreadyAwakenedSubtitle": "{name} ha superado el hito del nivel 70 — ya tiene su token del Árbol de Despertar y elegibilidad para el Santuario. Cultiva tokens de prestigio con ella, o sigue nivelando hasta el 120 en Personalizado.",
+      "goToPrestige": "Ir a Prestige-loop",
+      "keepLeveling": "Seguir nivelando (Personalizado)"
+    },
+    "expeditionPicker": {
+      "title": "Expeditions para el planificador",
+      "includedCount": "{included} de {total} incluidas",
+      "searchPlaceholder": "Buscar Expeditions...",
+      "includeAll": "Incluir todas",
+      "captionBefore": "El estado predeterminado refleja el progreso de tu archivo guardado en la página de",
+      "captionConfigs": "Configs",
+      "captionAfter": "Haz clic en una fila para incluirla o excluirla; haz clic en un tier para alternar solo ese tier.",
+      "rowExcludeTitle": "{name} — clic para excluir",
+      "rowIncludeTitle": "{name} — clic para incluir",
+      "requiredCompletions": "({n} req.)",
+      "toggleTier": "Alternar tier {tier}",
+      "noMatches": "Sin coincidencias."
+    },
+    "prestigeLoop": {
+      "roster": "Lista",
+      "learnMore": "Más información",
+      "checkInCadence": "Cadencia de revisión",
+      "choosePrestigeCreatures": "Elegir criaturas de prestigio",
+      "hoursShort": "{h}h",
+      "everyHours": "cada {h}h",
+      "perDay": "/ día",
+      "noEligibleTitle": "Aún no hay criaturas elegibles para el prestigio.",
+      "noEligibleSubtitle": "El Prestige Loop necesita criaturas Awakened (pueden alcanzar el nivel 120 y reiniciarse). Despierta algunas primero.",
+      "goToAwaken": "Ir a Awaken-rush",
+      "simulating": "Simulando el Prestige Loop…",
+      "readyTitle": "Listo para planificar tu Prestige Loop.",
+      "readySubtitle": "Elige con qué frecuencia revisarás y tu estrategia, luego calcula una configuración estable de cultivo de tokens.",
+      "roles": {
+        "climber": "Nivelando",
+        "booster": "Booster",
+        "anchor": "Anchor"
+      },
+      "results": {
+        "strategySummary": "Tus criaturas más fuertes se mantienen al máximo como potenciadores permanentes; todos los demás suben hasta el 120 y prestigian para obtener un token.",
+        "strategyExplainer": "Tus {boosterCount} criaturas más fuertes se quedan estacionadas en el nivel 120 como potenciadores permanentes — aceleran a su Party pero nunca prestigian, por lo que no ganan tokens propios. Todos los demás suben hasta el 120 y se prestigian en cada revisión para un token. Los parties de mejor ajuste se forman una vez y se mantienen, por lo que es un loop real de configurar y dejar.",
+        "tabSetup": "Configuración",
+        "tabLevels": "Niveles",
+        "prestigeTokenAlt": "Token de prestigio",
+        "tokensPerDay": "tokens de prestigio / día",
+        "checkingInEvery": "Revisando cada {h}h",
+        "recommendedSetup": "Configuración recomendada",
+        "viewSetup": "Ver configuración en Expeditions",
+        "viewSetupTitle": "Aplicar esta configuración a la página de Expeditions y abrirla en una pestaña nueva",
+        "howToReadCharts": "Cómo leer estos gráficos"
+      },
+      "timeline": {
+        "caption": "{n} revisiones consecutivas, cada {h}h.",
+        "captionLegend": "= prestigiado por un token, reinicia en nivel 1.",
+        "creature": "Criatura",
+        "tokens": "Tokens",
+        "checkInIndex": "#{n}",
+        "plusHours": "+{h}h",
+        "anchorTokensTooltip": "Anchor — mantenido en 120 para impulsar a sus compañeros; no gana tokens propios",
+        "tokensTooltip": "{n} token(s) de prestigio en esta ventana",
+        "prestigedTooltip": "Prestigiado en esta revisión — reiniciando en nivel 1",
+        "held": "retenido"
+      },
+      "chart": {
+        "allHeld": "Todos retenidos en 120 — sin nivelación en esta Expedition.",
+        "lvl": "NVL {n}",
+        "wastedXp": "XP desperdiciada",
+        "legendTokens": "{name} — {n} token de prestigio | {name} — {n} tokens de prestigio",
+        "prestigeTokensAlt": "Tokens de prestigio",
+        "heldAt120": "Retenido en 120"
+      }
     }
   },
   "summoningPlanner": {
@@ -654,7 +1021,80 @@
       "fromCreatures": "+{n} Gold/min de criaturas",
       "fromFlowers": "+{n} Gold/min de flores"
     },
-    "gold": "Gold"
+    "gold": "Gold",
+    "header": {
+      "empty": "Elige qué invocar a continuación.",
+      "count": "Invocando {n} criatura. | Invocando {n} criaturas.",
+      "subtitle": "Materiales agregados de tus invocaciones seleccionadas. Los bloqueos — como los niveles de habilidad que aún no has alcanzado — aparecen en línea y en el panel lateral."
+    },
+    "viewTabs": {
+      "plan": {
+        "label": "Plan",
+        "description": "Por criatura: lo que necesita cada invocación, en el orden de abordarlas, con tiempo hasta estar lista."
+      },
+      "materials": {
+        "label": "Todos los materiales",
+        "description": "Todo lo que necesitas, agrupado por fuente — como lista plana o árboles de fabricación completos."
+      }
+    },
+    "planSort": {
+      "step": "Orden de pasos",
+      "ready": "Más listos"
+    },
+    "rail": {
+      "heading": "Plan",
+      "blocked": "Bloqueado",
+      "addRemove": "Añadir / Eliminar criaturas"
+    },
+    "picker": {
+      "defaultTitle": "Añadir criaturas para invocar",
+      "close": "Cerrar",
+      "sortLevel": "Nivel",
+      "sortTitle": {
+        "tier": "Ordenar por tier",
+        "tierAsc": "Tier — ascendente (clic para descendente)",
+        "tierDesc": "Tier — descendente (clic para limpiar)",
+        "name": "Ordenar por nombre",
+        "nameAsc": "Nombre — A→Z (clic para Z→A)",
+        "nameDesc": "Nombre — Z→A (clic para limpiar)",
+        "level": "Ordenar por nivel",
+        "levelAsc": "Nivel — menor primero (clic para mayor primero)",
+        "levelDesc": "Nivel — mayor primero (clic para limpiar)"
+      },
+      "excludeBusy": "Excluir ocupadas",
+      "includeBusy": "Incluir ocupadas",
+      "excludeBusyHint": "Excluir cada criatura actualmente ocupada con otra actividad",
+      "includeBusyHint": "Volver a incluir las criaturas ocupadas con otra actividad"
+    },
+    "focus": {
+      "doThisNow": "Haz esto ahora",
+      "requirementsStocked": "{fulfilled}/{total} requisitos abastecidos",
+      "status": {
+        "blocked": "Bloqueado",
+        "ready": "Listo",
+        "inProgress": "En progreso"
+      },
+      "toReady": "{duration} para estar listo",
+      "waysToImprove": "Formas de mejorar",
+      "waysToImproveHint": "Las sugerencias asumen que las criaturas invocadas antes en tu plan ya están desplegadas en este paso — por lo que pueden nombrar criaturas que aún no has invocado.",
+      "requirements": "Requisitos",
+      "alsoNeededBy": "también necesario por",
+      "reservedNote": "Esta criatura está antes en tu plan y consume primero de este stock | Estas criaturas están antes en tu plan y consumen primero de este stock",
+      "sequentialLegend": {
+        "text": "Las cantidades son {sequential} — los materiales compartidos son consumidos primero por criaturas anteriores en tu plan, por lo que un número aquí puede leerse por debajo de lo que posees. Una porción de barra {violet} o {need} es stock que está {earmarked}, no que falte.",
+        "sequential": "secuenciales",
+        "violet": "violeta",
+        "need": "Falta",
+        "earmarked": "reservado"
+      }
+    },
+    "expeditionCard": {
+      "tierAlt": "Tier {tier}"
+    },
+    "gatherAdvisory": {
+      "awakenPointCost": "{n} Awaken Point | {n} Awaken Points",
+      "openIn": "Abrir en {feature}"
+    }
   },
   "configs": {
     "title": "Configuración",
@@ -863,7 +1303,12 @@
       "buyAtTitle": "comprar en",
       "categories": {
         "refining": "Refinado"
-      }
+      },
+      "resourceQueue": "Cola de {resource}",
+      "active": "activo",
+      "elapsed": "transcurrido",
+      "alreadyQueued": "Ya en cola — termina antes de que comiencen las nuevas tareas en esta estación.",
+      "noQueuedItems": "No hay detalles de objetos en cola para esta estación."
     },
     "itemPicker": {
       "placeholder": "Buscar objetos del planificador",
@@ -885,7 +1330,10 @@
       "need": "Necesitas",
       "items": "objetos",
       "have2": "tienes",
-      "queued": "en cola"
+      "queued": "en cola",
+      "here": "Aquí",
+      "owned": "en posesión",
+      "usedByEarlierCreatures": "usado por criaturas anteriores"
     },
     "goldRate": {
       "goldPerMin": "gold/min",
@@ -1080,7 +1528,13 @@
       "total": "Total",
       "need": "Necesitas",
       "have2": "tienes",
-      "queued": "en cola"
+      "queued": "en cola",
+      "here": "Aquí ",
+      "owned": "{n} en posesión",
+      "usedByEarlier": "usado por criaturas anteriores",
+      "requiresSkill": "Requiere {skill} Nv{level}",
+      "currentLevel": "(NVL {current})",
+      "clickToPlan": "Clic para planificar {skill}"
     }
   },
   "gardenView": {
@@ -1114,7 +1568,7 @@
     "merchantCostLead": "Comprar en el Merchant cuesta",
     "perFlower": "por flor",
     "plantAria": "Plantar {name} Flower",
-    "flowerName": "{name} Flower",
+    "flowerName": "Flor de {name}",
     "levelOf": "Nivel {level}/{max}",
     "removeAria": "Quitar flor del bancal",
     "removeTooltip": "En el juego, quitar una flor la devuelve a tu inventario: no pierdes la flor en sí. Sí pierdes todas sus mejoras de nivel, lo que significa que el fertilizante gastado en subirla de nivel también se pierde.",
@@ -1173,7 +1627,10 @@
     "awakenGatherDuration": "El nivel de duración de Awaken para {jobId} reduciría la recolección de {itemName} en ~{pct}%",
     "awakenGatherYield": "La bonificación de rendimiento de Awaken para {jobId} aumentaría el rendimiento de recolección de {itemName}",
     "awakenSpeed": "El nivel de velocidad de Awaken para {workstation} reduciría el tiempo de fabricación en ~5%",
-    "fabricationPoints": "Asigna {count} puntos de fabrication más a {itemName} para una producción pasiva más rápida"
+    "fabricationPoints": "Asigna {count} puntos de fabrication más a {itemName} para una producción pasiva más rápida",
+    "machineSwitch": "Cambia {machine} de {current} a {item} para producirlo de forma pasiva",
+    "machineSwitchContention": " — también deseado para {items}{more}",
+    "machineSwitchIdle": "inactivo"
   },
   "localeNotice": {
     "shownIn": "Mostrado en {language}",
@@ -1183,5 +1640,168 @@
   "localeHint": {
     "message": "Ahora disponible en más idiomas",
     "gotIt": "Entendido"
+  },
+  "skillPlanner": {
+    "eyebrow": "Planificador de Habilidades",
+    "heading": "Subida de nivel de {skill}",
+    "subheading": "Elige un nivel objetivo para ver el XP, los ciclos y el tiempo necesario — con todos tus bonificadores aplicados.",
+    "controls": {
+      "gathering": "Recolección",
+      "workstations": "Estaciones de trabajo",
+      "targetLevel": "Nivel objetivo",
+      "maxOut": "Maximizar (nivel 99)",
+      "unlocksAtLevel": "Desbloquea {item} en el nivel {level}",
+      "atTopTier": "Ya estás en el nivel máximo para esta habilidad."
+    },
+    "empty": {
+      "title": "Nada que planificar",
+      "subtitle": "Elige un nivel objetivo por encima de tu nivel actual para ver el plan de progresión."
+    },
+    "summary": {
+      "kicker": "Plan",
+      "title": "Resumen",
+      "totalXp": "XP Total",
+      "totalCrafts": "Elaboraciones Totales",
+      "totalCycles": "Ciclos Totales",
+      "totalAutocraft": "Autoelaboración Total",
+      "totalFocusTime": "Tiempo de Enfoque Total",
+      "playerLevel": "Nivel del jugador",
+      "xpBonusGain": "+{value}% de XP"
+    },
+    "waysToImprove": {
+      "kicker": "Eficiencia",
+      "title": "Formas de mejorar"
+    },
+    "ingredients": {
+      "kicker": "Materiales",
+      "title": "Costo de ingredientes",
+      "aside": "consumidos de tu inventario"
+    },
+    "advisory": {
+      "allRequired": "Los {count} son necesarios — mejora cada uno:"
+    },
+    "awakenSources": {
+      "banked": "Tienes {count} {points} sin gastar — abre el árbol para asignarlos.",
+      "awakenOwned": "Awaken uno que poseas → +1 {point}:",
+      "summonThenAwaken": "Summon y luego awaken uno → +1 {point}:",
+      "readyTitle": "Listo para Awaken",
+      "levelFirstTitle": "Sube al nivel 70 primero, luego Awaken"
+    },
+    "summonChip": {
+      "canSummon": "puede Summoned",
+      "matsShort": "{count} material faltante | {count} materiales faltantes",
+      "needsSkill": "requiere {skill} {level}",
+      "tierSummonThenAwaken": "Nivel {tier} · Summon y luego Awaken",
+      "stillNeed": "Aún se necesitan",
+      "allInInventory": "Todos los materiales en el inventario — listo para Summon.",
+      "blockedNeeds": "Bloqueado — requiere nivel {level} de {skill}",
+      "inspect": "Inspeccionar"
+    },
+    "sanctuary": {
+      "benefitGatherSpeed": "Velocidad de recolección",
+      "benefitYield": "Rendimiento",
+      "swapRoster": "Cambia tu lista de Sanctuary:",
+      "remove": "Eliminar",
+      "add": "Agregar",
+      "nothingToRemove": "Nada que eliminar — tienes espacios disponibles.",
+      "alreadySlotted": "Ya asignado — no se necesitan adiciones.",
+      "keepInPlace": "Mantener en su lugar",
+      "resultingTierChanges": "Cambios de nivel resultantes",
+      "slotsSharedNote": "— los espacios de Sanctuary son compartidos en todos los trabajos:",
+      "tierMove": "Nivel {from} → {to}"
+    },
+    "suggestion": {
+      "aria": "Sugerencia del Skill Planner",
+      "suggests": "Skill Planner sugiere",
+      "jobToTier": "{job} → Nivel {tier}",
+      "dismissAria": "Descartar sugerencia",
+      "dismiss": "Descartar",
+      "apply": "Aplicar"
+    },
+    "segments": {
+      "times": "veces",
+      "cycles": "ciclos",
+      "stepByStep": "Paso a paso",
+      "grindPath": "Ruta de progresión",
+      "inQueue": "{count} en cola"
+    }
+  },
+  "advisories": {
+    "openIn": "Abrir en {destination}",
+    "benefit": {
+      "fasterGathering": "{pct}% más rápido en recolección",
+      "yield": "+{amount} de rendimiento",
+      "xp": "+{pct}% de XP"
+    },
+    "cost": {
+      "tool": "{amount} {itemName}",
+      "awakenPoints": "{n} Awaken Point | {n} Awaken Points"
+    },
+    "sanctuary": {
+      "headline": "Sanctuary → Nivel {tier}",
+      "headlineWithJob": "Sanctuary de {job} → Nivel {tier}"
+    },
+    "playerLevel": {
+      "headline": "Sube habilidades bajas → +{levels} nivel de jugador | Sube habilidades bajas → +{levels} niveles de jugador",
+      "benefit": "+{pct}% de XP en cada habilidad"
+    },
+    "gather": {
+      "awakenNodeFallback": "Nodo Awaken",
+      "sanctuaryHeadline": "Sanctuary de {job}",
+      "sanctuaryHeadlineWithTier": "Sanctuary de {job} → Nivel {tier}",
+      "sanctuaryDetail": "recolección más rápida y de mayor rendimiento",
+      "yieldDetail": "+1 recolectado por acción",
+      "durationDetail": "−5% de tiempo de recolección"
+    },
+    "skill": {
+      "awakenNodeFallback": "Awaken nodo {type} {from} → {to}",
+      "toolFallback": "Herramienta",
+      "toolLevel": "{tool} Nivel {from} → {to}",
+      "sanctuaryLabel": "Sanctuary - {skill} Nivel {tier}"
+    }
+  },
+  "plannerGlossary": {
+    "awakenPoint": {
+      "term": "Awaken point",
+      "short": "Se gana cuando despiertas una criatura. Gástalo en cualquier nodo del Awaken Tree.",
+      "long": "Despertar una criatura otorga exactamente un Awaken point. El árbol se basa en trabajos (p. ej. Mining Duration, Chopping XP) en lugar de en criaturas, así que un point puede ir a la mejora de trabajo que más te ayude — nunca está ligado a una criatura concreta."
+    },
+    "sanctuarySeat": {
+      "term": "Sanctuary seat",
+      "short": "Una ranura de despliegue. Sentar una criatura despertada sube un nivel de trabajo y acelera esas recolecciones.",
+      "long": "Una criatura debe estar despertada antes de poder ocupar un Sanctuary seat o actuar como ayudante. Una vez sentada, eleva el nivel de un trabajo de recolección, acortando cada recolección restante de ese trabajo en adelante."
+    },
+    "checkIn": {
+      "term": "Revisión",
+      "short": "Una visita de regreso en la que recoges prestige tokens y vuelves a formar tus parties.",
+      "long": "El prestige loop asume que te alejas y vuelves según un horario fijo. Cada revisión es uno de esos regresos: depositas los tokens ganados desde la última visita y el planificador reasigna los parties para el siguiente tramo."
+    },
+    "cadence": {
+      "term": "Cadencia de revisión",
+      "short": "Con qué frecuencia regresas — cada 12h, 24h, etc. Cambia cómo se optimiza el loop.",
+      "long": "La cadencia fija la duración de cada tramo desatendido. Cadencias más cortas permiten que las criaturas prestigien y se vuelvan a formar más a menudo; cadencias más largas desperdician más tiempo una vez que las criaturas llegan al máximo entre visitas."
+    },
+    "prestige": {
+      "term": "Prestige",
+      "short": "Cuando una criatura alcanza el tope de nivel, se reinicia al nivel 1 y gana un prestige token.",
+      "long": "Prestigiar es la recompensa del loop: una criatura que llega al tope se reinicia y produce un token. Todo el planificador está afinado para maximizar cuántos de estos reinicios ocurren por día en toda tu lista."
+    },
+    "rosterRoleAnchor": {
+      "term": "Anchor",
+      "short": "Una de tus criaturas más fuertes, estacionada en el nivel 120 para acelerar a su party. Nunca prestigia, por lo que no gana tokens propios."
+    },
+    "rosterRoleBooster": {
+      "term": "Booster",
+      "short": "No es una criatura que eliges — una criatura Leveling que ha alcanzado el nivel 120 y está impulsando a su party hasta que se prestigia en la siguiente revisión."
+    },
+    "rosterRoleClimber": {
+      "term": "Leveling",
+      "short": "Una criatura subiendo hacia el nivel 120. Cuando llega al máximo, prestigia para obtener un token y luego empieza de nuevo."
+    },
+    "levelChart": {
+      "term": "Gráfico de niveles",
+      "short": "Cada línea es el nivel de una criatura a lo largo de las revisiones. Una línea que cae de vuelta a 1 es un reinicio de prestige.",
+      "long": "La vista de Niveles traza cada criatura del party de una expedición a lo largo del tiempo. Una línea que sube hacia el tope y luego cae de vuelta al nivel 1 es un prestige — ese reinicio es el momento en que se ganó un token. Los Anchors se mantienen planos cerca de la cima porque nunca se reinician."
+    }
   }
 }

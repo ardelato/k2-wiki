@@ -1,5 +1,4 @@
-import biomesData from '@/data/biomes.json'
-import expeditionsData from '@/data/expeditions.json'
+import { biomeMap, expeditions } from '@/data/entityMaps'
 import { i18nRecord } from '@/i18n'
 import type {
   Creature,
@@ -66,6 +65,12 @@ export const jobColors: Record<keyof Creature['jobs'], string> = {
   fishing: 'var(--color-job-fishing)',
   farming: 'var(--color-job-farming)',
 }
+
+/** Cumulative duration reduction fraction per sanctuary job tier (index = tier 0–5). */
+export const JOB_TIER_DURATION_REDUCTION: readonly number[] = [0, 0, 0.1, 0.1, 0.2, 0.2]
+
+/** Cumulative yield bonus per sanctuary job tier (index = tier 0–5). */
+export const JOB_TIER_YIELD_BONUS: readonly number[] = [0, 0, 0, 0, 0, 1]
 
 export const tierModifiers = {
   difficulty: [1, 1.5, 2, 2.5, 3],
@@ -210,58 +215,52 @@ interface BestExpeditionEntry {
   statAlignment: number
 }
 
-export function getBestExpeditionsForCreature(
-  creature: Creature,
-  limit: number = 5,
-): BestExpeditionEntry[] {
-  const expeditions = expeditionsData as Expedition[]
-  const biomes = biomesData as Biome[]
-  const biomeMap = new Map(biomes.map((b) => [b.id, b]))
-
-  // Normalize creature stats to proportions (sum to 1)
-  const statKeys: (keyof CreatureStats)[] = [
-    'power',
-    'grit',
-    'agility',
-    'smarts',
-    'looting',
-    'luck',
-  ]
-  const statTotal = statKeys.reduce((sum, k) => sum + creature.stats[k], 0)
-  const creatureProportions = statKeys.map((k) =>
-    statTotal > 0 ? creature.stats[k] / statTotal : 0,
+/**
+ * Stat alignment (0–1): dot product of the creature's stat proportions (its stats
+ * normalized to sum to 1) with the expedition's normalized stat weights. Used for the
+ * display/ranking score in both best-expedition rankings below.
+ */
+function statAlignmentScore(creature: Creature, expedition: Expedition): number {
+  const statTotal = STAT_KEYS.reduce((sum, k) => sum + creature.stats[k], 0)
+  const weightTotal = STAT_KEYS.reduce((sum, k) => sum + expedition.statWeights[k], 0)
+  if (statTotal <= 0 || weightTotal <= 0) return 0
+  return STAT_KEYS.reduce(
+    (sum, k) => sum + (creature.stats[k] / statTotal) * (expedition.statWeights[k] / weightTotal),
+    0,
   )
+}
 
+/**
+ * Shared scaffolding for best-expedition rankings. Handles biome-status, stat-alignment,
+ * and map/sort/slice; callers supply only the per-expedition numeric score.
+ */
+function rankExpeditions(
+  creature: Creature,
+  limit: number,
+  scoreFn: (
+    expedition: Expedition,
+    biome: Biome | undefined,
+    statAlignment: number,
+    traitMatch: boolean,
+  ) => number,
+): BestExpeditionEntry[] {
   return expeditions
     .map((expedition) => {
       const biome = biomeMap.get(expedition.biome)
       const traitMatch = creature.trait === expedition.trait
-
-      // Stat alignment: dot product of creature stat proportions and expedition weights
-      const weights = statKeys.map((k) => expedition.statWeights[k])
-      const weightTotal = weights.reduce((sum, w) => sum + w, 0)
-      const normalizedWeights = weights.map((w) => (weightTotal > 0 ? w / weightTotal : 0))
-      const statAlignment = creatureProportions.reduce(
-        (sum, p, i) => sum + p * normalizedWeights[i],
-        0,
-      )
+      const statAlignment = statAlignmentScore(creature, expedition)
 
       // Biome status
       let biomeStatus: 'advantage' | 'disadvantage' | 'neutral' = 'neutral'
-      let biomeScore = 1.0
       if (biome) {
         const mult = biomeMultiplier(creature, biome)
-        biomeScore = mult
         if (mult > 1) biomeStatus = 'advantage'
         else if (mult < 1) biomeStatus = 'disadvantage'
       }
 
-      // Combined score: stat alignment * biome * trait
-      const score = statAlignment * biomeScore * (traitMatch ? 1.5 : 1.0)
-
       return {
         expedition,
-        score: Math.round(score * 100),
+        score: scoreFn(expedition, biome, statAlignment, traitMatch),
         biomeName: biome?.name ?? expedition.biome,
         traitMatch,
         biomeStatus,
@@ -272,72 +271,37 @@ export function getBestExpeditionsForCreature(
     .slice(0, limit)
 }
 
+export function getBestExpeditionsForCreature(
+  creature: Creature,
+  limit: number = 5,
+): BestExpeditionEntry[] {
+  return rankExpeditions(creature, limit, (_expedition, biome, statAlignment, traitMatch) => {
+    const biomeScore = biome ? biomeMultiplier(creature, biome) : 1.0
+    // Combined score: stat alignment * biome * trait
+    const score = statAlignment * biomeScore * (traitMatch ? 1.5 : 1.0)
+    return Math.round(score * 100)
+  })
+}
+
 export function getBestExpeditionsForLeveling(
   creature: Creature,
   level: number,
   limit: number = 5,
 ): BestExpeditionEntry[] {
-  const expeditions = expeditionsData as Expedition[]
-  const biomes = biomesData as Biome[]
-  const biomeMap = new Map(biomes.map((b) => [b.id, b]))
-
-  return expeditions
-    .map((expedition) => {
-      const biome = biomeMap.get(expedition.biome)
-      const traitMatch = creature.trait === expedition.trait
-
-      // Biome status
-      let biomeStatus: 'advantage' | 'disadvantage' | 'neutral' = 'neutral'
-      if (biome) {
-        const mult = biomeMultiplier(creature, biome)
-        if (mult > 1) biomeStatus = 'advantage'
-        else if (mult < 1) biomeStatus = 'disadvantage'
+  return rankExpeditions(creature, limit, (expedition, biome) => {
+    // Score by best XP/sec across all tiers
+    let bestXpPerSec = 0
+    for (let tier = 1; tier <= 5; tier++) {
+      const rating = calculateCreatureRating(creature, expedition, level, biome)
+      const duration = calculateDuration(rating, expedition, tier)
+      const xpPerRun = calculateExpeditionXp(expedition, tier, 0, 1)
+      if (duration > 0 && xpPerRun > 0) {
+        const xpPerSec = xpPerRun / duration
+        if (xpPerSec > bestXpPerSec) bestXpPerSec = xpPerSec
       }
-
-      // Stat alignment (for display)
-      const statKeys: (keyof CreatureStats)[] = [
-        'power',
-        'grit',
-        'agility',
-        'smarts',
-        'looting',
-        'luck',
-      ]
-      const statTotal = statKeys.reduce((sum, k) => sum + creature.stats[k], 0)
-      const creatureProportions = statKeys.map((k) =>
-        statTotal > 0 ? creature.stats[k] / statTotal : 0,
-      )
-      const weights = statKeys.map((k) => expedition.statWeights[k])
-      const weightTotal = weights.reduce((sum, w) => sum + w, 0)
-      const normalizedWeights = weights.map((w) => (weightTotal > 0 ? w / weightTotal : 0))
-      const statAlignment = creatureProportions.reduce(
-        (sum, p, i) => sum + p * normalizedWeights[i],
-        0,
-      )
-
-      // Score by best XP/sec across all tiers
-      let bestXpPerSec = 0
-      for (let tier = 1; tier <= 5; tier++) {
-        const rating = calculateCreatureRating(creature, expedition, level, biome)
-        const duration = calculateDuration(rating, expedition, tier)
-        const xpPerRun = calculateExpeditionXp(expedition, tier, 0, 1)
-        if (duration > 0 && xpPerRun > 0) {
-          const xpPerSec = xpPerRun / duration
-          if (xpPerSec > bestXpPerSec) bestXpPerSec = xpPerSec
-        }
-      }
-
-      return {
-        expedition,
-        score: Math.round(bestXpPerSec * 1000),
-        biomeName: biome?.name ?? expedition.biome,
-        traitMatch,
-        biomeStatus,
-        statAlignment: Math.round(statAlignment * 100),
-      }
-    })
-    .toSorted((a, b) => b.score - a.score)
-    .slice(0, limit)
+    }
+    return Math.round(bestXpPerSec * 1000)
+  })
 }
 
 export function getRecommendedCreatures(

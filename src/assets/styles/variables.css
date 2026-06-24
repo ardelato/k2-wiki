@@ -1,19 +1,9 @@
 :root {
-  /* Base */
-  --color-bg: oklch(0.12 0.02 285);
-  --color-bg-card: oklch(0.16 0.025 285);
-  --color-bg-hover: oklch(0.22 0.03 285);
-  --color-bg-input: oklch(0.2 0.03 285);
-  --color-border: oklch(0.28 0.04 285);
-  --color-text: oklch(0.92 0.01 285);
-  --color-text-muted: oklch(0.6 0.04 285);
-  --color-primary: oklch(0.65 0.18 285);
-  --color-primary-fg: oklch(0.98 0 0);
-  --color-primary-hover: oklch(0.7 0.18 285);
-  --color-destructive: oklch(0.55 0.22 25);
-  --color-green: oklch(0.65 0.2 145);
-  --color-yellow: oklch(0.75 0.15 85);
-  --color-red: oklch(0.6 0.22 25);
+  /* Theme-agnostic decorative colors (identical in light and dark) ----------- */
+
+  /* Dark glass scrim — theme-invariant dark backdrop behind imagery (e.g. the
+     CreatureCard hero tier badge / checkbox), kept dark in both themes by design. */
+  --scrim: 0.12 0.02 285;
 
   /* Element type colors */
   --color-fire: oklch(0.6 0.22 25);
@@ -53,4 +43,46 @@
   --radius: 8px;
   --radius-sm: 4px;
   --radius-lg: 12px;
+
+  /* Panel / modal dimensions — kill the magic-number sprawl in the picker/modal layer. */
+  --panel-w-sm: 18rem; /* 288 — chip / popover panels */
+  --panel-w-md: 26rem; /* ~420 — pickers */
+  --panel-w-lg: 35rem; /* ~560 — large modals */
+  --panel-max-h: 80vh; /* picker / modal scroll cap */
+
+  /* Light theme (default) ----------------------------------------------------
+     Foreground tokens (text/accents) are tuned to meet WCAG AA (>=4.5:1) on the
+     light surfaces. The dark-tuned originals live in the `.dark` block below. */
+  --color-bg: oklch(0.975 0.004 285);
+  --color-bg-card: oklch(1 0 0);
+  --color-bg-hover: oklch(0.94 0.008 285);
+  --color-bg-input: oklch(0.96 0.006 285);
+  --color-border: oklch(0.89 0.008 285);
+  --color-text: oklch(0.27 0.035 277);
+  --color-text-muted: oklch(0.47 0.03 277);
+  --color-primary: oklch(0.52 0.1 205);
+  --color-primary-fg: oklch(0.98 0 0);
+  --color-primary-hover: oklch(0.46 0.1 205);
+  --color-destructive: oklch(0.55 0.22 25);
+  --color-green: oklch(0.53 0.15 150);
+  --color-yellow: oklch(0.55 0.12 70);
+  --color-red: oklch(0.53 0.22 25);
+}
+
+.dark {
+  /* Dark theme — original dark-tuned values. */
+  --color-bg: oklch(0.12 0.02 285);
+  --color-bg-card: oklch(0.16 0.025 285);
+  --color-bg-hover: oklch(0.22 0.03 285);
+  --color-bg-input: oklch(0.2 0.03 285);
+  --color-border: oklch(0.28 0.04 285);
+  --color-text: oklch(0.92 0.01 285);
+  --color-text-muted: oklch(0.6 0.04 285);
+  --color-primary: oklch(0.65 0.18 285);
+  --color-primary-fg: oklch(0.98 0 0);
+  --color-primary-hover: oklch(0.7 0.18 285);
+  --color-destructive: oklch(0.55 0.22 25);
+  --color-green: oklch(0.65 0.2 145);
+  --color-yellow: oklch(0.75 0.15 85);
+  --color-red: oklch(0.6 0.22 25);
 }

@@ -9,13 +9,14 @@ import ItemCard from '@/components/items/ItemCard.vue'
 import ItemDetail from '@/components/items/ItemDetail.vue'
 import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import SortableHeader from '@/components/shared/SortableHeader.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useItems } from '@/composables/useItems'
 import { summoningIndex } from '@/data/indexes'
 import type { Item } from '@/types'
-import { itemTypeColor, sourceLabel } from '@/utils/format'
-import { sourceIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { itemTypeColor, sourceLabel } from '@/utils/format/format'
+import { sourceIcons } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const {
   filteredItems,
@@ -259,7 +260,7 @@ onMounted(() => {
         <!-- Empty state -->
         <div
           v-if="filteredItems.length === 0"
-          class="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-card/50 px-6 py-16 text-center"
+          class="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-card/50 px-6 py-16 text-center"
         >
           <p class="text-lg font-semibold text-foreground">{{ t('items.view.emptyTitle') }}</p>
           <p class="mt-1 text-sm text-muted-foreground">
@@ -294,46 +295,25 @@ onMounted(() => {
             <table class="min-w-full text-sm" role="grid">
               <thead class="bg-muted/50">
                 <tr>
-                  <th
-                    class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="
-                      tableSortKey === 'name'
-                        ? tableSortDirection === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    "
-                  >
-                    <button
-                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                      @click="sortBy('name')"
-                    >
-                      {{ t('items.view.name') }}
-                      <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-30'">{{
-                        tableSortDirection === 'asc' ? '▲' : '▼'
-                      }}</span>
-                    </button>
-                  </th>
-                  <th
-                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="
-                      tableSortKey === 'type'
-                        ? tableSortDirection === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    "
-                  >
-                    <button
-                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                      @click="sortBy('type')"
-                    >
-                      {{ t('items.view.type') }}
-                      <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-30'">{{
-                        tableSortDirection === 'asc' ? '▲' : '▼'
-                      }}</span>
-                    </button>
-                  </th>
+                  <SortableHeader
+                    sort-key="name"
+                    :active-key="tableSortKey"
+                    :direction="tableSortDirection"
+                    :label="t('items.view.name')"
+                    align="left"
+                    inactive-arrow-class="opacity-30"
+                    @sort="sortBy"
+                  />
+                  <SortableHeader
+                    sort-key="type"
+                    :active-key="tableSortKey"
+                    :direction="tableSortDirection"
+                    :label="t('items.view.type')"
+                    align="left"
+                    inactive-arrow-class="opacity-30"
+                    th-class="whitespace-nowrap"
+                    @sort="sortBy"
+                  />
                   <th
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
                   >
@@ -378,48 +358,26 @@ onMounted(() => {
                       </button>
                     </span>
                   </th>
-                  <th
-                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="
-                      tableSortKey === 'recipeCount'
-                        ? tableSortDirection === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    "
-                  >
-                    <button
-                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                      @click="sortBy('recipeCount')"
-                    >
-                      {{ t('items.view.recipes') }}
-                      <span
-                        :class="tableSortKey === 'recipeCount' ? 'text-primary' : 'opacity-30'"
-                        >{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span
-                      >
-                    </button>
-                  </th>
-                  <th
-                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                    :aria-sort="
-                      tableSortKey === 'usedInCount'
-                        ? tableSortDirection === 'asc'
-                          ? 'ascending'
-                          : 'descending'
-                        : 'none'
-                    "
-                  >
-                    <button
-                      class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                      @click="sortBy('usedInCount')"
-                    >
-                      {{ t('items.view.usedIn') }}
-                      <span
-                        :class="tableSortKey === 'usedInCount' ? 'text-primary' : 'opacity-30'"
-                        >{{ tableSortDirection === 'asc' ? '▲' : '▼' }}</span
-                      >
-                    </button>
-                  </th>
+                  <SortableHeader
+                    sort-key="recipeCount"
+                    :active-key="tableSortKey"
+                    :direction="tableSortDirection"
+                    :label="t('items.view.recipes')"
+                    align="left"
+                    inactive-arrow-class="opacity-30"
+                    th-class="whitespace-nowrap"
+                    @sort="sortBy"
+                  />
+                  <SortableHeader
+                    sort-key="usedInCount"
+                    :active-key="tableSortKey"
+                    :direction="tableSortDirection"
+                    :label="t('items.view.usedIn')"
+                    align="left"
+                    inactive-arrow-class="opacity-30"
+                    th-class="whitespace-nowrap"
+                    @sort="sortBy"
+                  />
                   <th
                     v-if="anySummons"
                     class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
@@ -503,9 +461,7 @@ onMounted(() => {
                       >
                     </div>
                   </td>
-                  <td
-                    class="whitespace-nowrap px-2 py-2.5 font-mono text-sm text-yellow-700 dark:text-yellow-400"
-                  >
+                  <td class="whitespace-nowrap px-2 py-2.5 font-mono text-sm text-gold-strong">
                     {{ item.buyValue ?? '—' }} / {{ item.sellValue ?? '—' }}
                   </td>
                   <td class="px-2 py-2.5 text-sm text-foreground">
@@ -574,7 +530,7 @@ onMounted(() => {
             leave-to-class="opacity-0 translate-y-4"
           >
             <div
-              class="mx-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-border bg-card shadow-card"
+              class="mx-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-border bg-card shadow-card"
             >
               <ItemDetail
                 :item="selectedItem"

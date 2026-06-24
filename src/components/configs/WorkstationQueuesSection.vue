@@ -2,9 +2,9 @@
 import { ChevronRight } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 
-import { formatDuration } from '@/utils/format'
-import { sourceIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { formatDuration, formatNumber } from '@/utils/format/format'
+import { sourceIcons } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 interface QueuedItem {
   id: string
@@ -31,7 +31,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="rounded-2xl border border-border bg-card/50 p-5">
+  <div class="rounded-xl border border-border bg-card/50 p-5">
     <div class="flex flex-wrap items-start justify-between gap-3">
       <div class="flex items-start gap-2 text-left">
         <div>
@@ -61,15 +61,15 @@ const { t } = useI18n()
                 class="size-3.5 shrink-0 object-contain"
                 loading="lazy"
               />
-              <span class="text-[13px] font-extrabold">{{ group.station }}</span>
+              <span class="text-xs font-extrabold">{{ group.station }}</span>
             </div>
-            <div class="flex items-center gap-1.5 font-mono text-[10px]">
+            <div class="flex items-center gap-1.5 font-mono text-3xs">
               <span
                 v-if="queuedTimes[group.station]"
-                class="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/15 px-2 py-1 font-semibold leading-none text-amber-700 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-300"
+                class="inline-flex items-center gap-1 rounded-md border border-warning/40 bg-warning/15 px-2 py-1 font-semibold leading-none text-warning-strong dark:border-warning/25 dark:bg-warning/10 dark:text-warning-strong"
               >
                 <span
-                  class="text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-amber-700/80 dark:text-amber-300/70"
+                  class="text-3xs font-bold uppercase leading-none tracking-[0.18em] text-warning-strong/80"
                 >
                   {{ t('configs.queued.eta') }}
                 </span>
@@ -97,12 +97,12 @@ const { t } = useI18n()
                 loading="lazy"
               />
               <div class="min-w-0 flex-1">
-                <div class="flex items-center gap-1 text-[11px] font-extrabold">
-                  <span class="inline-block size-1.5 animate-pulse rounded-full bg-emerald-400" />
+                <div class="flex items-center gap-1 text-2xs font-extrabold">
+                  <span class="inline-block size-1.5 animate-pulse rounded-full bg-success" />
                   <span class="truncate">{{ group.items[0].name }}</span>
                 </div>
-                <div class="font-mono text-[9px] text-muted-foreground">
-                  ×{{ group.items[0].amount.toLocaleString() }}
+                <div class="font-mono text-3xs text-muted-foreground">
+                  ×{{ formatNumber(group.items[0].amount) }}
                 </div>
               </div>
             </div>
@@ -123,8 +123,8 @@ const { t } = useI18n()
                   class="size-5 shrink-0 object-contain"
                   loading="lazy"
                 />
-                <span class="flex-1 truncate text-[10px] font-bold">{{ item.name }}</span>
-                <span class="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground">
+                <span class="flex-1 truncate text-3xs font-bold">{{ item.name }}</span>
+                <span class="shrink-0 font-mono text-3xs tabular-nums text-muted-foreground">
                   ×{{ item.amount }}
                 </span>
               </div>

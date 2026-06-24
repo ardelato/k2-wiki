@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { Coins, Sparkles } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
 import { useAwakenSimulation } from '@/composables/useAwakenSimulation'
 import { useGameConfig } from '@/composables/useGameConfig'
 import UpgradesContent from '@/data/upgrades'
 import type { Upgrade, UpgradeEffectData } from '@/data/upgrades'
-import { jobIcons, sourceIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { formatNumber } from '@/utils/format/format'
+import { jobIcons, sourceIcons } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const { t } = useI18n()
 
@@ -189,6 +191,38 @@ function tabLabel(id: TabId): string {
 
 
 const tab = ref<TabId>('gathering')
+
+
+// Deep-link highlight: a planner advisory can open ?tree=<skill>&node=<id> to flag
+// the relevant tree card + node for a few seconds.
+const route = useRoute()
+const highlightTree = ref<string | null>(null)
+const highlightNode = ref<string | null>(null)
+
+
+function tabForTree(id: string): TabId {
+  if (WORK_GROUPS.some((g) => g.id === id)) return 'workstations'
+  if (GOLD_GROUPS.some((g) => g.id === id)) return 'gold'
+  return 'gathering'
+}
+
+
+onMounted(() => {
+  const tree = typeof route.query.tree === 'string' ? route.query.tree : null
+  if (!tree) return
+  tab.value = tabForTree(tree)
+  highlightTree.value = tree
+  highlightNode.value = typeof route.query.node === 'string' ? route.query.node : null
+  nextTick(() => {
+    document
+      .getElementById(`awaken-card-${tree}`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  })
+  window.setTimeout(() => {
+    highlightTree.value = null
+    highlightNode.value = null
+  }, 3500)
+})
 
 
 const { simAdded, simRemoved, savedIds, effectiveIds } = useAwakenSimulation()
@@ -688,7 +722,7 @@ function onNodeMouseLeave() {
 <template>
   <div class="space-y-6" @mousemove="onNodeMouseMove">
     <div>
-      <div class="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+      <div class="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
         {{ t('awakenView.eyebrow') }}
       </div>
       <h1 class="mt-1 text-2xl font-bold">Awaken Tree</h1>
@@ -727,7 +761,7 @@ function onNodeMouseLeave() {
             v-if="savedUnallocated > 0"
             :class="
               unallocatedPoints < 0
-                ? 'rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400'
+                ? 'rounded-full bg-danger/15 px-2 py-0.5 font-medium text-danger-strong'
                 : 'rounded-full bg-muted px-2 py-0.5 font-medium text-foreground'
             "
             :title="
@@ -740,13 +774,13 @@ function onNodeMouseLeave() {
           </span>
           <span
             v-if="totalSim > 0"
-            class="rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-amber-600 dark:text-amber-400"
+            class="rounded-full bg-warning/15 px-2 py-0.5 font-medium text-warning-strong"
           >
             +{{ totalSim }} {{ t('awakenView.simulated') }}
           </span>
           <span
             v-if="totalRemoved > 0"
-            class="rounded-full bg-red-500/15 px-2 py-0.5 font-medium text-red-600 dark:text-red-400"
+            class="rounded-full bg-danger/15 px-2 py-0.5 font-medium text-danger-strong"
           >
             −{{ totalRemoved }} {{ t('awakenView.removed') }}
           </span>
@@ -754,7 +788,7 @@ function onNodeMouseLeave() {
       </div>
       <div class="flex items-center gap-3">
         <button
-          class="rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
+          class="rounded-full border border-border/60 bg-card/65 px-2.5 py-1 text-2xs font-semibold text-muted-foreground transition hover:border-primary/35 hover:text-foreground"
           :class="hasChanges ? '' : 'pointer-events-none invisible'"
           :aria-hidden="!hasChanges"
           @click="resetSimulation"
@@ -780,7 +814,7 @@ function onNodeMouseLeave() {
         {{ tabLabel(t) }}
         <span class="font-mono text-xs text-muted-foreground">({{ tabCount(t) }})</span>
       </button>
-      <div class="ml-auto flex items-center gap-3 pb-2 font-mono text-[10px] text-muted-foreground">
+      <div class="ml-auto flex items-center gap-3 pb-2 font-mono text-3xs text-muted-foreground">
         <span class="inline-flex items-center gap-1">
           <span
             class="inline-block size-2.5 rounded-sm"
@@ -823,8 +857,10 @@ function onNodeMouseLeave() {
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <div
         v-for="card in activeCards"
+        :id="`awaken-card-${card.group.id}`"
         :key="card.group.id"
         class="rounded-xl border border-border bg-card p-3"
+        :class="{ 'attn-ring': highlightTree === card.group.id }"
         :style="{ background: `linear-gradient(${PALETTE[card.group.color].bgTint}, transparent)` }"
       >
         <div class="mb-2 flex items-center justify-between">
@@ -840,10 +876,12 @@ function onNodeMouseLeave() {
             <Coins v-else class="size-5" :style="{ color: PALETTE[card.group.color].stroke }" />
             <span class="text-sm font-semibold">{{ groupLabel(card.group) }}</span>
           </div>
-          <span class="font-mono text-[10px] text-muted-foreground">
+          <span class="font-mono text-3xs text-muted-foreground">
             {{ card.owned }}/{{ card.upgrades.length }}
-            <span v-if="card.sim > 0" class="ml-0.5 text-amber-500">+{{ card.sim }}</span>
-            <span v-if="card.removed > 0" class="ml-0.5 text-red-500">−{{ card.removed }}</span>
+            <span v-if="card.sim > 0" class="ml-0.5 text-warning-strong">+{{ card.sim }}</span>
+            <span v-if="card.removed > 0" class="ml-0.5 text-danger-strong"
+              >−{{ card.removed }}</span
+            >
           </span>
         </div>
         <svg
@@ -899,6 +937,19 @@ function onNodeMouseLeave() {
             @mouseenter="onNodeMouseEnter(u, $event)"
             @mouseleave="onNodeMouseLeave"
           >
+            <!-- Deep-link highlight ring -->
+            <rect
+              v-if="u.id === highlightNode"
+              :x="cardPos(card, u).cx - NODE_SIZE / 2 - 2.5"
+              :y="cardPos(card, u).cy - NODE_SIZE / 2 - 2.5"
+              :width="NODE_SIZE + 5"
+              :height="NODE_SIZE + 5"
+              rx="4"
+              fill="none"
+              stroke="hsl(48 96% 53%)"
+              class="attn-node"
+              style="pointer-events: none"
+            />
             <rect
               :x="cardPos(card, u).cx - NODE_SIZE / 2"
               :y="cardPos(card, u).cy - NODE_SIZE / 2"
@@ -980,12 +1031,12 @@ function onNodeMouseLeave() {
     >
       <div class="font-semibold text-foreground">{{ hovered.name }}</div>
       <div class="mt-0.5 text-muted-foreground">{{ describeEffect(hovered.effectData) }}</div>
-      <div class="mt-1 font-mono text-[10px]">
+      <div class="mt-1 font-mono text-3xs">
         <span v-if="effectiveIds.has(hovered.id)" class="text-green-500">{{
           t('awakenView.unlocked')
         }}</span>
         <span v-else class="inline-flex items-center gap-1">
-          <span class="inline-flex items-center gap-1 text-amber-500">
+          <span class="inline-flex items-center gap-1 text-warning-strong">
             <img
               v-if="awakenPointImage"
               :src="awakenPointImage"
@@ -994,7 +1045,7 @@ function onNodeMouseLeave() {
               style="image-rendering: pixelated"
               loading="lazy"
             />
-            {{ costToUnlock(hovered).toLocaleString() }}
+            {{ formatNumber(costToUnlock(hovered)) }}
           </span>
           <span v-if="!isPrereqMet(hovered)" class="text-muted-foreground">
             {{ t('awakenView.inclPrereqs') }}

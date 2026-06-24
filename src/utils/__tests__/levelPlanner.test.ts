@@ -1,7 +1,7 @@
 import creaturesData from '@/data/creatures.json'
 import expeditionsData from '@/data/expeditions.json'
 import type { Creature, Expedition } from '@/types'
-import { planLevelingPath, type AlternativeRoute } from '@/utils/levelPlanner'
+import { planLevelingPath, type AlternativeRoute } from '@/utils/planner/levelPlanner'
 
 const creatures = creaturesData as Creature[]
 const expeditions = expeditionsData as Expedition[]
@@ -320,10 +320,10 @@ describe('planLevelingPath — alternative routes', () => {
       isAwakened: false,
     })
 
-    const awakeningSteps = plan.steps.filter((s) => s.isAwakeningStep)
+    const awakeningSteps = plan.steps.filter((s) => s.kind === 'awaken')
     expect(awakeningSteps.length).toBeGreaterThan(0)
     for (const step of awakeningSteps) {
-      expect(step.alternatives).toBeUndefined()
+      expect('alternatives' in step ? step.alternatives : undefined).toBeUndefined()
     }
   })
 })
@@ -601,11 +601,11 @@ describe('planLevelingPath — booster support', () => {
       isAwakened: false,
       boosterCandidates: [{ creature: helper!, level: 120 }],
     })
-    const awakeningSteps = plan.steps.filter((s) => s.isAwakeningStep)
+    const awakeningSteps = plan.steps.filter((s) => s.kind === 'awaken')
     expect(awakeningSteps.length).toBeGreaterThan(0)
     for (const step of awakeningSteps) {
-      expect(step.boosters).toBeUndefined()
-      expect(step.partySize).toBeUndefined()
+      expect('boosters' in step ? step.boosters : undefined).toBeUndefined()
+      expect('partySize' in step ? step.partySize : undefined).toBeUndefined()
     }
   })
 })
@@ -621,7 +621,7 @@ describe('planLevelingPath — prestige mode', () => {
     })
 
     expect(plan.steps.length).toBeGreaterThan(1)
-    expect(plan.steps[0].isAwakeningStep).toBe(true)
+    expect(plan.steps[0].kind).toBe('awaken')
     expect(plan.steps[0].fromLevel).toBe(120)
     expect(plan.steps[0].toLevel).toBe(1)
   })
@@ -635,7 +635,7 @@ describe('planLevelingPath — prestige mode', () => {
       isPrestige: true,
     })
 
-    const levelingSteps = plan.steps.filter((s) => !s.isAwakeningStep)
+    const levelingSteps = plan.steps.filter((s) => s.kind === 'run')
     expect(levelingSteps.length).toBeGreaterThan(0)
     expect(levelingSteps[0].fromLevel).toBe(1)
     expect(plan.totalRuns).toBeGreaterThan(0)
@@ -650,6 +650,6 @@ describe('planLevelingPath — prestige mode', () => {
       isAwakened: true,
     })
 
-    expect(plan.steps[0].isAwakeningStep).toBeFalsy()
+    expect(plan.steps[0].kind).not.toBe('awaken')
   })
 })

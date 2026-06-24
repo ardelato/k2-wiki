@@ -368,54 +368,6 @@ export function useExpeditions(creatures: Creature[]) {
     return Array.from(ids).toSorted()
   })
 
-  function exportSetup(): string {
-    const assignedIds = new Set(Object.values(expeditionParties.value).flat())
-    const assignedLevels: Record<string, number> = {}
-    for (const id of assignedIds) {
-      if (creatureLevels.value[id]) {
-        assignedLevels[id] = creatureLevels.value[id]
-      }
-    }
-    return JSON.stringify({
-      parties: expeditionParties.value,
-      levels: assignedLevels,
-      tiers: expeditionTiers.value,
-      loopCounts: expeditionLoopCounts.value,
-    })
-  }
-
-  function importSetup(json: string): boolean {
-    try {
-      const data = JSON.parse(json)
-      if (data.parties && typeof data.parties === 'object') {
-        expeditionParties.value = data.parties
-      }
-      if (data.levels && typeof data.levels === 'object') {
-        creatureLevels.value = data.levels
-      }
-      if (data.tiers && typeof data.tiers === 'object') {
-        expeditionTiers.value = data.tiers
-      }
-      if (data.loopCounts && typeof data.loopCounts === 'object') {
-        expeditionLoopCounts.value = data.loopCounts
-      }
-      // Refresh current view
-      if (selectedExpedition.value) {
-        selectedTier.value = expeditionTiers.value[selectedExpedition.value.id] || 1
-        const ids = expeditionParties.value[selectedExpedition.value.id] || []
-        partySlots.value = Array(selectedExpedition.value.maxPartySize)
-          .fill(null)
-          .map((_, i) => {
-            const id = ids[i]
-            return id ? (creatures.find((c) => c.id === id) ?? null) : null
-          })
-      }
-      return true
-    } catch {
-      return false
-    }
-  }
-
   function resetAllExpeditions() {
     expeditionParties.value = {}
     creatureLevels.value = {}
@@ -461,8 +413,6 @@ export function useExpeditions(creatures: Creature[]) {
     allAssignedCreatureIds,
     expeditionEvaluations,
     totalXpPerSecond,
-    exportSetup,
-    importSetup,
     resetAllExpeditions,
     expeditionTiers,
     expeditionParties,

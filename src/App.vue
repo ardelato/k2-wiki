@@ -6,7 +6,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterView, useRoute } from 'vue-router'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
-import { useLocaleOnboarding } from '@/composables/useLocaleOnboarding'
+import { useLocaleOnboarding } from '@/composables/core/useLocaleOnboarding'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -67,7 +67,7 @@ watch(
 
       <div
         v-if="showMoveBanner"
-        class="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-center text-sm text-amber-900 dark:text-amber-200 sm:px-6"
+        class="border-b border-warning/40 bg-warning/10 px-4 py-2.5 text-center text-sm text-warning-strong sm:px-6"
         role="status"
       >
         <span class="mx-auto block max-w-app">

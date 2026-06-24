@@ -4,7 +4,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('./planner')
   await page.evaluate(() => localStorage.clear())
   await page.goto('./planner')
-  await page.getByText('Choose an item to begin planning.').waitFor()
+  await page.getByText('No item selected yet.').waitFor()
 })
 
 // ── Helpers ─────────────────────────────────────────────────────────
@@ -21,8 +21,8 @@ async function openItemPlan(page: Page, itemId: string, qty = 1) {
 
 test.describe('page rendering and item selection', () => {
   test('default empty state shows prompt to choose an item', async ({ page }) => {
-    await expect(page.getByText('Choose an item to begin planning.')).toBeVisible()
-    await expect(page.getByText('Browse Items')).toBeVisible()
+    await expect(page.getByText('No item selected yet.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Choose an item' })).toBeVisible()
   })
 
   test('URL with item ID shows planner with root item', async ({ page }) => {
@@ -32,11 +32,11 @@ test.describe('page rendering and item selection', () => {
   })
 
   test('item picker selects item and shows planner', async ({ page }) => {
-    // Click the item picker trigger button
-    await page.locator('main button[aria-haspopup="listbox"]').click()
+    // Open the modal item picker from the empty-state button
+    await page.getByRole('button', { name: 'Choose an item' }).click()
 
     // Search and select
-    await page.getByPlaceholder('Search planner items').fill('Planks')
+    await page.getByPlaceholder('Search items...').fill('Planks')
     await page.getByRole('button', { name: 'Planks' }).first().click()
 
     await expect(page.getByText('Planks').first()).toBeVisible()
@@ -120,8 +120,7 @@ test.describe('tree view', () => {
   })
 
   test('tree shows child dependencies', async ({ page }) => {
-    // Planks recipe needs Saw and Pine Log
-    await expect(page.getByText('Saw').first()).toBeVisible()
+    // Planks is crafted from Pine Log (v2 omits tools like Saw from the dependency tree).
     await expect(page.getByText('Pine Log').first()).toBeVisible()
   })
 
@@ -140,7 +139,8 @@ test.describe('planner heading', () => {
   test('heading shows item name when selected', async ({ page }) => {
     await openItemPlan(page, 'planks')
 
-    await expect(page.locator('h1', { hasText: 'Planks Planner' })).toBeVisible()
+    // v2 shows the selected item in the CraftPlannerHero (name in a bold span, no "X Planner" h1).
+    await expect(page.locator('span.font-bold', { hasText: 'Planks' }).first()).toBeVisible()
   })
 })
 
@@ -213,297 +213,95 @@ test.describe('machine and fabrication methods', () => {
 })
 
 // ══════════════════════════════════════════════════════════════════════
-// LEVEL UP PLANNER
+// CREATURE PLANNER — Awaken-rush & Prestige-loop (v2 tabs)
 // ══════════════════════════════════════════════════════════════════════
+//
+// v2 moved level planning into the Creature planner shell at /planner/creature,
+// with Summon / Awaken / Prestige tabs (the old ?tab=levelup query and the
+// per-creature single-leveling deep-link were removed). Landing on the creature
+// planner auto-launches the first-run tour, so tests suppress it first.
 
-/** Seed owned creatures for level planner tests */
-async function seedCreatures(page: Page) {
-  const creatures: Record<string, { owned: boolean; level: number; awakened: boolean }> = {
-    moss: { owned: true, level: 10, awakened: false },
-    scoots: { owned: true, level: 5, awakened: false },
-    slick: { owned: true, level: 15, awakened: false },
-    chroma: { owned: true, level: 8, awakened: false },
-    sunny: { owned: true, level: 12, awakened: false },
-  }
-  await page.evaluate(
-    (data) => localStorage.setItem('creature-collection', JSON.stringify(data)),
-    creatures,
-  )
+/** Suppress the first-run guided tour so its overlay doesn't intercept clicks. */
+async function suppressTour(page: Page) {
+  await page.evaluate(() => localStorage.setItem('planner-tour-seen-v2', 'true'))
 }
 
-// ── Level Up — single mode rendering ────────────────────────────────
+/** Seed an awakened, max-level roster so the prestige loop has eligible creatures. */
+async function seedAwakenedRoster(page: Page, ids: string[]) {
+  await page.evaluate((list) => {
+    const col: Record<string, { owned: boolean; level: number; awakened: boolean }> = {}
+    for (const id of list) col[id] = { owned: true, level: 120, awakened: true }
+    localStorage.setItem('creature-collection', JSON.stringify(col))
+  }, ids)
+}
 
-test.describe('level up - single mode rendering', () => {
-  test('default shows Level Up heading and mode toggle', async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
+// ── Creature planner tabs ───────────────────────────────────────────
 
-    await expect(page.locator('h1', { hasText: 'Level Up' })).toBeVisible()
-    await expect(page.getByText('Single', { exact: true })).toBeVisible()
-    await expect(page.getByText('Party', { exact: true })).toBeVisible()
-  })
-
-  test('empty state shows choose a creature prompt', async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
-
-    await expect(page.getByText('Choose a creature to begin planning.')).toBeVisible()
-  })
-})
-
-// ── Level Up — single mode planning ─────────────────────────────────
-
-test.describe('level up - single mode planning', () => {
+test.describe('creature planner - tabs', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
+    await page.goto('./planner/creature')
     await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
+    await suppressTour(page)
+    await page.goto('./planner/creature')
   })
 
-  test('selecting creature via URL shows leveling plan', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Heading should show creature name
-    await expect(page.locator('h1', { hasText: 'Moss' })).toBeVisible()
-
-    // Single-mode plan is gated behind an explicit Calculate button
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Summary should show steps, runs, XP/min
-    await expect(page.getByText(/\d+ step/).first()).toBeVisible()
-    await expect(page.getByText(/\d+ runs/).first()).toBeVisible()
-    await expect(page.getByText(/XP\/min avg/).first()).toBeVisible()
+  test('shows Summon, Awaken, and Prestige tabs', async ({ page }) => {
+    await expect(page.getByRole('button', { name: 'Summon', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Awaken', exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Prestige', exact: true })).toBeVisible()
   })
 
-  test('timeline steps show expedition names and level ranges', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // At least one step should show an expedition name
-    // Steps have numbered nodes (1, 2, 3...) and expedition details
-    await expect(page.getByText('Expedition').first()).toBeVisible()
+  test('awaken tab shows the awaken-rush heading and empty prompt', async ({ page }) => {
+    await page.goto('./planner/creature?tab=awaken')
+    await page.locator('h1', { hasText: 'Awaken Rush' }).waitFor()
+    await expect(page.getByText('Add a creature to plan an awaken.')).toBeVisible()
   })
 
-  test('target level preset 70 changes the plan', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
+  test('switching to the Prestige tab updates the URL and heading', async ({ page }) => {
+    await page.goto('./planner/creature?tab=awaken')
+    await page.locator('h1', { hasText: 'Awaken Rush' }).waitFor()
 
-    // Get step count at target 120
-    const stepsText120 = await page
-      .getByText(/\d+ steps?/)
-      .first()
-      .textContent()
-
-    // Switch to target 70 — invalidates the plan, so click Calculate again
-    // There are two sets of preset buttons (single + party), find the one in single mode
-    await page.getByRole('button', { name: '70', exact: true }).first().click()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Wait for plan to recalculate
-    await page
-      .getByText(/\d+ steps?/)
-      .first()
-      .waitFor()
-    const stepsText70 = await page
-      .getByText(/\d+ steps?/)
-      .first()
-      .textContent()
-
-    // Target 70 should have fewer or equal steps than 120
-    const steps120 = parseInt(stepsText120!.match(/(\d+)/)![1])
-    const steps70 = parseInt(stepsText70!.match(/(\d+)/)![1])
-    expect(steps70).toBeLessThanOrEqual(steps120)
-  })
-
-  test('creature at max level shows already max message', async ({ page }) => {
-    // Seed moss at level 70 (pre-awaken max)
-    await page.evaluate(() => {
-      const coll = JSON.parse(localStorage.getItem('creature-collection') || '{}')
-      coll.moss = { owned: true, level: 70, awakened: false }
-      localStorage.setItem('creature-collection', JSON.stringify(coll))
-    })
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.getByText('Already at max level!').waitFor()
+    await page.getByRole('button', { name: 'Prestige', exact: true }).click()
+    await expect(page).toHaveURL(/tab=prestige/)
+    await expect(page.locator('h1', { hasText: 'Prestige Loop' })).toBeVisible()
   })
 })
 
-// ── Level Up — step expansion & awakening ───────────────────────────
+// ── Prestige-loop ───────────────────────────────────────────────────
 
-test.describe('level up - step interaction', () => {
-  test('clicking a step card expands it to show details', async ({ page }) => {
-    await seedCreatures(page)
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Find the first step card button with aria-expanded
-    const stepButton = page.locator('button[aria-expanded="false"]').first()
-    await stepButton.click()
-
-    // After click, it should be expanded
-    await expect(page.locator('button[aria-expanded="true"]').first()).toBeVisible()
-  })
-
-  test('awakening step appears when plan crosses level 70', async ({ page }) => {
-    // Seed creature near awaken threshold so plan includes awakening
-    await page.evaluate(() => {
-      localStorage.setItem(
-        'creature-collection',
-        JSON.stringify({ moss: { owned: true, level: 60, awakened: false } }),
-      )
-    })
-    await page.goto('./planner?tab=levelup&creature=moss&target=120')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-    await page.getByRole('button', { name: 'Calculate' }).first().click()
-
-    // Awakening step should show "Awaken Creature" text
-    await expect(page.getByText('Awaken Creature')).toBeVisible()
-  })
-})
-
-// ── Level Up — party mode rendering ─────────────────────────────────
-
-test.describe('level up - party mode rendering', () => {
+test.describe('prestige-loop', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
+    await page.goto('./planner/creature')
     await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-    await page.goto('./planner?tab=levelup')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
+    await suppressTour(page)
   })
 
-  test('switching to Party mode shows creature filter and Calculate button', async ({ page }) => {
-    await page.getByText('Party', { exact: true }).click()
+  test('shows cadence controls and the eligibility empty state', async ({ page }) => {
+    await page.goto('./planner/creature?tab=prestige')
+    await page.locator('h1', { hasText: 'Prestige Loop' }).waitFor()
 
-    // Should show creature filter with creature names
-    await expect(page.getByText('Moss').first()).toBeVisible()
-
-    // Calculate button should be visible
-    await expect(page.getByRole('button', { name: 'Calculate' })).toBeVisible()
+    await expect(page.getByText('Check-in cadence')).toBeVisible()
+    await expect(page.getByText('No prestige-eligible creatures yet.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Go to Awaken-rush' })).toBeVisible()
   })
 
-  test('party mode shows target level and budget controls', async ({ page }) => {
-    await page.getByText('Party', { exact: true }).click()
-
-    await expect(page.getByText('Target').first()).toBeVisible()
-    await expect(page.getByText('Budget').first()).toBeVisible()
-    await expect(page.getByRole('button', { name: 'quick' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'thorough' })).toBeVisible()
-  })
-})
-
-// ── Level Up — party mode computation ───────────────────────────────
-
-test.describe('level up - party mode computation', () => {
-  test('Calculate triggers computation and shows results', async ({ page }) => {
+  test('computes a stable setup for an awakened roster', async ({ page }) => {
     test.setTimeout(90000)
+    await seedAwakenedRoster(page, [
+      'moss',
+      'scoots',
+      'slick',
+      'chroma',
+      'sunny',
+      'mizu',
+      'ranger',
+      'baabaa',
+    ])
+    await page.goto('./planner/creature?tab=prestige')
+    await page.locator('h1', { hasText: 'Prestige Loop' }).waitFor()
 
-    await page.goto('./planner?tab=levelup')
-    await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-    await page.goto('./planner?tab=levelup&mode=party&partyTarget=70')
-    await page.getByRole('button', { name: 'Calculate' }).waitFor()
-
-    // Click Calculate
     await page.getByRole('button', { name: 'Calculate' }).click()
-
-    // Wait for results — either loading indicator or results
-    // The computation can take a while, so wait for the summary to appear
-    await expect(page.getByText(/\d+ runs/).first()).toBeVisible({ timeout: 60000 })
-
-    // Strategy toggle should now be visible
-    await expect(page.getByText('Optimal', { exact: true })).toBeVisible()
-    await expect(page.getByText('Hands-Free', { exact: true })).toBeVisible()
-  })
-})
-
-// ── Level Up — expedition filter ─────────────────────────────────────
-
-test.describe('level up - expedition filter', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('./planner?tab=levelup')
-    await page.evaluate(() => localStorage.clear())
-    await seedCreatures(page)
-  })
-
-  test('expedition filter is visible in single mode', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Collapsible header should show expedition count
-    await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
-    await expect(page.getByText('Expeditions', { exact: true }).first()).toBeVisible()
-  })
-
-  test('expanding expedition filter shows list with tier skull icons', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Click to expand
-    await page.getByText('Expeditions', { exact: true }).first().click()
-
-    // Should show expedition names and skull icons
-    await expect(page.getByText('Expedition Training').first()).toBeVisible()
-    await expect(page.locator('img[alt="Tier 1"]').first()).toBeVisible()
-  })
-
-  test('expedition filter is visible in party mode', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&mode=party')
-    await page.locator('h1', { hasText: 'Level Up' }).waitFor()
-
-    await expect(page.getByText(/\d+ of \d+ included/).first()).toBeVisible()
-  })
-
-  test('Include All button toggles all expeditions', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Expand
-    await page.getByText('Expeditions', { exact: true }).first().click()
-
-    // Click Include All
-    await page.getByRole('button', { name: 'Include All' }).click()
-
-    // Should show all expeditions included (20 of 20)
-    await expect(page.getByText('20 of 20 included')).toBeVisible()
-  })
-
-  test('expedition filter persists after page refresh', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Expand and toggle Include All
-    await page.getByText('Expeditions', { exact: true }).first().click()
-    await page.getByRole('button', { name: 'Include All' }).click()
-    await expect(page.getByText('20 of 20 included')).toBeVisible()
-
-    // Refresh
-    await page.reload()
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Should still show as filtered
-    await expect(page.getByText('20 of 20 included')).toBeVisible()
-  })
-
-  test('Reset button clears overrides', async ({ page }) => {
-    await page.goto('./planner?tab=levelup&creature=moss&target=70')
-    await page.locator('h1', { hasText: 'Moss' }).waitFor()
-
-    // Locate the expedition filter section
-    const expSection = page.locator('.surface-card', { hasText: 'Expeditions' }).first()
-
-    // Expand and toggle Include All
-    await page.getByText('Expeditions', { exact: true }).first().click()
-    await page.getByRole('button', { name: 'Include All' }).click()
-    await expect(expSection.getByText('Filtered')).toBeVisible()
-
-    // Click Reset within expedition section
-    await expSection.getByRole('button', { name: 'Reset', exact: true }).click()
-
-    // Filtered badge should be gone from expedition section
-    await expect(expSection.getByText('Filtered')).toBeHidden()
+    await expect(page.getByText('Recommended setup')).toBeVisible({ timeout: 60000 })
+    await expect(page.getByText('prestige tokens / day').first()).toBeVisible()
   })
 })

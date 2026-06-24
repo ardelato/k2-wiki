@@ -6,11 +6,11 @@ import CreatureDetail from '@/components/beastiary/CreatureDetail.vue'
 import RightClickHint from '@/components/shared/RightClickHint.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import type { Expedition } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import type { ExpeditionPlan } from '@/utils/expeditionOptimizer'
-import { formatDuration, itemName, toTitleCase } from '@/utils/format'
-import { expeditionTierIcons } from '@/utils/icons'
-import { getItemImage } from '@/utils/itemImages'
+import { formatDuration, itemName, toTitleCase } from '@/utils/format/format'
+import { expeditionTierIcons } from '@/utils/format/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
+import { getItemImage } from '@/utils/images/itemImages'
+import type { ExpeditionPlan } from '@/utils/planner/expeditionOptimizer'
 
 defineProps<{
   plans: { expedition: Expedition; plan: ExpeditionPlan }[]
@@ -26,7 +26,7 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
   <div class="space-y-3">
     <div class="flex items-center gap-2">
       <Compass class="size-3.5 text-primary" />
-      <span class="text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+      <span class="text-2xs font-bold uppercase tracking-[0.12em] text-primary">
         {{ t('summoningPlannerComponents.expeditionPlan.title') }}
       </span>
     </div>
@@ -55,7 +55,7 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
             </span>
             <span
               v-if="plan.expedition.id === bestPlan.expedition.id"
-              class="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary"
+              class="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 text-3xs font-bold text-primary"
             >
               {{ t('summoningPlannerComponents.expeditionPlan.fastest') }}
             </span>
@@ -113,13 +113,13 @@ const { selectedCreature, drawerOpen, toggleCreature, closeDrawer } = useCreatur
                     class="size-full object-cover"
                   />
                 </div>
-                <span class="text-[10px] font-semibold text-foreground">{{
+                <span class="text-3xs font-semibold text-foreground">{{
                   member.creature.name
                 }}</span>
               </div>
             </RightClickHint>
           </div>
-          <div class="shrink-0 text-right text-[10px] text-muted-foreground">
+          <div class="shrink-0 text-right text-3xs text-muted-foreground">
             <span>{{ toTitleCase(expedition.biome) }}</span>
             <span v-if="expedition.trait"> · {{ toTitleCase(expedition.trait) }}</span>
           </div>

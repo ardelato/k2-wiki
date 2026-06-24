@@ -27,9 +27,9 @@ test.describe('page rendering', () => {
   })
 
   test('legend lists every node state', async ({ page }) => {
-    // Scope to the legend region (sits after the tab strip) to avoid colliding
-    // with the summary bar's optional "simulated/removed" badges.
-    const legend = page.locator('.text-\\[10px\\].font-mono').first()
+    // Scope to the legend region (the only mono row carrying all five labels) to avoid
+    // colliding with the summary bar's optional "simulated/removed" badges.
+    const legend = page.locator('.font-mono.text-3xs').filter({ hasText: 'Locked' }).first()
     await expect(legend.getByText('From save')).toBeVisible()
     await expect(legend.getByText('Simulated')).toBeVisible()
     await expect(legend.getByText('Removed')).toBeVisible()
