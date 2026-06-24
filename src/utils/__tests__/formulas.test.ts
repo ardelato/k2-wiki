@@ -361,6 +361,7 @@ describe('getBestExpeditionsForCreature', () => {
     expect(entry).toHaveProperty('traitMatch')
     expect(entry).toHaveProperty('biomeStatus')
     expect(entry).toHaveProperty('statAlignment')
+    expect(entry).toHaveProperty('tier')
   })
 
   test('scores are non-negative', () => {
@@ -368,6 +369,31 @@ describe('getBestExpeditionsForCreature', () => {
     for (const entry of results) {
       expect(entry.score).toBeGreaterThanOrEqual(0)
     }
+  })
+
+  test('recommended tier is an integer in 1..5', () => {
+    const results = getBestExpeditionsForCreature(creature, 20, 30)
+    for (const entry of results) {
+      expect(Number.isInteger(entry.tier)).toBe(true)
+      expect(entry.tier).toBeGreaterThanOrEqual(1)
+      expect(entry.tier).toBeLessThanOrEqual(5)
+    }
+  })
+
+  test('recommended tier adapts to creature level', () => {
+    // A creature too weak to clear a hard expedition should be steered to the
+    // highest-XP tier (run time is pinned at the max either way); once strong
+    // enough to clear it quickly, the best XP/sec lands on a lower, faster tier.
+    const strong = makeCreature({ stats: { ...zeroStats, power: 100 }, types: [] })
+    const hardId = 'expedition-type-20' // Battle for Koltera (baseRating 6000)
+    const tierAt = (level: number) =>
+      getBestExpeditionsForCreature(strong, 100, level).find((e) => e.expedition.id === hardId)
+        ?.tier
+
+    const weak = tierAt(1)
+    const leveled = tierAt(120)
+    expect(weak).toBe(5)
+    expect(leveled).toBeLessThan(weak!)
   })
 })
 
@@ -401,6 +427,7 @@ describe('getBestExpeditionsForLeveling', () => {
     expect(entry).toHaveProperty('traitMatch')
     expect(entry).toHaveProperty('biomeStatus')
     expect(entry).toHaveProperty('statAlignment')
+    expect(entry).toHaveProperty('tier')
   })
 
   test('higher level creatures produce valid results', () => {

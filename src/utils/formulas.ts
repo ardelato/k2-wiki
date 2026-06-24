@@ -213,6 +213,38 @@ interface BestExpeditionEntry {
   traitMatch: boolean
   biomeStatus: 'advantage' | 'disadvantage' | 'neutral'
   statAlignment: number
+  /** Recommended run-tier (1–5): the tier that maximizes XP/sec for this creature at `level`. */
+  tier: number
+}
+
+/**
+ * The run-tier (1–5) a creature should farm an expedition at: the one maximizing XP/sec.
+ * Higher tiers grant more XP but raise the difficulty rating (longer duration), so the best
+ * tier is the highest the creature's rating can still clear quickly. Mirrors the best-rate
+ * loop in scripts/generate-tables.ts (which builds the precomputed tables) and the leveling
+ * scorer below.
+ */
+function bestTierByRate(
+  creature: Creature,
+  expedition: Expedition,
+  level: number,
+  biome: Biome | undefined,
+): number {
+  const rating = calculateCreatureRating(creature, expedition, level, biome)
+  let bestTier = 1
+  let bestXpPerSec = -1
+  for (let tier = 1; tier <= 5; tier++) {
+    const duration = calculateDuration(rating, expedition, tier)
+    const xpPerRun = calculateExpeditionXp(expedition, tier, 0, 1)
+    if (duration > 0 && xpPerRun > 0) {
+      const xpPerSec = xpPerRun / duration
+      if (xpPerSec > bestXpPerSec) {
+        bestXpPerSec = xpPerSec
+        bestTier = tier
+      }
+    }
+  }
+  return bestTier
 }
 
 /**
@@ -236,6 +268,7 @@ function statAlignmentScore(creature: Creature, expedition: Expedition): number 
  */
 function rankExpeditions(
   creature: Creature,
+  level: number,
   limit: number,
   scoreFn: (
     expedition: Expedition,
@@ -265,6 +298,7 @@ function rankExpeditions(
         traitMatch,
         biomeStatus,
         statAlignment: Math.round(statAlignment * 100),
+        tier: bestTierByRate(creature, expedition, level, biome),
       }
     })
     .toSorted((a, b) => b.score - a.score)
@@ -274,13 +308,19 @@ function rankExpeditions(
 export function getBestExpeditionsForCreature(
   creature: Creature,
   limit: number = 5,
+  level: number = 1,
 ): BestExpeditionEntry[] {
-  return rankExpeditions(creature, limit, (_expedition, biome, statAlignment, traitMatch) => {
-    const biomeScore = biome ? biomeMultiplier(creature, biome) : 1.0
-    // Combined score: stat alignment * biome * trait
-    const score = statAlignment * biomeScore * (traitMatch ? 1.5 : 1.0)
-    return Math.round(score * 100)
-  })
+  return rankExpeditions(
+    creature,
+    level,
+    limit,
+    (_expedition, biome, statAlignment, traitMatch) => {
+      const biomeScore = biome ? biomeMultiplier(creature, biome) : 1.0
+      // Combined score: stat alignment * biome * trait
+      const score = statAlignment * biomeScore * (traitMatch ? 1.5 : 1.0)
+      return Math.round(score * 100)
+    },
+  )
 }
 
 export function getBestExpeditionsForLeveling(
@@ -288,7 +328,7 @@ export function getBestExpeditionsForLeveling(
   level: number,
   limit: number = 5,
 ): BestExpeditionEntry[] {
-  return rankExpeditions(creature, limit, (expedition, biome) => {
+  return rankExpeditions(creature, level, limit, (expedition, biome) => {
     // Score by best XP/sec across all tiers
     let bestXpPerSec = 0
     for (let tier = 1; tier <= 5; tier++) {
