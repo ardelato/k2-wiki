@@ -2,10 +2,11 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import SortableHeader from '@/components/shared/SortableHeader.vue'
 import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { Creature, CreatureStats, Jobs } from '@/types'
-import { getCreatureImage } from '@/utils/creatureImages'
-import { toTitleCase, typeColor, typeColorVar } from '@/utils/format'
+import { toTitleCase, typeColor, typeColorVar } from '@/utils/format/format'
+import { jobIcons } from '@/utils/format/icons'
 import {
   jobColors,
   jobLabels,
@@ -13,7 +14,7 @@ import {
   statLabels,
   traitAbbreviations,
 } from '@/utils/formulas'
-import { jobIcons } from '@/utils/icons'
+import { getCreatureImage } from '@/utils/images/creatureImages'
 
 const props = defineProps<{
   creatures: Creature[]
@@ -110,184 +111,89 @@ const sortedCreatures = computed(() => {
       <table class="min-w-full text-sm" role="grid">
         <thead class="bg-muted/50">
           <tr>
-            <th
-              class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :aria-sort="
-                tableSortKey === 'name'
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy('name')"
-              >
-                {{ t('beastiary.table.name') }}
-                <span :class="tableSortKey === 'name' ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
-              class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :aria-sort="
-                tableSortKey === 'type'
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy('type')"
-              >
-                {{ t('beastiary.table.type') }}
-                <span :class="tableSortKey === 'type' ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
-              class="px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :aria-sort="
-                tableSortKey === 'trait'
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy('trait')"
-              >
-                {{ t('beastiary.table.trait') }}
-                <span :class="tableSortKey === 'trait' ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
-              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :aria-sort="
-                tableSortKey === 'level'
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy('level')"
-              >
-                {{ t('beastiary.table.lvl') }}
-                <span :class="tableSortKey === 'level' ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
+            <SortableHeader
+              sort-key="name"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="t('beastiary.table.name')"
+              align="left"
+              @sort="sortBy"
+            />
+            <SortableHeader
+              sort-key="type"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="t('beastiary.table.type')"
+              align="left"
+              @sort="sortBy"
+            />
+            <SortableHeader
+              sort-key="trait"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="t('beastiary.table.trait')"
+              align="left"
+              @sort="sortBy"
+            />
+            <SortableHeader
+              sort-key="level"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="t('beastiary.table.lvl')"
+              align="center"
+              @sort="sortBy"
+            />
+            <SortableHeader
               v-for="([statKey], index) in statEntries"
               :key="statKey"
-              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :class="{ 'border-l border-border/40': index === 0 }"
-              :aria-sort="
-                tableSortKey === statKey
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy(statKey)"
-              >
-                {{ statAbbreviations[statKey] }}
-                <span :class="tableSortKey === statKey ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
-              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :aria-sort="
-                tableSortKey === 'statTotal'
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy('statTotal')"
-              >
-                {{ t('beastiary.table.total') }}
-                <span :class="tableSortKey === 'statTotal' ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
+              :sort-key="statKey"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="statAbbreviations[statKey]"
+              align="center"
+              :th-class="index === 0 ? 'border-l border-border/40' : ''"
+              @sort="sortBy"
+            />
+            <SortableHeader
+              sort-key="statTotal"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="t('beastiary.table.total')"
+              align="center"
+              @sort="sortBy"
+            />
+            <SortableHeader
               v-for="([jobKey, jobName], index) in jobEntries"
               :key="jobKey"
-              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :class="{ 'border-l border-border/40': index === 0 }"
-              :aria-sort="
-                tableSortKey === jobKey
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
+              :sort-key="jobKey"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              align="center"
+              :th-class="index === 0 ? 'border-l border-border/40' : ''"
+              @sort="sortBy"
             >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy(jobKey)"
-              >
-                <img
-                  v-if="jobIcons[jobKey]"
-                  :src="jobIcons[jobKey]"
-                  alt=""
-                  class="size-3.5"
-                  loading="lazy"
-                />
-                <span
-                  v-else
-                  class="inline-block size-1.5 rounded-full"
-                  :style="{ backgroundColor: jobColors[jobKey] }"
-                ></span>
-                {{ jobName.slice(0, 3) }}
-                <span :class="tableSortKey === jobKey ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
-            <th
-              class="px-2 py-3 text-center text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-              :aria-sort="
-                tableSortKey === 'jobTotal'
-                  ? tableSortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
-                  : 'none'
-              "
-            >
-              <button
-                class="focus-ring inline-flex items-center gap-1 transition hover:text-foreground"
-                @click="sortBy('jobTotal')"
-              >
-                {{ t('beastiary.table.total') }}
-                <span :class="tableSortKey === 'jobTotal' ? 'text-primary' : 'opacity-0'">{{
-                  tableSortDirection === 'asc' ? '▲' : '▼'
-                }}</span>
-              </button>
-            </th>
+              <img
+                v-if="jobIcons[jobKey]"
+                :src="jobIcons[jobKey]"
+                alt=""
+                class="size-3.5"
+                loading="lazy"
+              />
+              <span
+                v-else
+                class="inline-block size-1.5 rounded-full"
+                :style="{ backgroundColor: jobColors[jobKey] }"
+              ></span>
+              {{ jobName.slice(0, 3) }}
+            </SortableHeader>
+            <SortableHeader
+              sort-key="jobTotal"
+              :active-key="tableSortKey"
+              :direction="tableSortDirection"
+              :label="t('beastiary.table.total')"
+              align="center"
+              @sort="sortBy"
+            />
           </tr>
         </thead>
         <tbody class="divide-y divide-border/60">
@@ -331,7 +237,7 @@ const sortedCreatures = computed(() => {
                   />
                   <span v-else>{{ creature.name.charAt(0) }}</span>
                   <span
-                    class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-[9px] font-bold text-muted-foreground shadow-sm"
+                    class="absolute -right-1.5 -top-1.5 z-10 rounded-md border border-border bg-card px-1 py-px font-mono text-3xs font-bold text-muted-foreground shadow-sm"
                   >
                     T{{ creature.tier + 1 }}
                   </span>
@@ -349,7 +255,7 @@ const sortedCreatures = computed(() => {
                   <span
                     v-if="isOwned(creature.id)"
                     class="text-xs"
-                    :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-amber-400'"
+                    :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-warning-strong'"
                     >★</span
                   >
                 </div>
@@ -393,7 +299,7 @@ const sortedCreatures = computed(() => {
             >
               <template v-if="getLevel(creature.id) > 1">
                 <p>{{ creature.stats[statKey] * getLevel(creature.id) }}</p>
-                <p class="text-[10px] text-muted-foreground/60">
+                <p class="text-3xs text-muted-foreground/60">
                   {{ creature.stats[statKey] }}
                 </p>
               </template>
@@ -406,7 +312,7 @@ const sortedCreatures = computed(() => {
             >
               <template v-if="getLevel(creature.id) > 1">
                 <p>{{ totalStats(creature) * getLevel(creature.id) }}</p>
-                <p class="text-[10px] font-normal text-muted-foreground/60">
+                <p class="text-3xs font-normal text-muted-foreground/60">
                   {{ totalStats(creature) }}
                 </p>
               </template>

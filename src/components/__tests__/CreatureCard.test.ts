@@ -3,11 +3,11 @@ import { mount } from '@vue/test-utils'
 import CreatureCard from '@/components/beastiary/CreatureCard.vue'
 import type { Creature } from '@/types'
 
-vi.mock('@/utils/creatureImages', () => ({
+vi.mock('@/utils/images/creatureImages', () => ({
   getCreatureImage: () => undefined,
 }))
 
-vi.mock('@/utils/icons', () => ({
+vi.mock('@/utils/format/icons', () => ({
   jobIcons: {},
   jobColors: {},
 }))

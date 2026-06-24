@@ -2,7 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import type { Expedition } from '@/types'
-import { toTitleCase } from '@/utils/format'
+import { toTitleCase } from '@/utils/format/format'
 
 const { t } = useI18n()
 
