@@ -596,7 +596,7 @@ defineExpose({ awakenQueueCreatures })
                 {{ b.level }}
               </span>
               <button
-                class="focus-ring absolute -right-1.5 -top-1.5 grid size-4 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition hover:border-rose-400/60 hover:bg-rose-500/10 hover:text-rose-400"
+                class="focus-ring absolute -right-1.5 -top-1.5 grid size-4 place-items-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition hover:border-danger/60 hover:bg-danger/10 hover:text-danger-strong"
                 :title="t('levelPlanner.awaken.removeBooster', { name: b.name })"
                 @click="toggleAwakenBooster(b.id)"
               >

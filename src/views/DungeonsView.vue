@@ -774,7 +774,7 @@ const requirementLabel = computed(() =>
                         loading="lazy"
                       />
                       <span
-                        class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-3xs font-semibold text-cyan-300"
+                        class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-3xs font-semibold text-info-strong"
                       >
                         {{ getCreatureSlotScore(slot) }}
                       </span>
@@ -1078,11 +1078,7 @@ const requirementLabel = computed(() =>
                   <div class="flex items-center gap-1">
                     <p
                       class="truncate font-semibold"
-                      :class="
-                        isAwakened(creature.id)
-                          ? 'text-pink-600 dark:text-pink-400'
-                          : 'text-foreground'
-                      "
+                      :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-foreground'"
                     >
                       {{ creature.name }}
                     </p>
@@ -1090,9 +1086,7 @@ const requirementLabel = computed(() =>
                       v-if="isOwned(creature.id)"
                       class="text-xs"
                       :class="
-                        isAwakened(creature.id)
-                          ? 'text-pink-600 dark:text-pink-400'
-                          : 'text-warning-strong'
+                        isAwakened(creature.id) ? 'text-awakened-strong' : 'text-warning-strong'
                       "
                       >★</span
                     >

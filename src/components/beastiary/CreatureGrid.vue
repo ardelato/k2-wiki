@@ -54,7 +54,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
               ? 'border-accent opacity-100 ring-2 ring-accent'
               : isOwned(creature.id)
                 ? isAwakened(creature.id)
-                  ? 'border-pink-500/40 ring-1 ring-pink-500/20'
+                  ? 'border-awakened/40 ring-1 ring-awakened/20'
                   : 'border-primary/40 ring-1 ring-primary/20'
                 : 'border-border/60 opacity-55',
             selectedCreatureId === creature.id
@@ -144,11 +144,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
             <div class="text-center">
               <p
                 class="truncate text-lg font-extrabold"
-                :class="
-                  isAwakened(creature.id)
-                    ? 'text-pink-600 dark:text-pink-400'
-                    : 'text-foreground/80'
-                "
+                :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-foreground/80'"
               >
                 {{ creature.name }}
               </p>
@@ -210,7 +206,7 @@ const { isOwned, isAwakened, getLevel, setLevel, setAwakened, stepLevel, normali
                 class="flex w-full items-center justify-center gap-1.5 rounded-md border px-2 py-1 text-3xs font-semibold transition"
                 :class="
                   isAwakened(creature.id)
-                    ? 'border-pink-500/40 bg-pink-500/10 text-pink-400'
+                    ? 'border-awakened/40 bg-awakened/10 text-awakened-strong'
                     : 'border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground'
                 "
                 @click="setAwakened(creature.id, !isAwakened(creature.id))"

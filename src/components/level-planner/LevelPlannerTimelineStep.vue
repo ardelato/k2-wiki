@@ -93,8 +93,8 @@ function formatDelta(value: number): string {
         <div class="sticky top-[calc(var(--header-height)+0.75rem)] z-10 flex justify-center">
           <div
             v-if="step.kind === 'awaken'"
-            class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
-            style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
+            class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-awakened text-xs font-bold sm:size-8"
+            style="background-color: hsl(var(--card)); color: oklch(var(--awakened))"
           >
             <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
           </div>
@@ -116,7 +116,7 @@ function formatDelta(value: number): string {
     <!-- Awakening step card -->
     <div v-if="step.kind === 'awaken'" class="mb-2 min-w-0 flex-1 pb-1">
       <div
-        class="surface-card w-full overflow-hidden border-pink-500/30 bg-gradient-to-r from-pink-500/10 to-warning/10"
+        class="surface-card w-full overflow-hidden border-awakened/30 bg-gradient-to-r from-awakened/10 to-warning/10"
       >
         <div class="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
           <RightClickHint
@@ -126,7 +126,7 @@ function formatDelta(value: number): string {
             <img
               :src="getCreatureImage(partyMembers[0].creature)"
               :alt="creatureName"
-              class="size-10 shrink-0 rounded-lg border border-pink-500/30 object-cover transition hover:ring-1 hover:ring-pink-500/50 sm:size-12"
+              class="size-10 shrink-0 rounded-lg border border-awakened/30 object-cover transition hover:ring-1 hover:ring-awakened/50 sm:size-12"
               loading="lazy"
             />
           </RightClickHint>
@@ -139,7 +139,7 @@ function formatDelta(value: number): string {
                   class="size-5 shrink-0 object-contain"
                   loading="lazy"
                 />
-                <p class="text-sm font-semibold text-pink-400">
+                <p class="text-sm font-semibold text-awakened-strong">
                   {{
                     step.fromLevel > 70
                       ? t('levelPlannerComponents.timelineStep.prestigeCreature')
@@ -148,7 +148,7 @@ function formatDelta(value: number): string {
                 </p>
               </div>
               <span
-                class="shrink-0 rounded-full bg-pink-500/15 px-2 py-0.5 text-xs font-semibold text-pink-400"
+                class="shrink-0 rounded-full bg-awakened/15 px-2 py-0.5 text-xs font-semibold text-awakened-strong"
               >
                 LVL {{ step.fromLevel }}&rarr;{{ step.toLevel }}
               </span>
@@ -330,7 +330,7 @@ function formatDelta(value: number): string {
                   class="inline-flex items-center gap-1 text-xs font-semibold"
                   :class="
                     scoreRatioMet === undefined
-                      ? 'text-purple-400'
+                      ? 'text-reserved-strong'
                       : scoreRatioMet
                         ? 'text-success-strong'
                         : 'text-warning-strong'

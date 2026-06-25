@@ -41,7 +41,20 @@ const BUTTON_PAIRS: [label: string, fg: string, bg: string][] = [
 // Status chips: opaque `text-X-strong` over a translucent `bg-X/<alpha>` fill
 // that itself sits on the card or page background. Alphas span the real chip
 // range used across the app (bg-X/10 … bg-X/25).
-const SEMANTIC_COLORS = ['success', 'warning', 'danger', 'info', 'reserved', 'gold'] as const
+const SEMANTIC_COLORS = [
+  'success',
+  'warning',
+  'danger',
+  'info',
+  'reserved',
+  'gold',
+  // Method-kind + state colors share the chip recipe (text-X-strong on bg-X/alpha).
+  'awakened',
+  'garden',
+  'buy',
+  'machine',
+  'tool',
+] as const
 const CHIP_ALPHAS = [0.1, 0.25]
 const CHIP_BASES = ['card', 'background'] as const
 

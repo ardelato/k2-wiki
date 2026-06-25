@@ -290,8 +290,8 @@ function closeAwakenPopover() {
             @click.stop="toggleAwakenPopover(marker, $event)"
           >
             <div
-              class="size-7 overflow-hidden rounded-full border-2 border-pink-500 bg-card shadow-md shadow-pink-500/20 transition-transform hover:scale-110"
-              :class="activeAwakenMarker === marker ? 'ring-2 ring-pink-400/60' : ''"
+              class="size-7 overflow-hidden rounded-full border-2 border-awakened bg-card shadow-md shadow-awakened/20 transition-transform hover:scale-110"
+              :class="activeAwakenMarker === marker ? 'ring-2 ring-awakened/60' : ''"
             >
               <RightClickHint
                 v-if="marker.creature"
@@ -328,7 +328,7 @@ function closeAwakenPopover() {
           <div
             v-for="(marker, mi) in awakenMarkers"
             :key="`awaken-${mi}`"
-            class="pointer-events-none absolute inset-y-0 w-0.5 bg-pink-500/40"
+            class="pointer-events-none absolute inset-y-0 w-0.5 bg-awakened/40"
             :style="{ left: `${marker.pct}%`, transform: 'translateX(-50%)' }"
           />
           <div
@@ -500,7 +500,7 @@ function closeAwakenPopover() {
       :is-open="markerPop.isOpen"
       :el-ref="markerPop.setPanelEl"
       :style="markerPop.style"
-      class="z-50 w-60 rounded-xl border border-pink-500/30 bg-card shadow-xl shadow-black/30"
+      class="z-50 w-60 rounded-xl border border-awakened/30 bg-card shadow-xl shadow-black/30"
       @click.stop
     >
       <template v-if="activeAwakenMarker">
@@ -511,7 +511,7 @@ function closeAwakenPopover() {
               @contextmenu="ganttToggleCreature(activeAwakenMarker.creature)"
             >
               <div
-                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card transition hover:ring-1 hover:ring-pink-500/50"
+                class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-awakened bg-card transition hover:ring-1 hover:ring-awakened/50"
               >
                 <img
                   :src="getCreatureImage(activeAwakenMarker.creature)"
@@ -523,7 +523,7 @@ function closeAwakenPopover() {
             </RightClickHint>
             <div
               v-else
-              class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-pink-500 bg-card"
+              class="size-10 shrink-0 overflow-hidden rounded-full border-2 border-awakened bg-card"
             />
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5">
@@ -533,7 +533,7 @@ function closeAwakenPopover() {
                   class="size-4 shrink-0 object-contain"
                   loading="lazy"
                 />
-                <p class="text-sm font-bold text-pink-400">
+                <p class="text-sm font-bold text-awakened-strong">
                   {{ t('levelPlannerComponents.partyGantt.manuallyAwaken') }}
                 </p>
               </div>

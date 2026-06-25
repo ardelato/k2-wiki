@@ -87,10 +87,8 @@ const tierChanges = computed(() =>
 
     <!-- Remove ▸ Add, side by side and filling the full width on wider screens -->
     <div class="grid gap-2.5 sm:grid-cols-2">
-      <div class="rounded-xl border border-rose-500/25 bg-rose-500/[0.04] p-2.5">
-        <p
-          class="mb-2 text-2xs font-semibold uppercase tracking-wide text-rose-600 dark:text-rose-400"
-        >
+      <div class="rounded-xl border border-danger/25 bg-danger/[0.04] p-2.5">
+        <p class="mb-2 text-2xs font-semibold uppercase tracking-wide text-danger-strong">
           {{ t('skillPlanner.sanctuary.remove') }}
           <span class="text-muted-foreground">({{ diff.swapOut.length }})</span>
         </p>
@@ -182,7 +180,7 @@ const tierChanges = computed(() =>
             <span class="text-2xs tabular-nums text-muted-foreground">{{ d.from }}</span>
             <span
               class="text-3xs"
-              :class="d.to < d.from ? 'text-rose-500 dark:text-rose-400' : 'text-success-strong'"
+              :class="d.to < d.from ? 'text-danger-strong' : 'text-success-strong'"
             >
               {{ d.to < d.from ? '▼' : '▲' }}
             </span>
@@ -216,10 +214,7 @@ const tierChanges = computed(() =>
                   <span class="text-2xs text-muted-foreground">{{ b.label }}</span>
                   <span class="flex items-center gap-1 text-2xs tabular-nums">
                     <span class="text-foreground/80">{{ b.before }}</span>
-                    <span
-                      :class="
-                        b.improved ? 'text-success-strong' : 'text-rose-500 dark:text-rose-400'
-                      "
+                    <span :class="b.improved ? 'text-success-strong' : 'text-danger-strong'"
                       >→</span
                     >
                     <span class="font-semibold text-foreground">{{ b.after }}</span>

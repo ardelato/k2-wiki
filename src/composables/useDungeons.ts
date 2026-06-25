@@ -39,9 +39,9 @@ const GRADE_COLORS: Record<DungeonGradeLetter, { text: string; bg: string; borde
     border: 'border-info/30 dark:border-info/40',
   },
   C: {
-    text: 'text-orange-700 dark:text-orange-400',
-    bg: 'bg-orange-100 dark:bg-orange-500/15',
-    border: 'border-orange-300 dark:border-orange-500/40',
+    text: 'text-machine-strong',
+    bg: 'bg-machine/10 dark:bg-machine/15',
+    border: 'border-machine/30 dark:border-machine/40',
   },
   F: {
     text: 'text-danger-strong',

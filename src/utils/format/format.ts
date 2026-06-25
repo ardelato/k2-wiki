@@ -110,31 +110,34 @@ export function methodKindClasses(kind: PlannerMethodKind): string {
   if (kind === 'gather')
     return 'border-success/35 bg-success/10 text-success-strong dark:border-success/40 dark:bg-success/20 dark:text-success-strong'
   if (kind === 'garden')
-    return 'border-lime-600/35 bg-lime-100 text-lime-800 dark:border-lime-400/40 dark:bg-lime-400/20 dark:text-lime-100'
+    return 'border-garden/35 bg-garden/10 text-garden-strong dark:border-garden/40 dark:bg-garden/20 dark:text-garden-strong'
   if (kind === 'container')
     return 'border-gold/35 bg-gold/10 text-gold-strong dark:border-gold/40 dark:bg-gold/20 dark:text-gold-strong'
   if (kind === 'expedition')
     return 'border-info/35 bg-info/10 text-info-strong dark:border-info/40 dark:bg-info/20 dark:text-info-strong'
   if (kind === 'buy')
-    return 'border-fuchsia-600/35 bg-fuchsia-100 text-fuchsia-800 dark:border-fuchsia-400/40 dark:bg-fuchsia-400/20 dark:text-fuchsia-100'
+    return 'border-buy/35 bg-buy/10 text-buy-strong dark:border-buy/40 dark:bg-buy/20 dark:text-buy-strong'
   if (kind === 'machine')
-    return 'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100'
+    return 'border-machine/35 bg-machine/10 text-machine-strong dark:border-machine/40 dark:bg-machine/20 dark:text-machine-strong'
   if (kind === 'fabrication')
     return 'border-reserved/35 bg-reserved/10 text-reserved-strong dark:border-reserved/40 dark:bg-reserved/20 dark:text-reserved-strong'
   return 'border-destructive/40 bg-destructive/10 text-destructive-foreground'
 }
 
+// Returns a CSS color for inline `:style` bindings (e.g. gantt bar borders).
+// Inline styles resolve `var()`, so these track the theme automatically — no
+// canvas/getComputedStyle plumbing needed.
 export function methodKindColor(kind: PlannerMethodKind): string {
   if (kind === 'craft') return 'hsl(var(--primary))'
-  if (kind === 'gather') return 'rgb(52, 211, 153)'
-  if (kind === 'garden') return 'rgb(163, 230, 53)'
-  if (kind === 'container') return 'rgb(250, 204, 21)'
-  if (kind === 'expedition') return 'rgb(56, 189, 248)'
-  if (kind === 'buy') return 'rgb(232, 121, 249)'
+  if (kind === 'gather') return 'oklch(var(--success))'
+  if (kind === 'garden') return 'oklch(var(--garden))'
+  if (kind === 'container') return 'oklch(var(--gold))'
+  if (kind === 'expedition') return 'oklch(var(--info))'
+  if (kind === 'buy') return 'oklch(var(--buy))'
   if (kind === 'cycle') return 'hsl(var(--destructive))'
-  if (kind === 'stocked') return 'rgb(52, 211, 153)'
-  if (kind === 'machine') return 'rgb(251, 146, 60)'
-  if (kind === 'fabrication') return 'rgb(167, 139, 250)'
+  if (kind === 'stocked') return 'oklch(var(--success))'
+  if (kind === 'machine') return 'oklch(var(--machine))'
+  if (kind === 'fabrication') return 'oklch(var(--reserved))'
   return 'hsl(var(--muted-foreground))'
 }
 

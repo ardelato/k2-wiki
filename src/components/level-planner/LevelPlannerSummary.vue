@@ -111,7 +111,7 @@ function segmentColor(status: 'advantage' | 'disadvantage' | 'neutral'): string 
         {{ formatNumber(plan.totalRuns) }}
         {{ t('levelPlannerComponents.summary.runs') }}
       </span>
-      <span class="inline-flex items-center gap-1.5 text-purple-400">
+      <span class="inline-flex items-center gap-1.5 text-reserved-strong">
         <Zap class="size-3.5" />
         {{ Math.round(plan.xpPerMinute) }} {{ t('levelPlannerComponents.summary.xpPerMin') }}
       </span>

@@ -42,6 +42,19 @@
     --info-strong: 0.45 0.13 230;
     --reserved-strong: 0.45 0.18 285;
     --gold-strong: 0.5 0.12 85;
+
+    /* Method-kind + state colors — kept distinct from the status palette above so
+       they can diverge independently (a "garden" chip is not a "success"). */
+    --awakened: 0.6 0.2 350; /* pink   — awakened creature state   */
+    --garden: 0.72 0.18 128; /* lime   — garden / farming method   */
+    --buy: 0.62 0.24 322; /* fuchsia — shop / purchase method    */
+    --machine: 0.68 0.16 55; /* orange — machine / infra method    */
+    --tool: 0.62 0.1 195; /* teal   — tool-speed modifier chip  */
+    --awakened-strong: 0.47 0.2 350;
+    --garden-strong: 0.46 0.14 128;
+    --buy-strong: 0.48 0.22 322;
+    --machine-strong: 0.47 0.13 55;
+    --tool-strong: 0.44 0.09 195;
   }
 
   .dark {
@@ -79,6 +92,18 @@
     --info-strong: 0.78 0.13 230;
     --reserved-strong: 0.78 0.16 285;
     --gold-strong: 0.82 0.14 85;
+
+    /* Method-kind + state colors — dark-tuned. */
+    --awakened: 0.68 0.2 350;
+    --garden: 0.8 0.2 128;
+    --buy: 0.7 0.24 322;
+    --machine: 0.75 0.16 55;
+    --tool: 0.72 0.12 195;
+    --awakened-strong: 0.8 0.18 350;
+    --garden-strong: 0.85 0.18 128;
+    --buy-strong: 0.82 0.2 322;
+    --machine-strong: 0.82 0.13 55;
+    --tool-strong: 0.82 0.1 195;
   }
 
   * {

@@ -52,7 +52,10 @@ defineProps<{
             {{ collectionSummary.owned
             }}<span class="text-3xl text-muted-foreground/60">/{{ collectionSummary.total }}</span>
           </span>
-          <span v-if="collectionSummary.awakened" class="text-sm font-semibold text-pink-400">
+          <span
+            v-if="collectionSummary.awakened"
+            class="text-sm font-semibold text-awakened-strong"
+          >
             ★ {{ t('configs.hero.awakenedCount', { n: collectionSummary.awakened }) }}
           </span>
         </div>
@@ -74,7 +77,7 @@ defineProps<{
                 class="h-2.5 flex-1 rounded-sm"
                 :class="
                   i <= tierBucket.awakened
-                    ? 'bg-pink-400'
+                    ? 'bg-awakened'
                     : i <= tierBucket.owned
                       ? 'bg-accent'
                       : 'bg-muted/40'

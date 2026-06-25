@@ -1032,7 +1032,7 @@ function onNodeMouseLeave() {
       <div class="font-semibold text-foreground">{{ hovered.name }}</div>
       <div class="mt-0.5 text-muted-foreground">{{ describeEffect(hovered.effectData) }}</div>
       <div class="mt-1 font-mono text-3xs">
-        <span v-if="effectiveIds.has(hovered.id)" class="text-green-500">{{
+        <span v-if="effectiveIds.has(hovered.id)" class="text-success-strong">{{
           t('awakenView.unlocked')
         }}</span>
         <span v-else class="inline-flex items-center gap-1">

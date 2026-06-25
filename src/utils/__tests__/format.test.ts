@@ -184,9 +184,9 @@ describe('methodKindLabel', () => {
 })
 
 describe('methodKindClasses', () => {
-  test('machine kind includes orange classes', () => {
+  test('machine kind includes the machine token classes', () => {
     const classes = methodKindClasses('machine')
-    expect(classes).toContain('orange')
+    expect(classes).toContain('machine')
   })
 
   test('fabrication kind includes reserved (violet) token classes', () => {
@@ -196,12 +196,12 @@ describe('methodKindClasses', () => {
 })
 
 describe('methodKindColor', () => {
-  test('machine kind returns orange color', () => {
-    expect(methodKindColor('machine')).toBe('rgb(251, 146, 60)')
+  test('machine kind returns the machine token color', () => {
+    expect(methodKindColor('machine')).toBe('oklch(var(--machine))')
   })
 
-  test('fabrication kind returns violet color', () => {
-    expect(methodKindColor('fabrication')).toBe('rgb(167, 139, 250)')
+  test('fabrication kind returns the reserved (violet) token color', () => {
+    expect(methodKindColor('fabrication')).toBe('oklch(var(--reserved))')
   })
 })
 

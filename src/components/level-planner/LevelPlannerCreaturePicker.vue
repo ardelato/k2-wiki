@@ -133,14 +133,14 @@ function close() {
           <div class="flex items-center gap-1.5">
             <p
               class="truncate text-base font-semibold"
-              :class="isAwakened(selected.id) ? 'text-pink-400' : 'text-foreground'"
+              :class="isAwakened(selected.id) ? 'text-awakened-strong' : 'text-foreground'"
             >
               {{ selected.name }}
             </p>
             <span
               v-if="ownedCreatureIds.has(selected.id)"
               class="text-xs"
-              :class="isAwakened(selected.id) ? 'text-pink-400' : 'text-warning-strong'"
+              :class="isAwakened(selected.id) ? 'text-awakened-strong' : 'text-warning-strong'"
               >★</span
             >
             <span
@@ -152,7 +152,7 @@ function close() {
           </div>
           <p class="text-xs text-muted-foreground/80">
             LVL {{ getLevel(selected.id)
-            }}<span v-if="isAwakened(selected.id)" class="ml-1 text-pink-400">★</span>
+            }}<span v-if="isAwakened(selected.id)" class="ml-1 text-awakened-strong">★</span>
           </p>
         </div>
       </template>
@@ -229,21 +229,21 @@ function close() {
               <div class="flex items-center gap-1">
                 <p
                   class="truncate text-sm font-semibold"
-                  :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-foreground'"
+                  :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-foreground'"
                 >
                   {{ creature.name }}
                 </p>
                 <span
                   v-if="ownedCreatureIds.has(creature.id)"
                   class="text-xs"
-                  :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-warning-strong'"
+                  :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-warning-strong'"
                   >★</span
                 >
               </div>
               <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span v-if="ownedCreatureIds.has(creature.id)">
                   LVL {{ getLevel(creature.id)
-                  }}<span v-if="isAwakened(creature.id)" class="ml-1 text-pink-400">★</span>
+                  }}<span v-if="isAwakened(creature.id)" class="ml-1 text-awakened-strong">★</span>
                 </span>
                 <span v-else class="italic">{{
                   t('levelPlannerComponents.creaturePicker.notSummoned')
