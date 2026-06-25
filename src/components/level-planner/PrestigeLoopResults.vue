@@ -398,6 +398,7 @@ function viewSetupInExpeditions() {
           :creatures="creatures"
           :member-ids="party.members.map((m) => m.creatureId)"
           :anchor-ids="plan.anchorIds"
+          :get-level="getLevel"
         />
       </div>
     </section>
