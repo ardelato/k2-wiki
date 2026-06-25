@@ -344,7 +344,7 @@ function viewSetupInExpeditions() {
             <PartyCreatureTile
               :creature="m.creature"
               chip-state="included"
-              :level="m.level"
+              :level="getLevel(m.creatureId)"
               :awakened="isAwakened(m.creatureId)"
               :title-suffix="` — ${ROLE_LABEL[m.role]}`"
             />
