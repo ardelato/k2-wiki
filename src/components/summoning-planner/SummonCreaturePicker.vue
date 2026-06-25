@@ -5,12 +5,12 @@
  * search box, a Tier/Name sort, and a scrollable tier-grouped grid of PartyCreatureTile
  * chips. Selection logic is owned by the parent (emits toggle / toggle-tier / reset).
  */
-import { onKeyStroke } from '@vueuse/core'
 import { Ban, ChevronDown, ChevronUp, Info, RotateCcw, Search, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import PartyCreatureTile from '@/components/level-planner/PartyCreatureTile.vue'
+import ModalDialog from '@/components/shared/ModalDialog.vue'
 import { useCreatureStatus } from '@/composables/useCreatureStatus'
 import type { Creature } from '@/types'
 
@@ -163,237 +163,216 @@ watch(
     if (open) query.value = ''
   },
 )
-
-
-onKeyStroke('Escape', () => {
-  if (props.open) emit('close')
-})
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="picker">
-      <div
-        v-if="open"
-        class="fixed inset-0 z-[100] grid place-items-center bg-background/70 p-4 backdrop-blur-sm"
-        @click.self="emit('close')"
+  <ModalDialog
+    :open="open"
+    :aria-label="displayTitle"
+    class="surface-card flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden"
+    @close="emit('close')"
+  >
+    <!-- Header -->
+    <div class="flex items-center gap-3 border-b border-border/60 px-4 py-3">
+      <div class="flex items-baseline gap-2">
+        <h3 class="text-base font-bold text-foreground">{{ displayTitle }}</h3>
+        <span class="text-xs text-muted-foreground">{{
+          t('summoningPlannerComponents.creatureFilter.selected', { n: selectedCount })
+        }}</span>
+      </div>
+      <button
+        class="focus-ring ml-auto inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+        @click="emit('close')"
       >
-        <div class="surface-card flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden">
-          <!-- Header -->
-          <div class="flex items-center gap-3 border-b border-border/60 px-4 py-3">
-            <div class="flex items-baseline gap-2">
-              <h3 class="text-base font-bold text-foreground">{{ displayTitle }}</h3>
-              <span class="text-xs text-muted-foreground">{{
-                t('summoningPlannerComponents.creatureFilter.selected', { n: selectedCount })
-              }}</span>
-            </div>
-            <button
-              class="focus-ring ml-auto inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-              @click="emit('close')"
-            >
-              <X class="size-3.5" />
-              {{ t('summoningPlanner.picker.close') }}
-            </button>
-          </div>
+        <X class="size-3.5" />
+        {{ t('summoningPlanner.picker.close') }}
+      </button>
+    </div>
 
-          <!-- Optional callout (e.g. how the default selection is chosen) -->
-          <p
-            v-if="hint"
-            class="flex items-start gap-1.5 border-b border-border/40 bg-foreground/[0.02] px-4 py-2 text-2xs leading-relaxed text-muted-foreground/80"
-          >
-            <Info class="mt-px size-3.5 shrink-0 text-muted-foreground/60" />
-            <span>{{ hint }}</span>
-          </p>
+    <!-- Optional callout (e.g. how the default selection is chosen) -->
+    <p
+      v-if="hint"
+      class="flex items-start gap-1.5 border-b border-border/40 bg-foreground/[0.02] px-4 py-2 text-2xs leading-relaxed text-muted-foreground/80"
+    >
+      <Info class="mt-px size-3.5 shrink-0 text-muted-foreground/60" />
+      <span>{{ hint }}</span>
+    </p>
 
-          <!-- Search + sort + reset -->
-          <div class="flex flex-wrap items-center gap-2 border-b border-border/40 px-4 py-3">
-            <div class="relative min-w-0 flex-1">
-              <Search
-                class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                v-model="query"
-                type="text"
-                :placeholder="t('summoningPlannerComponents.creatureFilter.placeholder')"
-                class="focus-ring h-9 w-full rounded-lg border border-border/60 bg-background/70 pl-9 pr-4 text-sm font-medium text-foreground"
-              />
-            </div>
-            <div
-              class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
-            >
-              <button
-                class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
-                :class="
-                  sortBy === 'tier'
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
-                "
-                :title="
-                  sortBy === 'tier'
-                    ? sortDir === 'asc'
-                      ? t('summoningPlanner.picker.sortTitle.tierAsc')
-                      : t('summoningPlanner.picker.sortTitle.tierDesc')
-                    : t('summoningPlanner.picker.sortTitle.tier')
-                "
-                @click="cycleSort('tier')"
-              >
-                {{ t('summoningPlannerComponents.creatureFilter.sortTier') }}
-                <ChevronUp v-if="sortBy === 'tier' && sortDir === 'asc'" class="size-3" />
-                <ChevronDown v-else-if="sortBy === 'tier'" class="size-3" />
-              </button>
-              <button
-                class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
-                :class="
-                  sortBy === 'name'
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
-                "
-                :title="
-                  sortBy === 'name'
-                    ? sortDir === 'asc'
-                      ? t('summoningPlanner.picker.sortTitle.nameAsc')
-                      : t('summoningPlanner.picker.sortTitle.nameDesc')
-                    : t('summoningPlanner.picker.sortTitle.name')
-                "
-                @click="cycleSort('name')"
-              >
-                {{ t('summoningPlannerComponents.creatureFilter.sortName') }}
-                <ChevronUp v-if="sortBy === 'name' && sortDir === 'asc'" class="size-3" />
-                <ChevronDown v-else-if="sortBy === 'name'" class="size-3" />
-              </button>
-              <button
-                v-if="levelSort"
-                class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
-                :class="
-                  sortBy === 'level'
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
-                "
-                :title="
-                  sortBy === 'level'
-                    ? sortDir === 'asc'
-                      ? t('summoningPlanner.picker.sortTitle.levelAsc')
-                      : t('summoningPlanner.picker.sortTitle.levelDesc')
-                    : t('summoningPlanner.picker.sortTitle.level')
-                "
-                @click="cycleSort('level')"
-              >
-                {{ t('summoningPlanner.picker.sortLevel') }}
-                <ChevronUp v-if="sortBy === 'level' && sortDir === 'asc'" class="size-3" />
-                <ChevronDown v-else-if="sortBy === 'level'" class="size-3" />
-              </button>
-            </div>
-            <button
-              v-if="busyCreatures.length > 0"
-              class="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-2xs font-semibold transition"
-              :class="
-                anyBusyIncluded
-                  ? 'border-border/70 bg-background/70 text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
-                  : 'border-primary/40 bg-primary/15 text-primary'
-              "
-              :title="
-                anyBusyIncluded
-                  ? t('summoningPlanner.picker.excludeBusyHint')
-                  : t('summoningPlanner.picker.includeBusyHint')
-              "
-              @click="toggleBusy"
-            >
-              <Ban class="size-3.5" />
+    <!-- Search + sort + reset -->
+    <div class="flex flex-wrap items-center gap-2 border-b border-border/40 px-4 py-3">
+      <div class="relative min-w-0 flex-1">
+        <Search
+          class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          v-model="query"
+          type="text"
+          :placeholder="t('summoningPlannerComponents.creatureFilter.placeholder')"
+          class="focus-ring h-9 w-full rounded-lg border border-border/60 bg-background/70 pl-9 pr-4 text-sm font-medium text-foreground"
+        />
+      </div>
+      <div
+        class="inline-flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/70"
+      >
+        <button
+          class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
+          :class="
+            sortBy === 'tier'
+              ? 'bg-primary/15 text-primary'
+              : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+          "
+          :title="
+            sortBy === 'tier'
+              ? sortDir === 'asc'
+                ? t('summoningPlanner.picker.sortTitle.tierAsc')
+                : t('summoningPlanner.picker.sortTitle.tierDesc')
+              : t('summoningPlanner.picker.sortTitle.tier')
+          "
+          @click="cycleSort('tier')"
+        >
+          {{ t('summoningPlannerComponents.creatureFilter.sortTier') }}
+          <ChevronUp v-if="sortBy === 'tier' && sortDir === 'asc'" class="size-3" />
+          <ChevronDown v-else-if="sortBy === 'tier'" class="size-3" />
+        </button>
+        <button
+          class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
+          :class="
+            sortBy === 'name'
+              ? 'bg-primary/15 text-primary'
+              : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+          "
+          :title="
+            sortBy === 'name'
+              ? sortDir === 'asc'
+                ? t('summoningPlanner.picker.sortTitle.nameAsc')
+                : t('summoningPlanner.picker.sortTitle.nameDesc')
+              : t('summoningPlanner.picker.sortTitle.name')
+          "
+          @click="cycleSort('name')"
+        >
+          {{ t('summoningPlannerComponents.creatureFilter.sortName') }}
+          <ChevronUp v-if="sortBy === 'name' && sortDir === 'asc'" class="size-3" />
+          <ChevronDown v-else-if="sortBy === 'name'" class="size-3" />
+        </button>
+        <button
+          v-if="levelSort"
+          class="focus-ring flex h-8 items-center gap-1 px-2.5 text-2xs font-semibold transition"
+          :class="
+            sortBy === 'level'
+              ? 'bg-primary/15 text-primary'
+              : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+          "
+          :title="
+            sortBy === 'level'
+              ? sortDir === 'asc'
+                ? t('summoningPlanner.picker.sortTitle.levelAsc')
+                : t('summoningPlanner.picker.sortTitle.levelDesc')
+              : t('summoningPlanner.picker.sortTitle.level')
+          "
+          @click="cycleSort('level')"
+        >
+          {{ t('summoningPlanner.picker.sortLevel') }}
+          <ChevronUp v-if="sortBy === 'level' && sortDir === 'asc'" class="size-3" />
+          <ChevronDown v-else-if="sortBy === 'level'" class="size-3" />
+        </button>
+      </div>
+      <button
+        v-if="busyCreatures.length > 0"
+        class="focus-ring inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-2xs font-semibold transition"
+        :class="
+          anyBusyIncluded
+            ? 'border-border/70 bg-background/70 text-muted-foreground hover:bg-foreground/5 hover:text-foreground'
+            : 'border-primary/40 bg-primary/15 text-primary'
+        "
+        :title="
+          anyBusyIncluded
+            ? t('summoningPlanner.picker.excludeBusyHint')
+            : t('summoningPlanner.picker.includeBusyHint')
+        "
+        @click="toggleBusy"
+      >
+        <Ban class="size-3.5" />
+        {{
+          anyBusyIncluded
+            ? t('summoningPlanner.picker.excludeBusy')
+            : t('summoningPlanner.picker.includeBusy')
+        }}
+      </button>
+      <button
+        v-if="selectedCount > 0"
+        class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
+        @click="emit('reset')"
+      >
+        <RotateCcw class="size-3" />
+        {{ t('summoningPlannerComponents.creatureFilter.reset') }}
+      </button>
+    </div>
+
+    <!-- Scrollable grid -->
+    <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      <template v-if="filtered.length > 0 && isGroupedByTier">
+        <div v-for="group in groupByTier(filtered)" :key="group.tier" class="mb-3 last:mb-0">
+          <div class="mb-1.5 flex items-center gap-2">
+            <p class="text-3xs font-bold uppercase tracking-wider text-muted-foreground/60">
               {{
-                anyBusyIncluded
-                  ? t('summoningPlanner.picker.excludeBusy')
-                  : t('summoningPlanner.picker.includeBusy')
+                t('summoningPlannerComponents.creatureFilter.tierGroup', {
+                  n: group.tier + 1,
+                })
+              }}
+            </p>
+            <button
+              class="focus-ring inline-flex items-center rounded-md border px-2 py-0.5 text-3xs font-semibold transition"
+              :class="
+                isAllSelected(group.creatures)
+                  ? 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
+              "
+              @click="
+                emit(
+                  'toggle-tier',
+                  group.creatures.map((c) => c.id),
+                  !isAllSelected(group.creatures),
+                )
+              "
+            >
+              {{
+                isAllSelected(group.creatures)
+                  ? t('summoningPlannerComponents.creatureFilter.deselectAll')
+                  : t('summoningPlannerComponents.creatureFilter.selectAll')
               }}
             </button>
-            <button
-              v-if="selectedCount > 0"
-              class="focus-ring inline-flex items-center gap-1 rounded-md px-2 py-1 text-2xs font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground"
-              @click="emit('reset')"
-            >
-              <RotateCcw class="size-3" />
-              {{ t('summoningPlannerComponents.creatureFilter.reset') }}
-            </button>
           </div>
-
-          <!-- Scrollable grid -->
-          <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-            <template v-if="filtered.length > 0 && isGroupedByTier">
-              <div v-for="group in groupByTier(filtered)" :key="group.tier" class="mb-3 last:mb-0">
-                <div class="mb-1.5 flex items-center gap-2">
-                  <p class="text-3xs font-bold uppercase tracking-wider text-muted-foreground/60">
-                    {{
-                      t('summoningPlannerComponents.creatureFilter.tierGroup', {
-                        n: group.tier + 1,
-                      })
-                    }}
-                  </p>
-                  <button
-                    class="focus-ring inline-flex items-center rounded-md border px-2 py-0.5 text-3xs font-semibold transition"
-                    :class="
-                      isAllSelected(group.creatures)
-                        ? 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                        : 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
-                    "
-                    @click="
-                      emit(
-                        'toggle-tier',
-                        group.creatures.map((c) => c.id),
-                        !isAllSelected(group.creatures),
-                      )
-                    "
-                  >
-                    {{
-                      isAllSelected(group.creatures)
-                        ? t('summoningPlannerComponents.creatureFilter.deselectAll')
-                        : t('summoningPlannerComponents.creatureFilter.selectAll')
-                    }}
-                  </button>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                  <PartyCreatureTile
-                    v-for="c in group.creatures"
-                    :key="c.id"
-                    :creature="c"
-                    :chip-state="chipState(c.id)"
-                    :level="getLevel(c.id)"
-                    :awakened="isAwakened(c.id)"
-                    :show-activity="showActivity"
-                    @toggle="emit('toggle', c.id)"
-                  />
-                </div>
-              </div>
-            </template>
-
-            <div v-else-if="filtered.length > 0" class="flex flex-wrap gap-2">
-              <PartyCreatureTile
-                v-for="c in filtered"
-                :key="c.id"
-                :creature="c"
-                :chip-state="chipState(c.id)"
-                :level="getLevel(c.id)"
-                :awakened="isAwakened(c.id)"
-                :show-activity="showActivity"
-                @toggle="emit('toggle', c.id)"
-              />
-            </div>
-
-            <p v-if="filtered.length === 0" class="py-6 text-center text-sm text-muted-foreground">
-              {{ t('summoningPlannerComponents.creatureFilter.noMatches') }}
-            </p>
+          <div class="flex flex-wrap gap-2">
+            <PartyCreatureTile
+              v-for="c in group.creatures"
+              :key="c.id"
+              :creature="c"
+              :chip-state="chipState(c.id)"
+              :level="getLevel(c.id)"
+              :awakened="isAwakened(c.id)"
+              :show-activity="showActivity"
+              @toggle="emit('toggle', c.id)"
+            />
           </div>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
-</template>
+      </template>
 
-<style scoped>
-.picker-enter-active,
-.picker-leave-active {
-  transition: opacity 0.15s ease;
-}
-.picker-enter-from,
-.picker-leave-to {
-  opacity: 0;
-}
-</style>
+      <div v-else-if="filtered.length > 0" class="flex flex-wrap gap-2">
+        <PartyCreatureTile
+          v-for="c in filtered"
+          :key="c.id"
+          :creature="c"
+          :chip-state="chipState(c.id)"
+          :level="getLevel(c.id)"
+          :awakened="isAwakened(c.id)"
+          :show-activity="showActivity"
+          @toggle="emit('toggle', c.id)"
+        />
+      </div>
+
+      <p v-if="filtered.length === 0" class="py-6 text-center text-sm text-muted-foreground">
+        {{ t('summoningPlannerComponents.creatureFilter.noMatches') }}
+      </p>
+    </div>
+  </ModalDialog>
+</template>
