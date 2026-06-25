@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
+import { Search, SlidersHorizontal } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import ViewModeToggle from '@/components/shared/ViewModeToggle.vue'
 import type { SourceCategory } from '@/composables/useItems'
 import type { ItemType } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format/format'
@@ -94,40 +95,10 @@ const showFilters = ref(false)
         />
       </label>
 
-      <div
-        class="inline-flex items-center rounded-xl border border-border bg-muted/50 p-1"
-        role="radiogroup"
-        :aria-label="t('common.viewMode')"
-      >
-        <button
-          role="radio"
-          :aria-checked="props.viewMode === 'grid'"
-          class="focus-ring inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition"
-          :class="
-            props.viewMode === 'grid'
-              ? 'bg-primary text-primary-foreground shadow-glow'
-              : 'text-muted-foreground hover:text-foreground'
-          "
-          @click="emit('update:viewMode', 'grid')"
-        >
-          <Grid2x2 class="size-3.5" />
-          {{ t('common.grid') }}
-        </button>
-        <button
-          role="radio"
-          :aria-checked="props.viewMode === 'table'"
-          class="focus-ring inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition"
-          :class="
-            props.viewMode === 'table'
-              ? 'bg-primary text-primary-foreground shadow-glow'
-              : 'text-muted-foreground hover:text-foreground'
-          "
-          @click="emit('update:viewMode', 'table')"
-        >
-          <Columns3 class="size-3.5" />
-          {{ t('common.table') }}
-        </button>
-      </div>
+      <ViewModeToggle
+        :model-value="props.viewMode"
+        @update:model-value="emit('update:viewMode', $event)"
+      />
 
       <button
         class="focus-ring inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-accent/50 hover:text-foreground lg:hidden"
