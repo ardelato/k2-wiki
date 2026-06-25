@@ -137,6 +137,7 @@ jobs:
   e2e:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         shard: [1/3, 2/3, 3/3]
