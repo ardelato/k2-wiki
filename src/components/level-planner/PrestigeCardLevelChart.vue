@@ -10,18 +10,21 @@ import type { Creature } from '@/types'
 import { getCreatureImage } from '@/utils/images/creatureImages'
 import { getItemImage } from '@/utils/images/itemImages'
 import { derivePrestigeLevelSeries } from '@/utils/planner/prestigeLevelSeries'
-import type { PrestigeTimelineStep } from '@/utils/planner/prestigeLoopPlanner'
+import type { MemberRole, PrestigeTimelineStep } from '@/utils/planner/prestigeLoopPlanner'
 import { MAX_LEVEL } from '@/utils/planner/prestigeLoopPlanner'
 
-// A level-trajectory chart scoped to ONE expedition's party. The roster lives in a static
-// legend of creature chips below the chart; the hover popover maps each line's colour to a
-// name + level at a check-in. Keeping the chips in normal HTML flow means resizing only
-// rescales the lines — the legend never shifts or clips.
+// A level-trajectory chart scoped to ONE expedition's party. Every party member is plotted:
+// climbers trace a sawtooth, while anchors/boosters are held — their line ramps from the player's
+// true owned level (getLevel) up to the max, then holds flat (never prestiged → never drops). The
+// legend below splits the two groups of chips; the hover popover maps each line's colour to a
+// name + level at a check-in. Keeping the chips in normal HTML flow means resizing only rescales
+// the lines — the legend never shifts or clips.
 const props = defineProps<{
   timeline: PrestigeTimelineStep[]
   creatures: Map<string, Creature>
   memberIds: string[]
   anchorIds: string[]
+  getLevel: (id: string) => number
 }>()
 
 
@@ -69,6 +72,9 @@ interface Line {
   name: string
   image: string
   creature: Creature
+  role: MemberRole
+  /** Player's true owned level — the held line's ramp start and the chip's badge value. */
+  ownedLevel: number
   color: string
   tokens: number
   path: string
@@ -86,41 +92,32 @@ interface Line {
 }
 
 
-const climberSeries = computed(() => scoped.value.filter((s) => s.role === 'climber'))
-const heldEntries = computed(() =>
-  scoped.value
-    .filter((s) => s.role !== 'climber')
-    .flatMap((s) => {
-      const creature = props.creatures.get(s.creatureId)
-      if (!creature) return []
-      return [
-        {
-          id: s.creatureId,
-          name: creature.name,
-          image: getCreatureImage(creature) || '',
-          creature,
-        },
-      ]
-    }),
-)
-
-
 const yMax = y(MAX_LEVEL)
 
 
+// Plot every member. Climbers trace a sawtooth; held members (anchors/boosters) ramp from their
+// owned level up to the max, then hold flat.
 const lines = computed<Line[]>(() =>
-  climberSeries.value.flatMap((s, i) => {
+  scoped.value.flatMap((s, i) => {
     const creature = props.creatures.get(s.creatureId)
     if (!creature) return []
-    const points = s.points.map((p) => ({
-      checkIn: p.checkIn,
-      hours: p.hours,
-      px: x(p.checkIn),
-      py: y(p.level),
-      level: p.level,
-      prestiged: p.prestiged,
-      wastedHours: p.wastedHours,
-    }))
+    // Held creatures (anchors/boosters) are pre-maxed in the steady-state data, so it carries no
+    // climb. Reconstruct the one-time ramp the player actually makes: start the line at their
+    // true owned level, rise to the held max, then hold flat — never prestiged, so it never drops.
+    const held = s.role !== 'climber'
+    const ownedLevel = props.getLevel(s.creatureId)
+    const points = s.points.map((p, idx) => {
+      const level = held ? (idx === 0 ? ownedLevel : MAX_LEVEL) : p.level
+      return {
+        checkIn: p.checkIn,
+        hours: p.hours,
+        px: x(p.checkIn),
+        py: y(level),
+        level,
+        prestiged: held ? false : p.prestiged,
+        wastedHours: held ? 0 : p.wastedHours,
+      }
+    })
 
     // Build the trajectory. When a creature maxed mid-interval, redirect that segment to
     // climb up to 120, sit flat (the wasted span), then drop/continue at the check-in.
@@ -149,6 +146,8 @@ const lines = computed<Line[]>(() =>
         name: creature.name,
         image: getCreatureImage(creature) || '',
         creature,
+        role: s.role,
+        ownedLevel,
         color: PALETTE[i % PALETTE.length],
         tokens: s.tokens,
         path,
@@ -158,6 +157,11 @@ const lines = computed<Line[]>(() =>
     ]
   }),
 )
+
+
+// Climbers carry the trajectory + token legend; anchors/boosters get the "held at 120" chips.
+const climberLines = computed(() => lines.value.filter((l) => l.role === 'climber'))
+const heldLines = computed(() => lines.value.filter((l) => l.role !== 'climber'))
 
 
 const hasWaste = computed(() => lines.value.some((l) => l.wastedSegments.length > 0))
@@ -310,7 +314,7 @@ const tooltipStyle = computed(() => {
             {{ t('levelPlanner.prestigeLoop.timeline.plusHours', { h: lbl.hours }) }}
           </text>
 
-          <!-- Climber lines (one colour per member; mapped to the legend below) -->
+          <!-- All member lines (climbers + held; one colour per member, mapped to the legend below) -->
           <path
             v-for="l in lines"
             :key="'line' + l.id"
@@ -427,7 +431,7 @@ const tooltipStyle = computed(() => {
            the prestige tokens it earns. Plain HTML flow, so it stays crisp as the chart rescales. -->
       <div class="mt-3 flex shrink-0 flex-wrap content-start items-center gap-x-1.5 gap-y-2">
         <RightClickHint
-          v-for="l in lines"
+          v-for="l in climberLines"
           :key="'lg' + l.id"
           @contextmenu="toggleCreature(l.creature)"
         >
@@ -476,9 +480,9 @@ const tooltipStyle = computed(() => {
         </RightClickHint>
       </div>
 
-      <!-- Held at 120: anchors/boosters pinned at max. Shown as chips (not a text callout)
-           to match the climbers, with a 120 badge instead of a token count. -->
-      <div v-if="heldEntries.length" class="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-2">
+      <!-- Held: anchors/boosters. Their lines ramp from the owned level up to the max and hold;
+           these chips key the same colour and show the player's true owned level (the ramp start). -->
+      <div v-if="heldLines.length" class="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-2">
         <span
           class="inline-flex items-center gap-1 text-3xs font-semibold uppercase tracking-wide text-muted-foreground/70"
         >
@@ -486,24 +490,32 @@ const tooltipStyle = computed(() => {
           {{ t('levelPlanner.prestigeLoop.chart.heldAt120') }}
         </span>
         <RightClickHint
-          v-for="h in heldEntries"
-          :key="'held' + h.id"
-          @contextmenu="toggleCreature(h.creature)"
+          v-for="l in heldLines"
+          :key="'held' + l.id"
+          @contextmenu="toggleCreature(l.creature)"
         >
           <span
-            class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/35 py-0.5 pl-2 pr-3"
+            class="inline-flex items-center gap-1.5 rounded-lg border-2 bg-muted/35 py-0.5 pl-2 pr-3 transition-opacity"
+            :class="[l.color, isDimmed(l.id) ? 'opacity-40' : 'opacity-100']"
+            :style="{ borderColor: 'currentColor' }"
+            @mouseenter="hoveredId = l.id"
+            @mouseleave="hoveredId = null"
           >
             <span class="block size-6 shrink-0 overflow-hidden rounded-full bg-card">
               <img
-                v-if="h.image"
-                :src="h.image"
-                :alt="h.name"
+                v-if="l.image"
+                :src="l.image"
+                :alt="l.name"
                 class="size-full object-cover"
                 loading="lazy"
               />
             </span>
-            <span class="max-w-[8rem] truncate text-xs font-semibold">{{ h.name }}</span>
-            <span class="font-mono text-3xs font-bold text-muted-foreground">120</span>
+            <span class="max-w-[8rem] truncate text-xs font-semibold text-foreground">{{
+              l.name
+            }}</span>
+            <span class="font-mono text-3xs font-bold text-muted-foreground">{{
+              t('levelPlanner.prestigeLoop.chart.lvl', { n: l.ownedLevel })
+            }}</span>
           </span>
         </RightClickHint>
       </div>

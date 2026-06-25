@@ -344,7 +344,7 @@ function viewSetupInExpeditions() {
             <PartyCreatureTile
               :creature="m.creature"
               chip-state="included"
-              :level="m.level"
+              :level="getLevel(m.creatureId)"
               :awakened="isAwakened(m.creatureId)"
               :title-suffix="` — ${ROLE_LABEL[m.role]}`"
             />
@@ -398,6 +398,7 @@ function viewSetupInExpeditions() {
           :creatures="creatures"
           :member-ids="party.members.map((m) => m.creatureId)"
           :anchor-ids="plan.anchorIds"
+          :get-level="getLevel"
         />
       </div>
     </section>

@@ -66,9 +66,18 @@ const timeline: PrestigeTimelineStep[] = [
   ),
 ]
 
+// Real owned levels, deliberately below the in-loop 120 so we can prove held lines/chips render
+// the player's true level rather than the max the sim pins anchors/boosters to.
+const ownedLevels: Record<string, number> = { c: 108, b: 95, d: 50 }
 function mountCard(memberIds: string[], anchorIds: string[] = []) {
   return mount(PrestigeCardLevelChart, {
-    props: { timeline, creatures, memberIds, anchorIds },
+    props: {
+      timeline,
+      creatures,
+      memberIds,
+      anchorIds,
+      getLevel: (id: string) => ownedLevels[id] ?? 1,
+    },
   })
 }
 
@@ -80,17 +89,20 @@ function seriesLines(w: ReturnType<typeof mountCard>) {
 }
 
 describe('PrestigeCardLevelChart', () => {
-  test('plots a line only for the party climbers', () => {
+  test('plots a line for every party member — climbers and held alike', () => {
     const w = mountCard(['c', 'b'])
     expect(w.find('svg').exists()).toBe(true)
-    expect(seriesLines(w).length).toBe(1)
+    // climber c (sawtooth) + held booster b (flat at the in-loop 120) are both plotted
+    expect(seriesLines(w).length).toBe(2)
     expect(w.text()).toContain('Climber')
   })
 
-  test('lists held boosters/anchors in the held footer, not as lines', () => {
+  test('renders held boosters/anchors at their true owned level, not the in-loop max', () => {
     const w = mountCard(['c', 'b'])
-    expect(w.text()).toContain('Held at 120')
     expect(w.text()).toContain('Boostling')
+    // Booster b is owned at 95 — the chip shows that, not the sim's pinned 120.
+    expect(w.text()).toContain('LVL 95')
+    expect(w.text()).not.toContain('LVL 120')
   })
 
   test('scopes strictly to the given member ids', () => {
@@ -98,9 +110,19 @@ describe('PrestigeCardLevelChart', () => {
     expect(w.text()).not.toContain('Caveling')
   })
 
-  test('shows the empty state when the party is all held', () => {
-    const w = mountCard(['b'])
-    expect(seriesLines(w).length).toBe(0)
-    expect(w.text().toLowerCase()).toContain('no leveling')
+  test('ramps a held creature from its owned level up to the max, then holds', () => {
+    const w = mountCard(['b']) // booster b, owned at 95
+    const paths = seriesLines(w)
+    expect(paths.length).toBe(1)
+    // y-pixels per point: smaller y = higher level (120 is the top of the plot, y=0-ish).
+    const ys = [...(paths[0].attributes('d') ?? '').matchAll(/,(\d+(?:\.\d+)?)/g)].map((m) =>
+      Number(m[1]),
+    )
+    expect(ys.length).toBeGreaterThan(1)
+    // Rises: starts below the max (owned 95, larger y) and reaches the max (smallest y).
+    expect(ys[0]).toBeGreaterThan(ys[ys.length - 1])
+    // Never drops: level is non-decreasing, so y is non-increasing across the whole line.
+    for (let i = 1; i < ys.length; i++) expect(ys[i]).toBeLessThanOrEqual(ys[i - 1])
+    expect(w.text().toLowerCase()).not.toContain('no leveling')
   })
 })
