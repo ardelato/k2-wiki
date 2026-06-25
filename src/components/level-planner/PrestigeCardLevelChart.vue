@@ -33,8 +33,8 @@ const PALETTE = [
   'text-reserved-strong',
   'text-success-strong',
   'text-warning-strong',
-  'text-rose-500',
-  'text-cyan-500',
+  'text-danger-strong',
+  'text-tool-strong',
 ]
 
 

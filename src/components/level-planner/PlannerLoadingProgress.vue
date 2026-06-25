@@ -72,18 +72,14 @@ function formatElapsedMs(ms: number): string {
           </div>
           <div
             v-if="bestCompleteTime !== null"
-            class="col-span-2 flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 sm:col-span-1"
+            class="col-span-2 flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2 sm:col-span-1"
           >
-            <CheckCircle2 class="size-4 shrink-0 text-green-500" />
+            <CheckCircle2 class="size-4 shrink-0 text-success-strong" />
             <div class="min-w-0">
-              <p
-                class="text-3xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400"
-              >
+              <p class="text-3xs font-medium uppercase tracking-wider text-success-strong">
                 {{ t('levelPlannerComponents.loadingProgress.bestTime') }}
               </p>
-              <p
-                class="truncate text-sm font-semibold tabular-nums text-green-700 dark:text-green-300"
-              >
+              <p class="truncate text-sm font-semibold tabular-nums text-success-strong">
                 {{ formatDuration(bestCompleteTime) }}
               </p>
             </div>

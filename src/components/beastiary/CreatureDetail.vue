@@ -238,7 +238,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                   role="switch"
                   :aria-checked="isAwakened(creature.id)"
                   class="focus-ring relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors"
-                  :class="isAwakened(creature.id) ? 'bg-pink-500' : 'bg-muted'"
+                  :class="isAwakened(creature.id) ? 'bg-awakened' : 'bg-muted'"
                   @click="setAwakened(creature.id, !isAwakened(creature.id))"
                 >
                   <span
@@ -411,7 +411,7 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
                   <span v-if="entry.traitMatch" class="text-primary">{{
                     t('beastiary.detail.traitMatch')
                   }}</span>
-                  <span v-if="entry.biomeStatus === 'advantage'" class="text-green-500">{{
+                  <span v-if="entry.biomeStatus === 'advantage'" class="text-success-strong">{{
                     t('beastiary.detail.advantage')
                   }}</span>
                   <span v-if="entry.biomeStatus === 'disadvantage'" class="text-destructive">{{

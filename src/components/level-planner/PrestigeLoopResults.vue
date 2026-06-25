@@ -53,7 +53,7 @@ const ROLE_LABEL: Record<MemberRole, string> = {
 const ROLE_CLASS: Record<MemberRole, string> = {
   climber: 'bg-primary/15 text-primary',
   booster: 'bg-warning/15 text-warning-strong',
-  anchor: 'bg-slate-500/15 text-slate-600 dark:text-slate-300',
+  anchor: 'bg-muted-foreground/15 text-muted-foreground',
 }
 
 

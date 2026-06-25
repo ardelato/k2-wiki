@@ -411,9 +411,7 @@ watch(
             "
             :disabled="fertilizerToMaxAll === 0"
           >
-            <span
-              class="inline-flex items-center gap-1 font-semibold text-fuchsia-700 dark:text-fuchsia-300"
-            >
+            <span class="inline-flex items-center gap-1 font-semibold text-buy-strong">
               <img
                 :src="getItemImage({ id: FERTILIZER_ITEM_ID })"
                 alt="Fertilizer"

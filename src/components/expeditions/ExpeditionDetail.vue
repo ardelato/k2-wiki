@@ -341,7 +341,7 @@ function normalizeLoopCountOnBlur(event: FocusEvent) {
                     loading="lazy"
                   />
                   <span
-                    class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-3xs font-semibold text-cyan-300"
+                    class="absolute left-0.5 top-0.5 rounded-full bg-black/60 px-1.5 py-0.5 font-mono text-3xs font-semibold text-info-strong"
                   >
                     {{ getCreatureSlotRating(slot) }}
                   </span>

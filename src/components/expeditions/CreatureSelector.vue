@@ -375,20 +375,14 @@ const activeCreatureFilters = computed<ActiveFilter[]>(() => {
               <div class="flex items-center gap-1">
                 <p
                   class="truncate font-semibold"
-                  :class="
-                    isAwakened(creature.id) ? 'text-pink-600 dark:text-pink-400' : 'text-foreground'
-                  "
+                  :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-foreground'"
                 >
                   {{ creature.name }}
                 </p>
                 <span
                   v-if="isOwned(creature.id)"
                   class="text-xs"
-                  :class="
-                    isAwakened(creature.id)
-                      ? 'text-pink-600 dark:text-pink-400'
-                      : 'text-warning-strong'
-                  "
+                  :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-warning-strong'"
                   >★</span
                 >
               </div>

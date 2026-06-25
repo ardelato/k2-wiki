@@ -64,8 +64,8 @@ export function extractModifierChips(
         value: row.value,
         icon: upgradesIcon,
         color:
-          'border-cyan-600/35 bg-cyan-100 text-cyan-800 dark:border-cyan-400/40 dark:bg-cyan-400/20 dark:text-cyan-100',
-        accentColor: 'bg-cyan-500',
+          'border-info/35 bg-info/10 text-info-strong dark:border-info/40 dark:bg-info/20 dark:text-info-strong',
+        accentColor: 'bg-info',
         subtitle: t('modifiers.skillTreeBonuses'),
         stats: parseStats(row.value),
       })
@@ -90,8 +90,8 @@ export function extractModifierChips(
         value: row.value,
         icon: sourceIcons[machineName] ?? machinesIcon,
         color:
-          'border-orange-600/35 bg-orange-100 text-orange-800 dark:border-orange-400/40 dark:bg-orange-400/20 dark:text-orange-100',
-        accentColor: 'bg-orange-500',
+          'border-machine/35 bg-machine/10 text-machine-strong dark:border-machine/40 dark:bg-machine/20 dark:text-machine-strong',
+        accentColor: 'bg-machine',
         subtitle: t('modifiers.passiveMachineProduction'),
         stats: [localizeModifierValue(row.value)],
       })
@@ -124,8 +124,8 @@ export function extractModifierChips(
         value: row.value,
         icon: toolId ? toolIcons[toolId] : upgradesIcon,
         color:
-          'border-teal-600/35 bg-teal-100 text-teal-800 dark:border-teal-400/40 dark:bg-teal-400/20 dark:text-teal-100',
-        accentColor: 'bg-teal-500',
+          'border-tool/35 bg-tool/10 text-tool-strong dark:border-tool/40 dark:bg-tool/20 dark:text-tool-strong',
+        accentColor: 'bg-tool',
         subtitle: t('modifiers.toolSpeedModeBonus'),
         stats: [localizeModifierValue(row.value)],
       })

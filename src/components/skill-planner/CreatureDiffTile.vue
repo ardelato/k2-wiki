@@ -37,7 +37,7 @@ defineEmits<{
 
 
 const VARIANT = {
-  remove: 'border-rose-500/40',
+  remove: 'border-danger/40',
   add: 'border-success/40',
   keep: 'border-border',
   neutral: 'border-border',

@@ -521,8 +521,8 @@ const stepsByWave = computed(() => {
           <div class="sticky top-[calc(var(--header-height)+0.75rem)] z-10 flex justify-center">
             <div
               v-if="wave.isAwakening"
-              class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-pink-500 text-xs font-bold sm:size-8"
-              style="background-color: hsl(var(--card)); color: rgb(236 72 153)"
+              class="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-awakened text-xs font-bold sm:size-8"
+              style="background-color: hsl(var(--card)); color: oklch(var(--awakened))"
             >
               <img :src="awakenedSummonedIcon" alt="" class="size-4" loading="lazy" />
             </div>

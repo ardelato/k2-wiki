@@ -299,7 +299,7 @@ const { t } = useI18n()
               class="flex w-[92px] items-center justify-end gap-1 font-mono text-3xs font-bold"
               :class="
                 row.maxed
-                  ? 'text-pink-400'
+                  ? 'text-awakened-strong'
                   : row.locked
                     ? 'text-muted-foreground/40'
                     : 'text-muted-foreground'

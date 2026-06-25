@@ -969,9 +969,7 @@ function chooseCreature(creature: Creature) {
                     <span
                       class="truncate text-sm font-semibold"
                       :class="
-                        isAwakened(creature.id)
-                          ? 'text-pink-600 dark:text-pink-400'
-                          : 'text-foreground/80'
+                        isAwakened(creature.id) ? 'text-awakened-strong' : 'text-foreground/80'
                       "
                       >{{ creature.name }}</span
                     >
@@ -979,9 +977,7 @@ function chooseCreature(creature: Creature) {
                       v-if="isOwned(creature.id)"
                       class="shrink-0 text-xs"
                       :class="
-                        isAwakened(creature.id)
-                          ? 'text-pink-500 dark:text-pink-400'
-                          : 'text-warning-strong'
+                        isAwakened(creature.id) ? 'text-awakened-strong' : 'text-warning-strong'
                       "
                       >★</span
                     >

@@ -245,17 +245,15 @@ const sortedCreatures = computed(() => {
                 <div class="flex items-center gap-0.5">
                   <span
                     class="font-semibold"
-                    :class="
-                      isAwakened(creature.id)
-                        ? 'text-pink-600 dark:text-pink-400'
-                        : 'text-foreground/80'
-                    "
+                    :class="isAwakened(creature.id) ? 'text-awakened-strong' : 'text-foreground/80'"
                     >{{ creature.name }}</span
                   >
                   <span
                     v-if="isOwned(creature.id)"
                     class="text-xs"
-                    :class="isAwakened(creature.id) ? 'text-pink-400' : 'text-warning-strong'"
+                    :class="
+                      isAwakened(creature.id) ? 'text-awakened-strong' : 'text-warning-strong'
+                    "
                     >★</span
                   >
                 </div>

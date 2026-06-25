@@ -67,7 +67,7 @@ function tileBorderClass(): string {
   if (props.chipState === 'excluded') return 'border-border/40 opacity-40 grayscale'
   if (props.chipState === 'selected') return 'border-primary/60 ring-2 ring-primary/40'
   if (props.chipState === 'force-included') return 'border-primary/60 ring-1 ring-primary/30'
-  if (props.awakened) return 'border-pink-500/40 ring-1 ring-pink-500/20 hover:border-pink-500/60'
+  if (props.awakened) return 'border-awakened/40 ring-1 ring-awakened/20 hover:border-awakened/60'
   return 'border-border bg-card/50 hover:border-primary/50'
 }
 
@@ -76,7 +76,7 @@ function nameClass(): string {
   if (props.chipState === 'excluded') return 'text-white/60 line-through'
   if (props.chipState === 'selected') return 'text-primary'
   if (props.chipState === 'force-included') return 'text-primary'
-  if (props.awakened) return 'text-pink-400'
+  if (props.awakened) return 'text-awakened-strong'
   return 'text-white'
 }
 
@@ -85,7 +85,7 @@ function levelBadgeClass(): string {
   if (props.chipState === 'excluded') return 'text-muted-foreground'
   if (props.chipState === 'selected') return 'text-primary'
   if (props.chipState === 'force-included') return 'text-primary'
-  if (props.awakened) return 'text-pink-400'
+  if (props.awakened) return 'text-awakened-strong'
   return 'text-foreground'
 }
 </script>

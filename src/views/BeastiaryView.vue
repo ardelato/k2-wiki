@@ -339,7 +339,7 @@ const { t } = useI18n()
 
           <!-- Awakening -->
           <button
-            class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-pink-500/50 hover:text-pink-400 disabled:cursor-not-allowed disabled:opacity-40"
+            class="focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold text-muted-foreground transition hover:border-awakened/50 hover:text-awakened-strong disabled:cursor-not-allowed disabled:opacity-40"
             :disabled="!selectedIds.size"
             @click="bulkSetAwakened(true)"
           >

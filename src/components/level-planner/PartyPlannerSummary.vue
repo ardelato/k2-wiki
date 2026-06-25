@@ -59,7 +59,7 @@ const swapCount = computed(
           })
         }}
       </span>
-      <span class="inline-flex items-center gap-1.5 text-purple-400">
+      <span class="inline-flex items-center gap-1.5 text-reserved-strong">
         <Flag class="size-4" />
         {{
           t('levelPlannerComponents.partySummary.expeditions', {
@@ -68,7 +68,7 @@ const swapCount = computed(
         }}
       </span>
       <span
-        class="inline-flex cursor-help items-center gap-1.5 text-rose-400"
+        class="inline-flex cursor-help items-center gap-1.5 text-danger-strong"
         :title="t('levelPlannerComponents.partySummary.swapsTooltip')"
       >
         <ArrowRightLeft class="size-4" />
