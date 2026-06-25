@@ -6,8 +6,8 @@
  * bar and the reserved diagonal stripe overlay.
  *
  * Image-led / structured cards put their content in the default slot; BaseCard
- * owns only the shell. Uses the HSL `--card`/`--border` token set — do NOT use it
- * for CreatureCard, which lives on the OKLCH `--color-*` system.
+ * owns only the shell. Uses the HSL `--card`/`--border` token set — do NOT force
+ * it onto the beastiary grid card, which lives on the OKLCH `--color-*` type system.
  */
 withDefaults(
   defineProps<{
@@ -45,7 +45,7 @@ const VARIANTS = {
         : '',
     ]"
   >
-    <!-- Type accent bar (CreatureCard-style top bar) -->
+    <!-- Type accent bar (colored top bar) -->
     <div
       v-if="accentBarColor"
       class="absolute inset-x-0 top-0 h-[3px] rounded-t-xl"
