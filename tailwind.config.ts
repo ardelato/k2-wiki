@@ -45,6 +45,17 @@ export default {
         'info-strong': 'oklch(var(--info-strong) / <alpha-value>)',
         'reserved-strong': 'oklch(var(--reserved-strong) / <alpha-value>)',
         'gold-strong': 'oklch(var(--gold-strong) / <alpha-value>)',
+        // Method-kind + state colors — distinct from the status palette.
+        awakened: 'oklch(var(--awakened) / <alpha-value>)',
+        garden: 'oklch(var(--garden) / <alpha-value>)',
+        buy: 'oklch(var(--buy) / <alpha-value>)',
+        machine: 'oklch(var(--machine) / <alpha-value>)',
+        tool: 'oklch(var(--tool) / <alpha-value>)',
+        'awakened-strong': 'oklch(var(--awakened-strong) / <alpha-value>)',
+        'garden-strong': 'oklch(var(--garden-strong) / <alpha-value>)',
+        'buy-strong': 'oklch(var(--buy-strong) / <alpha-value>)',
+        'machine-strong': 'oklch(var(--machine-strong) / <alpha-value>)',
+        'tool-strong': 'oklch(var(--tool-strong) / <alpha-value>)',
       },
       borderRadius: {
         lg: 'var(--radius)',
