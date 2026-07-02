@@ -470,7 +470,6 @@ export interface PartyLevelingPlan {
 }
 
 export type ExpeditionStatKey = keyof ExpeditionStatWeights
-export type JobKey = keyof Jobs
 
 // Machine types
 export type MachineType = 'generator' | 'processor'
