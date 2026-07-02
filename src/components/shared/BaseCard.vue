@@ -6,8 +6,8 @@
  * bar and the reserved diagonal stripe overlay.
  *
  * Image-led / structured cards put their content in the default slot; BaseCard
- * owns only the shell. Uses the HSL `--card`/`--border` token set — do NOT use it
- * for CreatureCard, which lives on the OKLCH `--color-*` system.
+ * owns only the shell. Uses the HSL `--card`/`--border` token set — do NOT force
+ * it onto the beastiary grid card, which lives on the OKLCH `--color-*` type system.
  */
 withDefaults(
   defineProps<{
@@ -15,12 +15,15 @@ withDefaults(
     interactive?: boolean
     accentBarColor?: string | null
     stripePattern?: 'reserved' | null
+    /** Root element tag — e.g. `article` for a self-contained card. Defaults to `div`. */
+    as?: string
   }>(),
   {
     variant: 'default',
     interactive: false,
     accentBarColor: null,
     stripePattern: null,
+    as: 'div',
   },
 )
 
@@ -36,7 +39,8 @@ const VARIANTS = {
 </script>
 
 <template>
-  <div
+  <component
+    :is="as"
     class="relative rounded-xl border shadow-card"
     :class="[
       VARIANTS[variant],
@@ -45,7 +49,7 @@ const VARIANTS = {
         : '',
     ]"
   >
-    <!-- Type accent bar (CreatureCard-style top bar) -->
+    <!-- Type accent bar (colored top bar) -->
     <div
       v-if="accentBarColor"
       class="absolute inset-x-0 top-0 h-[3px] rounded-t-xl"
@@ -57,7 +61,7 @@ const VARIANTS = {
       class="base-card-stripe pointer-events-none absolute inset-0"
     />
     <slot />
-  </div>
+  </component>
 </template>
 
 <style scoped>

@@ -31,13 +31,13 @@ describe('ItemCard', () => {
 
   test('emits select with item when clicked', async () => {
     const wrapper = mount(ItemCard, { props: { ...defaultProps } })
-    await wrapper.find('article').trigger('click')
+    await wrapper.find('[role="button"]').trigger('click')
     expect(wrapper.emitted('select')).toHaveLength(1)
     expect(wrapper.emitted('select')![0]).toEqual([mockItem])
   })
 
   test('applies selected styling when selected is true', () => {
     const wrapper = mount(ItemCard, { props: { ...defaultProps, selected: true } })
-    expect(wrapper.find('article').classes().join(' ')).toMatch(/border-primary/)
+    expect(wrapper.find('[role="button"]').classes().join(' ')).toMatch(/border-primary/)
   })
 })

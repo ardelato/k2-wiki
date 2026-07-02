@@ -110,16 +110,13 @@ const hasJobOrContainerSources = computed(
 
     <div class="space-y-5 px-5 pb-5">
       <!-- Description -->
-      <div v-if="item.description" class="border-t border-border/60 pt-4">
+      <div v-if="item.description" class="detail-section">
         <p class="text-sm leading-relaxed text-muted-foreground">{{ item.description }}</p>
       </div>
 
       <!-- Values -->
-      <section
-        v-if="item.buyValue != null || item.sellValue != null"
-        class="border-t border-border/60 pt-4"
-      >
-        <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+      <section v-if="item.buyValue != null || item.sellValue != null" class="detail-section">
+        <h3 class="section-title mb-3">
           {{ t('items.detail.costs') }}
         </h3>
         <div
@@ -165,8 +162,8 @@ const hasJobOrContainerSources = computed(
       />
 
       <!-- Used As Ingredient -->
-      <section v-if="dedupedRecipeUsages.length" class="border-t border-border/60 pt-4">
-        <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+      <section v-if="dedupedRecipeUsages.length" class="detail-section">
+        <h3 class="section-title mb-3">
           {{ t('items.detail.usedAsIngredient') }}
         </h3>
         <div class="space-y-2">

@@ -33,8 +33,8 @@ function toggleVariants(recipeIdx: number) {
 </script>
 
 <template>
-  <section class="border-t border-border/60 pt-4">
-    <h3 class="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+  <section class="detail-section">
+    <h3 class="section-title mb-3">
       {{ t('items.detail.recipes') }}
     </h3>
     <div class="space-y-3">

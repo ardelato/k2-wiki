@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Columns3, Grid2x2, Search, SlidersHorizontal } from 'lucide-vue-next'
+import { ChevronDown, Search, SlidersHorizontal } from 'lucide-vue-next'
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -8,6 +8,7 @@ import notSummonedIcon from '@/assets/icons/not_summoned.webp'
 import summonedIcon from '@/assets/icons/summoned.webp'
 import ActiveFilters from '@/components/shared/ActiveFilters.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import ViewModeToggle from '@/components/shared/ViewModeToggle.vue'
 import type { ElementType } from '@/types'
 import { toTitleCase, typeColor } from '@/utils/format/format'
 import { jobIcons } from '@/utils/format/icons'
@@ -89,40 +90,10 @@ const hasActiveFilters = computed(
       </label>
 
       <!-- View mode toggle -->
-      <div
-        class="inline-flex items-center rounded-xl border border-border bg-muted/50 p-1"
-        role="radiogroup"
-        :aria-label="t('common.viewMode')"
-      >
-        <button
-          role="radio"
-          :aria-checked="props.viewMode === 'grid'"
-          class="focus-ring inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition"
-          :class="
-            props.viewMode === 'grid'
-              ? 'bg-primary text-primary-foreground shadow-glow'
-              : 'text-muted-foreground hover:text-foreground'
-          "
-          @click="emit('update:viewMode', 'grid')"
-        >
-          <Grid2x2 class="size-3.5" />
-          {{ t('common.grid') }}
-        </button>
-        <button
-          role="radio"
-          :aria-checked="props.viewMode === 'table'"
-          class="focus-ring inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-semibold transition"
-          :class="
-            props.viewMode === 'table'
-              ? 'bg-primary text-primary-foreground shadow-glow'
-              : 'text-muted-foreground hover:text-foreground'
-          "
-          @click="emit('update:viewMode', 'table')"
-        >
-          <Columns3 class="size-3.5" />
-          {{ t('common.table') }}
-        </button>
-      </div>
+      <ViewModeToggle
+        :model-value="props.viewMode"
+        @update:model-value="emit('update:viewMode', $event)"
+      />
 
       <!-- Mobile filter toggle -->
       <button

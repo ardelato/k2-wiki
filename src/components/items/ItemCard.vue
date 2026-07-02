@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BaseCard from '@/components/shared/BaseCard.vue'
 import type { Item } from '@/types'
 import { itemTypeColor } from '@/utils/format/format'
 import { getItemImage } from '@/utils/images/itemImages'
@@ -15,11 +16,13 @@ defineEmits<{
 </script>
 
 <template>
-  <article
+  <BaseCard
+    as="article"
+    interactive
+    :variant="selected ? 'selected' : 'default'"
     tabindex="0"
     role="button"
-    class="surface-card group relative cursor-pointer overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:border-accent/45 hover:shadow-glow active:translate-y-0 active:shadow-none"
-    :class="selected ? 'border-primary/40 ring-2 ring-primary/60' : ''"
+    class="group cursor-pointer overflow-hidden"
     @click="$emit('select', item)"
     @keydown.enter="$emit('select', item)"
   >
@@ -61,5 +64,5 @@ defineEmits<{
         {{ item.type }}
       </span>
     </div>
-  </article>
+  </BaseCard>
 </template>

@@ -9,6 +9,7 @@ import ItemCard from '@/components/items/ItemCard.vue'
 import ItemDetail from '@/components/items/ItemDetail.vue'
 import ItemsToolbar from '@/components/items/ItemsToolbar.vue'
 import type { ActiveFilter } from '@/components/shared/ActiveFilters.vue'
+import ModalDialog from '@/components/shared/ModalDialog.vue'
 import SortableHeader from '@/components/shared/SortableHeader.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useItems } from '@/composables/useItems'
@@ -507,42 +508,20 @@ onMounted(() => {
     </div>
 
     <!-- Mobile Modal -->
-    <Teleport to="body">
-      <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="opacity-0"
-        enter-to-class="opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="opacity-100"
-        leave-to-class="opacity-0"
-      >
-        <div
-          v-if="selectedItem && isMobile"
-          class="fixed inset-0 z-50 bg-background/95 p-4 backdrop-blur-sm xl:hidden"
-          @click.self="closeDetail"
-        >
-          <Transition
-            enter-active-class="transition duration-200 ease-out"
-            enter-from-class="opacity-0 translate-y-4"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition duration-150 ease-in"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 translate-y-4"
-          >
-            <div
-              class="mx-auto max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-border bg-card shadow-card"
-            >
-              <ItemDetail
-                :item="selectedItem"
-                @close="closeDetail"
-                @select-item="selectItemById"
-                @select-creature="toggleCreatureById"
-              />
-            </div>
-          </Transition>
-        </div>
-      </Transition>
-    </Teleport>
+    <ModalDialog
+      :open="Boolean(selectedItem) && isMobile"
+      backdrop-class="bg-background/95"
+      class="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-xl border border-border bg-card shadow-card"
+      @close="closeDetail"
+    >
+      <ItemDetail
+        v-if="selectedItem"
+        :item="selectedItem"
+        @close="closeDetail"
+        @select-item="selectItemById"
+        @select-creature="toggleCreatureById"
+      />
+    </ModalDialog>
 
     <CreatureDetail
       :creature="drawerCreature"

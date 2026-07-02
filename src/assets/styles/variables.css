@@ -1,10 +1,6 @@
 :root {
   /* Theme-agnostic decorative colors (identical in light and dark) ----------- */
 
-  /* Dark glass scrim — theme-invariant dark backdrop behind imagery (e.g. the
-     CreatureCard hero tier badge / checkbox), kept dark in both themes by design. */
-  --scrim: 0.12 0.02 285;
-
   /* Element type colors */
   --color-fire: oklch(0.6 0.22 25);
   --color-water: oklch(0.6 0.18 220);
