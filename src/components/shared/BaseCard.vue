@@ -15,12 +15,15 @@ withDefaults(
     interactive?: boolean
     accentBarColor?: string | null
     stripePattern?: 'reserved' | null
+    /** Root element tag — e.g. `article` for a self-contained card. Defaults to `div`. */
+    as?: string
   }>(),
   {
     variant: 'default',
     interactive: false,
     accentBarColor: null,
     stripePattern: null,
+    as: 'div',
   },
 )
 
@@ -36,7 +39,8 @@ const VARIANTS = {
 </script>
 
 <template>
-  <div
+  <component
+    :is="as"
     class="relative rounded-xl border shadow-card"
     :class="[
       VARIANTS[variant],
@@ -57,7 +61,7 @@ const VARIANTS = {
       class="base-card-stripe pointer-events-none absolute inset-0"
     />
     <slot />
-  </div>
+  </component>
 </template>
 
 <style scoped>

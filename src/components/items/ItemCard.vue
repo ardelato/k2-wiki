@@ -17,6 +17,7 @@ defineEmits<{
 
 <template>
   <BaseCard
+    as="article"
     interactive
     :variant="selected ? 'selected' : 'default'"
     tabindex="0"
