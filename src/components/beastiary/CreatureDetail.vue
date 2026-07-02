@@ -177,13 +177,6 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
       </div>
 
       <div class="space-y-5 px-5 pb-5">
-        <!-- Description -->
-        <div class="detail-section">
-          <p class="text-sm leading-relaxed text-muted-foreground">
-            {{ creature.description }}
-          </p>
-        </div>
-
         <!-- Collection & Actions -->
         <div class="detail-section space-y-4 rounded-lg border border-border/60 bg-muted/10 p-4">
           <h3 class="section-title">{{ t('beastiary.detail.collection') }}</h3>
