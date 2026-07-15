@@ -10,6 +10,7 @@ import {
 import type { GardenCell, GardenFlowerEntry, AwakenGatherUpgrade } from '@/types'
 import { getPlayerLevel } from '@/utils/formulas'
 import { calculateJobTiersFromSanctuary, type SaveConfig } from '@/utils/save/parseSave'
+import { writeStorageKey } from '@/utils/save/writeStorageKey'
 
 const sanctuaryCreatureIds = useLocalStorage<string[]>('config-sanctuary-creatures', [])
 const helperCreatureIds = useLocalStorage<string[]>('config-helper-creatures', [])
@@ -121,17 +122,10 @@ const queuedTimes = useLocalStorage<Record<string, number>>('config-queued-times
 const awakenGoldLevel = useLocalStorage<number>('config-awaken-gold-level', 0)
 const skillLevels = useLocalStorage<Record<string, number>>('config-skill-levels', {})
 
-// Dungeon state lives across multiple localStorage keys read by useDungeons.
-// Writes go through this helper so the `storage` event fires in the same
-// tab — useLocalStorage refs in useDungeons listen for it and stay in sync.
-function writeDungeonKey(key: string, value: string | null) {
-  const oldValue = localStorage.getItem(key)
-  if (value === null) localStorage.removeItem(key)
-  else localStorage.setItem(key, value)
-  window.dispatchEvent(
-    new StorageEvent('storage', { key, oldValue, newValue: value, storageArea: localStorage }),
-  )
-}
+// Dungeon state lives across multiple localStorage keys read by useDungeons. Writes go
+// through writeStorageKey so the `storage` event fires in the same tab — useLocalStorage
+// refs in useDungeons listen for it and stay in sync.
+const writeDungeonKey = writeStorageKey
 
 export function useGameConfig() {
   const playerLevel = computed(() => getPlayerLevel(skillLevels.value))
@@ -452,7 +446,13 @@ export function useGameConfig() {
   }
 
   function resetDungeonStorage() {
+    // Null every imported-dungeon key so useDungeons reverts to its defaults (tier 1,
+    // Combat focus, Mining sub-focus). Previously only creature-levels was cleared, so a
+    // reset left the old dungeon's focus/tier behind.
     writeDungeonKey('dungeon-creature-levels', null)
+    writeDungeonKey('dungeon-tier', null)
+    writeDungeonKey('dungeon-focus', null)
+    writeDungeonKey('dungeon-sub-focus', null)
   }
 
   // Apply the config-owned portion of an imported save. Preserves the exact

@@ -34,6 +34,7 @@ import { getCreatureImage } from '@/utils/images/creatureImages'
 import { getItemImage } from '@/utils/images/itemImages'
 import { decryptSave } from '@/utils/save/decrypt'
 import { extractSaveConfig, type SaveConfig } from '@/utils/save/parseSave'
+import { resetPlannerState } from '@/utils/save/resetPlannerState'
 
 const { t } = useI18n()
 
@@ -461,8 +462,10 @@ function applyAll() {
   applySaveConfig(save)
 
 
-  // A fresh save invalidates the old summon plan.
+  // A fresh save invalidates the old summon plan and any save-scoped planner state
+  // (awaken queue, boosters, sim, sanctuary targets, fabrication sim, expedition scope).
   clearSummoningPlannerSelection()
+  resetPlannerState()
 
 
   appliedSections.value = {
@@ -488,6 +491,9 @@ function resetAll() {
   resetCollection()
   resetGarden()
   clearSummoningPlannerSelection()
+  // Planner/simulation state each planner persists to its own key (awaken queue,
+  // boosters, sim, sanctuary targets, fabrication sim, expedition scope).
+  resetPlannerState()
   saveConfig.value = null
   saveFileName.value = ''
   savedAtMs.value = 0

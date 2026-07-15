@@ -385,11 +385,17 @@ describe('useGameConfig', () => {
     expect(localStorage.getItem('dungeon-sub-focus')).toBe('Mining')
   })
 
-  test('resetDungeonStorage clears dungeon-creature-levels', () => {
+  test('resetDungeonStorage clears every imported-dungeon key', () => {
     localStorage.setItem('dungeon-creature-levels', JSON.stringify({ pudge: 10 }))
+    localStorage.setItem('dungeon-tier', '5')
+    localStorage.setItem('dungeon-focus', 'gathering')
+    localStorage.setItem('dungeon-sub-focus', 'Fishing')
     const { resetDungeonStorage } = useGameConfig()
     resetDungeonStorage()
     expect(localStorage.getItem('dungeon-creature-levels')).toBeNull()
+    expect(localStorage.getItem('dungeon-tier')).toBeNull()
+    expect(localStorage.getItem('dungeon-focus')).toBeNull()
+    expect(localStorage.getItem('dungeon-sub-focus')).toBeNull()
   })
 
   test('applyDungeonStateFromSave notifies same-tab useLocalStorage consumers', async () => {
