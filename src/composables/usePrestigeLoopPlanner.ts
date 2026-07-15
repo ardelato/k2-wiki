@@ -35,20 +35,15 @@ export function usePrestigeLoopPlanner(
     plannerIncluded: { value: Set<string> }
   },
   expeditionTierSelections?: { value: Record<string, number[]> },
-  /**
-   * Overrides the auto-excluded roster basis. Prestige passes a set that omits
-   * Sanctuary-seated creatures (the loop reassigns them, so they stay eligible),
-   * unlike the default `excludedCreatureIds` which excludes every deployed creature.
-   */
-  globalExcludedIds?: { value: Set<string> },
 ) {
   const { creatures } = useCreatures()
   const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
   const { excludedCreatureIds } = useGameConfig()
 
-  /** Owned, awakened (prestige-capable), override-aware roster. */
+  /** Owned, awakened (prestige-capable), override-aware roster. Every deployed creature —
+   * Sanctuary included — is excluded by default; the picker can opt any of them back in. */
   const eligibleEntries = computed<PrestigeLoopRosterEntry[]>(() => {
-    const globalExcluded = globalExcludedIds?.value ?? excludedCreatureIds.value
+    const globalExcluded = excludedCreatureIds.value
     const plannerExcluded = creatureOverrides?.plannerExcluded.value ?? new Set<string>()
     const plannerIncluded = creatureOverrides?.plannerIncluded.value ?? new Set<string>()
 

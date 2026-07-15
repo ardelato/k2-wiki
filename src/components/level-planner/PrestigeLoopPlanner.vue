@@ -22,7 +22,6 @@ const props = defineProps<{
   creatureMap: Map<string, Creature>
   overrideableCreatures: Creature[]
   excludedCreatureIds: Set<string>
-  sanctuaryCreatureIds: string[]
   getLevel: (id: string) => number
   isAwakened: (id: string) => boolean
   // Shared session override set (parent-owned, shared with custom-party)
@@ -63,26 +62,13 @@ const prestigeBoosterCount = ref(3)
 const cadencePresets = COMPARISON_CADENCE_HOURS
 
 
-// The prestige loop reassigns creatures across expeditions, so a Sanctuary-seated creature
-// is still a valid candidate — drop Sanctuary members from the auto-excluded basis (other
-// deployments stay excluded, surfaced via the picker's busy toggle).
-const prestigeExcludedBasis = computed(() => {
-  const set = new Set(props.excludedCreatureIds)
-  for (const id of props.sanctuaryCreatureIds) set.delete(id)
-  return set
-})
-// Same include/exclude semantics as the shared handlers, but keyed off the prestige basis
-// so toggling a Sanctuary creature excludes it (rather than force-including an already-in one).
-const togglePrestigeCreature = (id: string) =>
-  props.toggleCreatureOverride(id, prestigeExcludedBasis.value)
-const togglePrestigeTier = (ids: string[], include: boolean) =>
-  props.toggleTierOverride(ids, include, prestigeExcludedBasis.value)
-
-
 const effectiveExpeditionTierSelections = computed(() => props.effectiveExpeditionTierSelections)
-const prestigeExcludedBasisRef = computed(() => prestigeExcludedBasis.value)
 
 
+// Sanctuary-seated creatures are treated like every other deployment: busy, and so
+// excluded from the auto-roster (running the loop would pull them out of their seat and
+// forfeit the job-tier bonus). They stay toggleable in via the picker's busy filter, using
+// the shared override handlers with their default basis — no prestige-specific carve-out.
 const {
   plan: prestigePlan,
   lastInput: prestigeLastInput,
@@ -97,7 +83,6 @@ const {
   prestigeBoosterCount,
   props.creatureOverrides,
   effectiveExpeditionTierSelections,
-  prestigeExcludedBasisRef,
 )
 
 
@@ -196,8 +181,8 @@ defineExpose({ prestigeCalculate, prestigeRecalculate })
     :selected-ids="prestigeSelectedIds"
     :get-level="getLevel"
     :is-awakened="isAwakened"
-    @toggle="togglePrestigeCreature"
-    @toggle-tier="togglePrestigeTier"
+    @toggle="toggleCreatureOverride"
+    @toggle-tier="toggleTierOverride"
     @reset="resetCreatureOverrides"
     @close="prestigeRosterPickerOpen = false"
   />
