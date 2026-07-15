@@ -5,6 +5,7 @@ import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import { useCreatures } from '@/composables/useCreatures'
 import { useGameConfig } from '@/composables/useGameConfig'
 import type {
+  Creature,
   CreatureLevelingSummary,
   PartyLevelingPlan,
   PartyPlanMember,
@@ -24,6 +25,49 @@ import {
  * per creature — no cross-creature coordination — which suits the walk-away flow.
  */
 const HANDS_FREE_SWAP_THRESHOLD = 0.4
+
+/** The expedition a plan spends the most time on — its lane on the timeline. Sums time
+ * per expedition (a plan can revisit one across non-consecutive or multi-tier steps), so
+ * the true bottleneck lane wins over a single long runner-up step. */
+export function dominantExpeditionId(plan: LevelingPlan): string | null {
+  const timeByExpedition = new Map<string, number>()
+  for (const step of plan.steps) {
+    if (step.kind !== 'run') continue
+    timeByExpedition.set(
+      step.expedition.id,
+      (timeByExpedition.get(step.expedition.id) ?? 0) + step.timeSeconds,
+    )
+  }
+  let bestId: string | null = null
+  let bestTime = -1
+  for (const [id, time] of timeByExpedition) {
+    if (time > bestTime) {
+      bestTime = time
+      bestId = id
+    }
+  }
+  return bestId
+}
+
+/**
+ * Layer expedition exclusions on top of the user's tier selections: each reserved
+ * expedition is pinned to an empty tier list so `planLevelingPath` skips it. Missing
+ * keys still default to all tiers, so only the reserved expeditions drop out.
+ */
+function reserveExpeditions(
+  base: Record<string, number[]> | undefined,
+  taken: Set<string>,
+): Record<string, number[]> | undefined {
+  if (taken.size === 0) return base
+  const out: Record<string, number[]> = { ...base }
+  for (const expId of taken) out[expId] = []
+  return out
+}
+
+/** True when a plan has at least one runnable step (vs. an empty, all-excluded plan). */
+function hasRunStep(plan: LevelingPlan): boolean {
+  return plan.steps.some((s) => s.kind === 'run')
+}
 
 export function useAwakenHandsFree(
   queueIds: Ref<string[]>,
@@ -88,32 +132,80 @@ export function useAwakenHandsFree(
   const plansById = computed<Map<string, LevelingPlan>>(() => {
     const map = new Map<string, LevelingPlan>()
     if (!hasCalculated.value) return map
+
+    // Resolve the queue to creatures still below target (others are already done).
+    const queued = queueIds.value
+      .map((id) => {
+        const creature = creatures.value.find((c) => c.id === id)
+        if (!creature) return null
+        const startLevel = startLevelFor(id)
+        if (startLevel >= targetLevel.value) return null
+        return { id, creature, startLevel }
+      })
+      .filter((x): x is { id: string; creature: Creature; startLevel: number } => x != null)
+
+    // Spread across distinct expeditions. The game runs ONE party per expedition at a
+    // time, so three creatures each planned solo would otherwise stack invalid, overlapping
+    // runs on the single best expedition. Instead each creature reserves the expedition it
+    // spends the most time on, and later creatures re-plan with the taken ones excluded — so
+    // every creature graduates on its own expedition, running truly in parallel.
+    //
+    // Order matters: the lowest-level creature (furthest from target, the makespan
+    // bottleneck) picks first and keeps the single best expedition; faster creatures have
+    // slack and absorb a runner-up expedition at little or no cost to the overall finish.
+    const order = queued.toSorted((a, b) => a.startLevel - b.startLevel)
+
     // Creatures run in parallel, so a booster can only help ONE of them. Allocate
     // exclusively: each creature plans against the remaining pool, then the boosters
     // it actually used are reserved so no later creature double-books them.
     let remaining = boosterPool.value
-    for (const id of queueIds.value) {
-      const creature = creatures.value.find((c) => c.id === id)
-      if (!creature) continue
-      const startLevel = startLevelFor(id)
-      if (startLevel >= targetLevel.value) continue
-      const plan = planLevelingPath({
-        creature,
-        startLevel,
-        targetLevel: targetLevel.value,
-        isAwakened: isAwakened(id),
-        swordXpMultiplier: expeditionToolXpBonus.value,
-        expeditionTierSelections: expeditionTierSelections?.value,
-        boosterCandidates: remaining.length > 0 ? remaining : undefined,
-        swapThreshold: HANDS_FREE_SWAP_THRESHOLD,
-      })
+    const takenExpeditions = new Set<string>()
+    const planFor = new Map<string, LevelingPlan>()
+
+    for (const { id, creature, startLevel } of order) {
+      const planWith = (tierSelections: Record<string, number[]> | undefined) =>
+        planLevelingPath({
+          creature,
+          startLevel,
+          targetLevel: targetLevel.value,
+          isAwakened: isAwakened(id),
+          swordXpMultiplier: expeditionToolXpBonus.value,
+          expeditionTierSelections: tierSelections,
+          boosterCandidates: remaining.length > 0 ? remaining : undefined,
+          swapThreshold: HANDS_FREE_SWAP_THRESHOLD,
+        })
+
+      let plan = planWith(reserveExpeditions(expeditionTierSelections?.value, takenExpeditions))
+      // If reserving the taken expeditions left nothing runnable, fall back to the
+      // unrestricted plan — a stacked-but-complete plan beats an empty one.
+      let sharedFallback = false
+      if (!hasRunStep(plan)) {
+        plan = planWith(expeditionTierSelections?.value)
+        sharedFallback = true
+      }
+
+      // Reserve this creature's lane only when it planned around the taken ones. A fallback
+      // plan is already sharing a lane, so reserving its expedition would needlessly push a
+      // later, genuinely-distinct creature off a lane it could still use.
+      if (!sharedFallback) {
+        const primary = dominantExpeditionId(plan)
+        if (primary) takenExpeditions.add(primary)
+      }
+
       const used = new Set<string>()
       for (const step of plan.steps) {
         if (step.kind !== 'run') continue
         for (const b of step.boosters ?? []) used.add(b.creature.id)
       }
       if (used.size > 0) remaining = remaining.filter((b) => !used.has(b.creature.id))
-      map.set(id, plan)
+      planFor.set(id, plan)
+    }
+
+    // Emit in queue order so downstream consumers (rail, summaries) stay stable regardless
+    // of the internal bottleneck-first planning order.
+    for (const id of queueIds.value) {
+      const plan = planFor.get(id)
+      if (plan) map.set(id, plan)
     }
     return map
   })

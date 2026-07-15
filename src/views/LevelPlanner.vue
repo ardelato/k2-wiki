@@ -25,7 +25,7 @@ const route = useRoute()
 const router = useRouter()
 const { creatures } = useCreatures()
 const { ownedCreatureIds, getLevel, isAwakened } = useCreatureCollection()
-const { excludedCreatureIds, sanctuaryCreatureIds } = useGameConfig()
+const { excludedCreatureIds } = useGameConfig()
 const {
   expeditionTierOverrides,
   includeAllExpeditions,
@@ -398,7 +398,6 @@ const headingSubtitle = computed(() => {
       :creature-map="creatureMap"
       :overrideable-creatures="overrideableCreatures"
       :excluded-creature-ids="excludedCreatureIds"
-      :sanctuary-creature-ids="sanctuaryCreatureIds"
       :get-level="getLevel"
       :is-awakened="isAwakened"
       :creature-overrides="creatureOverrides"
