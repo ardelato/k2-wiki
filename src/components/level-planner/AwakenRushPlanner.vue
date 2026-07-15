@@ -161,6 +161,21 @@ const awakenSingle = computed(() => isAwaken.value && awakenQueue.value.length =
 const awakenMulti = computed(() => isAwaken.value && awakenQueue.value.length >= 2)
 
 
+// A creature routed in from its drawer's "Plan Awakening" button (?creature=<id>, mirrored
+// into creatureId by the parent) seeds the queue: append it when it's an eligible, not-yet-
+// queued awaken target. Registered before the queue→creatureId mirror below so a pre-existing
+// single-creature queue can't overwrite the routed id before it lands. The has() guard makes
+// the mirror's write-back a no-op here, so the two watchers don't loop.
+watch(
+  creatureId,
+  (id) => {
+    if (!id || awakenQueueSet.value.has(id) || !awakenEligibleIds.value.has(id)) return
+    awakenQueue.value = [...awakenQueue.value, id]
+  },
+  { immediate: true },
+)
+
+
 // Mirror the lone queued creature into the single planner's creature id.
 watch(
   [awakenSingle, awakenQueue],

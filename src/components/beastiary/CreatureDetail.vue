@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Sparkles, TrendingUp, X } from 'lucide-vue-next'
+import { Sparkles, Target, X } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -253,11 +253,12 @@ function statHighlight(creature: Creature, statKey: keyof CreatureStats): string
           </div>
 
           <router-link
+            v-if="!isAwakened(creature.id)"
             :to="{ name: 'planner-creature', query: { tab: 'awaken', creature: creature.id } }"
             class="focus-ring bg-primary/12 hover:bg-primary/18 flex w-full items-center justify-center gap-2 rounded-lg border border-primary/35 px-4 py-2.5 text-sm font-semibold text-primary transition"
           >
-            <TrendingUp class="size-4" />
-            {{ t('beastiary.detail.planLeveling') }}
+            <Target class="size-4" />
+            {{ t('beastiary.detail.planAwakening') }}
           </router-link>
 
           <router-link
