@@ -37,6 +37,7 @@ import { isRunPartyStep } from '@/types'
 import type { Creature, PartyLevelingPlan, PlannerStrategy, PlannerTimeBudget } from '@/types'
 import { formatDuration, formatNumber } from '@/utils/format/format'
 import { getCreatureImage } from '@/utils/images/creatureImages'
+import { seedAwakenQueue } from '@/utils/planner/awakenQueue'
 import { expeditions as allExpeditions } from '@/utils/save/precomputedTables'
 
 const AWAKEN_TARGET = 70
@@ -159,6 +160,20 @@ const awakenQueueCreatures = computed(() =>
 // (step cards, alternatives, overrides); two or more switch to the party optimizer.
 const awakenSingle = computed(() => isAwaken.value && awakenQueue.value.length === 1)
 const awakenMulti = computed(() => isAwaken.value && awakenQueue.value.length >= 2)
+
+
+// Seed the queue from a creature routed in via the drawer's "Plan Awakening" button
+// (?creature=<id>, mirrored into creatureId by the parent). Registered before the
+// queue→creatureId mirror below so a pre-existing single-creature queue can't overwrite the
+// routed id before it lands; seedAwakenQueue returns the same array on a no-op, so the mirror's
+// write-back doesn't loop back through here.
+watch(
+  creatureId,
+  (id) => {
+    awakenQueue.value = seedAwakenQueue(awakenQueue.value, id, awakenEligibleIds.value)
+  },
+  { immediate: true },
+)
 
 
 // Mirror the lone queued creature into the single planner's creature id.
