@@ -1,3 +1,5 @@
+
+
 # K2 Wiki
 
 A fan-made companion app for [Koltera 2](https://store.steampowered.com/app/2834700/Koltera_2/) — browse the game's creatures, items, and dungeons, and plan your progression with a set of interactive planners.
@@ -58,7 +60,7 @@ npm run preview
 | `npm test`                | Run unit tests (Vitest)                      |
 | `npm run test:e2e`        | Run end-to-end tests (Playwright)            |
 | `npm run knip`            | Find unused files, exports, and dependencies |
-| `npm run generate-tables` | Regenerate game data in `src/data/`          |
+| `npm run generate-tables` | Regenerate precomputed tables in `src/data/precomputed/` |
 | `npm run i18n:check`      | Check locale files for missing/stale keys    |
 
 Git hooks are managed by [lefthook](https://github.com/evilmartians/lefthook) and installed automatically on `npm install`.
