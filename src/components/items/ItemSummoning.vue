@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import RightClickHint from '@/components/shared/RightClickHint.vue'
+import { useCreatureCollection } from '@/composables/useCreatureCollection'
 import type { SummoningReference } from '@/types'
 import { getCreatureImage } from '@/utils/images/creatureImages'
 
@@ -16,6 +17,9 @@ const emit = defineEmits<{
 
 
 const { t } = useI18n()
+
+
+const { isOwned } = useCreatureCollection()
 </script>
 
 <template>
@@ -31,6 +35,7 @@ const { t } = useI18n()
       >
         <div
           class="relative aspect-square overflow-hidden rounded-lg bg-muted/20 transition hover:ring-1 hover:ring-accent/40"
+          :class="isOwned(creature.id) ? 'opacity-40 grayscale' : ''"
         >
           <img
             v-if="getCreatureImage({ id: creature.id, image: '' })"
@@ -48,6 +53,9 @@ const { t } = useI18n()
           <div class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-1">
             <p class="truncate text-center text-3xs font-semibold text-white">
               {{ creature.name }}
+              <span v-if="isOwned(creature.id)" class="sr-only"
+                >({{ t('items.detail.owned') }})</span
+              >
             </p>
           </div>
         </div>

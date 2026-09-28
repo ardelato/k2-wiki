@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 
+import { useItemUsage } from '@/composables/useItemUsage'
 import {
   items,
   itemById,
@@ -41,6 +42,8 @@ export function useItems() {
   const typeFilter = ref<ItemType | 'all'>('all')
   const sourceFilter = ref<SourceCategory>('all')
   const sourceSubFilter = ref<Set<string>>(new Set())
+  const safeToSellOnly = ref(false)
+  const { safeToSell } = useItemUsage()
 
   const availableSubFilters = computed(() => {
     if (sourceFilter.value === 'all') return []
@@ -48,7 +51,7 @@ export function useItems() {
   })
 
   const filteredItems = computed(() => {
-    return items.filter((item) => {
+    const matches = items.filter((item) => {
       const q = searchQuery.value.toLowerCase()
       const matchesSearch =
         !q ||
@@ -63,8 +66,12 @@ export function useItems() {
           if (sourceSubFilter.value.size === 0) return true
           return sourceSubFilter.value.has(s)
         })
-      return matchesSearch && matchesType && matchesSource
+      const matchesSell = !safeToSellOnly.value || safeToSell(item)
+      return matchesSearch && matchesType && matchesSource && matchesSell
     })
+    // Answer "what should I sell first?" by putting the most gold at the top.
+    if (safeToSellOnly.value) matches.sort((a, b) => (b.sellValue ?? 0) - (a.sellValue ?? 0))
+    return matches
   })
 
   function getJobSources(id: string): JobActivitySource[] {
@@ -90,6 +97,7 @@ export function useItems() {
     typeFilter,
     sourceFilter,
     sourceSubFilter,
+    safeToSellOnly,
     availableSubFilters,
     getJobSources,
     getRecipeUsages,

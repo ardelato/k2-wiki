@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
-import { computed, ref, nextTick, onMounted } from 'vue'
+import { computed, ref, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -13,7 +13,7 @@ import ModalDialog from '@/components/shared/ModalDialog.vue'
 import SortableHeader from '@/components/shared/SortableHeader.vue'
 import { useCreatureDrawer } from '@/composables/useCreatureDrawer'
 import { useItems } from '@/composables/useItems'
-import { summoningIndex } from '@/data/indexes'
+import { useItemUsage } from '@/composables/useItemUsage'
 import type { Item } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format/format'
 import { sourceIcons } from '@/utils/format/icons'
@@ -25,10 +25,13 @@ const {
   typeFilter,
   sourceFilter,
   sourceSubFilter,
+  safeToSellOnly,
   availableSubFilters,
   getItemById,
-  getRecipeUsages,
 } = useItems()
+
+
+const { getUseCount, getSummonCount } = useItemUsage()
 
 
 const {
@@ -45,20 +48,21 @@ const detailPanelRef = ref<HTMLElement | null>(null)
 const lastTriggerEl = ref<HTMLElement | null>(null)
 
 
-type SortKey = 'name' | 'type' | 'buyValue' | 'sellValue' | 'recipeCount' | 'usedInCount'
+type SortKey =
+  | 'name'
+  | 'type'
+  | 'buyValue'
+  | 'sellValue'
+  | 'recipeCount'
+  | 'useCount'
+  | 'summonCount'
 
 
-function getDeduplicatedRecipeCount(itemId: string): number {
-  const usages = getRecipeUsages(itemId)
-  const seen = new Set<string>()
-  for (const u of usages) seen.add(u.outputItemId)
-  return seen.size
+// Ways to craft the item, grouped like the detail panel's Recipes section: variants at the
+// same workstation and level are one recipe.
+function getRecipeCount(item: Item): number {
+  return new Set(item.recipes.map((r) => `${r.workstation}|${r.levelRequirement}`)).size
 }
-
-
-const anySummons = computed(() =>
-  filteredItems.value.some((i) => (summoningIndex.get(i.id)?.length ?? 0) > 0),
-)
 
 
 function uniqueSourceLabels(sources: string[] | undefined): string[] {
@@ -89,10 +93,9 @@ const sortedItems = computed(() => {
     else if (key === 'type') result = a.type.localeCompare(b.type)
     else if (key === 'buyValue') result = (a.buyValue ?? 0) - (b.buyValue ?? 0)
     else if (key === 'sellValue') result = (a.sellValue ?? 0) - (b.sellValue ?? 0)
-    else if (key === 'recipeCount')
-      result = getDeduplicatedRecipeCount(a.id) - getDeduplicatedRecipeCount(b.id)
-    else if (key === 'usedInCount')
-      result = getRecipeUsages(a.id).length - getRecipeUsages(b.id).length
+    else if (key === 'recipeCount') result = getRecipeCount(a) - getRecipeCount(b)
+    else if (key === 'useCount') result = getUseCount(a.id) - getUseCount(b.id)
+    else if (key === 'summonCount') result = getSummonCount(a.id) - getSummonCount(b.id)
     return tableSortDirection.value === 'asc' ? result : -result
   })
   return list
@@ -132,6 +135,7 @@ function selectItemById(id: string) {
     typeFilter.value = 'all'
     sourceFilter.value = 'all'
     sourceSubFilter.value.clear()
+    safeToSellOnly.value = false
   }
   selectedItem.value = item
 }
@@ -162,7 +166,15 @@ function clearFilters() {
   typeFilter.value = 'all'
   sourceFilter.value = 'all'
   sourceSubFilter.value.clear()
+  safeToSellOnly.value = false
 }
+
+
+// The filter's order is "most gold first"; point the table the same way while it's on.
+watch(safeToSellOnly, (on) => {
+  tableSortKey.value = on ? 'sellValue' : 'name'
+  tableSortDirection.value = on ? 'desc' : 'asc'
+})
 
 
 const hasActiveFilters = computed(
@@ -170,7 +182,8 @@ const hasActiveFilters = computed(
     typeFilter.value !== 'all' ||
     sourceFilter.value !== 'all' ||
     searchQuery.value !== '' ||
-    sourceSubFilter.value.size > 0,
+    sourceSubFilter.value.size > 0 ||
+    safeToSellOnly.value,
 )
 
 
@@ -200,6 +213,8 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       image: sourceIcons[sub],
     })
   }
+  if (safeToSellOnly.value)
+    filters.push({ key: 'sell', group: 'Sell', label: t('items.toolbar.safeToSell') })
   return filters
 })
 
@@ -216,6 +231,10 @@ function removeFilter(key: string) {
   if (key === 'source') {
     sourceFilter.value = 'all'
     sourceSubFilter.value.clear()
+    return
+  }
+  if (key === 'sell') {
+    safeToSellOnly.value = false
     return
   }
   if (key.startsWith('sub:')) {
@@ -245,6 +264,7 @@ onMounted(() => {
       v-model:search-query="searchQuery"
       v-model:type-filter="typeFilter"
       v-model:source-filter="sourceFilter"
+      v-model:safe-to-sell-only="safeToSellOnly"
       v-model:view-mode="viewMode"
       :result-count="filteredItems.length"
       :source-sub-filter="sourceSubFilter"
@@ -370,21 +390,25 @@ onMounted(() => {
                     @sort="sortBy"
                   />
                   <SortableHeader
-                    sort-key="usedInCount"
+                    sort-key="useCount"
                     :active-key="tableSortKey"
                     :direction="tableSortDirection"
-                    :label="t('items.view.usedIn')"
+                    :label="t('items.view.uses')"
                     align="left"
                     inactive-arrow-class="opacity-30"
                     th-class="whitespace-nowrap"
                     @sort="sortBy"
                   />
-                  <th
-                    v-if="anySummons"
-                    class="whitespace-nowrap px-2 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground"
-                  >
-                    {{ t('items.view.summons') }}
-                  </th>
+                  <SortableHeader
+                    sort-key="summonCount"
+                    :active-key="tableSortKey"
+                    :direction="tableSortDirection"
+                    :label="t('items.view.summons')"
+                    align="left"
+                    inactive-arrow-class="opacity-30"
+                    th-class="whitespace-nowrap"
+                    @sort="sortBy"
+                  />
                 </tr>
               </thead>
               <tbody class="divide-y divide-border/60">
@@ -466,13 +490,13 @@ onMounted(() => {
                     {{ item.buyValue ?? '—' }} / {{ item.sellValue ?? '—' }}
                   </td>
                   <td class="px-2 py-2.5 text-sm text-foreground">
-                    {{ getDeduplicatedRecipeCount(item.id) || '—' }}
+                    {{ getRecipeCount(item) || '—' }}
                   </td>
                   <td class="px-2 py-2.5 text-sm text-foreground">
-                    {{ getRecipeUsages(item.id).length || '—' }}
+                    {{ getUseCount(item.id) || '—' }}
                   </td>
-                  <td v-if="anySummons" class="px-2 py-2.5 text-sm text-foreground">
-                    {{ summoningIndex.get(item.id)?.length || '—' }}
+                  <td class="px-2 py-2.5 text-sm text-foreground">
+                    {{ getSummonCount(item.id) || '—' }}
                   </td>
                 </tr>
               </tbody>

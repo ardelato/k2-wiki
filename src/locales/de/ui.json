@@ -274,7 +274,8 @@
       "filterBySource": "Nach Quelle filtern",
       "typeLabel": "Typ",
       "sourceLabel": "Quelle",
-      "resultCount": "{count} Ergebnisse"
+      "resultCount": "{count} Ergebnisse",
+      "safeToSell": "Sicher verkaufbar"
     },
     "view": {
       "emptyTitle": "Keine Gegenstände entsprechen deinen Filtern",
@@ -286,7 +287,7 @@
       "buy": "Kaufen",
       "sell": "Verkaufen",
       "recipes": "Rezepte",
-      "usedIn": "Verwendet in",
+      "uses": "Verwendungen",
       "summons": "Beschwörungen"
     },
     "detail": {
@@ -303,7 +304,12 @@
       "usedAsIngredient": "Als Zutat verwendet",
       "lootTable": "Beute-Tabelle",
       "summoning": "Beschwörung",
-      "levelShort": "Lvl"
+      "levelShort": "Lvl",
+      "otherUses": "Weitere Verwendungen",
+      "toolUpgrades": "Werkzeug-Upgrades",
+      "machineUpgrades": "Maschinen-Upgrades",
+      "dungeonEntry": "Dungeon-Eintritt",
+      "owned": "im Besitz"
     },
     "filters": {
       "search": "Suchen",

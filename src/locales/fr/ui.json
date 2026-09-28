@@ -274,7 +274,8 @@
       "filterBySource": "Filtrer par source",
       "typeLabel": "Type",
       "sourceLabel": "Source",
-      "resultCount": "{count} résultats"
+      "resultCount": "{count} résultats",
+      "safeToSell": "Vendable sans risque"
     },
     "view": {
       "emptyTitle": "Aucun objet ne correspond à tes filtres",
@@ -286,7 +287,7 @@
       "buy": "Acheter",
       "sell": "Vendre",
       "recipes": "Recettes",
-      "usedIn": "Utilisé dans",
+      "uses": "Utilisations",
       "summons": "Invocations"
     },
     "detail": {
@@ -303,7 +304,12 @@
       "usedAsIngredient": "Utilisé comme ingrédient",
       "lootTable": "Table de butin",
       "summoning": "Invocation",
-      "levelShort": "Niv"
+      "levelShort": "Niv",
+      "otherUses": "Autres utilisations",
+      "toolUpgrades": "Améliorations d'outils",
+      "machineUpgrades": "Améliorations de machines",
+      "dungeonEntry": "Entrée du donjon",
+      "owned": "possédée"
     },
     "filters": {
       "search": "Rechercher",

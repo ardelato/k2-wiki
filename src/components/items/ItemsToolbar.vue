@@ -10,11 +10,13 @@ import type { SourceCategory } from '@/composables/useItems'
 import type { ItemType } from '@/types'
 import { itemTypeColor, sourceLabel } from '@/utils/format/format'
 import { sourceIcons } from '@/utils/format/icons'
+import { getItemImage } from '@/utils/images/itemImages'
 
 const props = defineProps<{
   searchQuery: string
   typeFilter: ItemType | 'all'
   sourceFilter: SourceCategory
+  safeToSellOnly: boolean
   viewMode: 'grid' | 'table'
   resultCount: number
   sourceSubFilter: Set<string>
@@ -27,6 +29,7 @@ const emit = defineEmits<{
   'update:searchQuery': [value: string]
   'update:typeFilter': [value: ItemType | 'all']
   'update:sourceFilter': [value: SourceCategory]
+  'update:safeToSellOnly': [value: boolean]
   'update:viewMode': [value: 'grid' | 'table']
   'toggle-sub-filter': [value: string]
   'clear-sub-filters': []
@@ -40,7 +43,8 @@ const hasActiveFilters = computed(
     props.typeFilter !== 'all' ||
     props.sourceFilter !== 'all' ||
     props.searchQuery !== '' ||
-    props.sourceSubFilter.size > 0,
+    props.sourceSubFilter.size > 0 ||
+    props.safeToSellOnly,
 )
 
 
@@ -77,6 +81,9 @@ const { t } = useI18n()
 
 
 const showFilters = ref(false)
+
+
+const goldIcon = getItemImage({ id: 'gold' })
 </script>
 
 <template>
@@ -121,31 +128,40 @@ const showFilters = ref(false)
       class="mt-4 space-y-3"
       :class="showFilters ? 'block' : 'hidden lg:block'"
     >
-      <div
-        class="flex flex-wrap items-center gap-2.5"
-        role="radiogroup"
-        :aria-label="t('items.toolbar.filterByType')"
-      >
-        <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
-          t('items.toolbar.typeLabel')
-        }}</span>
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="contents" role="radiogroup" :aria-label="t('items.toolbar.filterByType')">
+          <span class="text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground">{{
+            t('items.toolbar.typeLabel')
+          }}</span>
+          <button
+            v-for="option in typeOptions"
+            :key="option.value"
+            role="radio"
+            :aria-checked="props.typeFilter === option.value"
+            class="pill focus-ring active:scale-[0.96]"
+            :class="props.typeFilter === option.value ? 'pill-active' : ''"
+            @click="
+              emit('update:typeFilter', props.typeFilter === option.value ? 'all' : option.value)
+            "
+          >
+            <span
+              class="mr-1.5 inline-block size-2 rounded-full"
+              :class="props.typeFilter === option.value ? 'ring-1 ring-white/60' : ''"
+              :style="{ backgroundColor: itemTypeColor(option.value as ItemType) }"
+            />
+            {{ option.label }}
+          </button>
+        </div>
+
+        <!-- Not a type, so it sits outside the radiogroup, aligned like the result count below. -->
         <button
-          v-for="option in typeOptions"
-          :key="option.value"
-          role="radio"
-          :aria-checked="props.typeFilter === option.value"
-          class="pill focus-ring active:scale-[0.96]"
-          :class="props.typeFilter === option.value ? 'pill-active' : ''"
-          @click="
-            emit('update:typeFilter', props.typeFilter === option.value ? 'all' : option.value)
-          "
+          class="pill focus-ring ml-auto gap-1.5 active:scale-[0.96]"
+          :class="props.safeToSellOnly ? 'pill-active' : ''"
+          :aria-pressed="props.safeToSellOnly"
+          @click="emit('update:safeToSellOnly', !props.safeToSellOnly)"
         >
-          <span
-            class="mr-1.5 inline-block size-2 rounded-full"
-            :class="props.typeFilter === option.value ? 'ring-1 ring-white/60' : ''"
-            :style="{ backgroundColor: itemTypeColor(option.value as ItemType) }"
-          />
-          {{ option.label }}
+          <img v-if="goldIcon" :src="goldIcon" alt="" class="size-4" />
+          {{ t('items.toolbar.safeToSell') }}
         </button>
       </div>
 

@@ -274,7 +274,8 @@
       "filterBySource": "Kaynağa göre filtrele",
       "typeLabel": "Tür",
       "sourceLabel": "Kaynak",
-      "resultCount": "{count} sonuç"
+      "resultCount": "{count} sonuç",
+      "safeToSell": "Satılabilir"
     },
     "view": {
       "emptyTitle": "Filtrelerinizle eşleşen eşya yok",
@@ -286,7 +287,7 @@
       "buy": "Satın Al",
       "sell": "Sat",
       "recipes": "Tarifler",
-      "usedIn": "Kullanıldığı Yerler",
+      "uses": "Kullanımlar",
       "summons": "Çağırmalar"
     },
     "detail": {
@@ -303,7 +304,12 @@
       "usedAsIngredient": "Malzeme Olarak Kullanıldığı Yerler",
       "lootTable": "Ganimet Tablosu",
       "summoning": "Çağırma",
-      "levelShort": "Svy"
+      "levelShort": "Svy",
+      "otherUses": "Diğer kullanımlar",
+      "toolUpgrades": "Alet yükseltmeleri",
+      "machineUpgrades": "Makine yükseltmeleri",
+      "dungeonEntry": "Zindan girişi",
+      "owned": "sahip olunan"
     },
     "filters": {
       "search": "Ara",
