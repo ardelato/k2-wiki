@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X, GitBranch } from 'lucide-vue-next'
+import { Castle, GitBranch, Hammer, Wrench, X } from 'lucide-vue-next'
 import { computed, toRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -9,6 +9,8 @@ import ItemLootTable from '@/components/items/ItemLootTable.vue'
 import ItemRecipeList from '@/components/items/ItemRecipeList.vue'
 import ItemSummoning from '@/components/items/ItemSummoning.vue'
 import { useItemDetail } from '@/composables/useItemDetail'
+import { useItemUsage } from '@/composables/useItemUsage'
+import { itemById, itemUseIndex } from '@/data/indexes'
 import type { Item } from '@/types'
 import { itemTypeColor } from '@/utils/format/format'
 import { getItemImage } from '@/utils/images/itemImages'
@@ -46,6 +48,48 @@ const {
   dedupedRecipeUsages,
   mergedRecipes,
 } = useItemDetail(item)
+
+
+const { safeToSell } = useItemUsage()
+const isSafeToSell = computed(() => safeToSell(item.value))
+
+
+// Crafting uses already have their own section; this lists every other way the item is spent.
+const machineUses = computed(() => {
+  const rows: { key: string; targetId: string; targetName: string; machineName: string }[] = []
+  for (const use of itemUseIndex.get(item.value.id) ?? []) {
+    if (use.kind !== 'machine') continue
+    rows.push({
+      key: `${use.machineId}|${use.targetId}`,
+      targetId: use.targetId,
+      targetName: itemById.get(use.targetId)?.name ?? use.targetId,
+      machineName: use.machineName,
+    })
+  }
+  return rows
+})
+
+
+const flatUses = computed(() => {
+  const rows: { key: string; icon: typeof Wrench; label: string }[] = []
+  for (const use of itemUseIndex.get(item.value.id) ?? []) {
+    if (use.kind === 'upgrade')
+      rows.push({
+        key: `upgrade:${use.target}`,
+        icon: use.target === 'tools' ? Hammer : Wrench,
+        label: t(
+          use.target === 'tools' ? 'items.detail.toolUpgrades' : 'items.detail.machineUpgrades',
+        ),
+      })
+    else if (use.kind === 'dungeon')
+      rows.push({
+        key: 'dungeon',
+        icon: Castle,
+        label: t('items.detail.dungeonEntry'),
+      })
+  }
+  return rows
+})
 
 
 const hasJobOrContainerSources = computed(
@@ -133,8 +177,17 @@ const hasJobOrContainerSources = computed(
               {{ t('items.detail.buy') }}
             </p>
           </div>
-          <div v-if="item.sellValue != null" class="rounded-xl bg-muted/20 px-3 py-2 text-center">
-            <p class="font-mono text-sm font-semibold text-foreground">{{ item.sellValue }}</p>
+          <div
+            v-if="item.sellValue != null"
+            class="rounded-xl px-3 py-2 text-center"
+            :class="isSafeToSell ? 'bg-gold-strong/15 ring-1 ring-gold-strong/50' : 'bg-muted/20'"
+          >
+            <p
+              class="font-mono text-sm font-semibold"
+              :class="isSafeToSell ? 'text-gold-strong' : 'text-foreground'"
+            >
+              {{ item.sellValue }}
+            </p>
             <p class="text-xs uppercase tracking-wide text-muted-foreground">
               {{ t('items.detail.sell') }}
             </p>
@@ -190,6 +243,44 @@ const hasJobOrContainerSources = computed(
             <span class="font-mono text-sm" style="color: var(--color-yellow)"
               >x{{ usage.amountNeeded }}</span
             >
+          </div>
+        </div>
+      </section>
+
+      <!-- Other Uses (machines, upgrades, dungeon) -->
+      <section v-if="machineUses.length || flatUses.length" class="detail-section">
+        <h3 class="section-title mb-3">
+          {{ t('items.detail.otherUses') }}
+        </h3>
+        <div class="space-y-2">
+          <div
+            v-for="use in machineUses"
+            :key="use.key"
+            class="-mx-1 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 transition hover:bg-muted/20"
+            @click="emit('select-item', use.targetId)"
+          >
+            <img
+              v-if="getItemImage({ id: use.targetId })"
+              :src="getItemImage({ id: use.targetId })"
+              :alt="use.targetName"
+              class="size-5 shrink-0 object-contain"
+              loading="lazy"
+            />
+            <span v-else class="size-1.5 shrink-0 rounded-full bg-accent/60" />
+            <div class="min-w-0 flex-1">
+              <span class="text-sm font-semibold text-foreground transition hover:text-primary">{{
+                use.targetName
+              }}</span>
+              <span class="text-sm text-muted-foreground"> &middot; {{ use.machineName }}</span>
+            </div>
+          </div>
+          <div
+            v-for="use in flatUses"
+            :key="use.key"
+            class="-mx-1 flex items-center gap-3 rounded-lg px-3 py-1.5"
+          >
+            <component :is="use.icon" class="size-5 shrink-0 text-muted-foreground" />
+            <span class="text-sm font-semibold text-foreground">{{ use.label }}</span>
           </div>
         </div>
       </section>

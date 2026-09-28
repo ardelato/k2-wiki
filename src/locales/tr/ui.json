@@ -304,7 +304,12 @@
       "usedAsIngredient": "Malzeme Olarak Kullanıldığı Yerler",
       "lootTable": "Ganimet Tablosu",
       "summoning": "Çağırma",
-      "levelShort": "Svy"
+      "levelShort": "Svy",
+      "otherUses": "Diğer kullanımlar",
+      "toolUpgrades": "Alet yükseltmeleri",
+      "machineUpgrades": "Makine yükseltmeleri",
+      "dungeonEntry": "Zindan girişi",
+      "owned": "sahip olunan"
     },
     "filters": {
       "search": "Ara",

@@ -304,7 +304,12 @@
       "usedAsIngredient": "Used As Ingredient",
       "lootTable": "Loot Table",
       "summoning": "Summoning",
-      "levelShort": "Lv"
+      "levelShort": "Lv",
+      "otherUses": "Other Uses",
+      "toolUpgrades": "Tool upgrades",
+      "machineUpgrades": "Machine upgrades",
+      "dungeonEntry": "Dungeon entry",
+      "owned": "owned"
     },
     "filters": {
       "search": "Search",

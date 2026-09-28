@@ -304,7 +304,12 @@
       "usedAsIngredient": "作為材料使用",
       "lootTable": "掉落表",
       "summoning": "召喚",
-      "levelShort": "Lv"
+      "levelShort": "Lv",
+      "otherUses": "其他用途",
+      "toolUpgrades": "工具升級",
+      "machineUpgrades": "機器升級",
+      "dungeonEntry": "地下城入場",
+      "owned": "已擁有"
     },
     "filters": {
       "search": "搜尋",

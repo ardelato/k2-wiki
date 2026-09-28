@@ -304,7 +304,12 @@
       "usedAsIngredient": "Usado como ingrediente",
       "lootTable": "Tabla de botín",
       "summoning": "Invocación",
-      "levelShort": "Nvl"
+      "levelShort": "Nvl",
+      "otherUses": "Otros usos",
+      "toolUpgrades": "Mejoras de herramientas",
+      "machineUpgrades": "Mejoras de máquinas",
+      "dungeonEntry": "Entrada a la mazmorra",
+      "owned": "obtenida"
     },
     "filters": {
       "search": "Buscar",

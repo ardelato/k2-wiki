@@ -304,7 +304,12 @@
       "usedAsIngredient": "Als Zutat verwendet",
       "lootTable": "Beute-Tabelle",
       "summoning": "Beschwörung",
-      "levelShort": "Lvl"
+      "levelShort": "Lvl",
+      "otherUses": "Weitere Verwendungen",
+      "toolUpgrades": "Werkzeug-Upgrades",
+      "machineUpgrades": "Maschinen-Upgrades",
+      "dungeonEntry": "Dungeon-Eintritt",
+      "owned": "im Besitz"
     },
     "filters": {
       "search": "Suchen",
