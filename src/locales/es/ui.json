@@ -274,7 +274,8 @@
       "filterBySource": "Filtrar por fuente",
       "typeLabel": "Tipo",
       "sourceLabel": "Fuente",
-      "resultCount": "{count} resultados"
+      "resultCount": "{count} resultados",
+      "safeToSell": "Se puede vender"
     },
     "view": {
       "emptyTitle": "Ningún objeto coincide con tus filtros",

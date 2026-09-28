@@ -274,7 +274,8 @@
       "filterBySource": "Kaynağa göre filtrele",
       "typeLabel": "Tür",
       "sourceLabel": "Kaynak",
-      "resultCount": "{count} sonuç"
+      "resultCount": "{count} sonuç",
+      "safeToSell": "Satılabilir"
     },
     "view": {
       "emptyTitle": "Filtrelerinizle eşleşen eşya yok",

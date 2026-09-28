@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
-import { computed, ref, nextTick, onMounted } from 'vue'
+import { computed, ref, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -25,6 +25,7 @@ const {
   typeFilter,
   sourceFilter,
   sourceSubFilter,
+  safeToSellOnly,
   availableSubFilters,
   getItemById,
   getRecipeUsages,
@@ -132,6 +133,7 @@ function selectItemById(id: string) {
     typeFilter.value = 'all'
     sourceFilter.value = 'all'
     sourceSubFilter.value.clear()
+    safeToSellOnly.value = false
   }
   selectedItem.value = item
 }
@@ -162,7 +164,15 @@ function clearFilters() {
   typeFilter.value = 'all'
   sourceFilter.value = 'all'
   sourceSubFilter.value.clear()
+  safeToSellOnly.value = false
 }
+
+
+// The filter's order is "most gold first"; point the table the same way while it's on.
+watch(safeToSellOnly, (on) => {
+  tableSortKey.value = on ? 'sellValue' : 'name'
+  tableSortDirection.value = on ? 'desc' : 'asc'
+})
 
 
 const hasActiveFilters = computed(
@@ -170,7 +180,8 @@ const hasActiveFilters = computed(
     typeFilter.value !== 'all' ||
     sourceFilter.value !== 'all' ||
     searchQuery.value !== '' ||
-    sourceSubFilter.value.size > 0,
+    sourceSubFilter.value.size > 0 ||
+    safeToSellOnly.value,
 )
 
 
@@ -200,6 +211,8 @@ const activeFilters = computed<ActiveFilter[]>(() => {
       image: sourceIcons[sub],
     })
   }
+  if (safeToSellOnly.value)
+    filters.push({ key: 'sell', group: 'Sell', label: t('items.toolbar.safeToSell') })
   return filters
 })
 
@@ -216,6 +229,10 @@ function removeFilter(key: string) {
   if (key === 'source') {
     sourceFilter.value = 'all'
     sourceSubFilter.value.clear()
+    return
+  }
+  if (key === 'sell') {
+    safeToSellOnly.value = false
     return
   }
   if (key.startsWith('sub:')) {
@@ -245,6 +262,7 @@ onMounted(() => {
       v-model:search-query="searchQuery"
       v-model:type-filter="typeFilter"
       v-model:source-filter="sourceFilter"
+      v-model:safe-to-sell-only="safeToSellOnly"
       v-model:view-mode="viewMode"
       :result-count="filteredItems.length"
       :source-sub-filter="sourceSubFilter"

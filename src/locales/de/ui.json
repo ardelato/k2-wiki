@@ -274,7 +274,8 @@
       "filterBySource": "Nach Quelle filtern",
       "typeLabel": "Typ",
       "sourceLabel": "Quelle",
-      "resultCount": "{count} Ergebnisse"
+      "resultCount": "{count} Ergebnisse",
+      "safeToSell": "Sicher verkaufbar"
     },
     "view": {
       "emptyTitle": "Keine Gegenstände entsprechen deinen Filtern",

@@ -274,7 +274,8 @@
       "filterBySource": "Filter by source",
       "typeLabel": "Type",
       "sourceLabel": "Source",
-      "resultCount": "{count} results"
+      "resultCount": "{count} results",
+      "safeToSell": "Safe to sell"
     },
     "view": {
       "emptyTitle": "No items match your filters",
