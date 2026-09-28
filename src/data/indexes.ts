@@ -179,3 +179,79 @@ for (const rewards of Object.values(dungeonsData.combatRewards)) {
     dungeonCombatRewardIds.add(reward.itemId)
   }
 }
+
+/**
+ * Every way an item gets consumed, keyed by item id. `recipeUsageIndex` and `summoningIndex`
+ * only cover one sink each, which made machine inputs, upgrade bars, containers and the
+ * dungeon's Armor Set look unused on the Items page.
+ */
+export type ItemUse =
+  | { kind: 'recipe'; targetId: string }
+  | {
+      kind: 'machine'
+      targetId: string
+      machineId: string
+      machineName: string
+    }
+  | { kind: 'summon'; creatureId: string }
+  | { kind: 'upgrade'; target: 'tools' | 'machines' }
+  | { kind: 'dungeon' }
+  | { kind: 'open' }
+
+export const itemUseIndex = new Map<string, ItemUse[]>()
+function addUse(itemId: string, use: ItemUse) {
+  const existing = itemUseIndex.get(itemId) ?? []
+  existing.push(use)
+  itemUseIndex.set(itemId, existing)
+}
+
+for (const item of items) {
+  // Variant recipes list the same ingredient once per recipe; one use per output is enough.
+  const seen = new Set<string>()
+  for (const recipe of item.recipes) {
+    for (const ingredient of recipe.ingredients) {
+      if (seen.has(ingredient.id)) continue
+      seen.add(ingredient.id)
+      addUse(ingredient.id, { kind: 'recipe', targetId: item.id })
+    }
+  }
+  if (item.lootTable?.length) addUse(item.id, { kind: 'open' })
+}
+
+for (const machine of machinesData.machines) {
+  for (const recipe of machine.recipes) {
+    // The Greenhouse lists each crop as its own zero-amount input; that picks what to grow and
+    // consumes nothing, so only inputs with a real amount count as a use.
+    const inputs: [string | null | undefined, number | undefined][] = [
+      [recipe.inputItemId, recipe.inputAmount],
+      'secondaryInputItemId' in recipe
+        ? [recipe.secondaryInputItemId, recipe.secondaryInputAmount]
+        : [undefined, 0],
+    ]
+    for (const [inputId, amount] of inputs) {
+      if (!inputId || !amount) continue
+      addUse(inputId, {
+        kind: 'machine',
+        targetId: recipe.outputItemId,
+        machineId: machine.id,
+        machineName: machine.name,
+      })
+    }
+  }
+}
+
+for (const creature of creatures) {
+  for (const cost of creature.summoningCost) {
+    addUse(cost.id, { kind: 'summon', creatureId: creature.id })
+  }
+}
+
+for (const barId of new Set(toolsData.upgradeCosts.map((c) => c.barId))) {
+  addUse(barId, { kind: 'upgrade', target: 'tools' })
+}
+// Machine upgrades cost bars plus a flat amount of planks at every tier.
+for (const id of new Set([...machinesData.upgradeCosts.map((c) => c.barId), 'planks'])) {
+  addUse(id, { kind: 'upgrade', target: 'machines' })
+}
+
+addUse(dungeonsData.requiresItem, { kind: 'dungeon' })
